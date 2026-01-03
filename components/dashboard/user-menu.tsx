@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -46,9 +45,6 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
             Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/team">Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <form action="/auth/sign-out" method="post" className="w-full">

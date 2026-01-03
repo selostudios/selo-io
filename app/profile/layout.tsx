@@ -2,9 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
-import { SettingsTabs } from '@/components/settings/settings-tabs'
 
-export default async function SettingsLayout({
+export default async function ProfileLayout({
   children,
 }: {
   children: React.ReactNode
@@ -36,13 +35,11 @@ export default async function SettingsLayout({
         <main className="flex-1">
           <div className="p-8 space-y-6">
             <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
+              <h1 className="text-3xl font-bold">Profile</h1>
               <p className="text-muted-foreground mt-2">
-                Manage your account and organization preferences
+                Manage your personal information
               </p>
             </div>
-
-            <SettingsTabs />
 
             {children}
           </div>
