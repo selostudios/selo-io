@@ -105,11 +105,11 @@ export default async function TeamSettingsPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold">Team Settings</h1>
-          <p className="text-muted-foreground mt-2">
+          <h2 className="text-xl font-semibold">Team Members</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage team members for {org?.name || 'your organization'}
           </p>
         </div>
@@ -117,13 +117,7 @@ export default async function TeamSettingsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Team Members</CardTitle>
-          <CardDescription>
-            Current members of your organization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="space-y-4">
             {teamMembersWithEmails.map((member) => (
               <div

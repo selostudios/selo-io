@@ -32,10 +32,10 @@ export default async function IntegrationsPage() {
   )
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Platform Integrations</h1>
-        <p className="text-muted-foreground mt-2">
+        <h2 className="text-xl font-semibold">Platform Integrations</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Connect your marketing platforms to track campaign performance
         </p>
       </div>
