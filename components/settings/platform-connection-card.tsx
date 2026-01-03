@@ -34,7 +34,8 @@ const platformInfo = {
 }
 
 export function PlatformConnectionCard({ connection, platformType }: { connection: Connection | null, platformType: string }) {
-  const info = platformInfo[connection?.platform_type as keyof typeof platformInfo || platformType as keyof typeof platformInfo]
+  const platformKey = (connection?.platform_type || platformType) as keyof typeof platformInfo
+  const info = platformInfo[platformKey] || { name: 'Unknown Platform', description: 'Unknown platform' }
 
   async function handleDisconnect() {
     'use server'

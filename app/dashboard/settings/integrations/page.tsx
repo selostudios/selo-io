@@ -1,21 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
 import { PlatformConnectionCard } from '@/components/settings/platform-connection-card'
+import { redirect } from 'next/navigation'
 
 export default async function IntegrationsPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
 
   const { data: userRecord } = await supabase
     .from('users')
     .select('organization_id')
-    .eq('id', user!.id)
+    .eq('id', user.id)
     .single()
+
+  if (!userRecord) {
+    redirect('/login')
+  }
 
   const { data: connections } = await supabase
     .from('platform_connections')
     .select('*')
-    .eq('organization_id', userRecord!.organization_id)
+    .eq('organization_id', userRecord.organization_id)
 
   const platforms = ['hubspot', 'google_analytics', 'linkedin', 'meta', 'instagram']
 
