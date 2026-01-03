@@ -13,11 +13,17 @@ interface ProfileFormProps {
   name: string
 }
 
-export function ProfileForm({ email, name }: ProfileFormProps) {
+export function ProfileForm({ email, name: initialName }: ProfileFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [name, setName] = useState(initialName)
   const router = useRouter()
+
+  // Check if save button should be disabled
+  const isNameValid = name.trim().length >= 3
+  const hasChanges = name.trim() !== initialName.trim()
+  const isSaveDisabled = !isNameValid || !hasChanges || isLoading
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -53,10 +59,16 @@ export function ProfileForm({ email, name }: ProfileFormProps) {
               name="name"
               type="text"
               placeholder="Your full name"
-              defaultValue={name}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               disabled={isLoading}
             />
+            {name.trim().length > 0 && name.trim().length < 3 && (
+              <p className="text-xs text-red-600">
+                Name must be at least 3 characters
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -83,7 +95,7 @@ export function ProfileForm({ email, name }: ProfileFormProps) {
             </div>
           )}
           <div className="flex justify-end">
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isSaveDisabled}>
               {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
