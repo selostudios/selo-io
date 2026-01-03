@@ -25,7 +25,7 @@ export default async function IntegrationsPage() {
     .select('*')
     .eq('organization_id', userRecord.organization_id)
 
-  const platforms = ['hubspot', 'google_analytics', 'linkedin', 'meta', 'instagram']
+  const platforms = ['hubspot', 'google_analytics', 'linkedin']
 
   const connectionsMap = new Map(
     connections?.map(c => [c.platform_type, c]) || []

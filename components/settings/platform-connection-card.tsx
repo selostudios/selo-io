@@ -23,14 +23,6 @@ const platformInfo = {
     name: 'LinkedIn',
     description: 'Post impressions, engagement, followers',
   },
-  meta: {
-    name: 'Meta (Facebook)',
-    description: 'Page insights, post performance',
-  },
-  instagram: {
-    name: 'Instagram',
-    description: 'Post impressions, engagement, followers',
-  },
 }
 
 export function PlatformConnectionCard({ connection, platformType }: { connection: Connection | null, platformType: string }) {
@@ -48,12 +40,14 @@ export function PlatformConnectionCard({ connection, platformType }: { connectio
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{info.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>{info.name}</CardTitle>
+            <Badge variant="warning">Not connected</Badge>
+          </div>
           <CardDescription>{info.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Badge variant="outline">Not connected</Badge>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-sm text-muted-foreground">
             Connect {info.name} to track performance metrics.
           </p>
         </CardContent>
@@ -64,13 +58,11 @@ export function PlatformConnectionCard({ connection, platformType }: { connectio
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{info.name}</CardTitle>
-            <CardDescription>{info.description}</CardDescription>
-          </div>
-          <Badge className="bg-green-100 text-green-800">{connection.status}</Badge>
+        <div className="flex items-center gap-2">
+          <CardTitle>{info.name}</CardTitle>
+          <Badge variant="success">{connection.status}</Badge>
         </div>
+        <CardDescription>{info.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
