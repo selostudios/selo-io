@@ -1,12 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { InviteUserDialog } from '@/components/settings/invite-user-dialog'
+import { ResendInviteButton } from '@/components/settings/resend-invite-button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
 
-function formatJoinedDate(dateString: string): string {
+function getInitials(name: string): string {
+  const parts = name.trim().split(' ').filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+function formatDate(dateString: string): string {
   const date = new Date(dateString)
 
   const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' })
@@ -122,19 +131,32 @@ export default async function TeamSettingsPage() {
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle>Active</CardTitle>
+          <CardDescription>
+            Current team members with access to the organization
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
             {teamMembersWithEmails.map((member) => (
               <div
                 key={member.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
-                <div>
-                  <p className="font-medium">{member.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.email}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Joined {formatJoinedDate(member.created_at)}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <Avatar className="size-10">
+                    <AvatarFallback className="text-sm font-medium">
+                      {getInitials(member.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-sm text-muted-foreground">{member.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Joined {formatDate(member.created_at)}
+                    </p>
+                  </div>
                 </div>
                 <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
                   {member.role.replace('_', ' ')}
@@ -174,10 +196,10 @@ export default async function TeamSettingsPage() {
                       <p className="text-sm text-muted-foreground">
                         {isExpired ? (
                           <span className="text-red-600">
-                            Expired {expiresAt.toLocaleDateString()}
+                            Expired {formatDate(invite.expires_at)}
                           </span>
                         ) : (
-                          <>Expires {expiresAt.toLocaleDateString()}</>
+                          <>Expires {formatDate(invite.expires_at)}</>
                         )}
                       </p>
                     </div>
@@ -185,6 +207,7 @@ export default async function TeamSettingsPage() {
                       <Badge variant="outline">
                         {invite.role.replace('_', ' ')}
                       </Badge>
+                      <ResendInviteButton inviteId={invite.id} email={invite.email} />
                       <form action={handleDeleteInvite}>
                         <input type="hidden" name="inviteId" value={invite.id} />
                         <Button type="submit" variant="ghost" size="sm">

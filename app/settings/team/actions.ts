@@ -99,6 +99,89 @@ export async function sendInvite(formData: FormData) {
   }
 }
 
+export async function resendInvite(inviteId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Get user's organization and role
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || userRecord.role !== 'admin') {
+    return { error: 'Only admins can resend invites' }
+  }
+
+  // Get the invite
+  const { data: invite } = await supabase
+    .from('invites')
+    .select('*')
+    .eq('id', inviteId)
+    .eq('organization_id', userRecord.organization_id)
+    .single()
+
+  if (!invite) {
+    return { error: 'Invite not found' }
+  }
+
+  // Update expires_at to extend the invite
+  const newExpiresAt = new Date()
+  newExpiresAt.setDate(newExpiresAt.getDate() + 7)
+
+  const { error: updateError } = await supabase
+    .from('invites')
+    .update({ expires_at: newExpiresAt.toISOString() })
+    .eq('id', inviteId)
+
+  if (updateError) {
+    console.error('[Resend Invite Error]', { type: 'update_error', error: updateError, timestamp: new Date().toISOString() })
+    return { error: 'Failed to update invite expiration' }
+  }
+
+  // Get organization name
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', userRecord.organization_id)
+    .single()
+
+  // Send invite email
+  const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite/${invite.id}`
+
+  try {
+    const { resend, FROM_EMAIL } = await import('@/lib/email/client')
+    const InviteEmail = (await import('@/emails/invite-email')).default
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: invite.email,
+      subject: `Reminder: You've been invited to join ${org?.name || 'an organization'} on Selo IO`,
+      react: InviteEmail({
+        inviteLink,
+        organizationName: org?.name || 'the organization',
+        invitedByEmail: user.email!,
+        role: invite.role,
+      }),
+    })
+  } catch (emailError) {
+    console.error('Failed to send invite email:', emailError)
+    return { error: 'Failed to send invite email' }
+  }
+
+  revalidatePath('/settings/team')
+
+  return {
+    success: true,
+    message: `Invite resent to ${invite.email}!`
+  }
+}
+
 export async function deleteInvite(inviteId: string) {
   const supabase = await createClient()
 

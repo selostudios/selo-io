@@ -7,16 +7,17 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { Toaster as Sonner, type ToasterProps, toast } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="light"
+      position="top-center"
       className="toaster group"
+      toastOptions={{
+        duration: 5000,
+      }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
@@ -37,4 +38,18 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
-export { Toaster }
+// Helper functions for consistent toast behavior
+const showSuccess = (message: string) => {
+  toast.success(message, {
+    duration: 5000,
+  })
+}
+
+const showError = (message: string) => {
+  toast.error(message, {
+    duration: Infinity,
+    closeButton: true,
+  })
+}
+
+export { Toaster, showSuccess, showError }

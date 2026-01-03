@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
+import { showSuccess, showError } from '@/components/ui/sonner'
 
 interface Industry {
   id: string
@@ -40,8 +41,6 @@ export function OrganizationForm({
   accentColor: initialAccentColor,
   industries,
 }: OrganizationFormProps) {
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(initialName)
   const [industryId, setIndustryId] = useState(initialIndustryId)
@@ -64,8 +63,6 @@ export function OrganizationForm({
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
-    setError(null)
-    setSuccess(null)
 
     // Add industry to form data
     formData.set('industry', industryId)
@@ -73,10 +70,10 @@ export function OrganizationForm({
     const result = await updateOrganization(formData)
 
     if (result?.error) {
-      setError(result.error)
+      showError(result.error)
       setIsLoading(false)
     } else if (result?.success) {
-      setSuccess('Organization settings updated successfully!')
+      showSuccess('Organization settings updated successfully!')
       setIsLoading(false)
       router.refresh()
     }
@@ -215,17 +212,6 @@ export function OrganizationForm({
               </div>
             </div>
           </div>
-
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded">
-              {success}
-            </div>
-          )}
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isSaveDisabled}>
