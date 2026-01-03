@@ -6,7 +6,7 @@
 
 **Architecture:** Next.js 14 App Router with React Server Components, Supabase for PostgreSQL + Auth + RLS, Vercel Edge Functions for API routes, Vercel Cron for weekly automation, Anthropic Claude via Vercel AI SDK for summary generation.
 
-**Tech Stack:** Next.js 14+, TypeScript, React, Tailwind CSS, Shadcn UI, Supabase, Vercel, Anthropic Claude
+**Tech Stack:** Next.js 14+, TypeScript, React, Tailwind CSS, Shadcn UI, Supabase, Vercel, Anthropic Claude, Resend, React Email
 
 ---
 
@@ -1228,7 +1228,239 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 7: User Invite System
+### Task 7: Email Setup with Resend
+
+**Files:**
+- Create: `lib/email/client.ts`
+- Create: `emails/invite-email.tsx`
+- Create: `emails/weekly-summary-email.tsx`
+- Modify: `.env.local`
+
+**Step 1: Install Resend and React Email**
+
+Run:
+```bash
+npm install resend
+npm install react-email @react-email/components
+npm install -D @react-email/tailwind
+```
+
+Expected: Email packages installed
+
+**Step 2: Set up Resend API key**
+
+Manual step (document for engineer):
+1. Go to https://resend.com/
+2. Create account and verify email
+3. Generate API key
+4. Add domain or use test domain (onboarding@resend.dev for development)
+
+Add to `.env.local`:
+```
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+```
+
+**Step 3: Create email client**
+
+Create `lib/email/client.ts`:
+```typescript
+import { Resend } from 'resend'
+
+export const resend = new Resend(process.env.RESEND_API_KEY!)
+
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Selo OS <onboarding@resend.dev>'
+```
+
+**Step 4: Create invite email template**
+
+Create `emails/invite-email.tsx`:
+```typescript
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Text,
+  Tailwind,
+} from '@react-email/components'
+
+interface InviteEmailProps {
+  inviteLink: string
+  organizationName: string
+  invitedByEmail: string
+  role: string
+}
+
+export default function InviteEmail({
+  inviteLink,
+  organizationName,
+  invitedByEmail,
+  role,
+}: InviteEmailProps) {
+  return (
+    <Html>
+      <Head />
+      <Preview>You've been invited to join {organizationName} on Selo OS</Preview>
+      <Tailwind>
+        <Body className="bg-neutral-50 font-sans">
+          <Container className="mx-auto py-12 px-4">
+            <Heading className="text-2xl font-bold text-neutral-900 mb-4">
+              Join {organizationName}
+            </Heading>
+            <Text className="text-neutral-700 mb-4">
+              {invitedByEmail} has invited you to join {organizationName} on Selo OS
+              as a <strong>{role.replace('_', ' ')}</strong>.
+            </Text>
+            <Text className="text-neutral-700 mb-6">
+              Selo OS helps marketing teams track campaign performance across
+              HubSpot, Google Analytics, LinkedIn, and more.
+            </Text>
+            <Section className="mb-6">
+              <Button
+                href={inviteLink}
+                className="bg-neutral-900 text-white px-6 py-3 rounded-md font-medium"
+              >
+                Accept Invitation
+              </Button>
+            </Section>
+            <Text className="text-sm text-neutral-500">
+              This invitation will expire in 7 days. If you didn't expect this
+              invitation, you can safely ignore this email.
+            </Text>
+            <Text className="text-sm text-neutral-500 mt-4">
+              Or copy and paste this link:{' '}
+              <Link href={inviteLink} className="text-blue-600">
+                {inviteLink}
+              </Link>
+            </Text>
+          </Container>
+        </Body>
+      </Tailwind>
+    </Html>
+  )
+}
+```
+
+**Step 5: Create weekly summary email template**
+
+Create `emails/weekly-summary-email.tsx`:
+```typescript
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Text,
+  Tailwind,
+} from '@react-email/components'
+
+interface WeeklySummaryEmailProps {
+  organizationName: string
+  weekStartDate: string
+  summaryBullets: string[]
+  dashboardLink: string
+}
+
+export default function WeeklySummaryEmail({
+  organizationName,
+  weekStartDate,
+  summaryBullets,
+  dashboardLink,
+}: WeeklySummaryEmailProps) {
+  return (
+    <Html>
+      <Head />
+      <Preview>Weekly Marketing Summary for {organizationName}</Preview>
+      <Tailwind>
+        <Body className="bg-neutral-50 font-sans">
+          <Container className="mx-auto py-12 px-4">
+            <Heading className="text-2xl font-bold text-neutral-900 mb-2">
+              Weekly Marketing Summary
+            </Heading>
+            <Text className="text-neutral-600 mb-6">
+              {organizationName} • Week of {weekStartDate}
+            </Text>
+
+            <Section className="bg-white p-6 rounded-lg mb-6">
+              {summaryBullets.map((bullet, index) => (
+                <Text key={index} className="text-neutral-800 mb-2">
+                  • {bullet}
+                </Text>
+              ))}
+            </Section>
+
+            <Section className="mb-6">
+              <Button
+                href={dashboardLink}
+                className="bg-neutral-900 text-white px-6 py-3 rounded-md font-medium"
+              >
+                View Full Dashboard
+              </Button>
+            </Section>
+
+            <Text className="text-sm text-neutral-500">
+              This summary is automatically generated every Monday morning based
+              on your campaign performance.
+            </Text>
+          </Container>
+        </Body>
+      </Tailwind>
+    </Html>
+  )
+}
+```
+
+**Step 6: Add email preview script**
+
+Add to `package.json` scripts:
+```json
+{
+  "scripts": {
+    "email": "email dev"
+  }
+}
+```
+
+**Step 7: Test email templates locally**
+
+Run:
+```bash
+npm run email
+```
+
+Expected: Opens browser at http://localhost:3000 showing email previews
+Stop server: Ctrl+C
+
+**Step 8: Commit**
+
+Run:
+```bash
+git add lib/email/ emails/ .env.local package.json
+git commit -m "feat: set up Resend for email notifications
+
+- Resend client configuration
+- React Email templates for invites and weekly summaries
+- Minimal, branded email design matching Selo Studios aesthetic
+- Email preview development environment
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 8: User Invite System
 
 **Files:**
 - Create: `app/dashboard/settings/team/page.tsx`
@@ -1284,16 +1516,43 @@ export async function sendInvite(formData: FormData) {
     return { error: error.message }
   }
 
-  // TODO: Send email with invite link
-  // For now, just return success with invite link
+  // Send invite email
   const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite/${invite.id}`
+
+  // Get organization name
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', userRecord.organization_id)
+    .single()
+
+  // Send email using Resend
+  try {
+    const { resend, FROM_EMAIL } = await import('@/lib/email/client')
+    const InviteEmail = (await import('@/emails/invite-email')).default
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `You've been invited to join ${org?.name || 'an organization'} on Selo OS`,
+      react: InviteEmail({
+        inviteLink,
+        organizationName: org?.name || 'the organization',
+        invitedByEmail: user.email!,
+        role,
+      }),
+    })
+  } catch (emailError) {
+    console.error('Failed to send invite email:', emailError)
+    // Don't fail the invite creation if email fails
+  }
 
   revalidatePath('/dashboard/settings/team')
 
   return {
     success: true,
     inviteLink,
-    message: `Invite created! Share this link: ${inviteLink}`
+    message: `Invite sent to ${email}!`
   }
 }
 
@@ -2811,6 +3070,244 @@ git commit -m "feat: add dashboard navigation and layout
 
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```
+
+---
+
+## Phase 7: Vercel Deployment Setup
+
+### Task 11: Vercel CLI Configuration
+
+**Files:**
+- Create: `vercel.json`
+- Create: `.vercelignore`
+- Modify: `package.json`
+
+**Step 1: Install Vercel CLI**
+
+Run:
+```bash
+npm install -g vercel
+```
+
+Expected: Vercel CLI installed globally
+
+**Step 2: Login to Vercel**
+
+Run:
+```bash
+vercel login
+```
+
+Expected: Browser opens, login successful
+
+**Step 3: Create vercel.json configuration**
+
+Create `vercel.json`:
+```json
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "crons": []
+}
+```
+
+**Step 4: Create .vercelignore**
+
+Create `.vercelignore`:
+```
+.env*.local
+.git
+node_modules
+.next
+.vercel
+```
+
+**Step 5: Link project to Vercel**
+
+Run:
+```bash
+vercel link
+```
+
+Answer prompts:
+- Set up and deploy? → N (we'll configure first)
+- Which scope? → Your personal account or team
+- Link to existing project? → N
+- What's your project's name? → selo-os
+- In which directory is your code located? → ./
+
+Expected: Project linked, `.vercel` directory created
+
+**Step 6: Configure environment variables**
+
+Run:
+```bash
+# Supabase
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
+
+# Resend
+vercel env add RESEND_API_KEY production
+vercel env add RESEND_FROM_EMAIL production
+
+# Site URL
+vercel env add NEXT_PUBLIC_SITE_URL production
+
+# AI (when ready)
+# vercel env add ANTHROPIC_API_KEY production
+```
+
+Paste values when prompted.
+
+**Step 7: Pull environment variables for development**
+
+Run:
+```bash
+vercel env pull .env.local
+```
+
+Expected: `.env.local` updated with development environment variables
+
+**Step 8: Test local build**
+
+Run:
+```bash
+vercel build
+```
+
+Expected: Build succeeds, output in `.vercel/output`
+
+**Step 9: Add .vercel to .gitignore**
+
+Verify `.gitignore` contains:
+```
+.vercel
+```
+
+(Should already be there from Next.js defaults)
+
+**Step 10: Commit**
+
+Run:
+```bash
+git add vercel.json .vercelignore package.json
+git commit -m "feat: configure Vercel deployment
+
+- Vercel CLI configuration
+- Environment variable setup
+- Build and deployment settings
+- Production-ready configuration
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 12: Deploy to Vercel
+
+**Prerequisites:**
+- Production Supabase project created with schema migrated
+- OAuth providers configured in Supabase with production redirect URLs
+- Resend account set up with verified domain
+- Environment variables configured in Vercel
+
+**Step 1: Deploy to preview**
+
+Run:
+```bash
+vercel
+```
+
+Expected:
+- Build succeeds
+- Deployment URL provided (e.g., `selo-os-abc123.vercel.app`)
+- Preview deployment ready
+
+**Step 2: Test preview deployment**
+
+1. Visit preview URL
+2. Test login flow
+3. Test organization creation
+4. Test campaign creation
+5. Verify all features work
+
+**Step 3: Deploy to production**
+
+Run:
+```bash
+vercel --prod
+```
+
+Expected:
+- Production build succeeds
+- Deployed to `selo-os.vercel.app` (or your custom domain)
+- Production deployment ready
+
+**Step 4: Configure custom domain (optional)**
+
+Run:
+```bash
+vercel domains add seloos.com
+```
+
+Follow prompts to:
+1. Verify domain ownership
+2. Configure DNS settings
+3. Wait for SSL certificate provisioning
+
+**Step 5: Set up GitHub integration (optional)**
+
+Manual step:
+1. Go to Vercel Dashboard → Project Settings → Git
+2. Connect GitHub repository
+3. Configure:
+   - Production branch: `main`
+   - Preview branches: All other branches
+   - Auto-deploy on push: Enabled
+
+**Step 6: Verify production deployment**
+
+Test checklist:
+- [ ] Login with email/password works
+- [ ] Google OAuth works
+- [ ] Microsoft OAuth works
+- [ ] Organization creation works
+- [ ] User invites send emails
+- [ ] Campaign creation works
+- [ ] Dashboard loads correctly
+- [ ] All navigation works
+- [ ] RLS prevents cross-org access
+
+**Step 7: Bootstrap first production user**
+
+1. Create first user via Supabase Auth UI or signup flow
+2. Get user ID from Supabase Dashboard
+3. Run SQL in Supabase SQL Editor:
+
+```sql
+-- Create first organization
+INSERT INTO organizations (name, industry)
+VALUES ('Badger CPA', 'Accounting')
+RETURNING id;
+
+-- Copy the returned ID, then:
+INSERT INTO users (id, organization_id, role)
+VALUES ('user-uuid-from-auth', 'org-id-from-above', 'admin');
+```
+
+**Step 8: Document deployment**
+
+Add to project README or docs:
+- Production URL
+- How to deploy updates
+- Environment variable management
+- Rollback procedure
 
 ---
 
