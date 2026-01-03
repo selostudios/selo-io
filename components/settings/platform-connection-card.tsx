@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { disconnectPlatform } from '@/app/dashboard/settings/integrations/actions'
+import { disconnectPlatform } from '@/app/settings/integrations/actions'
 
 type Connection = {
   id: string

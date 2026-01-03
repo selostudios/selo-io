@@ -90,7 +90,7 @@ export async function sendInvite(formData: FormData) {
     // Don't fail the invite creation if email fails
   }
 
-  revalidatePath('/dashboard/settings/team')
+  revalidatePath('/settings/team')
 
   return {
     success: true,
@@ -130,6 +130,6 @@ export async function deleteInvite(inviteId: string) {
     return { error: 'Failed to delete invite. Please try again.' }
   }
 
-  revalidatePath('/dashboard/settings/team')
+  revalidatePath('/settings/team')
   return { success: true }
 }

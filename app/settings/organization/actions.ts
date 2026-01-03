@@ -69,7 +69,7 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
     return { error: 'Failed to update organization settings' }
   }
 
-  revalidatePath('/dashboard/settings/organization')
+  revalidatePath('/settings/organization')
   revalidatePath('/dashboard')
 
   return { success: true }

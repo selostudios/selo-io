@@ -48,7 +48,7 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
             Profile
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings/team">Settings</Link>
+            <Link href="/settings/team">Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <form action="/auth/sign-out" method="post" className="w-full">

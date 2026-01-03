@@ -72,7 +72,7 @@ export async function connectPlatform(formData: FormData) {
     return { error: 'Failed to connect platform. Please try again.' }
   }
 
-  revalidatePath('/dashboard/settings/integrations')
+  revalidatePath('/settings/integrations')
   return { success: true }
 }
 
@@ -109,6 +109,6 @@ export async function disconnectPlatform(connectionId: string) {
     return { error: 'Failed to disconnect platform. Please try again.' }
   }
 
-  revalidatePath('/dashboard/settings/integrations')
+  revalidatePath('/settings/integrations')
   return { success: true }
 }

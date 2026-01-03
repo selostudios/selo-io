@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateOrganization } from '@/app/dashboard/settings/organization/actions'
+import { updateOrganization } from '@/app/settings/organization/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
