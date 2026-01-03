@@ -106,15 +106,7 @@ export function InviteUserDialog() {
               {success}
             </div>
           )}
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
+          <div className="flex justify-end">
             <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Sending...' : 'Send Invite'}
             </Button>
