@@ -30,10 +30,18 @@ export function Sidebar() {
       </div>
       <nav className="space-y-1">
         {navigation.map((item) => {
-          // Dashboard should only be active on exact match, others can match child routes
-          const isActive = item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname === item.href || pathname.startsWith(item.href + '/')
+          // Dashboard should only be active on exact match
+          // Settings should be active on any /settings/* route
+          // Campaigns can match child routes
+          let isActive = false
+          if (item.href === '/dashboard') {
+            isActive = pathname === '/dashboard'
+          } else if (item.href.startsWith('/settings')) {
+            isActive = pathname.startsWith('/settings')
+          } else {
+            isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          }
+
           return (
             <Link
               key={item.href}
