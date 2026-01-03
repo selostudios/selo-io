@@ -6,14 +6,36 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-export function CreateOrganizationForm() {
+interface Industry {
+  id: string
+  name: string
+}
+
+interface CreateOrganizationFormProps {
+  industries: Industry[]
+}
+
+export function CreateOrganizationForm({ industries }: CreateOrganizationFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [industry, setIndustry] = useState('')
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
+
+    // Add industry to form data
+    if (industry) {
+      formData.set('industry', industry)
+    }
 
     const result = await createOrganization(formData)
 
@@ -46,13 +68,18 @@ export function CreateOrganizationForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="industry">Industry</Label>
-            <Input
-              id="industry"
-              name="industry"
-              type="text"
-              placeholder="e.g., Accounting, CPA"
-              disabled={isLoading}
-            />
+            <Select value={industry} onValueChange={setIndustry} disabled={isLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {industries.map((ind) => (
+                  <SelectItem key={ind.id} value={ind.name}>
+                    {ind.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-3 rounded">

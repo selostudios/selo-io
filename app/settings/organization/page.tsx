@@ -39,6 +39,12 @@ export default async function OrganizationSettingsPage() {
     redirect('/dashboard')
   }
 
+  // Fetch industries
+  const { data: industries } = await supabase
+    .from('industries')
+    .select('id, name')
+    .order('name', { ascending: true })
+
   return (
     <div className="space-y-6">
       <div>
@@ -56,6 +62,7 @@ export default async function OrganizationSettingsPage() {
         primaryColor={org.primary_color}
         secondaryColor={org.secondary_color}
         accentColor={org.accent_color}
+        industries={industries || []}
       />
     </div>
   )

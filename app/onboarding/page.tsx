@@ -22,9 +22,15 @@ export default async function OnboardingPage() {
     redirect('/dashboard')
   }
 
+  // Fetch industries
+  const { data: industries } = await supabase
+    .from('industries')
+    .select('id, name')
+    .order('name', { ascending: true })
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-      <CreateOrganizationForm />
+      <CreateOrganizationForm industries={industries || []} />
     </div>
   )
 }

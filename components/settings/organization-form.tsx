@@ -6,7 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
+
+interface Industry {
+  id: string
+  name: string
+}
 
 interface OrganizationFormProps {
   organizationId: string
@@ -16,6 +28,7 @@ interface OrganizationFormProps {
   primaryColor: string
   secondaryColor: string
   accentColor: string
+  industries: Industry[]
 }
 
 export function OrganizationForm({
@@ -25,6 +38,7 @@ export function OrganizationForm({
   primaryColor: initialPrimaryColor,
   secondaryColor: initialSecondaryColor,
   accentColor: initialAccentColor,
+  industries,
 }: OrganizationFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -52,6 +66,9 @@ export function OrganizationForm({
     setIsLoading(true)
     setError(null)
     setSuccess(null)
+
+    // Add industry to form data
+    formData.set('industry', industry)
 
     const result = await updateOrganization(formData)
 
@@ -92,15 +109,18 @@ export function OrganizationForm({
 
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                name="industry"
-                type="text"
-                placeholder="e.g., Technology, Marketing, Healthcare"
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                disabled={isLoading}
-              />
+              <Select value={industry} onValueChange={setIndustry} disabled={isLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((ind) => (
+                    <SelectItem key={ind.id} value={ind.name}>
+                      {ind.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
