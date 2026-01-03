@@ -1,14 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Defensive check - should never happen due to layout, but be safe
+  if (!user) {
+    redirect('/login')
+  }
+
   const { data: userRecord } = await supabase
     .from('users')
     .select('organization:organizations(name)')
-    .eq('id', user!.id)
+    .eq('id', user.id)
     .single()
 
   return (
