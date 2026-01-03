@@ -38,8 +38,8 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader className="space-y-4">
-        <div className="flex justify-center">
+      <CardHeader className="space-y-2">
+        <div className="flex justify-center mb-0">
           <Image
             src="/selo-logo.jpg.webp"
             alt="Selo Studios"
