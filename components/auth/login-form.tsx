@@ -12,6 +12,15 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  // Simple email validation
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const isFormValid = isValidEmail(email) && password.length > 0
 
   async function handleEmailSignIn(formData: FormData) {
     setIsLoading(true)
@@ -22,7 +31,8 @@ export function LoginForm() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-      // Keep email value, form will clear password automatically
+      setPassword('') // Clear password on error
+      // Keep email value
     }
   }
 
@@ -74,6 +84,8 @@ export function LoginForm() {
               id="password"
               name="password"
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
             />
@@ -83,7 +95,7 @@ export function LoginForm() {
               {error}
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
