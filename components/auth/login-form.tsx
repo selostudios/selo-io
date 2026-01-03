@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState('')
 
   async function handleEmailSignIn(formData: FormData) {
     setIsLoading(true)
@@ -21,6 +22,7 @@ export function LoginForm() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
+      // Keep email value, form will clear password automatically
     }
   }
 
@@ -60,6 +62,8 @@ export function LoginForm() {
               name="email"
               type="email"
               placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
             />
