@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 
 export async function createOrganization(formData: FormData): Promise<{ error: string } | never> {
   const name = formData.get('name') as string
-  const industry = formData.get('industry') as string
+  const industryId = formData.get('industry') as string
 
   // Input validation
   if (!name || name.trim().length === 0) {
@@ -13,9 +13,6 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   }
   if (name.length > 100) {
     return { error: 'Organization name must be less than 100 characters' }
-  }
-  if (industry && industry.length > 100) {
-    return { error: 'Industry must be less than 100 characters' }
   }
 
   const supabase = await createClient()
@@ -65,7 +62,7 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     .from('organizations')
     .insert({
       name: name.trim(),
-      industry: industry?.trim() || null,
+      industry: industryId || null,
     })
     .select()
     .single()

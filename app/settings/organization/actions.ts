@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function updateOrganization(formData: FormData): Promise<{ error?: string; success?: boolean }> {
   const name = formData.get('name') as string
-  const industry = formData.get('industry') as string
+  const industryId = formData.get('industry') as string
   const logoUrl = formData.get('logoUrl') as string
   const primaryColor = formData.get('primaryColor') as string
   const secondaryColor = formData.get('secondaryColor') as string
@@ -55,7 +55,7 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
     .from('organizations')
     .update({
       name: name.trim(),
-      industry: industry?.trim() || null,
+      industry: industryId || null,
       logo_url: logoUrl?.trim() || null,
       primary_color: primaryColor,
       secondary_color: secondaryColor,

@@ -28,10 +28,10 @@ export default async function OrganizationSettingsPage() {
     redirect('/dashboard/settings/team')
   }
 
-  // Get organization details
+  // Get organization details with industry relationship
   const { data: org } = await supabase
     .from('organizations')
-    .select('*')
+    .select('id, name, industry, logo_url, primary_color, secondary_color, accent_color')
     .eq('id', userRecord.organization_id)
     .single()
 
@@ -57,7 +57,7 @@ export default async function OrganizationSettingsPage() {
       <OrganizationForm
         organizationId={org.id}
         name={org.name}
-        industry={org.industry || ''}
+        industryId={org.industry || ''}
         logoUrl={org.logo_url || ''}
         primaryColor={org.primary_color}
         secondaryColor={org.secondary_color}

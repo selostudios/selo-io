@@ -74,7 +74,7 @@ export function CreateOrganizationForm({ industries }: CreateOrganizationFormPro
               </SelectTrigger>
               <SelectContent>
                 {industries.map((ind) => (
-                  <SelectItem key={ind.id} value={ind.name}>
+                  <SelectItem key={ind.id} value={ind.id}>
                     {ind.name}
                   </SelectItem>
                 ))}

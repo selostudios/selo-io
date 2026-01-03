@@ -23,7 +23,7 @@ interface Industry {
 interface OrganizationFormProps {
   organizationId: string
   name: string
-  industry: string
+  industryId: string
   logoUrl: string
   primaryColor: string
   secondaryColor: string
@@ -33,7 +33,7 @@ interface OrganizationFormProps {
 
 export function OrganizationForm({
   name: initialName,
-  industry: initialIndustry,
+  industryId: initialIndustryId,
   logoUrl: initialLogoUrl,
   primaryColor: initialPrimaryColor,
   secondaryColor: initialSecondaryColor,
@@ -44,7 +44,7 @@ export function OrganizationForm({
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(initialName)
-  const [industry, setIndustry] = useState(initialIndustry)
+  const [industryId, setIndustryId] = useState(initialIndustryId)
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
   const [primaryColor, setPrimaryColor] = useState(initialPrimaryColor)
   const [secondaryColor, setSecondaryColor] = useState(initialSecondaryColor)
@@ -54,7 +54,7 @@ export function OrganizationForm({
   // Check if save button should be disabled
   const hasChanges =
     name !== initialName ||
-    industry !== initialIndustry ||
+    industryId !== initialIndustryId ||
     logoUrl !== initialLogoUrl ||
     primaryColor !== initialPrimaryColor ||
     secondaryColor !== initialSecondaryColor ||
@@ -68,7 +68,7 @@ export function OrganizationForm({
     setSuccess(null)
 
     // Add industry to form data
-    formData.set('industry', industry)
+    formData.set('industry', industryId)
 
     const result = await updateOrganization(formData)
 
@@ -109,13 +109,13 @@ export function OrganizationForm({
 
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
-              <Select value={industry} onValueChange={setIndustry} disabled={isLoading}>
+              <Select value={industryId} onValueChange={setIndustryId} disabled={isLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an industry" />
                 </SelectTrigger>
                 <SelectContent>
                   {industries.map((ind) => (
-                    <SelectItem key={ind.id} value={ind.name}>
+                    <SelectItem key={ind.id} value={ind.id}>
                       {ind.name}
                     </SelectItem>
                   ))}
