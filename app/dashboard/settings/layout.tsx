@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const settingsTabs = [
+  { name: 'Organization', href: '/dashboard/settings/organization' },
   { name: 'Team', href: '/dashboard/settings/team' },
   { name: 'Integrations', href: '/dashboard/settings/integrations' },
 ]

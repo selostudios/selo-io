@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Campaigns', href: '/dashboard/campaigns' },
-  { name: 'Settings', href: '/dashboard/settings/team' },
+  { name: 'Settings', href: '/dashboard/settings/organization' },
 ]
 
 export function Sidebar() {
