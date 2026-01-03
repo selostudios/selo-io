@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { CreateCampaignForm } from '@/components/campaigns/create-campaign-form'
+import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dialog'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -25,16 +25,15 @@ export default async function CampaignsPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Campaigns</h1>
           <p className="text-muted-foreground mt-2">
             Manage your marketing campaigns and track performance
           </p>
         </div>
+        {canCreateCampaign && <CreateCampaignDialog />}
       </div>
-
-      {canCreateCampaign && <CreateCampaignForm />}
 
       <div>
         <h2 className="text-xl font-semibold mb-4">
