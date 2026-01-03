@@ -17,14 +17,16 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-white border-r min-h-screen p-6">
       <div className="mb-8">
-        <Image
-          src="/selo-logo.jpg.webp"
-          alt="Selo Studios"
-          width={75}
-          height={30}
-          priority
-          className="object-contain"
-        />
+        <Link href="/dashboard">
+          <Image
+            src="/selo-logo.jpg.webp"
+            alt="Selo Studios"
+            width={75}
+            height={30}
+            priority
+            className="object-contain cursor-pointer"
+          />
+        </Link>
       </div>
       <nav className="space-y-1">
         {navigation.map((item) => {
