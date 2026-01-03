@@ -23,11 +23,12 @@ import { ProfileForm } from '@/components/settings/profile-form'
 
 interface UserMenuProps {
   userEmail: string
-  userName: string
+  firstName: string
+  lastName: string
   initials: string
 }
 
-export function UserMenu({ userEmail, userName, initials }: UserMenuProps) {
+export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuProps) {
   const [profileOpen, setProfileOpen] = useState(false)
 
   return (
@@ -67,7 +68,7 @@ export function UserMenu({ userEmail, userName, initials }: UserMenuProps) {
               Update your personal information
             </DialogDescription>
           </DialogHeader>
-          <ProfileForm email={userEmail} name={userName} />
+          <ProfileForm email={userEmail} firstName={firstName} lastName={lastName} />
         </DialogContent>
       </Dialog>
     </>

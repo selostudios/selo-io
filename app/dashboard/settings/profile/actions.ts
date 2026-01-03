@@ -4,14 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export async function updateProfile(formData: FormData): Promise<{ error?: string; success?: boolean }> {
-  const name = formData.get('name') as string
+  const firstName = formData.get('firstName') as string
+  const lastName = formData.get('lastName') as string
 
-  if (!name || name.trim().length === 0) {
-    return { error: 'Name is required' }
+  if (!firstName || firstName.trim().length === 0) {
+    return { error: 'First name is required' }
   }
 
-  if (name.length > 100) {
-    return { error: 'Name must be less than 100 characters' }
+  if (firstName.trim().length < 2) {
+    return { error: 'First name must be at least 2 characters' }
+  }
+
+  if (firstName.length > 50 || lastName.length > 50) {
+    return { error: 'Names must be less than 50 characters' }
   }
 
   const supabase = await createClient()
@@ -25,7 +30,10 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
   // Update user name
   const { error } = await supabase
     .from('users')
-    .update({ name: name.trim() })
+    .update({
+      first_name: firstName.trim(),
+      last_name: lastName.trim()
+    })
     .eq('id', user.id)
 
   if (error) {
@@ -33,7 +41,6 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
     return { error: 'Failed to update profile' }
   }
 
-  revalidatePath('/dashboard/settings/profile')
   revalidatePath('/dashboard/settings/team')
 
   return { success: true }

@@ -12,7 +12,7 @@ export async function Header() {
 
   const { data: userRecord, error } = await supabase
     .from('users')
-    .select('organization:organizations(name), name')
+    .select('organization:organizations(name), first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -22,15 +22,20 @@ export async function Header() {
 
   const orgName = (userRecord?.organization as unknown as { name: string } | null)?.name || 'Organization'
   const userEmail = user?.email || ''
-  const userName = userRecord?.name || userEmail.split('@')[0]
-  const initials = userName.length >= 2 ? userName.substring(0, 2).toUpperCase() : 'U'
+  const firstName = userRecord?.first_name || userEmail.split('@')[0]
+  const lastName = userRecord?.last_name || ''
+
+  // Generate initials from first and last name (or first two chars of firstName if no lastName)
+  const initials = lastName
+    ? `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+    : firstName.substring(0, 2).toUpperCase()
 
   return (
     <header className="h-16 border-b bg-white flex items-center justify-between px-6">
       <div>
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
-      <UserMenu userEmail={userEmail} userName={userName} initials={initials} />
+      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} initials={initials} />
     </header>
   )
 }

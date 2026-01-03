@@ -9,20 +9,22 @@ import { useRouter } from 'next/navigation'
 
 interface ProfileFormProps {
   email: string
-  name: string
+  firstName: string
+  lastName: string
 }
 
-export function ProfileForm({ email, name: initialName }: ProfileFormProps) {
+export function ProfileForm({ email, firstName: initialFirstName, lastName: initialLastName }: ProfileFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [name, setName] = useState(initialName)
+  const [firstName, setFirstName] = useState(initialFirstName)
+  const [lastName, setLastName] = useState(initialLastName)
   const router = useRouter()
 
   // Check if save button should be disabled
-  const isNameValid = name.trim().length >= 3
-  const hasChanges = name.trim() !== initialName.trim()
-  const isSaveDisabled = !isNameValid || !hasChanges || isLoading
+  const isFirstNameValid = firstName.trim().length >= 2
+  const hasChanges = firstName.trim() !== initialFirstName.trim() || lastName.trim() !== initialLastName.trim()
+  const isSaveDisabled = !isFirstNameValid || !hasChanges || isLoading
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -43,24 +45,38 @@ export function ProfileForm({ email, name: initialName }: ProfileFormProps) {
 
   return (
     <form action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="Your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-            {name.trim().length > 0 && name.trim().length < 3 && (
-              <p className="text-xs text-red-600">
-                Name must be at least 3 characters
-              </p>
-            )}
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name</Label>
+          <Input
+            id="firstName"
+            name="firstName"
+            type="text"
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+          {firstName.trim().length > 0 && firstName.trim().length < 2 && (
+            <p className="text-xs text-red-600">
+              At least 2 characters
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            name="lastName"
+            type="text"
+            placeholder="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
+      </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
