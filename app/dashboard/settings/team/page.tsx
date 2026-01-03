@@ -75,7 +75,9 @@ export default async function TeamSettingsPage() {
     .order('created_at', { ascending: false })
 
   // Map emails and names to team members
-  const userDataMap = new Map(userEmails?.map((u: any) => [u.user_id, { email: u.email, name: u.name }]) || [])
+  const userDataMap = new Map<string, { email: string; name: string }>(
+    userEmails?.map((u: any) => [u.user_id, { email: u.email, name: u.name }]) || []
+  )
   const teamMembersWithEmails = (teamMembers || []).map(member => {
     const userData = userDataMap.get(member.id)
     return {
