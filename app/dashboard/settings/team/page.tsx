@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { InviteUserForm } from '@/components/settings/invite-user-form'
+import { InviteUserDialog } from '@/components/settings/invite-user-dialog'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -79,16 +79,15 @@ export default async function TeamSettingsPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Team Settings</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage team members for {org?.name || 'your organization'}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">Team Settings</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage team members for {org?.name || 'your organization'}
+          </p>
+        </div>
+        {isAdmin && <InviteUserDialog />}
       </div>
-
-      {isAdmin && (
-        <InviteUserForm />
-      )}
 
       <Card>
         <CardHeader>
