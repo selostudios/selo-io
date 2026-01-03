@@ -5,7 +5,6 @@ import { updateProfile } from '@/app/dashboard/settings/profile/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 
 interface ProfileFormProps {
@@ -43,15 +42,7 @@ export function ProfileForm({ email, name: initialName }: ProfileFormProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>
-          Update your personal information
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={handleSubmit} className="space-y-4">
+    <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
@@ -94,13 +85,11 @@ export function ProfileForm({ email, name: initialName }: ProfileFormProps) {
               {success}
             </div>
           )}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSaveDisabled}>
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSaveDisabled}>
+          {isLoading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
   )
 }
