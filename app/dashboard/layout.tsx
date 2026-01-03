@@ -17,13 +17,13 @@ export default async function DashboardLayout({
   }
 
   // Check if user has organization
-  const { data: userRecord } = await supabase
+  const { data: userRecord, error } = await supabase
     .from('users')
     .select('organization_id')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord?.organization_id) {
+  if (error || !userRecord?.organization_id) {
     redirect('/onboarding')
   }
 

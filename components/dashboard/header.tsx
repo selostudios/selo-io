@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,16 +16,23 @@ export async function Header() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
 
-  const { data: userRecord } = await supabase
+  const { data: userRecord, error } = await supabase
     .from('users')
     .select('organization:organizations(name)')
-    .eq('id', user!.id)
+    .eq('id', user.id)
     .single()
 
-  const orgName = (userRecord?.organization as any)?.[0]?.name || 'Organization'
+  if (error || !userRecord) {
+    redirect('/login')
+  }
+
+  const orgName = (userRecord?.organization as unknown as { name: string } | null)?.name || 'Organization'
   const userEmail = user?.email || ''
-  const initials = userEmail.substring(0, 2).toUpperCase()
+  const initials = userEmail.length >= 2 ? userEmail.substring(0, 2).toUpperCase() : 'U'
 
   return (
     <header className="h-16 border-b bg-white flex items-center justify-between px-6">
@@ -41,8 +50,8 @@ export async function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{userEmail}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <a href="/dashboard/settings/team">Settings</a>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings/team">Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <form action="/auth/sign-out" method="post" className="w-full">
