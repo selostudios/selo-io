@@ -29,13 +29,34 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   }
 
   // Check if user already has an organization (prevent race conditions)
-  const { data: existingUser } = await supabase
+  const { data: existingUser, error: existingUserError } = await supabase
     .from('users')
     .select('organization_id')
     .eq('id', user.id)
     .single()
 
+  console.error('[Onboarding Debug]', {
+    type: 'existing_user_check',
+    userId: user.id,
+    existingUser,
+    existingUserError,
+    timestamp: new Date().toISOString()
+  })
+
+  // If the query failed (not just no results), it might be an RLS issue
+  if (existingUserError && existingUserError.code !== 'PGRST116') {
+    console.error('[Onboarding Error]', {
+      type: 'user_query_failed',
+      error: existingUserError,
+      timestamp: new Date().toISOString()
+    })
+    return {
+      error: `Could not check existing user: ${existingUserError.message} (${existingUserError.code})`
+    }
+  }
+
   if (existingUser?.organization_id) {
+    console.error('[Onboarding Error]', { type: 'already_has_org', orgId: existingUser.organization_id })
     return { error: 'You already have an organization' }
   }
 
@@ -50,8 +71,20 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     .single()
 
   if (orgError) {
-    console.error('[Onboarding Error]', { type: 'org_creation', timestamp: new Date().toISOString() })
-    return { error: 'Failed to create organization. Please try again.' }
+    console.error('[Onboarding Error]', {
+      type: 'org_creation',
+      error: orgError,
+      code: orgError.code,
+      message: orgError.message,
+      details: orgError.details,
+      hint: orgError.hint,
+      timestamp: new Date().toISOString()
+    })
+
+    // Show detailed error for debugging (TODO: make generic in production later)
+    return {
+      error: `Organization creation failed: ${orgError.message}${orgError.code ? ` (code: ${orgError.code})` : ''}${orgError.hint ? ` - ${orgError.hint}` : ''}`
+    }
   }
 
   // Create user record linking to organization
@@ -70,8 +103,16 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
       .delete()
       .eq('id', org.id)
 
-    console.error('[Onboarding Error]', { type: 'user_record_creation', timestamp: new Date().toISOString() })
-    return { error: 'Failed to create organization. Please try again.' }
+    console.error('[Onboarding Error]', {
+      type: 'user_record_creation',
+      error: userRecordError,
+      timestamp: new Date().toISOString()
+    })
+
+    // Show detailed error for debugging
+    return {
+      error: `User record creation failed: ${userRecordError.message}${userRecordError.code ? ` (code: ${userRecordError.code})` : ''}`
+    }
   }
 
   redirect('/dashboard')
