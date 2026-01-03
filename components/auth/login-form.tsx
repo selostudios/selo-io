@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { signInWithEmail, signInWithOAuth } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
@@ -37,9 +38,18 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Selo IO</CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+      <CardHeader className="space-y-4">
+        <div className="flex justify-center">
+          <Image
+            src="/selo-logo.jpg.webp"
+            alt="Selo Studios"
+            width={200}
+            height={80}
+            priority
+            className="object-contain"
+          />
+        </div>
+        <CardDescription className="text-center">Sign in to your account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form action={handleEmailSignIn} className="space-y-4">
