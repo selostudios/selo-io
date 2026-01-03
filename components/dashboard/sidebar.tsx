@@ -20,8 +20,8 @@ export function Sidebar() {
         <Image
           src="/selo-logo.jpg.webp"
           alt="Selo Studios"
-          width={150}
-          height={60}
+          width={75}
+          height={30}
           priority
           className="object-contain"
         />
