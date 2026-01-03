@@ -14,7 +14,7 @@ export default async function ProfileSettingsPage() {
   // Get user's name
   const { data: userRecord } = await supabase
     .from('users')
-    .select('name')
+    .select('first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -22,7 +22,8 @@ export default async function ProfileSettingsPage() {
     <div className="space-y-6">
       <ProfileForm
         email={user.email || ''}
-        name={userRecord?.name || ''}
+        firstName={userRecord?.first_name || ''}
+        lastName={userRecord?.last_name || ''}
       />
     </div>
   )
