@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +17,14 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-white border-r min-h-screen p-6">
       <div className="mb-8">
-        <h1 className="text-xl font-bold">Selo IO</h1>
+        <Image
+          src="/selo-logo.jpg.webp"
+          alt="Selo Studios"
+          width={150}
+          height={60}
+          priority
+          className="object-contain"
+        />
       </div>
       <nav className="space-y-1">
         {navigation.map((item) => {
