@@ -59,28 +59,27 @@ export default async function TeamSettingsPage() {
     .eq('id', userRecord.organization_id)
     .single()
 
-  // Get team members
+  // Get team members with emails using security definer function
+  const { data: userEmails } = await supabase.rpc('get_organization_user_emails', {
+    org_id: userRecord.organization_id
+  })
+
   const { data: teamMembers } = await supabase
     .from('users')
     .select(`
       id,
       role,
-      created_at,
-      email:id
+      created_at
     `)
     .eq('organization_id', userRecord.organization_id)
     .order('created_at', { ascending: false })
 
-  // Get user emails from auth
-  const teamMembersWithEmails = await Promise.all(
-    (teamMembers || []).map(async (member) => {
-      const { data: authUser } = await supabase.auth.admin.getUserById(member.id)
-      return {
-        ...member,
-        email: authUser.user?.email || 'Unknown'
-      }
-    })
-  )
+  // Map emails to team members
+  const emailMap = new Map(userEmails?.map(u => [u.user_id, u.email]) || [])
+  const teamMembersWithEmails = (teamMembers || []).map(member => ({
+    ...member,
+    email: emailMap.get(member.id) || 'Unknown'
+  }))
 
   // Get pending invites (only if admin)
   let pendingInvites: any[] = []
