@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "email": "email dev",
-    "add-user": "tsx scripts/add-user.ts"
+    "add-user": "tsx scripts/add-user.ts",
+    "reset-password": "tsx scripts/reset-password.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
