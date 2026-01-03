@@ -7,6 +7,24 @@ export async function sendInvite(formData: FormData) {
   const email = formData.get('email') as string
   const role = formData.get('role') as 'admin' | 'team_member' | 'client_viewer'
 
+  // Input validation
+  if (!email || !email.trim()) {
+    return { error: 'Email address is required' }
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return { error: 'Invalid email address format' }
+  }
+
+  // Validate role
+  const validRoles: Array<'admin' | 'team_member' | 'client_viewer'> = ['admin', 'team_member', 'client_viewer']
+  if (!validRoles.includes(role)) {
+    console.error('[Send Invite Error]', { type: 'invalid_role', role, timestamp: new Date().toISOString() })
+    return { error: 'Invalid role selected' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -84,13 +102,32 @@ export async function sendInvite(formData: FormData) {
 export async function deleteInvite(inviteId: string) {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Get user's organization and role
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || userRecord.role !== 'admin') {
+    console.error('[Delete Invite Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
+    return { error: 'Only admins can delete invites' }
+  }
+
   const { error } = await supabase
     .from('invites')
     .delete()
     .eq('id', inviteId)
+    .eq('organization_id', userRecord.organization_id) // Ensure invite belongs to user's org
 
   if (error) {
-    return { error: error.message }
+    console.error('[Delete Invite Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    return { error: 'Failed to delete invite. Please try again.' }
   }
 
   revalidatePath('/dashboard/settings/team')

@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold">
-        Welcome to {userRecord?.organization?.name || 'Selo IO'}
+        Welcome to {(userRecord?.organization as any)?.[0]?.name || 'Selo IO'}
       </h1>
       <p className="mt-4 text-muted-foreground">
         Dashboard coming soon...
