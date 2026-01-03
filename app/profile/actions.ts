@@ -41,7 +41,9 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
     return { error: 'Failed to update profile' }
   }
 
+  revalidatePath('/profile')
   revalidatePath('/settings/team')
+  revalidatePath('/dashboard')
 
   return { success: true }
 }
