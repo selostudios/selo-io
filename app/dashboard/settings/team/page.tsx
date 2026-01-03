@@ -74,12 +74,16 @@ export default async function TeamSettingsPage() {
     .eq('organization_id', userRecord.organization_id)
     .order('created_at', { ascending: false })
 
-  // Map emails to team members
-  const emailMap = new Map(userEmails?.map(u => [u.user_id, u.email]) || [])
-  const teamMembersWithEmails = (teamMembers || []).map(member => ({
-    ...member,
-    email: emailMap.get(member.id) || 'Unknown'
-  }))
+  // Map emails and names to team members
+  const userDataMap = new Map(userEmails?.map(u => [u.user_id, { email: u.email, name: u.name }]) || [])
+  const teamMembersWithEmails = (teamMembers || []).map(member => {
+    const userData = userDataMap.get(member.id)
+    return {
+      ...member,
+      name: userData?.name || 'Unknown',
+      email: userData?.email || 'Unknown'
+    }
+  })
 
   // Get pending invites (only if admin)
   let pendingInvites: any[] = []
@@ -127,7 +131,8 @@ export default async function TeamSettingsPage() {
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div>
-                  <p className="font-medium">{member.email}</p>
+                  <p className="font-medium">{member.name}</p>
+                  <p className="text-sm text-muted-foreground">{member.email}</p>
                   <p className="text-sm text-muted-foreground">
                     Joined {formatJoinedDate(member.created_at)}
                   </p>
