@@ -1,4 +1,4 @@
-# Selo OS MVP Implementation Plan
+# Selo IO MVP Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -118,7 +118,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 
 Manual step (document for engineer):
 1. Go to https://supabase.com/dashboard
-2. Create new project: "selo-os-dev"
+2. Create new project: "selo-io-dev"
 3. Save credentials:
    - Project URL
    - Anon public key
@@ -792,7 +792,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Selo OS</CardTitle>
+        <CardTitle className="text-2xl font-bold">Selo IO</CardTitle>
         <CardDescription>Sign in to your account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -1163,7 +1163,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold">
-        Welcome to {userRecord?.organization?.name || 'Selo OS'}
+        Welcome to {userRecord?.organization?.name || 'Selo IO'}
       </h1>
       <p className="mt-4 text-muted-foreground">
         Dashboard coming soon...
@@ -1268,7 +1268,7 @@ import { Resend } from 'resend'
 
 export const resend = new Resend(process.env.RESEND_API_KEY!)
 
-export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Selo OS <onboarding@resend.dev>'
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Selo IO <onboarding@resend.dev>'
 ```
 
 **Step 4: Create invite email template**
@@ -1305,7 +1305,7 @@ export default function InviteEmail({
   return (
     <Html>
       <Head />
-      <Preview>You've been invited to join {organizationName} on Selo OS</Preview>
+      <Preview>You've been invited to join {organizationName} on Selo IO</Preview>
       <Tailwind>
         <Body className="bg-neutral-50 font-sans">
           <Container className="mx-auto py-12 px-4">
@@ -1313,11 +1313,11 @@ export default function InviteEmail({
               Join {organizationName}
             </Heading>
             <Text className="text-neutral-700 mb-4">
-              {invitedByEmail} has invited you to join {organizationName} on Selo OS
+              {invitedByEmail} has invited you to join {organizationName} on Selo IO
               as a <strong>{role.replace('_', ' ')}</strong>.
             </Text>
             <Text className="text-neutral-700 mb-6">
-              Selo OS helps marketing teams track campaign performance across
+              Selo IO helps marketing teams track campaign performance across
               HubSpot, Google Analytics, LinkedIn, and more.
             </Text>
             <Section className="mb-6">
@@ -1534,7 +1534,7 @@ export async function sendInvite(formData: FormData) {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: `You've been invited to join ${org?.name || 'an organization'} on Selo OS`,
+      subject: `You've been invited to join ${org?.name || 'an organization'} on Selo IO`,
       react: InviteEmail({
         inviteLink,
         organizationName: org?.name || 'the organization',
@@ -2808,7 +2808,7 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-white border-r min-h-screen p-6">
       <div className="mb-8">
-        <h1 className="text-xl font-bold">Selo OS</h1>
+        <h1 className="text-xl font-bold">Selo IO</h1>
       </div>
       <nav className="space-y-1">
         {navigation.map((item) => {
@@ -3136,7 +3136,7 @@ Answer prompts:
 - Set up and deploy? → N (we'll configure first)
 - Which scope? → Your personal account or team
 - Link to existing project? → N
-- What's your project's name? → selo-os
+- What's your project's name? → selo-io
 - In which directory is your code located? → ./
 
 Expected: Project linked, `.vercel` directory created
@@ -3226,7 +3226,7 @@ vercel
 
 Expected:
 - Build succeeds
-- Deployment URL provided (e.g., `selo-os-abc123.vercel.app`)
+- Deployment URL provided (e.g., `selo-io-abc123.vercel.app`)
 - Preview deployment ready
 
 **Step 2: Test preview deployment**
@@ -3246,7 +3246,7 @@ vercel --prod
 
 Expected:
 - Production build succeeds
-- Deployed to `selo-os.vercel.app` (or your custom domain)
+- Deployed to `selo-io.vercel.app` (or your custom domain)
 - Production deployment ready
 
 **Step 4: Configure custom domain (optional)**
@@ -3387,7 +3387,7 @@ Before considering MVP complete, test:
 
 ## Plan Complete
 
-This implementation plan provides a complete, step-by-step guide to building the Selo OS MVP. Each task is broken down into small, manageable steps with exact code, commands, and verification steps.
+This implementation plan provides a complete, step-by-step guide to building the Selo IO MVP. Each task is broken down into small, manageable steps with exact code, commands, and verification steps.
 
 **Total estimated implementation time:** 40-60 hours for experienced Next.js/Supabase developer
 

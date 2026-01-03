@@ -1,4 +1,4 @@
-# Selo OS - Marketing Performance Dashboard Design
+# Selo IO - Marketing Performance Dashboard Design
 
 **Date:** January 2, 2026
 **Status:** Design Approved
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Selo OS is a multi-tenant SaaS platform that automates marketing performance tracking and reporting for consultants. The MVP enables consultants to track campaign performance across HubSpot, Google Analytics, and LinkedIn, with automated weekly AI-generated summaries.
+Selo IO is a multi-tenant SaaS platform that automates marketing performance tracking and reporting for consultants. The MVP enables consultants to track campaign performance across HubSpot, Google Analytics, and LinkedIn, with automated weekly AI-generated summaries.
 
 ## Business Context
 
