@@ -44,9 +44,12 @@ export default async function CampaignsPage() {
             <CampaignCard key={campaign.id} campaign={campaign} />
           ))}
           {(!campaigns || campaigns.length === 0) && (
-            <p className="text-muted-foreground col-span-full text-center py-8">
-              No campaigns yet. Create your first campaign to get started!
-            </p>
+            <div className="col-span-full border-2 border-dashed border-neutral-300 rounded-lg p-12 text-center space-y-4">
+              <p className="text-muted-foreground">
+                No campaigns yet.
+              </p>
+              {canCreateCampaign && <CreateCampaignDialog buttonText="Create Campaign" />}
+            </div>
           )}
         </div>
       </div>

@@ -16,7 +16,11 @@ import { Label } from '@/components/ui/label'
 import { createCampaign } from '@/app/dashboard/campaigns/actions'
 import { useRouter } from 'next/navigation'
 
-export function CreateCampaignDialog() {
+interface CreateCampaignDialogProps {
+  buttonText?: string
+}
+
+export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCampaignDialogProps) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +46,7 @@ export function CreateCampaignDialog() {
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4 mr-2" />
-          New Campaign
+          {buttonText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
