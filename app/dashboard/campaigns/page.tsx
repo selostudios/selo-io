@@ -44,7 +44,7 @@ export default async function CampaignsPage() {
           {campaigns?.map((campaign) => (
             <CampaignCard key={campaign.id} campaign={campaign} />
           ))}
-          {!campaigns || campaigns.length === 0 && (
+          {(!campaigns || campaigns.length === 0) && (
             <p className="text-muted-foreground col-span-full text-center py-8">
               No campaigns yet. Create your first campaign to get started!
             </p>

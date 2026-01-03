@@ -9,6 +9,24 @@ export async function createCampaign(formData: FormData) {
   const start_date = formData.get('start_date') as string
   const end_date = formData.get('end_date') as string
 
+  // Input validation
+  if (!name || name.trim().length === 0) {
+    return { error: 'Campaign name is required' }
+  }
+
+  if (name.length > 100) {
+    return { error: 'Campaign name must be less than 100 characters' }
+  }
+
+  // Validate date range if both dates provided
+  if (start_date && end_date) {
+    const start = new Date(start_date)
+    const end = new Date(end_date)
+    if (end < start) {
+      return { error: 'End date must be after start date' }
+    }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,7 +41,8 @@ export async function createCampaign(formData: FormData) {
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    return { error: 'Permission denied' }
+    console.error('[Create Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
+    return { error: 'You don\'t have permission to create campaigns' }
   }
 
   // Generate UTM parameters
@@ -43,7 +62,8 @@ export async function createCampaign(formData: FormData) {
     .single()
 
   if (error) {
-    return { error: error.message }
+    console.error('[Create Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    return { error: 'Failed to create campaign. Please try again.' }
   }
 
   revalidatePath('/dashboard/campaigns')
@@ -56,8 +76,51 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
   const start_date = formData.get('start_date') as string
   const end_date = formData.get('end_date') as string
 
+  // Input validation
+  if (name && name.trim().length === 0) {
+    return { error: 'Campaign name cannot be empty' }
+  }
+
+  if (name && name.length > 100) {
+    return { error: 'Campaign name must be less than 100 characters' }
+  }
+
+  // Validate date range if both dates provided
+  if (start_date && end_date) {
+    const start = new Date(start_date)
+    const end = new Date(end_date)
+    if (end < start) {
+      return { error: 'End date must be after start date' }
+    }
+  }
+
+  // Validate status
+  const validStatuses = ['draft', 'active', 'completed']
+  if (status && !validStatuses.includes(status)) {
+    return { error: 'Invalid campaign status' }
+  }
+
   const supabase = await createClient()
 
+  // Authentication check
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Authorization check - get user's organization and role
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+    console.error('[Update Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
+    return { error: 'You don\'t have permission to update campaigns' }
+  }
+
+  // Update campaign (RLS + explicit org filter for defense in depth)
   const { error } = await supabase
     .from('campaigns')
     .update({
@@ -67,9 +130,11 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
       end_date: end_date || null,
     })
     .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id) // Ensure campaign belongs to user's org
 
   if (error) {
-    return { error: error.message }
+    console.error('[Update Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    return { error: 'Failed to update campaign. Please try again.' }
   }
 
   revalidatePath('/dashboard/campaigns')
@@ -80,13 +145,34 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
 export async function deleteCampaign(campaignId: string) {
   const supabase = await createClient()
 
+  // Authentication check
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Authorization check - get user's organization and role
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+    console.error('[Delete Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
+    return { error: 'You don\'t have permission to delete campaigns' }
+  }
+
+  // Delete campaign (RLS + explicit org filter for defense in depth)
   const { error } = await supabase
     .from('campaigns')
     .delete()
     .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id) // Ensure campaign belongs to user's org
 
   if (error) {
-    return { error: error.message }
+    console.error('[Delete Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    return { error: 'Failed to delete campaign. Please try again.' }
   }
 
   revalidatePath('/dashboard/campaigns')

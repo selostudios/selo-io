@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,10 @@ export default async function CampaignDetailPage({
 
   async function handleDelete() {
     'use server'
-    await deleteCampaign(id)
+    const result = await deleteCampaign((await params).id)
+    if (!result?.error) {
+      redirect('/dashboard/campaigns')
+    }
   }
 
   return (
