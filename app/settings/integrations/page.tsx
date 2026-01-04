@@ -33,6 +33,13 @@ export default async function IntegrationsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded border border-blue-200 bg-blue-50 p-4">
+        <p className="text-sm text-blue-900">
+          <strong>Note:</strong> Platform connection UI is placeholder for MVP. In production, this
+          will include OAuth flows and credential input forms.
+        </p>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold">Platform Integrations</h2>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -48,13 +55,6 @@ export default async function IntegrationsPage() {
             platformType={platform}
           />
         ))}
-      </div>
-
-      <div className="rounded border border-blue-200 bg-blue-50 p-4">
-        <p className="text-sm text-blue-900">
-          <strong>Note:</strong> Platform connection UI is placeholder for MVP. In production, this
-          will include OAuth flows and credential input forms.
-        </p>
       </div>
     </div>
   )

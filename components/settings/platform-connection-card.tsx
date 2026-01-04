@@ -50,20 +50,24 @@ export function PlatformConnectionCard({
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>{info.name}</CardTitle>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{info.name}</CardTitle>
+              <CardDescription className="mt-1">{info.description}</CardDescription>
+            </div>
             <Badge variant="warning">Not connected</Badge>
           </div>
-          <CardDescription>{info.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          {platformType === 'linkedin' ? (
-            <LinkedInConnectDialog />
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Connect {info.name} to track performance metrics.
-            </p>
-          )}
+          <div className="flex justify-end">
+            {platformType === 'linkedin' ? (
+              <LinkedInConnectDialog />
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Connect {info.name} to track performance metrics.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     )
@@ -72,11 +76,13 @@ export function PlatformConnectionCard({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle>{info.name}</CardTitle>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>{info.name}</CardTitle>
+            <CardDescription className="mt-1">{info.description}</CardDescription>
+          </div>
           <Badge variant="success">{connection.status}</Badge>
         </div>
-        <CardDescription>{info.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
