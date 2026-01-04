@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files - keep secrets in .env.local (not committed)
+# env files - secrets are never committed
 .env.local
+.env.production
 .env.local.*
 .env.*.local
 
