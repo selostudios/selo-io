@@ -123,8 +123,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
               <strong>Email:</strong> {invite.email}
             </p>
             <p className="text-muted-foreground text-sm">
-              <strong>Role:</strong>{' '}
-              <Badge variant="outline">{displayName(invite.role)}</Badge>
+              <strong>Role:</strong> <Badge variant="outline">{displayName(invite.role)}</Badge>
             </p>
             <p className="text-muted-foreground text-sm">
               <strong>Expires:</strong> {expiresAt.toLocaleDateString()}
