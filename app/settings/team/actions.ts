@@ -62,10 +62,10 @@ export async function sendInvite(formData: FormData) {
   // Send invite email
   const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite/${invite.id}`
 
-  // Get organization name
+  // Get organization name and logo
   const { data: org } = await supabase
     .from('organizations')
-    .select('name')
+    .select('name, logo_url')
     .eq('id', userRecord.organization_id)
     .single()
 
@@ -89,6 +89,7 @@ export async function sendInvite(formData: FormData) {
         organizationName: org?.name || 'the organization',
         invitedByEmail: user.email!,
         role,
+        logoUrl: org?.logo_url || null,
       }),
     })
 
@@ -171,10 +172,10 @@ export async function resendInvite(inviteId: string) {
     return { error: 'Failed to update invite expiration' }
   }
 
-  // Get organization name
+  // Get organization name and logo
   const { data: org } = await supabase
     .from('organizations')
-    .select('name')
+    .select('name, logo_url')
     .eq('id', userRecord.organization_id)
     .single()
 
@@ -194,6 +195,7 @@ export async function resendInvite(inviteId: string) {
         organizationName: org?.name || 'the organization',
         invitedByEmail: user.email!,
         role: invite.role,
+        logoUrl: org?.logo_url || null,
       }),
     })
 
