@@ -8,13 +8,13 @@ interface OrgLogoProps {
 }
 
 export function OrgLogo({ logoUrl, orgName, primaryColor, size = 40 }: OrgLogoProps) {
-  const initial = orgName.charAt(0).toUpperCase()
+  const initial = orgName?.charAt(0)?.toUpperCase() || '?'
 
   if (logoUrl) {
     return (
       <Image
         src={logoUrl}
-        alt={`${orgName} logo`}
+        alt={orgName ? `${orgName} logo` : 'Organization logo'}
         width={size}
         height={size}
         className="rounded-lg object-contain"
@@ -24,6 +24,8 @@ export function OrgLogo({ logoUrl, orgName, primaryColor, size = 40 }: OrgLogoPr
 
   return (
     <div
+      role="img"
+      aria-label={orgName ? `${orgName} logo` : 'Organization logo'}
       className="rounded-lg flex items-center justify-center text-white font-bold"
       style={{
         width: size,
