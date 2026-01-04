@@ -102,11 +102,31 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <UtmParamRow label="utm_source" value={campaign.utm_source || ''} />
-            <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium || ''} />
-            <UtmParamRow label="utm_campaign" value={campaign.utm_campaign || ''} />
-            <UtmParamRow label="utm_term" value={campaign.utm_term || ''} />
-            <UtmParamRow label="utm_content" value={campaign.utm_content || ''} />
+            <UtmParamRow
+              label="utm_source"
+              value={campaign.utm_source || ''}
+              description="Identifies which site or platform sent the traffic (e.g., linkedin, facebook, newsletter)"
+            />
+            <UtmMediumSelect
+              campaignId={campaign.id}
+              currentValue={campaign.utm_medium || ''}
+              description="Identifies the marketing medium or channel type (e.g., social, email, cpc, organic)"
+            />
+            <UtmParamRow
+              label="utm_campaign"
+              value={campaign.utm_campaign || ''}
+              description="Identifies the specific campaign name or promotion (e.g., spring-sale, product-launch)"
+            />
+            <UtmParamRow
+              label="utm_term"
+              value={campaign.utm_term || ''}
+              description="Identifies target audience, keywords, or ad groups (e.g., marketing-managers, uk-audience)"
+            />
+            <UtmParamRow
+              label="utm_content"
+              value={campaign.utm_content || ''}
+              description="Differentiates similar content or links - use for A/B testing, content format, or link placement (e.g., video-cta, carousel-post)"
+            />
           </div>
           <p className="text-muted-foreground mt-4 text-sm">
             Use these parameters when creating content in HubSpot, LinkedIn, and other platforms.

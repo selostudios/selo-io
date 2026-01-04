@@ -3,13 +3,20 @@
 import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { showSuccess } from '@/components/ui/sonner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface UtmParamRowProps {
   label: string
   value: string
+  description?: string
 }
 
-export function UtmParamRow({ label, value }: UtmParamRowProps) {
+export function UtmParamRow({ label, value, description }: UtmParamRowProps) {
   async function handleCopy() {
     await navigator.clipboard.writeText(value)
     showSuccess(`Copied ${label} to clipboard`)
@@ -18,7 +25,22 @@ export function UtmParamRow({ label, value }: UtmParamRowProps) {
   return (
     <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
-        <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">{label}</span>
+        {description ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+                  {label}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>{description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">{label}</span>
+        )}
         <code className="px-4 text-sm" style={{ color: value ? '#171717' : '#9ca3af' }}>
           {value || 'Not set'}
         </code>

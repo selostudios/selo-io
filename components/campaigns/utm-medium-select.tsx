@@ -10,6 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { updateUtmMedium } from '@/app/dashboard/campaigns/actions'
 
@@ -25,9 +31,10 @@ const MEDIUM_OPTIONS = [
 interface UtmMediumSelectProps {
   campaignId: string
   currentValue: string
+  description?: string
 }
 
-export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectProps) {
+export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMediumSelectProps) {
   const [value, setValue] = useState(currentValue)
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -57,7 +64,22 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
   return (
     <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
-        <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">utm_medium</span>
+        {description ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+                  utm_medium
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>{description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">utm_medium</span>
+        )}
         <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
           <SelectTrigger className="w-[320px] rounded-none border-0 shadow-none">
             <SelectValue>
