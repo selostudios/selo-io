@@ -188,6 +188,11 @@ Selo IO is a multi-tenant SaaS platform that automates marketing performance tra
 - Supabase PostgreSQL (structured data)
 - Vercel Blob or Supabase Storage (logo uploads)
 
+**Email:**
+- Resend (transactional email for weekly summaries)
+- Sending domain: `send.notifications.selostudios.com` (verified)
+- DNS configured in AWS Route 53: DKIM, SPF, MX records
+
 **AI:**
 
 - Vercel AI SDK
@@ -429,6 +434,15 @@ Each platform has a server-side adapter that:
 - Strengthen attribution reporting
 - Automate event attendance tracking
 - Enhanced lead-to-deal pipeline visibility
+
+**Phase 7 - AI Billing & Usage Tracking:**
+- Customer-provided AI API keys: Allow organizations to input their own Anthropic/OpenAI API tokens
+- Platform-managed billing mode: For customers who prefer we handle AI costs
+- Billing tab under Organization settings route with:
+  - Total spend breakdown by model (Claude, GPT-4, etc.)
+  - Token usage metrics (input tokens, output tokens)
+  - Usage trends over time
+  - Cost attribution per feature (weekly summaries, content generation, etc.)
 
 ## Success Metrics
 
