@@ -61,7 +61,7 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
         <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
           <SelectTrigger className="w-[320px] rounded-none border-0 shadow-none">
             <SelectValue>
-              <span className="font-mono text-neutral-900">{value}</span>
+              <span className="font-mono" style={{ color: '#171717' }}>{value}</span>
               {selectedOption && (
                 <span className="text-muted-foreground ml-2">- {selectedOption.description}</span>
               )}
@@ -70,7 +70,7 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
           <SelectContent>
             {MEDIUM_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                <span className="font-mono">{option.value}</span>
+                <span className="font-mono" style={{ color: '#171717' }}>{option.value}</span>
                 <span className="text-muted-foreground ml-2">- {option.description}</span>
               </SelectItem>
             ))}
