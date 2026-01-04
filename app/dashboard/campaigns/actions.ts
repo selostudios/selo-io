@@ -164,6 +164,42 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
   return { success: true }
 }
 
+export async function updateCampaignDescription(campaignId: string, description: string) {
+  if (description && description.length > 500) {
+    return { error: 'Description must be less than 500 characters' }
+  }
+
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+    return { error: 'You don\'t have permission to update campaigns' }
+  }
+
+  const { error } = await supabase
+    .from('campaigns')
+    .update({ description: description?.trim() || null })
+    .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id)
+
+  if (error) {
+    return { error: 'Failed to update description' }
+  }
+
+  revalidatePath(`/dashboard/campaigns/${campaignId}`)
+  return { success: true }
+}
+
 export async function updateUtmMedium(campaignId: string, medium: string) {
   const validMediums = ['email', 'social', 'cpc', 'display', 'referral', 'organic']
   if (!validMediums.includes(medium)) {
