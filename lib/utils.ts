@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Converts a snake_case role string to a capitalized display name.
+ * e.g., "team_member" -> "Team Member"
+ */
+export function displayName(role: string): string {
+  return role
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function formatDate(dateString: string, includeTime = true): string {
   const date = new Date(dateString)
 

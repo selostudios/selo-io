@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
-import { formatDate } from '@/lib/utils'
+import { formatDate, displayName } from '@/lib/utils'
 
 function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean)
@@ -147,7 +147,7 @@ export default async function TeamSettingsPage() {
                     </p>
                   </div>
                 </div>
-                <Badge>{member.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
+                <Badge>{displayName(member.role)}</Badge>
               </div>
             ))}
             {teamMembersWithEmails.length === 0 && (
@@ -189,7 +189,7 @@ export default async function TeamSettingsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{invite.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
+                      <Badge variant="outline">{displayName(invite.role)}</Badge>
                       <ResendInviteButton inviteId={invite.id} email={invite.email} />
                       <form action={handleDeleteInvite}>
                         <input type="hidden" name="inviteId" value={invite.id} />
