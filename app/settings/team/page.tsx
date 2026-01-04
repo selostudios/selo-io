@@ -144,8 +144,8 @@ export default async function TeamSettingsPage() {
                 key={member.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-10">
+                <div className="flex items-start gap-4">
+                  <Avatar className="size-10 mt-0.5">
                     <AvatarFallback className="text-sm font-medium">
                       {getInitials(member.name)}
                     </AvatarFallback>
