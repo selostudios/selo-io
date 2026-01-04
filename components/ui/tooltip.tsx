@@ -29,9 +29,16 @@ function Tooltip({
 }
 
 function TooltipTrigger({
+  style,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+  return (
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      style={{ cursor: 'help', ...style }}
+      {...props}
+    />
+  )
 }
 
 function TooltipContent({

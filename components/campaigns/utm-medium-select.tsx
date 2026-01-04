@@ -64,22 +64,20 @@ export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMe
   return (
     <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
-        {description ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white" style={{ cursor: 'help' }}>
-                  utm_medium
-                </span>
-              </TooltipTrigger>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+                utm_medium
+              </span>
+            </TooltipTrigger>
+            {description && (
               <TooltipContent side="top" align="start" className="max-w-xs">
                 <p>{description}</p>
               </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">utm_medium</span>
-        )}
+            )}
+          </Tooltip>
+        </TooltipProvider>
         <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
           <SelectTrigger className="w-[320px] rounded-none border-0 shadow-none">
             <SelectValue>
