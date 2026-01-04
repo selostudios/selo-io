@@ -8,6 +8,7 @@ import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { UtmParamRow } from '@/components/campaigns/utm-param-row'
 import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
 import { EditableDescription } from '@/components/campaigns/editable-description'
+import { RegenerateUtmButton } from '@/components/campaigns/regenerate-utm-button'
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,6 +19,19 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   if (!campaign) {
     notFound()
   }
+
+  // Get user's role
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+
+  const isAdmin = userRecord?.role === 'admin'
 
   async function handleDelete() {
     'use server'
@@ -82,8 +96,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>UTM Parameters</CardTitle>
+          {isAdmin && <RegenerateUtmButton campaignId={campaign.id} />}
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

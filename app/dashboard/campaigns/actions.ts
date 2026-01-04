@@ -259,6 +259,55 @@ export async function updateUtmMedium(campaignId: string, medium: string) {
   return { success: true }
 }
 
+export async function regenerateUtmParameters(campaignId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+    return { error: "You don't have permission to update campaigns" }
+  }
+
+  // Get current campaign name
+  const { data: campaign } = await supabase
+    .from('campaigns')
+    .select('name')
+    .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id)
+    .single()
+
+  if (!campaign) {
+    return { error: 'Campaign not found' }
+  }
+
+  // Generate new UTM parameters
+  const utmParams = generateUTMParameters(campaign.name)
+
+  const { error } = await supabase
+    .from('campaigns')
+    .update(utmParams)
+    .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id)
+
+  if (error) {
+    return { error: 'Failed to regenerate UTM parameters' }
+  }
+
+  revalidatePath(`/dashboard/campaigns/${campaignId}`)
+  return { success: true, utmParams }
+}
+
 export async function deleteCampaign(campaignId: string) {
   const supabase = await createClient()
 
