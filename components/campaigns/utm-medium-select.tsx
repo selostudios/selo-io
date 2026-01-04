@@ -68,7 +68,7 @@ export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMe
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-help bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+                <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white" style={{ cursor: 'help' }}>
                   utm_medium
                 </span>
               </TooltipTrigger>

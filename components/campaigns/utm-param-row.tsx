@@ -29,7 +29,7 @@ export function UtmParamRow({ label, value, description }: UtmParamRowProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-help bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+                <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white" style={{ cursor: 'help' }}>
                   {label}
                 </span>
               </TooltipTrigger>
