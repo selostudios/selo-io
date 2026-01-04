@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { deleteCampaign } from '../actions'
+import { formatDate } from '@/lib/utils'
+import { UtmParamRow } from '@/components/campaigns/utm-param-row'
+import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
 
 export default async function CampaignDetailPage({
   params,
@@ -53,11 +56,11 @@ export default async function CampaignDetailPage({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Start Date</p>
-              <p>{campaign.start_date ? new Date(campaign.start_date).toLocaleDateString() : 'Not set'}</p>
+              <p>{campaign.start_date ? formatDate(campaign.start_date, false) : 'Not set'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">End Date</p>
-              <p>{campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'Not set'}</p>
+              <p>{campaign.end_date ? formatDate(campaign.end_date, false) : 'Not set'}</p>
             </div>
           </div>
         </CardContent>
@@ -69,29 +72,14 @@ export default async function CampaignDetailPage({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-neutral-50 rounded">
-              <span className="font-mono text-sm">utm_source</span>
-              <code className="text-sm">{campaign.utm_source}</code>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-neutral-50 rounded">
-              <span className="font-mono text-sm">utm_medium</span>
-              <code className="text-sm">{campaign.utm_medium}</code>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-neutral-50 rounded">
-              <span className="font-mono text-sm">utm_campaign</span>
-              <code className="text-sm">{campaign.utm_campaign}</code>
-            </div>
+            <UtmParamRow label="utm_source" value={campaign.utm_source} />
+            <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium} />
+            <UtmParamRow label="utm_campaign" value={campaign.utm_campaign} />
             {campaign.utm_term && (
-              <div className="flex justify-between items-center p-3 bg-neutral-50 rounded">
-                <span className="font-mono text-sm">utm_term</span>
-                <code className="text-sm">{campaign.utm_term}</code>
-              </div>
+              <UtmParamRow label="utm_term" value={campaign.utm_term} />
             )}
             {campaign.utm_content && (
-              <div className="flex justify-between items-center p-3 bg-neutral-50 rounded">
-                <span className="font-mono text-sm">utm_content</span>
-                <code className="text-sm">{campaign.utm_content}</code>
-              </div>
+              <UtmParamRow label="utm_content" value={campaign.utm_content} />
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-4">

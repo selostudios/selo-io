@@ -4,8 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 import { generateUTMParameters } from '@/lib/utils/utm'
 import { revalidatePath } from 'next/cache'
 
+const VALID_CAMPAIGN_TYPES = [
+  'thought_leadership',
+  'product_launch',
+  'brand_awareness',
+  'lead_generation',
+  'event_promotion',
+  'seasonal',
+  'other'
+] as const
+
 export async function createCampaign(formData: FormData) {
   const name = formData.get('name') as string
+  const description = formData.get('description') as string
+  const type = formData.get('type') as string
   const start_date = formData.get('start_date') as string
   const end_date = formData.get('end_date') as string
 
@@ -16,6 +28,14 @@ export async function createCampaign(formData: FormData) {
 
   if (name.length > 100) {
     return { error: 'Campaign name must be less than 100 characters' }
+  }
+
+  if (description && description.length > 500) {
+    return { error: 'Description must be less than 500 characters' }
+  }
+
+  if (type && !VALID_CAMPAIGN_TYPES.includes(type as typeof VALID_CAMPAIGN_TYPES[number])) {
+    return { error: 'Invalid campaign type' }
   }
 
   // Validate date range if both dates provided
@@ -53,6 +73,8 @@ export async function createCampaign(formData: FormData) {
     .insert({
       organization_id: userRecord.organization_id,
       name,
+      description: description?.trim() || null,
+      type: type || 'other',
       start_date: start_date || null,
       end_date: end_date || null,
       status: 'draft',
@@ -138,6 +160,43 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
   }
 
   revalidatePath('/dashboard/campaigns')
+  revalidatePath(`/dashboard/campaigns/${campaignId}`)
+  return { success: true }
+}
+
+export async function updateUtmMedium(campaignId: string, medium: string) {
+  const validMediums = ['email', 'social', 'cpc', 'display', 'referral', 'organic']
+  if (!validMediums.includes(medium)) {
+    return { error: 'Invalid medium type' }
+  }
+
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+    return { error: 'You don\'t have permission to update campaigns' }
+  }
+
+  const { error } = await supabase
+    .from('campaigns')
+    .update({ utm_medium: medium })
+    .eq('id', campaignId)
+    .eq('organization_id', userRecord.organization_id)
+
+  if (error) {
+    return { error: 'Failed to update medium' }
+  }
+
   revalidatePath(`/dashboard/campaigns/${campaignId}`)
   return { success: true }
 }

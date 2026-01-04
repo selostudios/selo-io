@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
 
 type Campaign = {
   id: string
@@ -32,12 +33,12 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
         <CardContent>
           <div className="text-sm text-muted-foreground space-y-1">
             {campaign.start_date && (
-              <p>Starts: {new Date(campaign.start_date).toLocaleDateString()}</p>
+              <p>Starts: {formatDate(campaign.start_date, false)}</p>
             )}
             {campaign.end_date && (
-              <p>Ends: {new Date(campaign.end_date).toLocaleDateString()}</p>
+              <p>Ends: {formatDate(campaign.end_date, false)}</p>
             )}
-            <p>Created: {new Date(campaign.created_at).toLocaleDateString()}</p>
+            <p>Created: {formatDate(campaign.created_at)}</p>
           </div>
         </CardContent>
       </Card>

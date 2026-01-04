@@ -7,36 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
+import { formatDate } from '@/lib/utils'
 
 function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean)
   if (parts.length === 0) return '?'
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-
-  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' })
-  const day = date.getDate()
-  const month = date.toLocaleDateString('en-US', { month: 'long' })
-  const year = date.getFullYear()
-
-  // Get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
-  const ordinalSuffix = (n: number) => {
-    const s = ['th', 'st', 'nd', 'rd']
-    const v = n % 100
-    return n + (s[(v - 20) % 10] || s[v] || s[0])
-  }
-
-  // Get time in 12-hour format
-  let hours = date.getHours()
-  const minutes = date.getMinutes().toString().padStart(2, '0')
-  const ampm = hours >= 12 ? 'pm' : 'am'
-  hours = hours % 12 || 12
-
-  return `${dayOfWeek} ${ordinalSuffix(day)}, ${month} ${year} at ${hours}:${minutes}${ampm}`
 }
 
 export default async function TeamSettingsPage() {
