@@ -20,9 +20,9 @@ export function displayName(role: string): string {
 export function formatDate(dateString: string, includeTime = true): string {
   const date = new Date(dateString)
 
-  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' })
+  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' })
   const day = date.getDate()
-  const month = date.toLocaleDateString('en-US', { month: 'long' })
+  const month = date.toLocaleDateString('en-US', { month: 'short' })
   const year = date.getFullYear()
 
   // Get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
@@ -33,7 +33,7 @@ export function formatDate(dateString: string, includeTime = true): string {
   }
 
   if (!includeTime) {
-    return `${dayOfWeek} ${ordinalSuffix(day)}, ${month} ${year}`
+    return `${dayOfWeek}, ${ordinalSuffix(day)} ${month}, ${year}`
   }
 
   // Get time in 12-hour format
@@ -42,5 +42,5 @@ export function formatDate(dateString: string, includeTime = true): string {
   const ampm = hours >= 12 ? 'pm' : 'am'
   hours = hours % 12 || 12
 
-  return `${dayOfWeek} ${ordinalSuffix(day)}, ${month} ${year} at ${hours}:${minutes}${ampm}`
+  return `${dayOfWeek}, ${ordinalSuffix(day)} ${month}, ${year} at ${hours}:${minutes}${ampm}`
 }

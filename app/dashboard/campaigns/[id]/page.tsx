@@ -32,17 +32,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">{campaign.name}</h1>
-          <Badge
-            className={
-              campaign.status === 'active'
-                ? 'bg-green-100 text-green-800'
-                : campaign.status === 'disabled'
-                  ? 'bg-red-100 text-red-800'
-                  : campaign.status === 'draft'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-blue-100 text-blue-800'
-            }
-          >
+          <Badge variant={campaign.status as 'draft' | 'active' | 'disabled' | 'completed'}>
             {displayName(campaign.status)}
           </Badge>
         </div>

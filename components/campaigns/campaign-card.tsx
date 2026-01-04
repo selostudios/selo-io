@@ -13,29 +13,26 @@ type Campaign = {
 }
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
-  const statusColors = {
-    draft: 'bg-yellow-100 text-yellow-800',
-    active: 'bg-green-100 text-green-800',
-    disabled: 'bg-red-100 text-red-800',
-    completed: 'bg-blue-100 text-blue-800',
-  }
+  const statusVariant = campaign.status as 'draft' | 'active' | 'disabled' | 'completed'
 
   return (
     <Link href={`/dashboard/campaigns/${campaign.id}`}>
       <Card className="cursor-pointer transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg">{campaign.name}</CardTitle>
-            <Badge className={statusColors[campaign.status as keyof typeof statusColors]}>
-              {displayName(campaign.status)}
-            </Badge>
+            <div>
+              <CardTitle className="text-lg">{campaign.name}</CardTitle>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Created {formatDate(campaign.created_at, false)}
+              </p>
+            </div>
+            <Badge variant={statusVariant}>{displayName(campaign.status)}</Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground space-y-1 text-sm">
             {campaign.start_date && <p>Starts: {formatDate(campaign.start_date, false)}</p>}
             {campaign.end_date && <p>Ends: {formatDate(campaign.end_date, false)}</p>}
-            <p>Created: {formatDate(campaign.created_at)}</p>
           </div>
         </CardContent>
       </Card>
