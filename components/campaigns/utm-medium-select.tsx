@@ -72,7 +72,7 @@ export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMe
                   utm_medium
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
+              <TooltipContent side="top" align="start" className="max-w-xs">
                 <p>{description}</p>
               </TooltipContent>
             </Tooltip>
