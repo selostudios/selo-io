@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function InviteUserForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState('client_viewer')
 
@@ -24,6 +25,7 @@ export function InviteUserForm() {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
+    setWarning(null)
 
     formData.append('role', role)
 
@@ -31,6 +33,11 @@ export function InviteUserForm() {
 
     if (result?.error) {
       setError(result.error)
+    } else if (result?.warning) {
+      setWarning(result.warning)
+      // Reset form - invite was still created
+      const form = document.querySelector('form') as HTMLFormElement
+      form?.reset()
     } else if (result?.success) {
       setSuccess(result.message || 'Invite sent successfully!')
       // Reset form
@@ -78,6 +85,11 @@ export function InviteUserForm() {
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
               {error}
+            </div>
+          )}
+          {warning && (
+            <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded break-all">
+              {warning}
             </div>
           )}
           {success && (

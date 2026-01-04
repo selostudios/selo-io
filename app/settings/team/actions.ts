@@ -70,11 +70,14 @@ export async function sendInvite(formData: FormData) {
     .single()
 
   // Send email using Resend
+  let emailSent = false
+  let emailError: string | null = null
+
   try {
     const { resend, FROM_EMAIL } = await import('@/lib/email/client')
     const InviteEmail = (await import('@/emails/invite-email')).default
 
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `You've been invited to join ${org?.name || 'an organization'} on Selo IO`,
@@ -85,12 +88,27 @@ export async function sendInvite(formData: FormData) {
         role,
       }),
     })
-  } catch (emailError) {
-    console.error('Failed to send invite email:', emailError)
-    // Don't fail the invite creation if email fails
+
+    if (result.error) {
+      console.error('Resend API error:', result.error)
+      emailError = result.error.message
+    } else {
+      emailSent = true
+    }
+  } catch (err) {
+    console.error('Failed to send invite email:', err)
+    emailError = err instanceof Error ? err.message : 'Unknown error sending email'
   }
 
   revalidatePath('/settings/team')
+
+  if (!emailSent) {
+    return {
+      success: true,
+      inviteLink,
+      warning: `Invite created but email failed to send: ${emailError}. Share this link manually: ${inviteLink}`
+    }
+  }
 
   return {
     success: true,
