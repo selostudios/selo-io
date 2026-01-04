@@ -132,7 +132,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         {/* Logo Preview */}
         <div className="relative">
           {previewUrl ? (
-            <div className="h-12 w-12 overflow-hidden rounded-lg">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
               <Image
                 src={previewUrl}
                 alt="Organization logo"
@@ -143,7 +143,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
             </div>
           ) : (
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-lg text-lg font-bold text-white"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
               style={{ backgroundColor: primaryColor || '#6B7280' }}
             >
               {initial}
