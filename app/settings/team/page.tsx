@@ -147,7 +147,7 @@ export default async function TeamSettingsPage() {
                     </p>
                   </div>
                 </div>
-                <Badge>{member.role.replace('_', ' ')}</Badge>
+                <Badge>{member.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
               </div>
             ))}
             {teamMembersWithEmails.length === 0 && (
@@ -189,7 +189,7 @@ export default async function TeamSettingsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{invite.role.replace('_', ' ')}</Badge>
+                      <Badge variant="outline">{invite.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
                       <ResendInviteButton inviteId={invite.id} email={invite.email} />
                       <form action={handleDeleteInvite}>
                         <input type="hidden" name="inviteId" value={invite.id} />

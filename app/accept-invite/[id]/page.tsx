@@ -123,7 +123,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
             </p>
             <p className="text-muted-foreground text-sm">
               <strong>Role:</strong>{' '}
-              <Badge variant="outline">{invite.role.replace('_', ' ')}</Badge>
+              <Badge variant="outline">{invite.role.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Badge>
             </p>
             <p className="text-muted-foreground text-sm">
               <strong>Expires:</strong> {expiresAt.toLocaleDateString()}
