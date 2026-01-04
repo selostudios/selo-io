@@ -19,11 +19,13 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <CardTitle className="text-lg">{campaign.name}</CardTitle>
-            <Badge variant={campaign.status}>{displayName(campaign.status)}</Badge>
+            <Badge variant={campaign.status.toLowerCase() as CampaignStatusType}>
+              {displayName(campaign.status)}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-muted-foreground flex justify-between text-sm">
+          <div className="flex justify-between text-sm text-neutral-600">
             {campaign.start_date && <p>Starts: {formatDate(campaign.start_date, false)}</p>}
             {campaign.end_date && <p>Ends: {formatDate(campaign.end_date, false)}</p>}
           </div>
