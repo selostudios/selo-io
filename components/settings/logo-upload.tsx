@@ -132,13 +132,15 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         {/* Logo Preview */}
         <div className="relative">
           {previewUrl ? (
-            <Image
-              src={previewUrl}
-              alt="Organization logo"
-              width={48}
-              height={48}
-              className="rounded-lg object-contain"
-            />
+            <div className="h-12 w-12 overflow-hidden rounded-lg">
+              <Image
+                src={previewUrl}
+                alt="Organization logo"
+                width={48}
+                height={48}
+                className="h-full w-full object-cover"
+              />
+            </div>
           ) : (
             <div
               className="flex h-12 w-12 items-center justify-center rounded-lg text-lg font-bold text-white"
@@ -191,13 +193,15 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
               {/* Preview */}
               <div className="relative">
                 {previewUrl ? (
-                  <Image
-                    src={previewUrl}
-                    alt="Organization logo"
-                    width={80}
-                    height={80}
-                    className="rounded-lg object-contain"
-                  />
+                  <div className="h-20 w-20 overflow-hidden rounded-lg">
+                    <Image
+                      src={previewUrl}
+                      alt="Organization logo"
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div
                     className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
