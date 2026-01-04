@@ -130,26 +130,24 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
       {/* Compact View */}
       <div className="flex items-center gap-4">
         {/* Logo Preview */}
-        <div className="relative">
-          {previewUrl ? (
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-              <Image
-                src={previewUrl}
-                alt="Organization logo"
-                width={48}
-                height={48}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ) : (
-            <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
-              style={{ backgroundColor: primaryColor || '#6B7280' }}
-            >
-              {initial}
-            </div>
-          )}
-        </div>
+        {previewUrl ? (
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+            <Image
+              src={previewUrl}
+              alt="Organization logo"
+              width={48}
+              height={48}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
+            style={{ backgroundColor: primaryColor || '#6B7280' }}
+          >
+            {initial}
+          </div>
+        )}
 
         {/* Edit/Add Button */}
         <Button
