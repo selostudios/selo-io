@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { deleteCampaign } from '../actions'
-import { formatDate } from '@/lib/utils'
+import { formatDate, displayName } from '@/lib/utils'
 import { UtmParamRow } from '@/components/campaigns/utm-param-row'
 import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
 import { EditableDescription } from '@/components/campaigns/editable-description'
@@ -32,7 +32,19 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">{campaign.name}</h1>
-          <Badge className="mt-2">{campaign.status}</Badge>
+          <Badge
+            className={`mt-2 ${
+              campaign.status === 'active'
+                ? 'bg-green-100 text-green-800'
+                : campaign.status === 'disabled'
+                  ? 'bg-red-100 text-red-800'
+                  : campaign.status === 'draft'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-blue-100 text-blue-800'
+            }`}
+          >
+            {displayName(campaign.status)}
+          </Badge>
         </div>
         <form action={handleDelete}>
           <Button type="submit" variant="destructive">

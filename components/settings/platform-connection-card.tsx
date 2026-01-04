@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { disconnectPlatform } from '@/app/settings/integrations/actions'
+import { displayName } from '@/lib/utils'
 import { LinkedInConnectDialog } from '@/components/integrations/linkedin-connect-dialog'
 
 type Connection = {
@@ -81,7 +82,7 @@ export function PlatformConnectionCard({
             <CardTitle>{info.name}</CardTitle>
             <CardDescription className="mt-1">{info.description}</CardDescription>
           </div>
-          <Badge variant="success">{connection.status}</Badge>
+          <Badge variant="success">{displayName(connection.status)}</Badge>
         </div>
       </CardHeader>
       <CardContent>
