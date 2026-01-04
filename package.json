@@ -10,7 +10,14 @@
     "email": "email dev",
     "add-user": "tsx scripts/add-user.ts",
     "reset-password": "tsx scripts/reset-password.ts",
-    "check-user": "tsx scripts/check-user.ts"
+    "check-user": "tsx scripts/check-user.ts",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest watch",
+    "test:seed": "tsx tests/helpers/seed.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
@@ -37,17 +44,26 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@react-email/preview-server": "^5.1.1",
     "@react-email/tailwind": "^2.0.3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.27",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "happy-dom": "^20.0.11",
+    "msw": "^2.12.7",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.16"
   }
 }
