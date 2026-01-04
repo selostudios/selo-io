@@ -5,6 +5,7 @@ import { updateOrganization } from '@/app/settings/organization/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LogoUpload } from '@/components/settings/logo-upload'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -44,17 +45,16 @@ export function OrganizationForm({
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(initialName)
   const [industryId, setIndustryId] = useState(initialIndustryId)
-  const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
   const [primaryColor, setPrimaryColor] = useState(initialPrimaryColor)
   const [secondaryColor, setSecondaryColor] = useState(initialSecondaryColor)
   const [accentColor, setAccentColor] = useState(initialAccentColor)
   const router = useRouter()
 
   // Check if save button should be disabled
+  // Note: Logo changes are handled separately by LogoUpload component
   const hasChanges =
     name !== initialName ||
     industryId !== initialIndustryId ||
-    logoUrl !== initialLogoUrl ||
     primaryColor !== initialPrimaryColor ||
     secondaryColor !== initialSecondaryColor ||
     accentColor !== initialAccentColor
@@ -123,19 +123,12 @@ export function OrganizationForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
-              <Input
-                id="logoUrl"
-                name="logoUrl"
-                type="url"
-                placeholder="https://example.com/logo.png"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                disabled={isLoading}
+              <Label>Organization Logo</Label>
+              <LogoUpload
+                currentLogoUrl={initialLogoUrl || null}
+                organizationName={name}
+                primaryColor={primaryColor}
               />
-              <p className="text-xs text-muted-foreground">
-                Enter a URL to your organization's logo image
-              </p>
             </div>
           </div>
 
