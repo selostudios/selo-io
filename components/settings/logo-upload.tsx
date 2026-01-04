@@ -39,36 +39,46 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
 
     setIsUploading(true)
 
-    const formData = new FormData()
-    formData.append('file', file)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
 
-    const result = await uploadLogo(formData)
+      const result = await uploadLogo(formData)
 
-    if (result.error) {
-      showError(result.error)
-    } else if (result.logoUrl) {
-      setPreviewUrl(result.logoUrl)
-      showSuccess('Logo uploaded successfully!')
-      router.refresh()
+      if (result.error) {
+        showError(result.error)
+      } else if (result.logoUrl) {
+        setPreviewUrl(result.logoUrl)
+        showSuccess('Logo uploaded successfully!')
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('[LogoUpload Error]', { type: 'upload_failed', timestamp: new Date().toISOString() })
+      showError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsUploading(false)
     }
-
-    setIsUploading(false)
   }
 
   async function handleRemove() {
     setIsRemoving(true)
 
-    const result = await removeLogo()
+    try {
+      const result = await removeLogo()
 
-    if (result.error) {
-      showError(result.error)
-    } else {
-      setPreviewUrl(null)
-      showSuccess('Logo removed successfully!')
-      router.refresh()
+      if (result.error) {
+        showError(result.error)
+      } else {
+        setPreviewUrl(null)
+        showSuccess('Logo removed successfully!')
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('[LogoUpload Error]', { type: 'remove_failed', timestamp: new Date().toISOString() })
+      showError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsRemoving(false)
     }
-
-    setIsRemoving(false)
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -96,6 +106,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
     if (file) {
       handleFileSelect(file)
     }
+    e.target.value = '' // Reset to allow re-selecting the same file
   }
 
   return (
@@ -107,6 +118,15 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        tabIndex={0}
+        role="button"
+        aria-label="Upload logo. Drop a file here or press Enter to browse."
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            fileInputRef.current?.click()
+          }
+        }}
       >
         <div className="flex flex-col items-center gap-4">
           {/* Preview */}
@@ -171,6 +191,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
           accept=".png,.jpg,.jpeg,.svg"
           onChange={handleInputChange}
           className="hidden"
+          aria-label="Choose logo file"
         />
       </div>
     </div>
