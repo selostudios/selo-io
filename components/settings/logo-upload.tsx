@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface LogoUploadProps {
   currentLogoUrl: string | null
@@ -18,6 +25,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
   const [isRemoving, setIsRemoving] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -50,6 +58,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
       } else if (result.logoUrl) {
         setPreviewUrl(result.logoUrl)
         showSuccess('Logo uploaded successfully!')
+        setDialogOpen(false)
         router.refresh()
       }
     } catch {
@@ -74,6 +83,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
       } else {
         setPreviewUrl(null)
         showSuccess('Logo removed successfully!')
+        setDialogOpen(false)
         router.refresh()
       }
     } catch {
@@ -116,88 +126,130 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
   }
 
   return (
-    <div className="space-y-4">
-      <div
-        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-          dragOver ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300'
-        } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        tabIndex={0}
-        role="button"
-        aria-label="Upload logo. Drop a file here or press Enter to browse."
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            fileInputRef.current?.click()
-          }
-        }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          {/* Preview */}
-          <div className="relative">
-            {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt="Organization logo"
-                width={80}
-                height={80}
-                className="rounded-lg object-contain"
-              />
-            ) : (
-              <div
-                className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
-                style={{ backgroundColor: primaryColor || '#6B7280' }}
-              >
-                {initial}
-              </div>
-            )}
-          </div>
-
-          {/* Instructions */}
-          <div className="space-y-1">
-            <p className="text-sm text-neutral-600">
-              {isUploading ? 'Uploading...' : 'Drag and drop your logo here, or click to browse'}
-            </p>
-            <p className="text-xs text-neutral-400">PNG, JPG, or SVG. Max 2MB.</p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading || isRemoving}
+    <>
+      {/* Compact View */}
+      <div className="flex items-center gap-4">
+        {/* Logo Preview */}
+        <div className="relative">
+          {previewUrl ? (
+            <Image
+              src={previewUrl}
+              alt="Organization logo"
+              width={48}
+              height={48}
+              className="rounded-lg object-contain"
+            />
+          ) : (
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-lg text-lg font-bold text-white"
+              style={{ backgroundColor: primaryColor || '#6B7280' }}
             >
-              {isUploading ? 'Uploading...' : 'Choose File'}
-            </Button>
-            {previewUrl && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRemove}
-                disabled={isUploading || isRemoving}
-                className="text-red-600 hover:text-red-700"
-              >
-                {isRemoving ? 'Removing...' : 'Remove'}
-              </Button>
-            )}
-          </div>
+              {initial}
+            </div>
+          )}
         </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".png,.jpg,.jpeg,.svg"
-          onChange={handleInputChange}
-          className="hidden"
-          aria-label="Choose logo file"
-        />
+        {/* Edit/Add Button */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setDialogOpen(true)}
+        >
+          {previewUrl ? 'Edit' : 'Add Logo'}
+        </Button>
       </div>
-    </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Organization Logo</DialogTitle>
+            <DialogDescription>
+              Upload a logo for your organization. PNG, JPG, or SVG. Max 2MB.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div
+            className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+              dragOver ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300'
+            } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            tabIndex={0}
+            role="button"
+            aria-label="Upload logo. Drop a file here or press Enter to browse."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
+          >
+            <div className="flex flex-col items-center gap-4">
+              {/* Preview */}
+              <div className="relative">
+                {previewUrl ? (
+                  <Image
+                    src={previewUrl}
+                    alt="Organization logo"
+                    width={80}
+                    height={80}
+                    className="rounded-lg object-contain"
+                  />
+                ) : (
+                  <div
+                    className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
+                    style={{ backgroundColor: primaryColor || '#6B7280' }}
+                  >
+                    {initial}
+                  </div>
+                )}
+              </div>
+
+              {/* Instructions */}
+              <p className="text-sm text-neutral-600">
+                {isUploading ? 'Uploading...' : 'Drag and drop your logo here, or click to browse'}
+              </p>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading || isRemoving}
+                >
+                  {isUploading ? 'Uploading...' : 'Choose File'}
+                </Button>
+                {previewUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemove}
+                    disabled={isUploading || isRemoving}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    {isRemoving ? 'Removing...' : 'Remove'}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.svg"
+              onChange={handleInputChange}
+              className="hidden"
+              aria-label="Choose logo file"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
