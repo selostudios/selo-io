@@ -18,7 +18,12 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
       <Card className="cursor-pointer transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg">{campaign.name}</CardTitle>
+            <div>
+              <CardTitle className="text-lg">{campaign.name}</CardTitle>
+              <p className="mt-1 text-sm text-neutral-500">
+                {formatDate(campaign.created_at, false)}
+              </p>
+            </div>
             <Badge variant={campaign.status.toLowerCase() as CampaignStatusType}>
               {displayName(campaign.status)}
             </Badge>
