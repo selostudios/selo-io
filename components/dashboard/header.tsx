@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UserMenu } from '@/components/dashboard/user-menu'
+import { OrgLogo } from '@/components/dashboard/org-logo'
 
 export async function Header() {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ export async function Header() {
 
   const { data: userRecord, error } = await supabase
     .from('users')
-    .select('organization:organizations(name), first_name, last_name')
+    .select('organization:organizations(name, logo_url, primary_color), first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -20,7 +21,10 @@ export async function Header() {
     redirect('/login')
   }
 
-  const orgName = (userRecord?.organization as unknown as { name: string } | null)?.name || 'Organization'
+  const org = userRecord?.organization as unknown as { name: string; logo_url: string | null; primary_color: string | null } | null
+  const orgName = org?.name || 'Organization'
+  const logoUrl = org?.logo_url || null
+  const primaryColor = org?.primary_color || null
   const userEmail = user?.email || ''
   const firstName = userRecord?.first_name || userEmail.split('@')[0]
   const lastName = userRecord?.last_name || ''
@@ -32,7 +36,8 @@ export async function Header() {
 
   return (
     <header className="h-16 border-b bg-white flex items-center justify-between px-6">
-      <div>
+      <div className="flex items-center gap-3">
+        <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
       <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} initials={initials} />
