@@ -74,3 +74,134 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
 
   return { success: true }
 }
+
+export async function uploadLogo(formData: FormData): Promise<{ error?: string; logoUrl?: string }> {
+  const file = formData.get('file') as File
+
+  if (!file || file.size === 0) {
+    return { error: 'No file provided' }
+  }
+
+  // Validate file size (2MB max)
+  const MAX_SIZE = 2 * 1024 * 1024
+  if (file.size > MAX_SIZE) {
+    return { error: 'File size must be less than 2MB' }
+  }
+
+  // Validate file type
+  const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return { error: 'File must be PNG, JPG, or SVG' }
+  }
+
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Get user's organization and verify they're an admin
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || userRecord.role !== 'admin') {
+    return { error: 'Only admins can upload logos' }
+  }
+
+  const orgId = userRecord.organization_id
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png'
+  const filePath = `${orgId}/logo.${fileExt}`
+
+  // Delete existing logo files first (there might be different extensions)
+  const { data: existingFiles } = await supabase.storage
+    .from('organization-logos')
+    .list(orgId)
+
+  if (existingFiles && existingFiles.length > 0) {
+    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    await supabase.storage.from('organization-logos').remove(filesToDelete)
+  }
+
+  // Upload new logo
+  const { error: uploadError } = await supabase.storage
+    .from('organization-logos')
+    .upload(filePath, file, { upsert: true })
+
+  if (uploadError) {
+    console.error('[Logo Upload Error]', { error: uploadError, timestamp: new Date().toISOString() })
+    return { error: 'Failed to upload logo' }
+  }
+
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('organization-logos')
+    .getPublicUrl(filePath)
+
+  // Update organization with new logo URL
+  const { error: updateError } = await supabase
+    .from('organizations')
+    .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+    .eq('id', orgId)
+
+  if (updateError) {
+    console.error('[Logo Update Error]', { error: updateError, timestamp: new Date().toISOString() })
+    return { error: 'Failed to save logo' }
+  }
+
+  revalidatePath('/settings/organization')
+  revalidatePath('/dashboard')
+
+  return { logoUrl: publicUrl }
+}
+
+export async function removeLogo(): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Get user's organization and verify they're an admin
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || userRecord.role !== 'admin') {
+    return { error: 'Only admins can remove logos' }
+  }
+
+  const orgId = userRecord.organization_id
+
+  // Delete all logo files for this org
+  const { data: existingFiles } = await supabase.storage
+    .from('organization-logos')
+    .list(orgId)
+
+  if (existingFiles && existingFiles.length > 0) {
+    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    await supabase.storage.from('organization-logos').remove(filesToDelete)
+  }
+
+  // Clear logo URL from organization
+  const { error: updateError } = await supabase
+    .from('organizations')
+    .update({ logo_url: null, updated_at: new Date().toISOString() })
+    .eq('id', orgId)
+
+  if (updateError) {
+    console.error('[Logo Remove Error]', { error: updateError, timestamp: new Date().toISOString() })
+    return { error: 'Failed to remove logo' }
+  }
+
+  revalidatePath('/settings/organization')
+  revalidatePath('/dashboard')
+
+  return { success: true }
+}
