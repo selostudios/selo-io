@@ -30,10 +30,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-8 p-8">
       <div className="flex items-start justify-between">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">{campaign.name}</h1>
           <Badge
-            className={`mt-2 ${
+            className={
               campaign.status === 'active'
                 ? 'bg-green-100 text-green-800'
                 : campaign.status === 'disabled'
@@ -41,7 +41,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
                   : campaign.status === 'draft'
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-blue-100 text-blue-800'
-            }`}
+            }
           >
             {displayName(campaign.status)}
           </Badge>
