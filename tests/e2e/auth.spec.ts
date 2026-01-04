@@ -15,7 +15,7 @@ test.describe('Authentication', () => {
 
     // Should redirect to dashboard
     await expect(page).toHaveURL('/dashboard')
-    await expect(page.locator('text=Test Organization')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Test Organization', exact: true })).toBeVisible()
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Authentication', () => {
     await page.click('button[type="submit"]')
 
     // Should show error
-    await expect(page.locator('text=/invalid.*credentials/i')).toBeVisible()
+    await expect(page.getByText('Invalid email or password')).toBeVisible()
   })
 
   test('login button is disabled for invalid email', async ({ page }) => {

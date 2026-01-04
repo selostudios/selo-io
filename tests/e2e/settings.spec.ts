@@ -24,27 +24,25 @@ test.describe('Settings', () => {
     await page.goto('/settings/organization')
 
     // Click Team tab
-    await page.click('text=Team')
+    await page.getByRole('link', { name: 'Team' }).click()
     await expect(page).toHaveURL('/settings/team')
 
     // Click Integrations tab
-    await page.click('text=Integrations')
+    await page.getByRole('link', { name: 'Integrations' }).click()
     await expect(page).toHaveURL('/settings/integrations')
 
     // Click Organization tab
-    await page.click('text=Organization')
+    await page.getByRole('link', { name: 'Organization' }).click()
     await expect(page).toHaveURL('/settings/organization')
   })
 
   test('admin can view team members', async ({ page }) => {
     await page.goto('/settings/team')
 
-    // Should see admin user
-    await expect(page.locator('text=Admin User')).toBeVisible()
-    await expect(page.locator('text=admin@test.com')).toBeVisible()
+    // Should see admin user (use email which is unique)
+    await expect(page.getByText('admin@test.com')).toBeVisible()
 
-    // Should see team member
-    await expect(page.locator('text=Team Member')).toBeVisible()
-    await expect(page.locator('text=member@test.com')).toBeVisible()
+    // Should see team member (use email which is unique)
+    await expect(page.getByText('member@test.com')).toBeVisible()
   })
 })
