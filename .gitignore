@@ -50,3 +50,6 @@ coverage/
 playwright-report/
 test-results/
 .vitest/
+
+# Supabase
+supabase/.temp/
