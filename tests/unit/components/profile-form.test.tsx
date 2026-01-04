@@ -2,6 +2,15 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ProfileForm } from '@/components/settings/profile-form'
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+  }),
+}))
+
 describe('ProfileForm', () => {
   const defaultProps = {
     email: 'test@example.com',
