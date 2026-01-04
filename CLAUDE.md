@@ -13,6 +13,8 @@ Selo IO is a multi-tenant SaaS marketing performance dashboard that tracks campa
 npm run dev              # Start dev server at http://localhost:3000
 npm run build            # Production build
 npm run lint             # Run ESLint
+npm run format           # Format code with Prettier
+npm run format:check     # Check formatting (CI)
 
 # Testing
 npm test                 # Run ALL tests (unit + integration + e2e)
