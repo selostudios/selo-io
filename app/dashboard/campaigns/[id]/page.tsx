@@ -105,10 +105,8 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <UtmParamRow label="utm_source" value={campaign.utm_source || ''} />
             <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium || ''} />
             <UtmParamRow label="utm_campaign" value={campaign.utm_campaign || ''} />
-            {campaign.utm_term && <UtmParamRow label="utm_term" value={campaign.utm_term} />}
-            {campaign.utm_content && (
-              <UtmParamRow label="utm_content" value={campaign.utm_content} />
-            )}
+            <UtmParamRow label="utm_term" value={campaign.utm_term || ''} />
+            <UtmParamRow label="utm_content" value={campaign.utm_content || ''} />
           </div>
           <p className="text-muted-foreground mt-4 text-sm">
             Use these parameters when creating content in HubSpot, LinkedIn, and other platforms.
