@@ -135,7 +135,7 @@ export default async function TeamSettingsPage() {
                     </p>
                   </div>
                 </div>
-                <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
+                <Badge>
                   {member.role.replace('_', ' ')}
                 </Badge>
               </div>
