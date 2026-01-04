@@ -41,7 +41,7 @@ npm run reset-password   # CLI: Reset user password
 - **Next.js 16** with App Router and React Server Components
 - **Supabase** for auth (JWT in cookies) and PostgreSQL with Row-Level Security
 - **Shadcn UI** (New York style) + Tailwind CSS 4 + Radix UI
-- **React Email** + Resend for transactional emails
+- **React Email** for templates, **Mailpit** for local email testing, **Resend** for production/staging
 - **Vitest** + **Playwright** for testing
 
 ### Multi-Tenant Data Model
