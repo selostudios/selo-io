@@ -87,9 +87,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <UtmParamRow label="utm_source" value={campaign.utm_source} />
-            <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium} />
-            <UtmParamRow label="utm_campaign" value={campaign.utm_campaign} />
+            <UtmParamRow label="utm_source" value={campaign.utm_source || ''} />
+            <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium || ''} />
+            <UtmParamRow label="utm_campaign" value={campaign.utm_campaign || ''} />
             {campaign.utm_term && <UtmParamRow label="utm_term" value={campaign.utm_term} />}
             {campaign.utm_content && (
               <UtmParamRow label="utm_content" value={campaign.utm_content} />

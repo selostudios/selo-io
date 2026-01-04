@@ -19,7 +19,9 @@ export function UtmParamRow({ label, value }: UtmParamRowProps) {
     <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
         <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">{label}</span>
-        <code className="px-4 text-sm" style={{ color: '#171717' }}>{value}</code>
+        <code className="px-4 text-sm" style={{ color: value ? '#171717' : '#9ca3af' }}>
+          {value || 'Not set'}
+        </code>
       </div>
       <Button variant="ghost" size="sm" onClick={handleCopy} className="mr-2 h-8 w-8 p-0">
         <Copy className="h-4 w-4" />
