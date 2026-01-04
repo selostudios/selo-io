@@ -24,7 +24,26 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
                 {formatDate(campaign.created_at, false)}
               </p>
             </div>
-            <Badge variant={campaign.status.toLowerCase() as CampaignStatusType}>
+            <Badge
+              style={{
+                backgroundColor:
+                  campaign.status === 'draft'
+                    ? '#fef9c3'
+                    : campaign.status === 'active'
+                      ? '#dcfce7'
+                      : campaign.status === 'completed'
+                        ? '#dbeafe'
+                        : '#fee2e2',
+                color:
+                  campaign.status === 'draft'
+                    ? '#854d0e'
+                    : campaign.status === 'active'
+                      ? '#166534'
+                      : campaign.status === 'completed'
+                        ? '#1e40af'
+                        : '#991b1b',
+              }}
+            >
               {displayName(campaign.status)}
             </Badge>
           </div>
