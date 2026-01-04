@@ -20,7 +20,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-lg">{campaign.name}</CardTitle>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-neutral-700">
                 {formatDate(campaign.created_at, false)}
               </p>
             </div>
@@ -30,7 +30,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between text-sm text-neutral-600">
+          <div className="flex justify-between text-sm text-neutral-700">
             {campaign.start_date && <p>Starts: {formatDate(campaign.start_date, false)}</p>}
             {campaign.end_date && <p>Ends: {formatDate(campaign.end_date, false)}</p>}
           </div>
