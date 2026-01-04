@@ -189,6 +189,7 @@ Selo IO is a multi-tenant SaaS platform that automates marketing performance tra
 - Vercel Blob or Supabase Storage (logo uploads)
 
 **Email:**
+
 - Resend (transactional email for weekly summaries)
 - Sending domain: `send.notifications.selostudios.com` (verified)
 - DNS configured in AWS Route 53: DKIM, SPF, MX records
@@ -436,6 +437,7 @@ Each platform has a server-side adapter that:
 - Enhanced lead-to-deal pipeline visibility
 
 **Phase 7 - AI Billing & Usage Tracking:**
+
 - Customer-provided AI API keys: Allow organizations to input their own Anthropic/OpenAI API tokens
 - Platform-managed billing mode: For customers who prefer we handle AI costs
 - Billing tab under Organization settings route with:
