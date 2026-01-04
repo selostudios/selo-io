@@ -105,27 +105,27 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <UtmParamRow
               label="utm_source"
               value={campaign.utm_source || ''}
-              description="Identifies which site or platform sent the traffic (e.g., linkedin, facebook, newsletter)"
+              description="Identifies which site or platform sent the traffic. Example: linkedin, facebook, newsletter, google"
             />
             <UtmMediumSelect
               campaignId={campaign.id}
               currentValue={campaign.utm_medium || ''}
-              description="Identifies the marketing medium or channel type (e.g., social, email, cpc, organic)"
+              description="Identifies the marketing medium or channel type. Example: social, email, cpc, display, organic"
             />
             <UtmParamRow
               label="utm_campaign"
               value={campaign.utm_campaign || ''}
-              description="Identifies the specific campaign name or promotion (e.g., spring-sale, product-launch)"
+              description="Identifies the specific campaign name or promotion. Example: spring-sale-2026, product-launch-q1"
             />
             <UtmParamRow
               label="utm_term"
               value={campaign.utm_term || ''}
-              description="Identifies target audience, keywords, or ad groups (e.g., marketing-managers, uk-audience)"
+              description="Identifies target audience, keywords, or ad groups. Example: cmo-audience, marketing-managers, uk-enterprise"
             />
             <UtmParamRow
               label="utm_content"
               value={campaign.utm_content || ''}
-              description="Differentiates similar content or links - use for A/B testing, content format, or link placement (e.g., video-cta, carousel-post)"
+              description="Differentiates similar content for A/B testing, format, or placement. Example: video-testimonial, carousel-a, header-cta"
             />
           </div>
           <p className="text-muted-foreground mt-4 text-sm">
