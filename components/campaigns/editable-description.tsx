@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Pencil, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { updateCampaignDescription } from '@/app/dashboard/campaigns/actions'
 
@@ -45,20 +44,23 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
   if (isEditing) {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Input
+        <div className="flex items-start gap-2">
+          <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description of the campaign goals"
             disabled={isLoading}
-            className="flex-1"
+            rows={3}
+            className="flex-1 px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50"
           />
-          <Button size="sm" variant="ghost" onClick={handleSave} disabled={isLoading}>
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isLoading}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col gap-1">
+            <Button size="sm" variant="ghost" onClick={handleSave} disabled={isLoading}>
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isLoading}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <p className={`text-xs text-right ${description.length > MAX_LENGTH ? 'text-red-600' : 'text-muted-foreground'}`}>
           {description.length}/{MAX_LENGTH}
