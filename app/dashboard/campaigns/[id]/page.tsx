@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { deleteCampaign } from '../actions'
@@ -51,6 +51,9 @@ export default async function CampaignDetailPage({
       <Card>
         <CardHeader>
           <CardTitle>Campaign Details</CardTitle>
+          {campaign.description && (
+            <CardDescription>{campaign.description}</CardDescription>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
