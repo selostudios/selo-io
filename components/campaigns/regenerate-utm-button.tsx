@@ -31,12 +31,7 @@ export function RegenerateUtmButton({ campaignId }: RegenerateUtmButtonProps) {
   }
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleRegenerate}
-      disabled={isLoading}
-    >
+    <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={isLoading}>
       <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
       {isLoading ? 'Regenerating...' : 'Regenerate'}
     </Button>

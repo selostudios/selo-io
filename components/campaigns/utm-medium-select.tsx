@@ -10,12 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { updateUtmMedium } from '@/app/dashboard/campaigns/actions'
 
@@ -92,7 +87,9 @@ export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMe
           <SelectContent>
             {MEDIUM_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                <span className="font-mono" style={{ color: '#171717' }}>{option.value}</span>
+                <span className="font-mono" style={{ color: '#171717' }}>
+                  {option.value}
+                </span>
                 <span className="text-muted-foreground ml-2">- {option.description}</span>
               </SelectItem>
             ))}
