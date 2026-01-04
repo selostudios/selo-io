@@ -159,12 +159,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         )}
 
         {/* Edit/Add Button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setDialogOpen(true)}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
           {previewUrl ? 'Edit' : 'Add Logo'}
         </Button>
       </div>

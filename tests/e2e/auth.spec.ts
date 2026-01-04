@@ -13,11 +13,9 @@ test.describe('Authentication', () => {
     await page.fill('input[name="password"]', testUsers.admin.password)
     await page.click('button[type="submit"]')
 
-    // Should redirect to dashboard
+    // Should redirect to dashboard and show welcome heading
     await expect(page).toHaveURL('/dashboard')
-    await expect(
-      page.getByRole('heading', { name: 'Test Organization', exact: true })
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Welcome to/ })).toBeVisible()
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
