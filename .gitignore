@@ -43,3 +43,10 @@ next-env.d.ts
 
 # worktrees
 .worktrees
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+.vitest/
