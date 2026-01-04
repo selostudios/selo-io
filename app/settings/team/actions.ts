@@ -74,13 +74,13 @@ export async function sendInvite(formData: FormData) {
   let emailError: string | null = null
 
   try {
-    const { resend, FROM_EMAIL } = await import('@/lib/email/client')
+    const { sendEmail, FROM_EMAIL } = await import('@/lib/email/client')
     const InviteEmail = (await import('@/emails/invite-email')).default
 
     console.log('[Email Debug] Sending invite email to:', email)
     console.log('[Email Debug] From:', FROM_EMAIL)
 
-    const result = await resend.emails.send({
+    const result = await sendEmail({
       from: FROM_EMAIL,
       to: email,
       subject: `You've been invited to join ${org?.name || 'an organization'} on Selo IO`,
@@ -92,10 +92,10 @@ export async function sendInvite(formData: FormData) {
       }),
     })
 
-    console.log('[Email Debug] Resend result:', JSON.stringify(result, null, 2))
+    console.log('[Email Debug] Result:', JSON.stringify(result, null, 2))
 
     if (result.error) {
-      console.error('Resend API error:', result.error)
+      console.error('Email API error:', result.error)
       emailError = result.error.message
     } else if (result.data?.id) {
       console.log('[Email Debug] Email sent successfully, ID:', result.data.id)
@@ -182,10 +182,10 @@ export async function resendInvite(inviteId: string) {
   const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite/${invite.id}`
 
   try {
-    const { resend, FROM_EMAIL } = await import('@/lib/email/client')
+    const { sendEmail, FROM_EMAIL } = await import('@/lib/email/client')
     const InviteEmail = (await import('@/emails/invite-email')).default
 
-    await resend.emails.send({
+    const result = await sendEmail({
       from: FROM_EMAIL,
       to: invite.email,
       subject: `Reminder: You've been invited to join ${org?.name || 'an organization'} on Selo IO`,
@@ -196,6 +196,11 @@ export async function resendInvite(inviteId: string) {
         role: invite.role,
       }),
     })
+
+    if (result.error) {
+      console.error('Failed to send invite email:', result.error)
+      return { error: 'Failed to send invite email' }
+    }
   } catch (emailError) {
     console.error('Failed to send invite email:', emailError)
     return { error: 'Failed to send invite email' }
