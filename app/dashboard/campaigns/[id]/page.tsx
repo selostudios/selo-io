@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { deleteCampaign } from '../actions'
-import { formatDate, displayName } from '@/lib/utils'
+import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { UtmParamRow } from '@/components/campaigns/utm-param-row'
 import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
 import { EditableDescription } from '@/components/campaigns/editable-description'
@@ -35,19 +35,19 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           <Badge
             style={{
               backgroundColor:
-                campaign.status === 'draft'
+                campaign.status === CampaignStatus.DRAFT
                   ? '#fef9c3'
-                  : campaign.status === 'active'
+                  : campaign.status === CampaignStatus.ACTIVE
                     ? '#dcfce7'
-                    : campaign.status === 'completed'
+                    : campaign.status === CampaignStatus.COMPLETED
                       ? '#dbeafe'
                       : '#fee2e2',
               color:
-                campaign.status === 'draft'
+                campaign.status === CampaignStatus.DRAFT
                   ? '#854d0e'
-                  : campaign.status === 'active'
+                  : campaign.status === CampaignStatus.ACTIVE
                     ? '#166534'
-                    : campaign.status === 'completed'
+                    : campaign.status === CampaignStatus.COMPLETED
                       ? '#1e40af'
                       : '#991b1b',
             }}

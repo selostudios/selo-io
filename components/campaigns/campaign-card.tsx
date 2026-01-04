@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { formatDate, displayName, type CampaignStatusType } from '@/lib/utils'
+import { formatDate, displayName, CampaignStatus, type CampaignStatusType } from '@/lib/utils'
 
 type Campaign = {
   id: string
@@ -27,19 +27,19 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
             <Badge
               style={{
                 backgroundColor:
-                  campaign.status === 'draft'
+                  campaign.status === CampaignStatus.DRAFT
                     ? '#fef9c3'
-                    : campaign.status === 'active'
+                    : campaign.status === CampaignStatus.ACTIVE
                       ? '#dcfce7'
-                      : campaign.status === 'completed'
+                      : campaign.status === CampaignStatus.COMPLETED
                         ? '#dbeafe'
                         : '#fee2e2',
                 color:
-                  campaign.status === 'draft'
+                  campaign.status === CampaignStatus.DRAFT
                     ? '#854d0e'
-                    : campaign.status === 'active'
+                    : campaign.status === CampaignStatus.ACTIVE
                       ? '#166534'
-                      : campaign.status === 'completed'
+                      : campaign.status === CampaignStatus.COMPLETED
                         ? '#1e40af'
                         : '#991b1b',
               }}
