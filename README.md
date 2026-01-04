@@ -20,6 +20,45 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Testing
+
+This project includes comprehensive testing infrastructure with unit tests, integration tests, and E2E tests.
+
+### Running Tests
+
+```bash
+# Run all tests (unit, integration, and E2E)
+npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests
+npm run test:integration
+
+# Run only E2E tests
+npm run test:e2e
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Seed test data for E2E tests
+npm run test:seed
+```
+
+### Test Structure
+
+- `tests/unit/` - Unit tests for components and utilities
+- `tests/integration/` - Integration tests for server actions and RLS policies
+- `tests/e2e/` - End-to-end tests for critical user journeys
+- `tests/helpers/` - Test utilities and database helpers
+- `tests/fixtures/` - Reusable test data
+
+For more details, see [docs/testing.md](docs/testing.md).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
