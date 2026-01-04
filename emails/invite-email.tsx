@@ -5,6 +5,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -17,6 +18,7 @@ interface InviteEmailProps {
   organizationName: string
   invitedByEmail: string
   role: string
+  logoUrl?: string | null
 }
 
 export default function InviteEmail({
@@ -24,6 +26,7 @@ export default function InviteEmail({
   organizationName,
   invitedByEmail,
   role,
+  logoUrl,
 }: InviteEmailProps) {
   return (
     <Html>
@@ -32,6 +35,29 @@ export default function InviteEmail({
       <Tailwind>
         <Body className="bg-neutral-50 font-sans">
           <Container className="mx-auto py-12 px-4">
+            {/* Logo + Org Name Header */}
+            <Section className="mb-6">
+              <table cellPadding="0" cellSpacing="0" style={{ width: 'auto' }}>
+                <tr>
+                  {logoUrl && (
+                    <td style={{ paddingRight: '12px', verticalAlign: 'middle' }}>
+                      <Img
+                        src={logoUrl}
+                        alt={organizationName}
+                        width="40"
+                        height="40"
+                        style={{ borderRadius: '8px', objectFit: 'contain' }}
+                      />
+                    </td>
+                  )}
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text className="text-xl font-bold text-neutral-900 m-0">
+                      {organizationName}
+                    </Text>
+                  </td>
+                </tr>
+              </table>
+            </Section>
             <Heading className="text-2xl font-bold text-neutral-900 mb-4">
               Join {organizationName}
             </Heading>
