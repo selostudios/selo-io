@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { LinkedInSection } from '@/components/dashboard/linkedin-section'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -41,6 +42,20 @@ export default async function DashboardPage() {
     console.error('[Dashboard Error]', { type: 'active_count', timestamp: new Date().toISOString() })
   }
 
+  // Get LinkedIn connection status
+  const { data: linkedInConnection } = await supabase
+    .from('platform_connections')
+    .select('id, last_sync_at')
+    .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'linkedin')
+    .single()
+
+  // Get platform connection count
+  const { count: connectionCount } = await supabase
+    .from('platform_connections')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', userRecord.organization_id)
+
   return (
     <div className="p-8 space-y-8">
       <div>
@@ -80,24 +95,20 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">0</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Connect platforms in Settings
-            </p>
+            <p className="text-3xl font-bold">{connectionCount || 0}</p>
+            {!connectionCount && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Connect platforms in Settings
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Campaign metrics will appear here once platform integrations are connected.
-          </p>
-        </CardContent>
-      </Card>
+      <LinkedInSection
+        isConnected={!!linkedInConnection}
+        lastSyncAt={linkedInConnection?.last_sync_at || null}
+      />
     </div>
   )
 }
