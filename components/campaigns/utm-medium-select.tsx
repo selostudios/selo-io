@@ -57,7 +57,7 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
   return (
     <div className="flex justify-between items-center bg-neutral-50 rounded-l overflow-hidden">
       <div className="flex items-center">
-        <span className="font-mono text-sm bg-black text-white px-4 py-3">utm_medium</span>
+        <span className="font-mono text-sm bg-neutral-700 text-white px-4 py-3">utm_medium</span>
         <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
           <SelectTrigger className="w-[320px] border-0 rounded-none shadow-none">
             <SelectValue>
