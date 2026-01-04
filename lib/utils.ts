@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const CampaignStatus = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  DISABLED: 'disabled',
+  COMPLETED: 'completed',
+} as const
+
+export type CampaignStatusType = (typeof CampaignStatus)[keyof typeof CampaignStatus]
+
 /**
  * Converts a snake_case role string to a capitalized display name.
  * e.g., "team_member" -> "Team Member"
