@@ -48,7 +48,12 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     )
 
     if (!response.ok) {
-      const error = await response.json()
+      let error
+      try {
+        error = await response.json()
+      } catch {
+        error = await response.text()
+      }
       console.error('[LinkedIn OAuth] Token exchange failed:', {
         status: response.status,
         error,
@@ -92,7 +97,12 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     )
 
     if (!response.ok) {
-      const error = await response.json()
+      let error
+      try {
+        error = await response.json()
+      } catch {
+        error = await response.text()
+      }
       console.error('[LinkedIn OAuth] Token refresh failed:', {
         status: response.status,
         error,
