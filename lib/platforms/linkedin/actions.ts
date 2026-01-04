@@ -9,7 +9,9 @@ export async function syncLinkedInMetrics() {
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -60,9 +62,7 @@ export async function syncLinkedInMetrics() {
       .eq('platform_type', 'linkedin')
       .eq('date', today)
 
-    const { error: insertError } = await supabase
-      .from('campaign_metrics')
-      .insert(records)
+    const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
 
     if (insertError) {
       console.error('[LinkedIn Sync Error]', insertError)
@@ -89,7 +89,9 @@ export async function syncLinkedInMetrics() {
 export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -105,7 +107,8 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   }
 
   // Import date utilities
-  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } = await import('@/lib/utils/date-ranges')
+  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } =
+    await import('@/lib/utils/date-ranges')
 
   const currentRange = getDateRange(period)
   const previousRange = getPreviousPeriodRange(currentRange, period)
@@ -131,7 +134,7 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   // Aggregate by metric type
   const aggregate = (metrics: Array<{ metric_type: string; value: number }> | null) => {
     const result: Record<string, number> = {}
-    metrics?.forEach(m => {
+    metrics?.forEach((m) => {
       result[m.metric_type] = (result[m.metric_type] || 0) + Number(m.value)
     })
     return result

@@ -9,13 +9,13 @@ Add LinkedIn organization page metrics to the main dashboard, showing key perfor
 
 ## Metrics
 
-| Metric | Description | LinkedIn API |
-|--------|-------------|--------------|
-| New Followers | Followers gained in period | `organizationalEntityFollowerStatistics` |
-| Page Views | Company page views | `organizationPageStatistics` |
-| Unique Visitors | Unique page visitors | `organizationPageStatistics` |
-| Impressions | Post impressions | `organizationalEntityShareStatistics` |
-| Reactions | Total reactions on posts | `organizationalEntityShareStatistics` |
+| Metric          | Description                | LinkedIn API                             |
+| --------------- | -------------------------- | ---------------------------------------- |
+| New Followers   | Followers gained in period | `organizationalEntityFollowerStatistics` |
+| Page Views      | Company page views         | `organizationPageStatistics`             |
+| Unique Visitors | Unique page visitors       | `organizationPageStatistics`             |
+| Impressions     | Post impressions           | `organizationalEntityShareStatistics`    |
+| Reactions       | Total reactions on posts   | `organizationalEntityShareStatistics`    |
 
 ## Scope
 
@@ -35,11 +35,11 @@ Manual token entry (MVP approach):
 
 User-selectable with dropdown:
 
-| Option | Current Period | Comparison Period |
-|--------|---------------|-------------------|
-| 7 days (default) | Last 7 days | Previous 7 days |
-| 30 days | Last 30 days | Previous 30 days |
-| This quarter | Current calendar quarter | Previous calendar quarter |
+| Option           | Current Period           | Comparison Period         |
+| ---------------- | ------------------------ | ------------------------- |
+| 7 days (default) | Last 7 days              | Previous 7 days           |
+| 30 days          | Last 30 days             | Previous 30 days          |
+| This quarter     | Current calendar quarter | Previous calendar quarter |
 
 Calendar quarters: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
 
@@ -86,16 +86,17 @@ ALTER COLUMN campaign_id DROP NOT NULL;
 
 Daily snapshots in `campaign_metrics`:
 
-| Column | Value |
-|--------|-------|
+| Column          | Value             |
+| --------------- | ----------------- |
 | organization_id | Organization UUID |
-| campaign_id | NULL (org-level) |
-| platform_type | 'linkedin' |
-| date | Date of metric |
-| metric_type | See below |
-| value | Numeric value |
+| campaign_id     | NULL (org-level)  |
+| platform_type   | 'linkedin'        |
+| date            | Date of metric    |
+| metric_type     | See below         |
+| value           | Numeric value     |
 
 Metric types:
+
 - `linkedin_followers`
 - `linkedin_page_views`
 - `linkedin_unique_visitors`
@@ -159,16 +160,16 @@ lib/platforms/linkedin/
 
 ## Implementation Files
 
-| File | Purpose |
-|------|---------|
-| `lib/platforms/linkedin/client.ts` | LinkedIn API client |
-| `lib/platforms/linkedin/adapter.ts` | Data fetching and normalization |
-| `lib/platforms/linkedin/types.ts` | TypeScript types for API responses |
-| `lib/platforms/linkedin/actions.ts` | Server actions for sync |
-| `components/dashboard/linkedin-section.tsx` | Dashboard UI component |
-| `components/dashboard/metric-card.tsx` | Reusable metric card |
-| `components/integrations/linkedin-connect-dialog.tsx` | Connection modal |
-| `supabase/migrations/XXX_add_org_to_metrics.sql` | Schema migration |
+| File                                                  | Purpose                            |
+| ----------------------------------------------------- | ---------------------------------- |
+| `lib/platforms/linkedin/client.ts`                    | LinkedIn API client                |
+| `lib/platforms/linkedin/adapter.ts`                   | Data fetching and normalization    |
+| `lib/platforms/linkedin/types.ts`                     | TypeScript types for API responses |
+| `lib/platforms/linkedin/actions.ts`                   | Server actions for sync            |
+| `components/dashboard/linkedin-section.tsx`           | Dashboard UI component             |
+| `components/dashboard/metric-card.tsx`                | Reusable metric card               |
+| `components/integrations/linkedin-connect-dialog.tsx` | Connection modal                   |
+| `supabase/migrations/XXX_add_org_to_metrics.sql`      | Schema migration                   |
 
 ## Security
 

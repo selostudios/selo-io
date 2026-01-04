@@ -26,9 +26,18 @@ const platformInfo = {
   },
 }
 
-export function PlatformConnectionCard({ connection, platformType }: { connection: Connection | null, platformType: string }) {
+export function PlatformConnectionCard({
+  connection,
+  platformType,
+}: {
+  connection: Connection | null
+  platformType: string
+}) {
   const platformKey = (connection?.platform_type || platformType) as keyof typeof platformInfo
-  const info = platformInfo[platformKey] || { name: 'Unknown Platform', description: 'Unknown platform' }
+  const info = platformInfo[platformKey] || {
+    name: 'Unknown Platform',
+    description: 'Unknown platform',
+  }
 
   async function handleDisconnect() {
     'use server'
@@ -51,7 +60,7 @@ export function PlatformConnectionCard({ connection, platformType }: { connectio
           {platformType === 'linkedin' ? (
             <LinkedInConnectDialog />
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Connect {info.name} to track performance metrics.
             </p>
           )}
@@ -72,7 +81,7 @@ export function PlatformConnectionCard({ connection, platformType }: { connectio
       <CardContent>
         <div className="space-y-4">
           {connection.last_sync_at && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Last synced: {new Date(connection.last_sync_at).toLocaleString()}
             </p>
           )}

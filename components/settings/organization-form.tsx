@@ -84,7 +84,7 @@ export function OrganizationForm({
       <CardHeader>
         <CardTitle>Organization Information</CardTitle>
         <CardDescription>
-          Update your organization's branding and basic information
+          Update your organization&apos;s branding and basic information
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -145,7 +145,7 @@ export function OrganizationForm({
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     disabled={isLoading}
-                    className="w-20 h-10 cursor-pointer"
+                    className="h-10 w-20 cursor-pointer"
                   />
                   <Input
                     type="text"
@@ -168,7 +168,7 @@ export function OrganizationForm({
                     value={secondaryColor}
                     onChange={(e) => setSecondaryColor(e.target.value)}
                     disabled={isLoading}
-                    className="w-20 h-10 cursor-pointer"
+                    className="h-10 w-20 cursor-pointer"
                   />
                   <Input
                     type="text"
@@ -191,7 +191,7 @@ export function OrganizationForm({
                     value={accentColor}
                     onChange={(e) => setAccentColor(e.target.value)}
                     disabled={isLoading}
-                    className="w-20 h-10 cursor-pointer"
+                    className="h-10 w-20 cursor-pointer"
                   />
                   <Input
                     type="text"

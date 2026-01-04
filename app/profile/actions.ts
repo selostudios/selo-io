@@ -3,7 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function updateProfile(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+export async function updateProfile(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
   const firstName = formData.get('firstName') as string
   const lastName = formData.get('lastName') as string
 
@@ -21,7 +23,9 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return { error: 'Not authenticated' }
@@ -32,12 +36,16 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
     .from('users')
     .update({
       first_name: firstName.trim(),
-      last_name: lastName.trim()
+      last_name: lastName.trim(),
     })
     .eq('id', user.id)
 
   if (error) {
-    console.error('[Profile Error]', { type: 'update_name', error, timestamp: new Date().toISOString() })
+    console.error('[Profile Error]', {
+      type: 'update_name',
+      error,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to update profile' }
   }
 

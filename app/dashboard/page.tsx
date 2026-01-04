@@ -6,7 +6,9 @@ import { LinkedInSection } from '@/components/dashboard/linkedin-section'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     redirect('/login')
   }
@@ -28,7 +30,10 @@ export default async function DashboardPage() {
     .eq('organization_id', userRecord.organization_id)
 
   if (campaignError) {
-    console.error('[Dashboard Error]', { type: 'campaign_count', timestamp: new Date().toISOString() })
+    console.error('[Dashboard Error]', {
+      type: 'campaign_count',
+      timestamp: new Date().toISOString(),
+    })
   }
 
   // Get active campaigns with error handling
@@ -39,7 +44,10 @@ export default async function DashboardPage() {
     .eq('status', 'active')
 
   if (activeError) {
-    console.error('[Dashboard Error]', { type: 'active_count', timestamp: new Date().toISOString() })
+    console.error('[Dashboard Error]', {
+      type: 'active_count',
+      timestamp: new Date().toISOString(),
+    })
   }
 
   // Get LinkedIn connection status
@@ -57,20 +65,21 @@ export default async function DashboardPage() {
     .eq('organization_id', userRecord.organization_id)
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">
-          Welcome to {(userRecord?.organization as unknown as { name: string } | null)?.name || 'Selo IO'}
+          Welcome to{' '}
+          {(userRecord?.organization as unknown as { name: string } | null)?.name || 'Selo IO'}
         </h1>
         <p className="text-muted-foreground mt-2">
           Track your marketing performance across all platforms
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Total Campaigns
             </CardTitle>
           </CardHeader>
@@ -80,7 +89,7 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Active Campaigns
             </CardTitle>
           </CardHeader>
@@ -90,16 +99,14 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Platform Connections
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{connectionCount || 0}</p>
             {!connectionCount && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Connect platforms in Settings
-              </p>
+              <p className="text-muted-foreground mt-2 text-sm">Connect platforms in Settings</p>
             )}
           </CardContent>
         </Card>

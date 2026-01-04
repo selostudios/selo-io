@@ -28,8 +28,10 @@ async function checkUser() {
   console.log(`🔍 Checking user: ${email}\n`)
 
   // Get auth user
-  const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
-  const authUser = users.find(u => u.email === email)
+  const {
+    data: { users },
+  } = await supabase.auth.admin.listUsers()
+  const authUser = users.find((u) => u.email === email)
 
   if (!authUser) {
     console.log('❌ No auth user found')

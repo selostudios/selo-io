@@ -15,7 +15,7 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="w-64 bg-white border-r min-h-screen p-6">
+    <div className="min-h-screen w-64 border-r bg-white p-6">
       <div className="mb-8">
         <Link href="/dashboard">
           <Image
@@ -24,7 +24,7 @@ export function Sidebar() {
             width={75}
             height={30}
             priority
-            className="object-contain cursor-pointer"
+            className="cursor-pointer object-contain"
           />
         </Link>
       </div>
@@ -47,10 +47,8 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'block px-3 py-2 rounded-md text-sm font-medium',
-                isActive
-                  ? 'bg-neutral-900 text-white'
-                  : 'text-neutral-600 hover:bg-neutral-100'
+                'block rounded-md px-3 py-2 text-sm font-medium',
+                isActive ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:bg-neutral-100'
               )}
             >
               {item.name}

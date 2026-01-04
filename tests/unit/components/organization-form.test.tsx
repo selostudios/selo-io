@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({
 describe('OrganizationForm', () => {
   const mockIndustries = [
     { id: 'industry-1', name: 'Marketing' },
-    { id: 'industry-2', name: 'Software' }
+    { id: 'industry-2', name: 'Software' },
   ]
 
   const defaultProps = {
@@ -25,7 +25,7 @@ describe('OrganizationForm', () => {
     primaryColor: '#000000',
     secondaryColor: '#F5F5F0',
     accentColor: '#666666',
-    industries: mockIndustries
+    industries: mockIndustries,
   }
 
   beforeEach(() => {

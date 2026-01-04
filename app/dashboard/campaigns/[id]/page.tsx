@@ -9,19 +9,11 @@ import { UtmParamRow } from '@/components/campaigns/utm-param-row'
 import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
 import { EditableDescription } from '@/components/campaigns/editable-description'
 
-export default async function CampaignDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data: campaign } = await supabase.from('campaigns').select('*').eq('id', id).single()
 
   if (!campaign) {
     notFound()
@@ -36,8 +28,8 @@ export default async function CampaignDetailPage({
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-start">
+    <div className="space-y-8 p-8">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">{campaign.name}</h1>
           <Badge className="mt-2">{campaign.status}</Badge>
@@ -57,11 +49,11 @@ export default async function CampaignDetailPage({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Start Date</p>
+              <p className="text-muted-foreground text-sm font-medium">Start Date</p>
               <p>{campaign.start_date ? formatDate(campaign.start_date, false) : 'Not set'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">End Date</p>
+              <p className="text-muted-foreground text-sm font-medium">End Date</p>
               <p>{campaign.end_date ? formatDate(campaign.end_date, false) : 'Not set'}</p>
             </div>
           </div>
@@ -77,14 +69,12 @@ export default async function CampaignDetailPage({
             <UtmParamRow label="utm_source" value={campaign.utm_source} />
             <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium} />
             <UtmParamRow label="utm_campaign" value={campaign.utm_campaign} />
-            {campaign.utm_term && (
-              <UtmParamRow label="utm_term" value={campaign.utm_term} />
-            )}
+            {campaign.utm_term && <UtmParamRow label="utm_term" value={campaign.utm_term} />}
             {campaign.utm_content && (
               <UtmParamRow label="utm_content" value={campaign.utm_content} />
             )}
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-muted-foreground mt-4 text-sm">
             Use these parameters when creating content in HubSpot, LinkedIn, and other platforms.
           </p>
         </CardContent>

@@ -4,7 +4,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export const testDb = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false }
+  auth: { persistSession: false },
 })
 
 export async function createTestUser(
@@ -16,7 +16,7 @@ export async function createTestUser(
     email,
     password,
     email_confirm: true,
-    user_metadata: metadata
+    user_metadata: metadata,
   })
   if (error) throw error
   return data.user
@@ -30,7 +30,7 @@ export async function createTestOrganization(name: string, industryId?: string) 
       industry: industryId,
       primary_color: '#000000',
       secondary_color: '#F5F5F0',
-      accent_color: '#666666'
+      accent_color: '#666666',
     })
     .select()
     .single()
@@ -53,7 +53,7 @@ export async function linkUserToOrganization(
       organization_id: organizationId,
       role,
       first_name: firstName,
-      last_name: lastName
+      last_name: lastName,
     })
     .select()
     .single()

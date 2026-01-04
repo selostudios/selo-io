@@ -47,7 +47,8 @@ export function ResendInviteButton({ inviteId, email }: ResendInviteButtonProps)
         <DialogHeader>
           <DialogTitle>Resend Invite</DialogTitle>
           <DialogDescription>
-            Are you sure you want to resend the invitation to {email}? This will also extend the expiration by 7 days.
+            Are you sure you want to resend the invitation to {email}? This will also extend the
+            expiration by 7 days.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

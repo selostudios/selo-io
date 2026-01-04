@@ -13,6 +13,7 @@
 ### Task 1: Create Storage Bucket Migration
 
 **Files:**
+
 - Create: `supabase/migrations/20260104000001_create_logo_storage.sql`
 
 **Step 1: Write the migration**
@@ -74,6 +75,7 @@ git commit -m "feat: add storage bucket for organization logos"
 ### Task 2: Add Logo Upload Server Actions
 
 **Files:**
+
 - Modify: `app/settings/organization/actions.ts`
 
 **Step 1: Add uploadLogo action**
@@ -83,7 +85,9 @@ Add these imports at the top and new actions after `updateOrganization`:
 ```typescript
 // Add to existing imports - nothing new needed
 
-export async function uploadLogo(formData: FormData): Promise<{ error?: string; logoUrl?: string }> {
+export async function uploadLogo(
+  formData: FormData
+): Promise<{ error?: string; logoUrl?: string }> {
   const file = formData.get('file') as File
 
   if (!file || file.size === 0) {
@@ -104,7 +108,9 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -125,12 +131,10 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
   const filePath = `${orgId}/logo.${fileExt}`
 
   // Delete existing logo files first (there might be different extensions)
-  const { data: existingFiles } = await supabase.storage
-    .from('organization-logos')
-    .list(orgId)
+  const { data: existingFiles } = await supabase.storage.from('organization-logos').list(orgId)
 
   if (existingFiles && existingFiles.length > 0) {
-    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    const filesToDelete = existingFiles.map((f) => `${orgId}/${f.name}`)
     await supabase.storage.from('organization-logos').remove(filesToDelete)
   }
 
@@ -140,14 +144,17 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
     .upload(filePath, file, { upsert: true })
 
   if (uploadError) {
-    console.error('[Logo Upload Error]', { error: uploadError, timestamp: new Date().toISOString() })
+    console.error('[Logo Upload Error]', {
+      error: uploadError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to upload logo' }
   }
 
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('organization-logos')
-    .getPublicUrl(filePath)
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('organization-logos').getPublicUrl(filePath)
 
   // Update organization with new logo URL
   const { error: updateError } = await supabase
@@ -156,7 +163,10 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
     .eq('id', orgId)
 
   if (updateError) {
-    console.error('[Logo Update Error]', { error: updateError, timestamp: new Date().toISOString() })
+    console.error('[Logo Update Error]', {
+      error: updateError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to save logo' }
   }
 
@@ -169,7 +179,9 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
 export async function removeLogo(): Promise<{ error?: string; success?: boolean }> {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -188,12 +200,10 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
   const orgId = userRecord.organization_id
 
   // Delete all logo files for this org
-  const { data: existingFiles } = await supabase.storage
-    .from('organization-logos')
-    .list(orgId)
+  const { data: existingFiles } = await supabase.storage.from('organization-logos').list(orgId)
 
   if (existingFiles && existingFiles.length > 0) {
-    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    const filesToDelete = existingFiles.map((f) => `${orgId}/${f.name}`)
     await supabase.storage.from('organization-logos').remove(filesToDelete)
   }
 
@@ -204,7 +214,10 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
     .eq('id', orgId)
 
   if (updateError) {
-    console.error('[Logo Remove Error]', { error: updateError, timestamp: new Date().toISOString() })
+    console.error('[Logo Remove Error]', {
+      error: updateError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to remove logo' }
   }
 
@@ -227,6 +240,7 @@ git commit -m "feat: add uploadLogo and removeLogo server actions"
 ### Task 3: Create LogoUpload Component
 
 **Files:**
+
 - Create: `components/settings/logo-upload.tsx`
 
 **Step 1: Create the component**
@@ -335,9 +349,9 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
   return (
     <div className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragOver ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300'
-        } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+        } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -355,7 +369,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
               />
             ) : (
               <div
-                className="w-20 h-20 rounded-lg flex items-center justify-center text-2xl font-bold text-white"
+                className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
                 style={{ backgroundColor: primaryColor || '#6B7280' }}
               >
                 {initial}
@@ -368,9 +382,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
             <p className="text-sm text-neutral-600">
               {isUploading ? 'Uploading...' : 'Drag and drop your logo here, or click to browse'}
             </p>
-            <p className="text-xs text-neutral-400">
-              PNG, JPG, or SVG. Max 2MB.
-            </p>
+            <p className="text-xs text-neutral-400">PNG, JPG, or SVG. Max 2MB.</p>
           </div>
 
           {/* Actions */}
@@ -424,6 +436,7 @@ git commit -m "feat: add LogoUpload component with drag-and-drop"
 ### Task 4: Update Organization Form
 
 **Files:**
+
 - Modify: `components/settings/organization-form.tsx`
 
 **Step 1: Replace URL input with LogoUpload component**
@@ -438,7 +451,7 @@ import { LogoUpload } from '@/components/settings/logo-upload'
 // Remove logoUrl from hasChanges check
 
 // Replace the logo URL input div with:
-<div className="space-y-2">
+;<div className="space-y-2">
   <Label>Organization Logo</Label>
   <LogoUpload
     currentLogoUrl={initialLogoUrl || null}
@@ -462,6 +475,7 @@ git commit -m "feat: replace logo URL input with file upload component"
 ### Task 5: Create OrgLogo Component for Header
 
 **Files:**
+
 - Create: `components/dashboard/org-logo.tsx`
 
 **Step 1: Create the component**
@@ -493,7 +507,7 @@ export function OrgLogo({ logoUrl, orgName, primaryColor, size = 40 }: OrgLogoPr
 
   return (
     <div
-      className="rounded-lg flex items-center justify-center text-white font-bold"
+      className="flex items-center justify-center rounded-lg font-bold text-white"
       style={{
         width: size,
         height: size,
@@ -519,6 +533,7 @@ git commit -m "feat: add OrgLogo component with initials fallback"
 ### Task 6: Update Header to Show Logo
 
 **Files:**
+
 - Modify: `components/dashboard/header.tsx`
 
 **Step 1: Add logo to header**
@@ -534,7 +549,9 @@ import { OrgLogo } from '@/components/dashboard/org-logo'
 export async function Header() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     redirect('/login')
   }
@@ -549,7 +566,11 @@ export async function Header() {
     redirect('/login')
   }
 
-  const org = userRecord?.organization as unknown as { name: string; logo_url: string | null; primary_color: string | null } | null
+  const org = userRecord?.organization as unknown as {
+    name: string
+    logo_url: string | null
+    primary_color: string | null
+  } | null
   const orgName = org?.name || 'Organization'
   const logoUrl = org?.logo_url || null
   const primaryColor = org?.primary_color || null
@@ -562,12 +583,17 @@ export async function Header() {
     : firstName.substring(0, 2).toUpperCase()
 
   return (
-    <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
       <div className="flex items-center gap-3">
         <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
-      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} initials={initials} />
+      <UserMenu
+        userEmail={userEmail}
+        firstName={firstName}
+        lastName={lastName}
+        initials={initials}
+      />
     </header>
   )
 }
@@ -585,6 +611,7 @@ git commit -m "feat: display organization logo in header"
 ### Task 7: Update Email Template with Logo
 
 **Files:**
+
 - Modify: `emails/invite-email.tsx`
 
 **Step 1: Add logo to email template**
@@ -626,7 +653,7 @@ export default function InviteEmail({
       <Preview>You've been invited to join {organizationName} on Selo IO</Preview>
       <Tailwind>
         <Body className="bg-neutral-50 font-sans">
-          <Container className="mx-auto py-12 px-4">
+          <Container className="mx-auto px-4 py-12">
             {/* Logo + Org Name Header */}
             <Section className="mb-6">
               <table cellPadding="0" cellSpacing="0" style={{ width: 'auto' }}>
@@ -643,7 +670,7 @@ export default function InviteEmail({
                     </td>
                   )}
                   <td style={{ verticalAlign: 'middle' }}>
-                    <Text className="text-xl font-bold text-neutral-900 m-0">
+                    <Text className="m-0 text-xl font-bold text-neutral-900">
                       {organizationName}
                     </Text>
                   </td>
@@ -651,30 +678,28 @@ export default function InviteEmail({
               </table>
             </Section>
 
-            <Heading className="text-2xl font-bold text-neutral-900 mb-4">
-              You're Invited!
-            </Heading>
-            <Text className="text-neutral-700 mb-4">
-              {invitedByEmail} has invited you to join {organizationName} on Selo IO
-              as a <strong>{role.replace('_', ' ')}</strong>.
+            <Heading className="mb-4 text-2xl font-bold text-neutral-900">You're Invited!</Heading>
+            <Text className="mb-4 text-neutral-700">
+              {invitedByEmail} has invited you to join {organizationName} on Selo IO as a{' '}
+              <strong>{role.replace('_', ' ')}</strong>.
             </Text>
-            <Text className="text-neutral-700 mb-6">
-              Selo IO helps marketing teams track campaign performance across
-              HubSpot, Google Analytics, LinkedIn, and more.
+            <Text className="mb-6 text-neutral-700">
+              Selo IO helps marketing teams track campaign performance across HubSpot, Google
+              Analytics, LinkedIn, and more.
             </Text>
             <Section className="mb-6">
               <Button
                 href={inviteLink}
-                className="bg-neutral-900 text-white px-6 py-3 rounded-md font-medium"
+                className="rounded-md bg-neutral-900 px-6 py-3 font-medium text-white"
               >
                 Accept Invitation
               </Button>
             </Section>
             <Text className="text-sm text-neutral-500">
-              This invitation will expire in 7 days. If you didn't expect this
-              invitation, you can safely ignore this email.
+              This invitation will expire in 7 days. If you didn't expect this invitation, you can
+              safely ignore this email.
             </Text>
-            <Text className="text-sm text-neutral-500 mt-4">
+            <Text className="mt-4 text-sm text-neutral-500">
               Or copy and paste this link:{' '}
               <Link href={inviteLink} className="text-blue-600">
                 {inviteLink}
@@ -700,6 +725,7 @@ git commit -m "feat: add organization logo to invite email template"
 ### Task 8: Update Invite Actions to Pass Logo URL
 
 **Files:**
+
 - Modify: `app/settings/team/actions.ts`
 
 **Step 1: Fetch and pass logoUrl to email template**
@@ -738,6 +764,7 @@ git commit -m "feat: pass organization logo to invite emails"
 ### Task 9: Add Next.js Image Domain Config
 
 **Files:**
+
 - Modify: `next.config.ts`
 
 **Step 1: Add Supabase storage domain**

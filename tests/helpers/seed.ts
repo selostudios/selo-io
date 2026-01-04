@@ -10,11 +10,9 @@ export async function seedTestData() {
   console.log('🌱 Seeding test data...')
 
   // Get Marketing industry
-  const { data: industries } = await supabase
-    .from('industries')
-    .select('id, name')
+  const { data: industries } = await supabase.from('industries').select('id, name')
 
-  const marketingIndustry = industries?.find(i => i.name === 'Marketing')
+  const marketingIndustry = industries?.find((i) => i.name === 'Marketing')
 
   // Create admin user
   const adminUser = await supabase.auth.admin.createUser({
@@ -23,8 +21,8 @@ export async function seedTestData() {
     email_confirm: true,
     user_metadata: {
       first_name: testUsers.admin.firstName,
-      last_name: testUsers.admin.lastName
-    }
+      last_name: testUsers.admin.lastName,
+    },
   })
 
   // Create team member user
@@ -34,8 +32,8 @@ export async function seedTestData() {
     email_confirm: true,
     user_metadata: {
       first_name: testUsers.teamMember.firstName,
-      last_name: testUsers.teamMember.lastName
-    }
+      last_name: testUsers.teamMember.lastName,
+    },
   })
 
   // Create test organization
@@ -46,7 +44,7 @@ export async function seedTestData() {
       industry: marketingIndustry?.id,
       primary_color: testOrganization.primaryColor,
       secondary_color: testOrganization.secondaryColor,
-      accent_color: testOrganization.accentColor
+      accent_color: testOrganization.accentColor,
     })
     .select()
     .single()
@@ -58,15 +56,15 @@ export async function seedTestData() {
       organization_id: org!.id,
       role: 'admin',
       first_name: testUsers.admin.firstName,
-      last_name: testUsers.admin.lastName
+      last_name: testUsers.admin.lastName,
     },
     {
       id: teamMemberUser.data.user!.id,
       organization_id: org!.id,
       role: 'team_member',
       first_name: testUsers.teamMember.firstName,
-      last_name: testUsers.teamMember.lastName
-    }
+      last_name: testUsers.teamMember.lastName,
+    },
   ])
 
   // Create test campaign
@@ -75,7 +73,7 @@ export async function seedTestData() {
     description: testCampaign.description,
     organization_id: org!.id,
     start_date: testCampaign.startDate,
-    end_date: testCampaign.endDate
+    end_date: testCampaign.endDate,
   })
 
   console.log('✅ Test data seeded successfully')

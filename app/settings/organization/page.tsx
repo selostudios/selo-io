@@ -5,7 +5,9 @@ import { OrganizationForm } from '@/components/settings/organization-form'
 export default async function OrganizationSettingsPage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')
@@ -49,8 +51,8 @@ export default async function OrganizationSettingsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Organization Profile</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage your organization's branding and settings
+        <p className="text-muted-foreground mt-1 text-sm">
+          Manage your organization&apos;s branding and settings
         </p>
       </div>
 

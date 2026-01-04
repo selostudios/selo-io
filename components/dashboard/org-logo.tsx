@@ -26,7 +26,7 @@ export function OrgLogo({ logoUrl, orgName, primaryColor, size = 40 }: OrgLogoPr
     <div
       role="img"
       aria-label={orgName ? `${orgName} logo` : 'Organization logo'}
-      className="rounded-lg flex items-center justify-center text-white font-bold"
+      className="flex items-center justify-center rounded-lg font-bold text-white"
       style={{
         width: size,
         height: size,

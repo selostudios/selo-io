@@ -7,11 +7,11 @@ export function mockResend() {
         send: vi.fn().mockResolvedValue({
           id: 'mock-email-id',
           from: 'noreply@selo.io',
-          to: 'test@example.com'
-        })
-      }
+          to: 'test@example.com',
+        }),
+      },
     },
-    FROM_EMAIL: 'noreply@selo.io'
+    FROM_EMAIL: 'noreply@selo.io',
   }))
 }
 
@@ -23,11 +23,11 @@ export function mockSupabaseClient() {
           user: {
             id: 'user-123',
             email: 'test@example.com',
-            created_at: new Date().toISOString()
-          }
+            created_at: new Date().toISOString(),
+          },
         },
-        error: null
-      })
+        error: null,
+      }),
     },
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
@@ -35,8 +35,8 @@ export function mockSupabaseClient() {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: {}, error: null })
-    })
+      single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    }),
   }
 }
 

@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation'
 export default async function IntegrationsPage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     redirect('/login')
   }
@@ -27,20 +29,18 @@ export default async function IntegrationsPage() {
 
   const platforms = ['hubspot', 'google_analytics', 'linkedin']
 
-  const connectionsMap = new Map(
-    connections?.map(c => [c.platform_type, c]) || []
-  )
+  const connectionsMap = new Map(connections?.map((c) => [c.platform_type, c]) || [])
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Platform Integrations</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-muted-foreground mt-1 text-sm">
           Connect your marketing platforms to track campaign performance
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {platforms.map((platform) => (
           <PlatformConnectionCard
             key={platform}
@@ -50,10 +50,10 @@ export default async function IntegrationsPage() {
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded p-4">
+      <div className="rounded border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-900">
-          <strong>Note:</strong> Platform connection UI is placeholder for MVP.
-          In production, this will include OAuth flows and credential input forms.
+          <strong>Note:</strong> Platform connection UI is placeholder for MVP. In production, this
+          will include OAuth flows and credential input forms.
         </p>
       </div>
     </div>

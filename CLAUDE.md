@@ -38,6 +38,7 @@ npm run reset-password   # CLI: Reset user password
 ## Architecture
 
 ### Tech Stack
+
 - **Next.js 16** with App Router and React Server Components
 - **Supabase** for auth (JWT in cookies) and PostgreSQL with Row-Level Security
 - **Shadcn UI** (New York style) + Tailwind CSS 4 + Radix UI
@@ -45,6 +46,7 @@ npm run reset-password   # CLI: Reset user password
 - **Vitest** + **Playwright** for testing
 
 ### Multi-Tenant Data Model
+
 Organizations own all data (campaigns, platform connections, team members). RLS policies enforce data isolation at the database level. User roles: `admin`, `team_member`, `client_viewer`.
 
 ### Key Patterns
@@ -56,10 +58,12 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 **Platform Integration**: Adapter pattern normalizes external platform data. See `lib/platforms/linkedin/` for reference implementation.
 
 **Supabase Clients**:
+
 - `lib/supabase/server.ts` - Server-side (RSC, server actions)
 - `lib/supabase/client.ts` - Browser-side
 
 ### Directory Structure
+
 ```
 app/                    # Next.js App Router pages
   auth/                 # OAuth callback, sign-out
@@ -76,6 +80,7 @@ docs/plans/             # Implementation plans and design docs
 ```
 
 ### Testing Strategy
+
 - **Unit (60%)**: `tests/unit/` - Components, utilities with Vitest + Testing Library
 - **Integration (30%)**: `tests/integration/` - Server actions, RLS policies with real Supabase
 - **E2E (10%)**: `tests/e2e/` - Critical user journeys with Playwright
@@ -83,6 +88,7 @@ docs/plans/             # Implementation plans and design docs
 Integration and E2E tests require local Supabase running via Docker.
 
 ### Error Logging Convention
+
 ```typescript
 console.error('[Context Error]', { type: 'error_type', timestamp: new Date().toISOString() })
 ```

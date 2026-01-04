@@ -30,7 +30,9 @@ export async function signInWithEmail(formData: FormData): Promise<{ error: stri
   redirect('/dashboard')
 }
 
-export async function signInWithOAuth(provider: 'google' | 'azure'): Promise<{ error: string } | undefined> {
+export async function signInWithOAuth(
+  provider: 'google' | 'azure'
+): Promise<{ error: string } | undefined> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (!siteUrl) {
     console.error('[Auth Error]', { type: 'oauth_config', timestamp: new Date().toISOString() })
@@ -47,7 +49,11 @@ export async function signInWithOAuth(provider: 'google' | 'azure'): Promise<{ e
 
   if (error) {
     // Generic error message to prevent information disclosure
-    console.error('[Auth Error]', { type: 'oauth_signin', provider, timestamp: new Date().toISOString() })
+    console.error('[Auth Error]', {
+      type: 'oauth_signin',
+      provider,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to initiate sign-in. Please try again.' }
   }
 
@@ -56,6 +62,10 @@ export async function signInWithOAuth(provider: 'google' | 'azure'): Promise<{ e
   }
 
   // Handle case where OAuth URL isn't generated
-  console.error('[Auth Error]', { type: 'oauth_no_url', provider, timestamp: new Date().toISOString() })
+  console.error('[Auth Error]', {
+    type: 'oauth_no_url',
+    provider,
+    timestamp: new Date().toISOString(),
+  })
   return { error: 'Failed to initiate sign-in. Please try again.' }
 }

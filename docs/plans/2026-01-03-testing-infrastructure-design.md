@@ -13,11 +13,13 @@
 ## Testing Architecture
 
 ### Testing Pyramid
+
 - **Unit Tests (60%)** - Component rendering, utilities, validation
 - **Integration Tests (30%)** - Server actions, database operations, RLS policies
 - **E2E Tests (10%)** - Critical user journeys, cross-page flows
 
 ### Directory Structure
+
 ```
 tests/
 ├── setup.ts              # Global test setup
@@ -43,6 +45,7 @@ tests/
 ## Tooling & Configuration
 
 ### Dependencies
+
 ```json
 {
   "devDependencies": {
@@ -59,6 +62,7 @@ tests/
 ```
 
 ### Vitest Configuration
+
 ```typescript
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
@@ -74,18 +78,19 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'tests/']
-    }
+      exclude: ['node_modules/', 'tests/'],
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './')
-    }
-  }
+      '@': path.resolve(__dirname, './'),
+    },
+  },
 })
 ```
 
 ### Playwright Configuration
+
 ```typescript
 // playwright.config.ts
 import { defineConfig } from '@playwright/test'
@@ -110,6 +115,7 @@ export default defineConfig({
 ```
 
 ### Package.json Scripts
+
 ```json
 {
   "scripts": {
@@ -127,12 +133,14 @@ export default defineConfig({
 ## Integration Testing Strategy
 
 ### Local Supabase Setup
+
 - Run Supabase locally via Docker (`supabase start`)
 - Real PostgreSQL with RLS policies
 - Isolated test environment
 - Fast test execution
 
 ### Database Helpers
+
 ```typescript
 // tests/integration/helpers/db.ts
 import { createClient } from '@supabase/supabase-js'
@@ -147,7 +155,7 @@ export async function createTestUser(email: string, password: string) {
   const { data, error } = await testDb.auth.admin.createUser({
     email,
     password,
-    email_confirm: true
+    email_confirm: true,
   })
   if (error) throw error
   return data.user
@@ -161,14 +169,18 @@ export async function cleanupTestData(userId?: string) {
 ```
 
 ### RLS Policy Testing
+
 Test that row-level security policies work correctly:
+
 - Users can only view users in their organization
 - Users cannot update other organizations
 - Campaigns are isolated by organization
 - Team invitations respect roles
 
 ### Server Action Testing
+
 Test server actions with real database operations:
+
 - Organization creation
 - Profile updates
 - Team invitations
@@ -179,23 +191,27 @@ Test server actions with real database operations:
 ### Critical User Journeys
 
 **Authentication & Onboarding:**
+
 - Login → Onboarding → Dashboard flow
 - Organization creation with industry selection
 - Invalid credentials show errors
 
 **Settings & Profile:**
+
 - Admin updates organization settings
 - User updates profile (first/last name)
 - Admin invites team member
 - Navigation between settings tabs
 
 **Campaign Management:**
+
 - Create campaign via dialog
 - View campaign list
 - Navigate to campaign details
 - Empty state handling
 
 ### Test Helpers
+
 ```typescript
 // tests/e2e/helpers.ts
 export async function loginAsAdmin(page: Page) {
@@ -210,6 +226,7 @@ export async function loginAsAdmin(page: Page) {
 ## CI/CD with GitHub Actions
 
 ### GitHub Actions Workflow
+
 ```yaml
 name: Tests
 
@@ -268,6 +285,7 @@ jobs:
 ```
 
 ### Vercel Integration
+
 - Enable "Wait for checks to pass before deploying" in Vercel settings
 - GitHub Actions runs tests first
 - Vercel only deploys if tests pass
@@ -276,6 +294,7 @@ jobs:
 ## Test Data & Fixtures
 
 ### Database Seeding
+
 ```typescript
 // tests/helpers/seed.ts
 export async function seedTestData() {
@@ -293,6 +312,7 @@ export async function cleanupTestData() {
 ```
 
 ### Test Fixtures
+
 ```typescript
 // tests/fixtures/index.ts
 export const testUsers = {
@@ -300,44 +320,48 @@ export const testUsers = {
     email: 'admin@test.com',
     password: 'TestPassword123!',
     firstName: 'Admin',
-    lastName: 'User'
+    lastName: 'User',
   },
   teamMember: {
     email: 'member@test.com',
     password: 'TestPassword123!',
     firstName: 'Team',
-    lastName: 'Member'
-  }
+    lastName: 'Member',
+  },
 }
 ```
 
 ## Mocking Strategies
 
 ### Mock External Services
+
 ```typescript
 // tests/helpers/mocks.ts
 export function mockResend() {
   vi.mock('@/lib/email/client', () => ({
     resend: {
       emails: {
-        send: vi.fn().mockResolvedValue({ id: 'mock-email-id' })
-      }
+        send: vi.fn().mockResolvedValue({ id: 'mock-email-id' }),
+      },
     },
-    FROM_EMAIL: 'noreply@selo.io'
+    FROM_EMAIL: 'noreply@selo.io',
   }))
 }
 ```
 
 ### Mock Supabase (unit tests only)
+
 ```typescript
 export function mockSupabaseClient() {
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: 'user-1', email: 'test@example.com' } }
-      })
+        data: { user: { id: 'user-1', email: 'test@example.com' } },
+      }),
     },
-    from: vi.fn().mockReturnValue({ /* mock queries */ })
+    from: vi.fn().mockReturnValue({
+      /* mock queries */
+    }),
   }
 }
 ```
@@ -345,21 +369,25 @@ export function mockSupabaseClient() {
 ## Priority Test Coverage
 
 ### Authentication & Onboarding
+
 - Unit: Login form validation, form state
 - Integration: Organization creation, user record linking, RLS
 - E2E: Complete signup → onboarding → dashboard flow
 
 ### Settings & Profile
+
 - Unit: Form validation, change detection, color pickers
 - Integration: Admin-only operations, industry FK, team invites
 - E2E: Update settings, profile, invite flow
 
 ### Campaigns
+
 - Unit: Campaign form, date validation
 - Integration: Campaign creation, RLS isolation
 - E2E: Create, view, navigate campaigns
 
 ### Database & RLS
+
 - Integration: 100% RLS policy coverage
   - Organization isolation
   - User visibility by org
@@ -367,6 +395,7 @@ export function mockSupabaseClient() {
   - Role-based permissions
 
 ## Coverage Targets
+
 - Unit tests: 80%+ coverage
 - Integration tests: 100% of server actions
 - E2E tests: All critical user paths

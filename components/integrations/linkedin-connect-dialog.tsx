@@ -33,10 +33,13 @@ export function LinkedInConnectDialog() {
 
     const formData = new FormData()
     formData.append('platform_type', 'linkedin')
-    formData.append('credentials', JSON.stringify({
-      organization_id: organizationId.trim(),
-      access_token: accessToken.trim(),
-    }))
+    formData.append(
+      'credentials',
+      JSON.stringify({
+        organization_id: organizationId.trim(),
+        access_token: accessToken.trim(),
+      })
+    )
 
     const result = await connectPlatform(formData)
 
@@ -74,7 +77,7 @@ export function LinkedInConnectDialog() {
               onChange={(e) => setOrganizationId(e.target.value)}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Found in your LinkedIn Company Page URL (e.g., linkedin.com/company/12345678)
             </p>
           </div>
@@ -88,12 +91,18 @@ export function LinkedInConnectDialog() {
               onChange={(e) => setAccessToken(e.target.value)}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
-              Generate at developers.linkedin.com with r_organization_social and r_organization_admin scopes
+            <p className="text-muted-foreground text-xs">
+              Generate at developers.linkedin.com with r_organization_social and
+              r_organization_admin scopes
             </p>
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

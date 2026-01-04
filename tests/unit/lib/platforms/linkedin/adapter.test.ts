@@ -14,7 +14,7 @@ describe('LinkedInAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(LinkedInClient).mockImplementation(function() {
+    vi.mocked(LinkedInClient).mockImplementation(function () {
       return {
         getAllMetrics: mockGetAllMetrics,
       } as unknown as LinkedInClient

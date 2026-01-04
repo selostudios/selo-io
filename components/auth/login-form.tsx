@@ -51,7 +51,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-2">
-        <div className="flex justify-center mb-0">
+        <div className="mb-0 flex justify-center">
           <Image
             src="/selo-logo.jpg.webp"
             alt="Selo Studios"
@@ -90,11 +90,7 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
@@ -105,9 +101,7 @@ export function LoginForm() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
+            <span className="bg-background text-muted-foreground px-2">Or continue with</span>
           </div>
         </div>
 

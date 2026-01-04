@@ -16,12 +16,12 @@ export function UtmParamRow({ label, value }: UtmParamRowProps) {
   }
 
   return (
-    <div className="flex justify-between items-center bg-neutral-50 rounded-l overflow-hidden">
+    <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
-        <span className="font-mono text-sm bg-neutral-700 text-white px-4 py-3">{label}</span>
-        <code className="text-sm px-4">{value}</code>
+        <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">{label}</span>
+        <code className="px-4 text-sm">{value}</code>
       </div>
-      <Button variant="ghost" size="sm" onClick={handleCopy} className="h-8 w-8 p-0 mr-2">
+      <Button variant="ghost" size="sm" onClick={handleCopy} className="mr-2 h-8 w-8 p-0">
         <Copy className="h-4 w-4" />
         <span className="sr-only">Copy {label}</span>
       </Button>

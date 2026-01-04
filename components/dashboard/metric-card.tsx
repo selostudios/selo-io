@@ -8,12 +8,11 @@ export function MetricCard({ label, value, change }: MetricCardProps) {
   const formattedValue = value.toLocaleString()
 
   const isPositive = change !== null && change >= 0
-  const isNegative = change !== null && change < 0
 
   return (
     <div className="flex flex-col">
       <span className="text-2xl font-bold">{formattedValue}</span>
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
       {change !== null && (
         <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
           <span>{isPositive ? '▲' : '▼'}</span>

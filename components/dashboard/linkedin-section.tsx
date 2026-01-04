@@ -36,7 +36,12 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
 
   useEffect(() => {
     if (isConnected) {
-      loadMetrics()
+      startTransition(async () => {
+        const result = await getLinkedInMetrics(period)
+        if (result.metrics) {
+          setMetrics(result.metrics)
+        }
+      })
     }
   }, [isConnected, period])
 
@@ -69,24 +74,16 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
           <CardTitle>LinkedIn</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Connect LinkedIn in Settings to view metrics.
-          </p>
+          <p className="text-muted-foreground">Connect LinkedIn in Settings to view metrics.</p>
         </CardContent>
       </Card>
     )
   }
 
-  const periodLabels: Record<Period, string> = {
-    '7d': '7 days',
-    '30d': '30 days',
-    'quarter': 'This quarter',
-  }
-
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <CardTitle>LinkedIn</CardTitle>
           <div className="flex items-center gap-2">
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
@@ -112,7 +109,7 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
           </div>
         </div>
         {lastSyncAt && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Last synced: {new Date(lastSyncAt).toLocaleString()}
           </p>
         )}
@@ -121,7 +118,7 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
         {isPending ? (
           <p className="text-muted-foreground">Loading metrics...</p>
         ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.label}
@@ -132,9 +129,7 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">
-            No data yet. Click refresh to sync metrics.
-          </p>
+          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
         )}
       </CardContent>
     </Card>

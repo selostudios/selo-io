@@ -19,7 +19,9 @@ function getInitials(name: string): string {
 export default async function TeamSettingsPage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')
@@ -47,24 +49,31 @@ export default async function TeamSettingsPage() {
 
   // Get team members with emails using security definer function
   const { data: userEmails } = await supabase.rpc('get_organization_user_emails', {
-    org_id: userRecord.organization_id
+    org_id: userRecord.organization_id,
   })
 
   const { data: teamMembers } = await supabase
     .from('users')
-    .select(`
+    .select(
+      `
       id,
       role,
       created_at
-    `)
+    `
+    )
     .eq('organization_id', userRecord.organization_id)
     .order('created_at', { ascending: false })
 
   // Map emails and names to team members
   const userDataMap = new Map<string, { email: string; first_name: string; last_name: string }>(
-    userEmails?.map((u: any) => [u.user_id, { email: u.email, first_name: u.first_name, last_name: u.last_name }]) || []
+    userEmails?.map(
+      (u: { user_id: string; email: string; first_name: string; last_name: string }) => [
+        u.user_id,
+        { email: u.email, first_name: u.first_name, last_name: u.last_name },
+      ]
+    ) || []
   )
-  const teamMembersWithEmails = (teamMembers || []).map(member => {
+  const teamMembersWithEmails = (teamMembers || []).map((member) => {
     const userData = userDataMap.get(member.id)
     const fullName = userData
       ? `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`.trim()
@@ -72,12 +81,17 @@ export default async function TeamSettingsPage() {
     return {
       ...member,
       name: fullName,
-      email: userData?.email || 'Unknown'
+      email: userData?.email || 'Unknown',
     }
   })
 
   // Get pending invites (only if admin)
-  let pendingInvites: any[] = []
+  let pendingInvites: Array<{
+    id: string
+    email: string
+    role: string
+    expires_at: string
+  }> = []
   if (isAdmin) {
     const { data: invites } = await supabase
       .from('invites')
@@ -97,10 +111,10 @@ export default async function TeamSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex items-start justify-between">
         <div>
           <h2 className="text-xl font-semibold">Team Members</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Manage team members for {org?.name || 'your organization'}
           </p>
         </div>
@@ -110,38 +124,34 @@ export default async function TeamSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Active</CardTitle>
-          <CardDescription>
-            Current team members with access to the organization
-          </CardDescription>
+          <CardDescription>Current team members with access to the organization</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {teamMembersWithEmails.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
+                className="flex items-center justify-between rounded-lg border p-4"
               >
                 <div className="flex items-start gap-4">
-                  <Avatar className="size-10 mt-0.5">
+                  <Avatar className="mt-0.5 size-10">
                     <AvatarFallback className="text-sm font-medium">
                       {getInitials(member.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">{member.email}</p>
+                    <p className="text-muted-foreground text-sm">
                       Joined {formatDate(member.created_at)}
                     </p>
                   </div>
                 </div>
-                <Badge>
-                  {member.role.replace('_', ' ')}
-                </Badge>
+                <Badge>{member.role.replace('_', ' ')}</Badge>
               </div>
             ))}
             {teamMembersWithEmails.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-8">
+              <p className="text-muted-foreground py-8 text-center text-sm">
                 No team members found
               </p>
             )}
@@ -153,9 +163,7 @@ export default async function TeamSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pending Invites</CardTitle>
-            <CardDescription>
-              Invitations that haven't been accepted yet
-            </CardDescription>
+            <CardDescription>Invitations that haven&apos;t been accepted yet</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -166,11 +174,11 @@ export default async function TeamSettingsPage() {
                 return (
                   <div
                     key={invite.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between rounded-lg border p-4"
                   >
                     <div>
                       <p className="font-medium">{invite.email}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {isExpired ? (
                           <span className="text-red-600">
                             Expired {formatDate(invite.expires_at)}
@@ -181,9 +189,7 @@ export default async function TeamSettingsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        {invite.role.replace('_', ' ')}
-                      </Badge>
+                      <Badge variant="outline">{invite.role.replace('_', ' ')}</Badge>
                       <ResendInviteButton inviteId={invite.id} email={invite.email} />
                       <form action={handleDeleteInvite}>
                         <input type="hidden" name="inviteId" value={invite.id} />

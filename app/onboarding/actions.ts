@@ -18,7 +18,10 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     console.error('[Onboarding Error]', { type: 'auth_check', timestamp: new Date().toISOString() })
@@ -37,7 +40,7 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     userId: user.id,
     existingUser,
     existingUserError,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 
   // If the query failed (not just no results), it might be an RLS issue
@@ -45,15 +48,18 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     console.error('[Onboarding Error]', {
       type: 'user_query_failed',
       error: existingUserError,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
     return {
-      error: `Could not check existing user: ${existingUserError.message} (${existingUserError.code})`
+      error: `Could not check existing user: ${existingUserError.message} (${existingUserError.code})`,
     }
   }
 
   if (existingUser?.organization_id) {
-    console.error('[Onboarding Error]', { type: 'already_has_org', orgId: existingUser.organization_id })
+    console.error('[Onboarding Error]', {
+      type: 'already_has_org',
+      orgId: existingUser.organization_id,
+    })
     return { error: 'You already have an organization' }
   }
 
@@ -75,40 +81,35 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
       message: orgError.message,
       details: orgError.details,
       hint: orgError.hint,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
 
     // Show detailed error for debugging (TODO: make generic in production later)
     return {
-      error: `Organization creation failed: ${orgError.message}${orgError.code ? ` (code: ${orgError.code})` : ''}${orgError.hint ? ` - ${orgError.hint}` : ''}`
+      error: `Organization creation failed: ${orgError.message}${orgError.code ? ` (code: ${orgError.code})` : ''}${orgError.hint ? ` - ${orgError.hint}` : ''}`,
     }
   }
 
   // Create user record linking to organization
-  const { error: userRecordError } = await supabase
-    .from('users')
-    .insert({
-      id: user.id,
-      organization_id: org.id,
-      role: 'admin',
-    })
+  const { error: userRecordError } = await supabase.from('users').insert({
+    id: user.id,
+    organization_id: org.id,
+    role: 'admin',
+  })
 
   if (userRecordError) {
     // Cleanup: Delete the organization we just created since user record failed
-    await supabase
-      .from('organizations')
-      .delete()
-      .eq('id', org.id)
+    await supabase.from('organizations').delete().eq('id', org.id)
 
     console.error('[Onboarding Error]', {
       type: 'user_record_creation',
       error: userRecordError,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
 
     // Show detailed error for debugging
     return {
-      error: `User record creation failed: ${userRecordError.message}${userRecordError.code ? ` (code: ${userRecordError.code})` : ''}`
+      error: `User record creation failed: ${userRecordError.message}${userRecordError.code ? ` (code: ${userRecordError.code})` : ''}`,
     }
   }
 

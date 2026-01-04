@@ -60,16 +60,14 @@ export function InviteUserDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Invite Member
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>
-          <DialogDescription>
-            Send an invitation to join your organization
-          </DialogDescription>
+          <DialogDescription>Send an invitation to join your organization</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -96,13 +94,9 @@ export function InviteUserDialog() {
               </SelectContent>
             </Select>
           </div>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           {success && (
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded break-all">
+            <div className="rounded bg-green-50 p-3 text-sm break-all text-green-600">
               {success}
             </div>
           )}

@@ -13,7 +13,9 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     redirect(`/login?redirect=/accept-invite/${id}`)
@@ -22,22 +24,22 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   // Get the invite
   const { data: invite, error: inviteError } = await supabase
     .from('invites')
-    .select(`
+    .select(
+      `
       *,
       organization:organizations(name)
-    `)
+    `
+    )
     .eq('id', id)
     .single()
 
   if (inviteError || !invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invite Not Found</CardTitle>
-            <CardDescription>
-              This invitation link is invalid or has been removed.
-            </CardDescription>
+            <CardDescription>This invitation link is invalid or has been removed.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -47,13 +49,11 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   // Check if already accepted
   if (invite.accepted_at) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invite Already Used</CardTitle>
-            <CardDescription>
-              This invitation has already been accepted.
-            </CardDescription>
+            <CardDescription>This invitation has already been accepted.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
@@ -71,13 +71,13 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
 
   if (isExpired) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invite Expired</CardTitle>
             <CardDescription>
-              This invitation expired on {expiresAt.toLocaleDateString()}.
-              Please request a new invitation.
+              This invitation expired on {expiresAt.toLocaleDateString()}. Please request a new
+              invitation.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -88,7 +88,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   // Check if email matches
   if (user.email !== invite.email) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Email Mismatch</CardTitle>
@@ -108,24 +108,24 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>You've Been Invited!</CardTitle>
+          <CardTitle>You&apos;ve Been Invited!</CardTitle>
           <CardDescription>
-            You've been invited to join {invite.organization?.name || 'an organization'}
+            You&apos;ve been invited to join {invite.organization?.name || 'an organization'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               <strong>Email:</strong> {invite.email}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               <strong>Role:</strong>{' '}
               <Badge variant="outline">{invite.role.replace('_', ' ')}</Badge>
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               <strong>Expires:</strong> {expiresAt.toLocaleDateString()}
             </p>
           </div>

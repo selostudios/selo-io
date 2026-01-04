@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { LinkedInClient } from '@/lib/platforms/linkedin/client'
 
 describe('LinkedInClient', () => {
@@ -22,11 +22,14 @@ describe('LinkedInClient', () => {
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 },
+              },
+            ],
+          }),
       })
 
       const result = await client.getFollowerStatistics(startDate, endDate)
@@ -39,11 +42,12 @@ describe('LinkedInClient', () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
-      await expect(client.getFollowerStatistics(new Date(), new Date()))
-        .rejects.toThrow('LinkedIn API error: 401')
+      await expect(client.getFollowerStatistics(new Date(), new Date())).rejects.toThrow(
+        'LinkedIn API error: 401'
+      )
     })
   })
 
@@ -53,14 +57,17 @@ describe('LinkedInClient', () => {
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            views: {
-              allPageViews: { pageViews: 500 },
-              uniqueVisitors: 250
-            }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                views: {
+                  allPageViews: { pageViews: 500 },
+                  uniqueVisitors: 250,
+                },
+              },
+            ],
+          }),
       })
 
       const result = await client.getPageStatistics(new Date(), new Date())
@@ -75,14 +82,17 @@ describe('LinkedInClient', () => {
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            totalShareStatistics: {
-              impressionCount: 3000,
-              reactionCount: 50
-            }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                totalShareStatistics: {
+                  impressionCount: 3000,
+                  reactionCount: 50,
+                },
+              },
+            ],
+          }),
       })
 
       const result = await client.getShareStatistics(new Date(), new Date())

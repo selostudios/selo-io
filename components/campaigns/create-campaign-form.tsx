@@ -31,9 +31,7 @@ export function CreateCampaignForm() {
     <Card>
       <CardHeader>
         <CardTitle>Create Campaign</CardTitle>
-        <CardDescription>
-          Set up a new marketing campaign with tracking parameters
-        </CardDescription>
+        <CardDescription>Set up a new marketing campaign with tracking parameters</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
@@ -51,28 +49,14 @@ export function CreateCampaignForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start_date">Start Date</Label>
-              <Input
-                id="start_date"
-                name="start_date"
-                type="date"
-                disabled={isLoading}
-              />
+              <Input id="start_date" name="start_date" type="date" disabled={isLoading} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="end_date">End Date</Label>
-              <Input
-                id="end_date"
-                name="end_date"
-                type="date"
-                disabled={isLoading}
-              />
+              <Input id="end_date" name="end_date" type="date" disabled={isLoading} />
             </div>
           </div>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Creating...' : 'Create Campaign'}
           </Button>

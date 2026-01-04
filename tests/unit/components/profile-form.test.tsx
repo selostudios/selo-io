@@ -15,7 +15,7 @@ describe('ProfileForm', () => {
   const defaultProps = {
     email: 'test@example.com',
     firstName: 'John',
-    lastName: 'Doe'
+    lastName: 'Doe',
   }
 
   it('renders form with initial values', () => {

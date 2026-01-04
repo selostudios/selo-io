@@ -23,7 +23,7 @@ export function SettingsTabs() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                'pb-3 text-sm font-medium border-b-2 transition-colors',
+                'border-b-2 pb-3 text-sm font-medium transition-colors',
                 isActive
                   ? 'border-neutral-900 text-neutral-900'
                   : 'border-transparent text-neutral-600 hover:text-neutral-900'

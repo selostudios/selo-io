@@ -52,9 +52,7 @@ export function InviteUserForm() {
     <Card>
       <CardHeader>
         <CardTitle>Invite Team Member</CardTitle>
-        <CardDescription>
-          Send an invitation to join your organization
-        </CardDescription>
+        <CardDescription>Send an invitation to join your organization</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
@@ -82,18 +80,14 @@ export function InviteUserForm() {
               </SelectContent>
             </Select>
           </div>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           {warning && (
-            <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded break-all">
+            <div className="rounded bg-amber-50 p-3 text-sm break-all text-amber-700">
               {warning}
             </div>
           )}
           {success && (
-            <div className="text-sm text-green-600 bg-green-50 p-3 rounded break-all">
+            <div className="rounded bg-green-50 p-3 text-sm break-all text-green-600">
               {success}
             </div>
           )}

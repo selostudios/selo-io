@@ -6,7 +6,9 @@ export default async function OnboardingPage() {
   const supabase = await createClient()
 
   // Check if user is authenticated
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     redirect('/login')
   }

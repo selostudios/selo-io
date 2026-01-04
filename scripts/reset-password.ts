@@ -58,14 +58,17 @@ async function resetPassword() {
   try {
     // Get user by email
     console.log(`📧 Looking up user: ${email}`)
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
+    const {
+      data: { users },
+      error: listError,
+    } = await supabase.auth.admin.listUsers()
 
     if (listError) {
       console.error('❌ Failed to list users:', listError.message)
       process.exit(1)
     }
 
-    const user = users.find(u => u.email === email)
+    const user = users.find((u) => u.email === email)
 
     if (!user) {
       console.error(`❌ User not found: ${email}`)
@@ -76,10 +79,7 @@ async function resetPassword() {
 
     // Update password
     console.log(`\n🔑 Updating password...`)
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      user.id,
-      { password }
-    )
+    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, { password })
 
     if (updateError) {
       console.error('❌ Failed to update password:', updateError.message)
@@ -95,7 +95,6 @@ async function resetPassword() {
     console.log(`🔑 User ID: ${user.id}`)
     console.log('═══════════════════════════════════════')
     console.log('\n🎉 User can now sign in with the new password!')
-
   } catch (error) {
     console.error('❌ Unexpected error:', error)
     process.exit(1)

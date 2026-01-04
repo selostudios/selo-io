@@ -43,9 +43,7 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{userEmail}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
-            Profile
-          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setProfileOpen(true)}>Profile</DropdownMenuItem>
           <DropdownMenuItem>
             <form action="/auth/sign-out" method="post" className="w-full">
               <button type="submit" className="w-full text-left">
@@ -60,9 +58,7 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Profile</DialogTitle>
-            <DialogDescription>
-              Update your personal information
-            </DialogDescription>
+            <DialogDescription>Update your personal information</DialogDescription>
           </DialogHeader>
           <ProfileForm email={userEmail} firstName={firstName} lastName={lastName} />
         </DialogContent>

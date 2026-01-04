@@ -3,7 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function updateOrganization(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+export async function updateOrganization(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
   const name = formData.get('name') as string
   const industryId = formData.get('industry') as string
   const logoUrl = formData.get('logoUrl') as string
@@ -33,7 +35,9 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return { error: 'Not authenticated' }
@@ -60,12 +64,16 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
       primary_color: primaryColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', userRecord.organization_id)
 
   if (error) {
-    console.error('[Organization Error]', { type: 'update_org', error, timestamp: new Date().toISOString() })
+    console.error('[Organization Error]', {
+      type: 'update_org',
+      error,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to update organization settings' }
   }
 
@@ -75,7 +83,9 @@ export async function updateOrganization(formData: FormData): Promise<{ error?: 
   return { success: true }
 }
 
-export async function uploadLogo(formData: FormData): Promise<{ error?: string; logoUrl?: string }> {
+export async function uploadLogo(
+  formData: FormData
+): Promise<{ error?: string; logoUrl?: string }> {
   const file = formData.get('file') as File
 
   if (!file || file.size === 0) {
@@ -96,7 +106,9 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -117,12 +129,10 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
   const filePath = `${orgId}/logo.${fileExt}`
 
   // Delete existing logo files first (there might be different extensions)
-  const { data: existingFiles } = await supabase.storage
-    .from('organization-logos')
-    .list(orgId)
+  const { data: existingFiles } = await supabase.storage.from('organization-logos').list(orgId)
 
   if (existingFiles && existingFiles.length > 0) {
-    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    const filesToDelete = existingFiles.map((f) => `${orgId}/${f.name}`)
     await supabase.storage.from('organization-logos').remove(filesToDelete)
   }
 
@@ -132,14 +142,17 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
     .upload(filePath, file, { upsert: true })
 
   if (uploadError) {
-    console.error('[Logo Upload Error]', { error: uploadError, timestamp: new Date().toISOString() })
+    console.error('[Logo Upload Error]', {
+      error: uploadError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to upload logo' }
   }
 
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('organization-logos')
-    .getPublicUrl(filePath)
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('organization-logos').getPublicUrl(filePath)
 
   // Update organization with new logo URL
   const { error: updateError } = await supabase
@@ -148,7 +161,10 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
     .eq('id', orgId)
 
   if (updateError) {
-    console.error('[Logo Update Error]', { error: updateError, timestamp: new Date().toISOString() })
+    console.error('[Logo Update Error]', {
+      error: updateError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to save logo' }
   }
 
@@ -161,7 +177,9 @@ export async function uploadLogo(formData: FormData): Promise<{ error?: string; 
 export async function removeLogo(): Promise<{ error?: string; success?: boolean }> {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -180,12 +198,10 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
   const orgId = userRecord.organization_id
 
   // Delete all logo files for this org
-  const { data: existingFiles } = await supabase.storage
-    .from('organization-logos')
-    .list(orgId)
+  const { data: existingFiles } = await supabase.storage.from('organization-logos').list(orgId)
 
   if (existingFiles && existingFiles.length > 0) {
-    const filesToDelete = existingFiles.map(f => `${orgId}/${f.name}`)
+    const filesToDelete = existingFiles.map((f) => `${orgId}/${f.name}`)
     await supabase.storage.from('organization-logos').remove(filesToDelete)
   }
 
@@ -196,7 +212,10 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
     .eq('id', orgId)
 
   if (updateError) {
-    console.error('[Logo Remove Error]', { error: updateError, timestamp: new Date().toISOString() })
+    console.error('[Logo Remove Error]', {
+      error: updateError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to remove logo' }
   }
 

@@ -15,6 +15,7 @@
 ### Task 1: Initialize Next.js Project
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `next.config.js`
@@ -25,12 +26,14 @@
 **Step 1: Initialize Next.js with TypeScript**
 
 Run:
+
 ```bash
 cd /Users/owainllewellyn/projects/Selo-OS/.worktrees/mvp-implementation
 npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --import-alias "@/*"
 ```
 
 Answer prompts:
+
 - Would you like to use ESLint? → Yes
 - Would you like to use Turbopack? → No
 - Would you like to customize the default import alias? → No
@@ -40,6 +43,7 @@ Expected: Creates Next.js project with App Router, TypeScript, Tailwind
 **Step 2: Verify development server works**
 
 Run:
+
 ```bash
 npm run dev
 ```
@@ -52,6 +56,7 @@ Stop server: Ctrl+C
 **Step 3: Install core dependencies**
 
 Run:
+
 ```bash
 npm install @supabase/supabase-js @supabase/ssr
 npm install -D @types/node
@@ -62,11 +67,13 @@ Expected: Dependencies installed successfully
 **Step 4: Install Shadcn UI**
 
 Run:
+
 ```bash
 npx shadcn@latest init
 ```
 
 Answer prompts:
+
 - Would you like to use TypeScript? → yes
 - Which style? → New York
 - Which color? → Neutral
@@ -80,6 +87,7 @@ Expected: Shadcn UI configured with components directory
 **Step 5: Install initial Shadcn components**
 
 Run:
+
 ```bash
 npx shadcn@latest add button card input label select table toast tabs dropdown-menu avatar badge
 ```
@@ -89,6 +97,7 @@ Expected: Components installed in `components/ui/`
 **Step 6: Commit**
 
 Run:
+
 ```bash
 git add .
 git commit -m "feat: initialize Next.js project with Shadcn UI
@@ -108,6 +117,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 2: Supabase Setup
 
 **Files:**
+
 - Create: `.env.local`
 - Create: `lib/supabase/client.ts`
 - Create: `lib/supabase/server.ts`
@@ -117,6 +127,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create Supabase project**
 
 Manual step (document for engineer):
+
 1. Go to https://supabase.com/dashboard
 2. Create new project: "selo-io-dev"
 3. Save credentials:
@@ -127,6 +138,7 @@ Manual step (document for engineer):
 **Step 2: Create environment variables file**
 
 Create `.env.local`:
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -136,6 +148,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 **Step 3: Add .env.local to .gitignore**
 
 Verify `.gitignore` contains:
+
 ```
 .env*.local
 ```
@@ -145,6 +158,7 @@ Verify `.gitignore` contains:
 **Step 4: Create Supabase client utilities**
 
 Create `lib/supabase/client.ts`:
+
 ```typescript
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -159,6 +173,7 @@ export function createClient() {
 **Step 5: Create Supabase server utilities**
 
 Create `lib/supabase/server.ts`:
+
 ```typescript
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -197,6 +212,7 @@ export async function createClient() {
 **Step 6: Create middleware for auth**
 
 Create `middleware.ts`:
+
 ```typescript
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -260,15 +276,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
 ```
 
 **Step 7: Commit**
 
 Run:
+
 ```bash
 git add lib/ middleware.ts .gitignore
 git commit -m "feat: configure Supabase client and auth middleware
@@ -287,11 +302,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 3: Database Schema Setup
 
 **Files:**
+
 - Create: `supabase/migrations/20260102000001_initial_schema.sql`
 
 **Step 1: Create Supabase migrations directory**
 
 Run:
+
 ```bash
 mkdir -p supabase/migrations
 ```
@@ -299,6 +316,7 @@ mkdir -p supabase/migrations
 **Step 2: Create initial schema migration**
 
 Create `supabase/migrations/20260102000001_initial_schema.sql`:
+
 ```sql
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -567,11 +585,13 @@ CREATE TRIGGER update_platform_connections_updated_at BEFORE UPDATE ON platform_
 Manual step (document for engineer):
 
 Option A - Using Supabase Dashboard:
+
 1. Go to Supabase Dashboard → SQL Editor
 2. Copy contents of migration file
 3. Run SQL
 
 Option B - Using Supabase CLI (recommended):
+
 ```bash
 # Install Supabase CLI if not installed
 npm install -g supabase
@@ -586,6 +606,7 @@ supabase db push
 **Step 4: Verify schema in Supabase Dashboard**
 
 Manual verification:
+
 1. Go to Supabase Dashboard → Table Editor
 2. Verify tables exist: organizations, users, invites, campaigns, platform_connections, campaign_metrics, weekly_summaries
 3. Go to Authentication → Policies
@@ -594,6 +615,7 @@ Manual verification:
 **Step 5: Commit**
 
 Run:
+
 ```bash
 git add supabase/
 git commit -m "feat: create initial database schema with RLS
@@ -617,6 +639,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 4: Auth Configuration
 
 **Files:**
+
 - Create: `app/auth/callback/route.ts`
 - Create: `app/auth/sign-out/route.ts`
 - Modify: Supabase Dashboard (manual)
@@ -624,6 +647,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Configure OAuth providers in Supabase**
 
 Manual step (document for engineer):
+
 1. Go to Supabase Dashboard → Authentication → Providers
 2. Enable Email provider (should be enabled by default)
 3. Enable Google provider:
@@ -640,6 +664,7 @@ Manual step (document for engineer):
 **Step 2: Create auth callback handler**
 
 Create `app/auth/callback/route.ts`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -666,6 +691,7 @@ export async function GET(request: Request) {
 **Step 3: Create sign-out handler**
 
 Create `app/auth/sign-out/route.ts`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -681,6 +707,7 @@ export async function POST(request: Request) {
 **Step 4: Commit**
 
 Run:
+
 ```bash
 git add app/auth/
 git commit -m "feat: configure auth callback and sign-out handlers
@@ -699,6 +726,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 5: Login Page UI
 
 **Files:**
+
 - Create: `app/login/page.tsx`
 - Create: `app/login/actions.ts`
 - Create: `components/auth/login-form.tsx`
@@ -706,6 +734,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create login actions**
 
 Create `app/login/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -751,6 +780,7 @@ export async function signInWithOAuth(provider: 'google' | 'azure') {
 **Step 2: Create login form component**
 
 Create `components/auth/login-form.tsx`:
+
 ```typescript
 'use client'
 
@@ -868,6 +898,7 @@ export function LoginForm() {
 **Step 3: Create login page**
 
 Create `app/login/page.tsx`:
+
 ```typescript
 import { LoginForm } from '@/components/auth/login-form'
 import { createClient } from '@/lib/supabase/server'
@@ -893,6 +924,7 @@ export default async function LoginPage() {
 **Step 4: Update environment variables**
 
 Add to `.env.local`:
+
 ```
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
@@ -900,6 +932,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 **Step 5: Test login page**
 
 Run:
+
 ```bash
 npm run dev
 ```
@@ -912,6 +945,7 @@ Stop server: Ctrl+C
 **Step 6: Commit**
 
 Run:
+
 ```bash
 git add app/login/ components/auth/ .env.local
 git commit -m "feat: add login page with email and OAuth authentication
@@ -934,6 +968,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 6: Create Organization Flow
 
 **Files:**
+
 - Create: `app/dashboard/page.tsx`
 - Create: `app/dashboard/layout.tsx`
 - Create: `app/onboarding/page.tsx`
@@ -943,6 +978,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create onboarding actions**
 
 Create `app/onboarding/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -956,7 +992,10 @@ export async function createOrganization(formData: FormData) {
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { error: 'Not authenticated' }
@@ -977,13 +1016,11 @@ export async function createOrganization(formData: FormData) {
   }
 
   // Create user record linking to organization
-  const { error: userRecordError } = await supabase
-    .from('users')
-    .insert({
-      id: user.id,
-      organization_id: org.id,
-      role: 'admin',
-    })
+  const { error: userRecordError } = await supabase.from('users').insert({
+    id: user.id,
+    organization_id: org.id,
+    role: 'admin',
+  })
 
   if (userRecordError) {
     return { error: userRecordError.message }
@@ -996,6 +1033,7 @@ export async function createOrganization(formData: FormData) {
 **Step 2: Create organization form component**
 
 Create `components/onboarding/create-organization-form.tsx`:
+
 ```typescript
 'use client'
 
@@ -1071,6 +1109,7 @@ export function CreateOrganizationForm() {
 **Step 3: Create onboarding page**
 
 Create `app/onboarding/page.tsx`:
+
 ```typescript
 import { CreateOrganizationForm } from '@/components/onboarding/create-organization-form'
 import { createClient } from '@/lib/supabase/server'
@@ -1107,6 +1146,7 @@ export default async function OnboardingPage() {
 **Step 4: Create dashboard layout**
 
 Create `app/dashboard/layout.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -1146,6 +1186,7 @@ export default async function DashboardLayout({
 **Step 5: Create placeholder dashboard page**
 
 Create `app/dashboard/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 
@@ -1176,13 +1217,16 @@ export default async function DashboardPage() {
 **Step 6: Update root page to redirect**
 
 Modify `app/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (user) {
     redirect('/dashboard')
@@ -1195,11 +1239,13 @@ export default async function Home() {
 **Step 7: Test onboarding flow**
 
 Run:
+
 ```bash
 npm run dev
 ```
 
 Test flow:
+
 1. Visit http://localhost:3000
 2. Should redirect to /login
 3. Sign in (create test account if needed)
@@ -1212,6 +1258,7 @@ Stop server: Ctrl+C
 **Step 8: Commit**
 
 Run:
+
 ```bash
 git add app/onboarding/ app/dashboard/ app/page.tsx components/onboarding/
 git commit -m "feat: add organization onboarding flow
@@ -1231,6 +1278,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 7: Email Setup with Resend
 
 **Files:**
+
 - Create: `lib/email/client.ts`
 - Create: `emails/invite-email.tsx`
 - Create: `emails/weekly-summary-email.tsx`
@@ -1239,6 +1287,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Install Resend and React Email**
 
 Run:
+
 ```bash
 npm install resend
 npm install react-email @react-email/components
@@ -1250,12 +1299,14 @@ Expected: Email packages installed
 **Step 2: Set up Resend API key**
 
 Manual step (document for engineer):
+
 1. Go to https://resend.com/
 2. Create account and verify email
 3. Generate API key
 4. Add domain or use test domain (onboarding@resend.dev for development)
 
 Add to `.env.local`:
+
 ```
 RESEND_API_KEY=re_xxxxxxxxxxxxx
 ```
@@ -1263,6 +1314,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxxx
 **Step 3: Create email client**
 
 Create `lib/email/client.ts`:
+
 ```typescript
 import { Resend } from 'resend'
 
@@ -1274,6 +1326,7 @@ export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Selo IO <onboarding@
 **Step 4: Create invite email template**
 
 Create `emails/invite-email.tsx`:
+
 ```typescript
 import {
   Body,
@@ -1349,6 +1402,7 @@ export default function InviteEmail({
 **Step 5: Create weekly summary email template**
 
 Create `emails/weekly-summary-email.tsx`:
+
 ```typescript
 import {
   Body,
@@ -1423,6 +1477,7 @@ export default function WeeklySummaryEmail({
 **Step 6: Add email preview script**
 
 Add to `package.json` scripts:
+
 ```json
 {
   "scripts": {
@@ -1434,6 +1489,7 @@ Add to `package.json` scripts:
 **Step 7: Test email templates locally**
 
 Run:
+
 ```bash
 npm run email
 ```
@@ -1444,6 +1500,7 @@ Stop server: Ctrl+C
 **Step 8: Commit**
 
 Run:
+
 ```bash
 git add lib/email/ emails/ .env.local package.json
 git commit -m "feat: set up Resend for email notifications
@@ -1463,6 +1520,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 8: User Invite System
 
 **Files:**
+
 - Create: `app/dashboard/settings/team/page.tsx`
 - Create: `app/dashboard/settings/team/actions.ts`
 - Create: `components/settings/invite-user-form.tsx`
@@ -1472,6 +1530,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create invite actions**
 
 Create `app/dashboard/settings/team/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -1484,7 +1543,9 @@ export async function sendInvite(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -1552,17 +1613,14 @@ export async function sendInvite(formData: FormData) {
   return {
     success: true,
     inviteLink,
-    message: `Invite sent to ${email}!`
+    message: `Invite sent to ${email}!`,
   }
 }
 
 export async function deleteInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('invites')
-    .delete()
-    .eq('id', inviteId)
+  const { error } = await supabase.from('invites').delete().eq('id', inviteId)
 
   if (error) {
     return { error: error.message }
@@ -1576,6 +1634,7 @@ export async function deleteInvite(inviteId: string) {
 **Step 2: Create invite form component**
 
 Create `components/settings/invite-user-form.tsx`:
+
 ```typescript
 'use client'
 
@@ -1677,6 +1736,7 @@ export function InviteUserForm() {
 **Step 3: Create team settings page**
 
 Create `app/dashboard/settings/team/page.tsx`:
+
 ```typescript
 import { InviteUserForm } from '@/components/settings/invite-user-form'
 import { createClient } from '@/lib/supabase/server'
@@ -1773,6 +1833,7 @@ export default async function TeamSettingsPage() {
 **Step 4: Create accept invite actions**
 
 Create `app/accept-invite/[id]/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -1782,7 +1843,9 @@ import { redirect } from 'next/navigation'
 export async function acceptInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'You must be logged in to accept an invite' }
   }
@@ -1809,13 +1872,11 @@ export async function acceptInvite(inviteId: string) {
   }
 
   // Create user record
-  const { error: userError } = await supabase
-    .from('users')
-    .insert({
-      id: user.id,
-      organization_id: invite.organization_id,
-      role: invite.role,
-    })
+  const { error: userError } = await supabase.from('users').insert({
+    id: user.id,
+    organization_id: invite.organization_id,
+    role: invite.role,
+  })
 
   if (userError) {
     return { error: userError.message }
@@ -1826,7 +1887,7 @@ export async function acceptInvite(inviteId: string) {
     .from('invites')
     .update({
       status: 'accepted',
-      accepted_at: new Date().toISOString()
+      accepted_at: new Date().toISOString(),
     })
     .eq('id', inviteId)
 
@@ -1837,6 +1898,7 @@ export async function acceptInvite(inviteId: string) {
 **Step 5: Create accept invite page**
 
 Create `app/accept-invite/[id]/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -1935,11 +1997,13 @@ export default async function AcceptInvitePage({
 **Step 6: Test invite flow**
 
 Run:
+
 ```bash
 npm run dev
 ```
 
 Test:
+
 1. Login as admin
 2. Go to /dashboard/settings/team
 3. Send invite
@@ -1954,6 +2018,7 @@ Stop server: Ctrl+C
 **Step 7: Commit**
 
 Run:
+
 ```bash
 git add app/dashboard/settings/ app/accept-invite/ components/settings/
 git commit -m "feat: add user invite system
@@ -1976,6 +2041,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 8: Campaign CRUD
 
 **Files:**
+
 - Create: `app/dashboard/campaigns/page.tsx`
 - Create: `app/dashboard/campaigns/actions.ts`
 - Create: `app/dashboard/campaigns/[id]/page.tsx`
@@ -1986,6 +2052,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create UTM utility functions**
 
 Create `lib/utils/utm.ts`:
+
 ```typescript
 export function generateUTMParameters(campaignName: string) {
   // Convert campaign name to URL-safe format
@@ -2003,13 +2070,16 @@ export function generateUTMParameters(campaignName: string) {
   }
 }
 
-export function buildUTMUrl(baseUrl: string, params: {
-  utm_source?: string
-  utm_medium?: string
-  utm_campaign?: string
-  utm_term?: string
-  utm_content?: string
-}) {
+export function buildUTMUrl(
+  baseUrl: string,
+  params: {
+    utm_source?: string
+    utm_medium?: string
+    utm_campaign?: string
+    utm_term?: string
+    utm_content?: string
+  }
+) {
   const url = new URL(baseUrl)
 
   if (params.utm_source) url.searchParams.set('utm_source', params.utm_source)
@@ -2025,6 +2095,7 @@ export function buildUTMUrl(baseUrl: string, params: {
 **Step 2: Create campaign actions**
 
 Create `app/dashboard/campaigns/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -2039,7 +2110,9 @@ export async function createCampaign(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -2108,10 +2181,7 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
 export async function deleteCampaign(campaignId: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('campaigns')
-    .delete()
-    .eq('id', campaignId)
+  const { error } = await supabase.from('campaigns').delete().eq('id', campaignId)
 
   if (error) {
     return { error: error.message }
@@ -2125,6 +2195,7 @@ export async function deleteCampaign(campaignId: string) {
 **Step 3: Create campaign form component**
 
 Create `components/campaigns/create-campaign-form.tsx`:
+
 ```typescript
 'use client'
 
@@ -2214,6 +2285,7 @@ export function CreateCampaignForm() {
 **Step 4: Create campaign card component**
 
 Create `components/campaigns/campaign-card.tsx`:
+
 ```typescript
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -2266,6 +2338,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
 **Step 5: Create campaigns list page**
 
 Create `app/dashboard/campaigns/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { CreateCampaignForm } from '@/components/campaigns/create-campaign-form'
@@ -2328,6 +2401,7 @@ export default async function CampaignsPage() {
 **Step 6: Create campaign detail page**
 
 Create `app/dashboard/campaigns/[id]/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
@@ -2445,11 +2519,13 @@ export default async function CampaignDetailPage({
 **Step 7: Test campaign flow**
 
 Run:
+
 ```bash
 npm run dev
 ```
 
 Test:
+
 1. Go to /dashboard/campaigns
 2. Create a new campaign
 3. Verify UTM parameters are generated
@@ -2461,6 +2537,7 @@ Stop server: Ctrl+C
 **Step 8: Commit**
 
 Run:
+
 ```bash
 git add app/dashboard/campaigns/ components/campaigns/ lib/utils/
 git commit -m "feat: add campaign management with UTM tracking
@@ -2483,6 +2560,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 9: Platform Connection Management
 
 **Files:**
+
 - Create: `app/dashboard/settings/integrations/page.tsx`
 - Create: `app/dashboard/settings/integrations/actions.ts`
 - Create: `components/settings/platform-connection-card.tsx`
@@ -2491,6 +2569,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create platform types**
 
 Create `lib/platforms/types.ts`:
+
 ```typescript
 export type PlatformType = 'hubspot' | 'google_analytics' | 'linkedin' | 'meta' | 'instagram'
 
@@ -2529,6 +2608,7 @@ export type PlatformConnection = {
 **Step 2: Create integration actions**
 
 Create `app/dashboard/settings/integrations/actions.ts`:
+
 ```typescript
 'use server'
 
@@ -2541,7 +2621,9 @@ export async function connectPlatform(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -2567,16 +2649,17 @@ export async function connectPlatform(formData: FormData) {
   // TODO: Encrypt credentials before storing
   // For MVP, storing as-is (SECURITY: Must encrypt in production!)
 
-  const { error } = await supabase
-    .from('platform_connections')
-    .upsert({
+  const { error } = await supabase.from('platform_connections').upsert(
+    {
       organization_id: userRecord.organization_id,
       platform_type,
       credentials: credentialsObj,
       status: 'active',
-    }, {
-      onConflict: 'organization_id,platform_type'
-    })
+    },
+    {
+      onConflict: 'organization_id,platform_type',
+    }
+  )
 
   if (error) {
     return { error: error.message }
@@ -2589,10 +2672,7 @@ export async function connectPlatform(formData: FormData) {
 export async function disconnectPlatform(connectionId: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('platform_connections')
-    .delete()
-    .eq('id', connectionId)
+  const { error } = await supabase.from('platform_connections').delete().eq('id', connectionId)
 
   if (error) {
     return { error: error.message }
@@ -2606,6 +2686,7 @@ export async function disconnectPlatform(connectionId: string) {
 **Step 3: Create platform connection card**
 
 Create `components/settings/platform-connection-card.tsx`:
+
 ```typescript
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -2702,6 +2783,7 @@ export function PlatformConnectionCard({ connection }: { connection: Connection 
 **Step 4: Create integrations page**
 
 Create `app/dashboard/settings/integrations/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { PlatformConnectionCard } from '@/components/settings/platform-connection-card'
@@ -2761,6 +2843,7 @@ export default async function IntegrationsPage() {
 **Step 5: Commit**
 
 Run:
+
 ```bash
 git add app/dashboard/settings/integrations/ components/settings/platform-connection-card.tsx lib/platforms/
 git commit -m "feat: add platform integrations management UI
@@ -2782,6 +2865,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 10: Dashboard Layout with Navigation
 
 **Files:**
+
 - Modify: `app/dashboard/layout.tsx`
 - Create: `components/dashboard/sidebar.tsx`
 - Create: `components/dashboard/header.tsx`
@@ -2789,6 +2873,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Create sidebar component**
 
 Create `components/dashboard/sidebar.tsx`:
+
 ```typescript
 'use client'
 
@@ -2837,6 +2922,7 @@ export function Sidebar() {
 **Step 2: Create header component**
 
 Create `components/dashboard/header.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
@@ -2901,6 +2987,7 @@ export async function Header() {
 **Step 3: Update dashboard layout**
 
 Modify `app/dashboard/layout.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -2948,6 +3035,7 @@ export default async function DashboardLayout({
 **Step 4: Update dashboard homepage**
 
 Modify `app/dashboard/page.tsx`:
+
 ```typescript
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -3041,11 +3129,13 @@ export default async function DashboardPage() {
 **Step 5: Test navigation**
 
 Run:
+
 ```bash
 npm run dev
 ```
 
 Test:
+
 1. Login and navigate through all pages
 2. Verify sidebar highlighting
 3. Test user dropdown menu
@@ -3056,6 +3146,7 @@ Stop server: Ctrl+C
 **Step 6: Commit**
 
 Run:
+
 ```bash
 git add app/dashboard/ components/dashboard/
 git commit -m "feat: add dashboard navigation and layout
@@ -3078,6 +3169,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 11: Vercel CLI Configuration
 
 **Files:**
+
 - Create: `vercel.json`
 - Create: `.vercelignore`
 - Modify: `package.json`
@@ -3085,6 +3177,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Install Vercel CLI**
 
 Run:
+
 ```bash
 npm install -g vercel
 ```
@@ -3094,6 +3187,7 @@ Expected: Vercel CLI installed globally
 **Step 2: Login to Vercel**
 
 Run:
+
 ```bash
 vercel login
 ```
@@ -3103,6 +3197,7 @@ Expected: Browser opens, login successful
 **Step 3: Create vercel.json configuration**
 
 Create `vercel.json`:
+
 ```json
 {
   "buildCommand": "npm run build",
@@ -3117,6 +3212,7 @@ Create `vercel.json`:
 **Step 4: Create .vercelignore**
 
 Create `.vercelignore`:
+
 ```
 .env*.local
 .git
@@ -3128,11 +3224,13 @@ node_modules
 **Step 5: Link project to Vercel**
 
 Run:
+
 ```bash
 vercel link
 ```
 
 Answer prompts:
+
 - Set up and deploy? → N (we'll configure first)
 - Which scope? → Your personal account or team
 - Link to existing project? → N
@@ -3144,6 +3242,7 @@ Expected: Project linked, `.vercel` directory created
 **Step 6: Configure environment variables**
 
 Run:
+
 ```bash
 # Supabase
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
@@ -3166,6 +3265,7 @@ Paste values when prompted.
 **Step 7: Pull environment variables for development**
 
 Run:
+
 ```bash
 vercel env pull .env.local
 ```
@@ -3175,6 +3275,7 @@ Expected: `.env.local` updated with development environment variables
 **Step 8: Test local build**
 
 Run:
+
 ```bash
 vercel build
 ```
@@ -3184,6 +3285,7 @@ Expected: Build succeeds, output in `.vercel/output`
 **Step 9: Add .vercel to .gitignore**
 
 Verify `.gitignore` contains:
+
 ```
 .vercel
 ```
@@ -3193,6 +3295,7 @@ Verify `.gitignore` contains:
 **Step 10: Commit**
 
 Run:
+
 ```bash
 git add vercel.json .vercelignore package.json
 git commit -m "feat: configure Vercel deployment
@@ -3212,6 +3315,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ### Task 12: Deploy to Vercel
 
 **Prerequisites:**
+
 - Production Supabase project created with schema migrated
 - OAuth providers configured in Supabase with production redirect URLs
 - Resend account set up with verified domain
@@ -3220,11 +3324,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 1: Deploy to preview**
 
 Run:
+
 ```bash
 vercel
 ```
 
 Expected:
+
 - Build succeeds
 - Deployment URL provided (e.g., `selo-io-abc123.vercel.app`)
 - Preview deployment ready
@@ -3240,11 +3346,13 @@ Expected:
 **Step 3: Deploy to production**
 
 Run:
+
 ```bash
 vercel --prod
 ```
 
 Expected:
+
 - Production build succeeds
 - Deployed to `selo-io.vercel.app` (or your custom domain)
 - Production deployment ready
@@ -3252,11 +3360,13 @@ Expected:
 **Step 4: Configure custom domain (optional)**
 
 Run:
+
 ```bash
 vercel domains add seloos.com
 ```
 
 Follow prompts to:
+
 1. Verify domain ownership
 2. Configure DNS settings
 3. Wait for SSL certificate provisioning
@@ -3264,6 +3374,7 @@ Follow prompts to:
 **Step 5: Set up GitHub integration (optional)**
 
 Manual step:
+
 1. Go to Vercel Dashboard → Project Settings → Git
 2. Connect GitHub repository
 3. Configure:
@@ -3274,6 +3385,7 @@ Manual step:
 **Step 6: Verify production deployment**
 
 Test checklist:
+
 - [ ] Login with email/password works
 - [ ] Google OAuth works
 - [ ] Microsoft OAuth works
@@ -3304,6 +3416,7 @@ VALUES ('user-uuid-from-auth', 'org-id-from-above', 'admin');
 **Step 8: Document deployment**
 
 Add to project README or docs:
+
 - Production URL
 - How to deploy updates
 - Environment variable management
@@ -3316,6 +3429,7 @@ Add to project README or docs:
 The following features are documented for future implementation:
 
 ### Phase 7: Platform API Integrations
+
 - HubSpot adapter implementation
 - Google Analytics adapter implementation
 - LinkedIn adapter implementation
@@ -3323,6 +3437,7 @@ The following features are documented for future implementation:
 - Metric aggregation and storage
 
 ### Phase 8: Weekly Summary Automation
+
 - Vercel AI SDK integration with Anthropic Claude
 - Weekly summary generation logic
 - Vercel Cron job configuration
@@ -3330,6 +3445,7 @@ The following features are documented for future implementation:
 - Summary archive and resend
 
 ### Phase 9: Advanced Features
+
 - PDF export for quarterly reports
 - Sentiment analysis
 - AI search tracking
@@ -3358,11 +3474,13 @@ Before considering MVP complete, test:
 ## Deployment Instructions
 
 **Step 1: Set up production Supabase project**
+
 1. Create new Supabase project for production
 2. Run migration: `supabase/migrations/20260102000001_initial_schema.sql`
 3. Configure OAuth providers with production redirect URLs
 
 **Step 2: Set up Vercel project**
+
 1. Connect GitHub repo to Vercel
 2. Add environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -3372,12 +3490,14 @@ Before considering MVP complete, test:
 3. Deploy
 
 **Step 3: Bootstrap first user**
+
 1. Manually create first user in Supabase Auth
 2. Run SQL to create first admin user in `users` table
 3. Create first organization
 4. Link user to organization
 
 **Step 4: Verify**
+
 1. Test full auth flow
 2. Test organization creation
 3. Test invite system
@@ -3392,6 +3512,7 @@ This implementation plan provides a complete, step-by-step guide to building the
 **Total estimated implementation time:** 40-60 hours for experienced Next.js/Supabase developer
 
 **Key omissions from MVP (to be added later):**
+
 - Real platform API integrations (HubSpot, GA, LinkedIn)
 - Weekly summary automation with AI
 - Email sending

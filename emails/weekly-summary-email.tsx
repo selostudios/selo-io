@@ -5,7 +5,6 @@ import {
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Section,
   Text,
@@ -31,17 +30,17 @@ export default function WeeklySummaryEmail({
       <Preview>Weekly Marketing Summary for {organizationName}</Preview>
       <Tailwind>
         <Body className="bg-neutral-50 font-sans">
-          <Container className="mx-auto py-12 px-4">
-            <Heading className="text-2xl font-bold text-neutral-900 mb-2">
+          <Container className="mx-auto px-4 py-12">
+            <Heading className="mb-2 text-2xl font-bold text-neutral-900">
               Weekly Marketing Summary
             </Heading>
-            <Text className="text-neutral-600 mb-6">
+            <Text className="mb-6 text-neutral-600">
               {organizationName} • Week of {weekStartDate}
             </Text>
 
-            <Section className="bg-white p-6 rounded-lg mb-6">
+            <Section className="mb-6 rounded-lg bg-white p-6">
               {summaryBullets.map((bullet, index) => (
-                <Text key={index} className="text-neutral-800 mb-2">
+                <Text key={index} className="mb-2 text-neutral-800">
                   • {bullet}
                 </Text>
               ))}
@@ -50,15 +49,15 @@ export default function WeeklySummaryEmail({
             <Section className="mb-6">
               <Button
                 href={dashboardLink}
-                className="bg-neutral-900 text-white px-6 py-3 rounded-md font-medium"
+                className="rounded-md bg-neutral-900 px-6 py-3 font-medium text-white"
               >
                 View Full Dashboard
               </Button>
             </Section>
 
             <Text className="text-sm text-neutral-500">
-              This summary is automatically generated every Monday morning based
-              on your campaign performance.
+              This summary is automatically generated every Monday morning based on your campaign
+              performance.
             </Text>
           </Container>
         </Body>

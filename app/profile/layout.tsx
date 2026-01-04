@@ -3,14 +3,12 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 
-export default async function ProfileLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function ProfileLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')
@@ -30,15 +28,13 @@ export default async function ProfileLayout({
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         <Header />
         <main className="flex-1">
-          <div className="p-8 space-y-6">
+          <div className="space-y-6 p-8">
             <div>
               <h1 className="text-3xl font-bold">Profile</h1>
-              <p className="text-muted-foreground mt-2">
-                Manage your personal information
-              </p>
+              <p className="text-muted-foreground mt-2">Manage your personal information</p>
             </div>
 
             {children}

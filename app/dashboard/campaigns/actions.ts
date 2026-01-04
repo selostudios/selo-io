@@ -11,7 +11,7 @@ const VALID_CAMPAIGN_TYPES = [
   'lead_generation',
   'event_promotion',
   'seasonal',
-  'other'
+  'other',
 ] as const
 
 export async function createCampaign(formData: FormData) {
@@ -34,7 +34,7 @@ export async function createCampaign(formData: FormData) {
     return { error: 'Description must be less than 500 characters' }
   }
 
-  if (type && !VALID_CAMPAIGN_TYPES.includes(type as typeof VALID_CAMPAIGN_TYPES[number])) {
+  if (type && !VALID_CAMPAIGN_TYPES.includes(type as (typeof VALID_CAMPAIGN_TYPES)[number])) {
     return { error: 'Invalid campaign type' }
   }
 
@@ -49,7 +49,9 @@ export async function createCampaign(formData: FormData) {
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -61,8 +63,12 @@ export async function createCampaign(formData: FormData) {
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    console.error('[Create Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
-    return { error: 'You don\'t have permission to create campaigns' }
+    console.error('[Create Campaign Error]', {
+      type: 'unauthorized',
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: "You don't have permission to create campaigns" }
   }
 
   // Generate UTM parameters
@@ -84,7 +90,10 @@ export async function createCampaign(formData: FormData) {
     .single()
 
   if (error) {
-    console.error('[Create Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    console.error('[Create Campaign Error]', {
+      type: 'database_error',
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to create campaign. Please try again.' }
   }
 
@@ -125,7 +134,9 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
   const supabase = await createClient()
 
   // Authentication check
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -138,8 +149,12 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    console.error('[Update Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
-    return { error: 'You don\'t have permission to update campaigns' }
+    console.error('[Update Campaign Error]', {
+      type: 'unauthorized',
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: "You don't have permission to update campaigns" }
   }
 
   // Update campaign (RLS + explicit org filter for defense in depth)
@@ -155,7 +170,10 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     .eq('organization_id', userRecord.organization_id) // Ensure campaign belongs to user's org
 
   if (error) {
-    console.error('[Update Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    console.error('[Update Campaign Error]', {
+      type: 'database_error',
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to update campaign. Please try again.' }
   }
 
@@ -171,7 +189,9 @@ export async function updateCampaignDescription(campaignId: string, description:
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -183,7 +203,7 @@ export async function updateCampaignDescription(campaignId: string, description:
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    return { error: 'You don\'t have permission to update campaigns' }
+    return { error: "You don't have permission to update campaigns" }
   }
 
   const { error } = await supabase
@@ -208,7 +228,9 @@ export async function updateUtmMedium(campaignId: string, medium: string) {
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -220,7 +242,7 @@ export async function updateUtmMedium(campaignId: string, medium: string) {
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    return { error: 'You don\'t have permission to update campaigns' }
+    return { error: "You don't have permission to update campaigns" }
   }
 
   const { error } = await supabase
@@ -241,7 +263,9 @@ export async function deleteCampaign(campaignId: string) {
   const supabase = await createClient()
 
   // Authentication check
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -254,8 +278,12 @@ export async function deleteCampaign(campaignId: string) {
     .single()
 
   if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
-    console.error('[Delete Campaign Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
-    return { error: 'You don\'t have permission to delete campaigns' }
+    console.error('[Delete Campaign Error]', {
+      type: 'unauthorized',
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: "You don't have permission to delete campaigns" }
   }
 
   // Delete campaign (RLS + explicit org filter for defense in depth)
@@ -266,7 +294,10 @@ export async function deleteCampaign(campaignId: string) {
     .eq('organization_id', userRecord.organization_id) // Ensure campaign belongs to user's org
 
   if (error) {
-    console.error('[Delete Campaign Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    console.error('[Delete Campaign Error]', {
+      type: 'database_error',
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to delete campaign. Please try again.' }
   }
 

@@ -52,8 +52,11 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         showSuccess('Logo uploaded successfully!')
         router.refresh()
       }
-    } catch (error) {
-      console.error('[LogoUpload Error]', { type: 'upload_failed', timestamp: new Date().toISOString() })
+    } catch {
+      console.error('[LogoUpload Error]', {
+        type: 'upload_failed',
+        timestamp: new Date().toISOString(),
+      })
       showError('An unexpected error occurred. Please try again.')
     } finally {
       setIsUploading(false)
@@ -73,8 +76,11 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
         showSuccess('Logo removed successfully!')
         router.refresh()
       }
-    } catch (error) {
-      console.error('[LogoUpload Error]', { type: 'remove_failed', timestamp: new Date().toISOString() })
+    } catch {
+      console.error('[LogoUpload Error]', {
+        type: 'remove_failed',
+        timestamp: new Date().toISOString(),
+      })
       showError('An unexpected error occurred. Please try again.')
     } finally {
       setIsRemoving(false)
@@ -112,9 +118,9 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
   return (
     <div className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragOver ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300'
-        } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+        } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -141,7 +147,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
               />
             ) : (
               <div
-                className="w-20 h-20 rounded-lg flex items-center justify-center text-2xl font-bold text-white"
+                className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
                 style={{ backgroundColor: primaryColor || '#6B7280' }}
               >
                 {initial}
@@ -154,9 +160,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
             <p className="text-sm text-neutral-600">
               {isUploading ? 'Uploading...' : 'Drag and drop your logo here, or click to browse'}
             </p>
-            <p className="text-xs text-neutral-400">
-              PNG, JPG, or SVG. Max 2MB.
-            </p>
+            <p className="text-xs text-neutral-400">PNG, JPG, or SVG. Max 2MB.</p>
           </div>
 
           {/* Actions */}

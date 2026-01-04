@@ -52,14 +52,14 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
     showSuccess('Copied utm_medium to clipboard')
   }
 
-  const selectedOption = MEDIUM_OPTIONS.find(opt => opt.value === value)
+  const selectedOption = MEDIUM_OPTIONS.find((opt) => opt.value === value)
 
   return (
-    <div className="flex justify-between items-center bg-neutral-50 rounded-l overflow-hidden">
+    <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
       <div className="flex items-center">
-        <span className="font-mono text-sm bg-neutral-700 text-white px-4 py-3">utm_medium</span>
+        <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">utm_medium</span>
         <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
-          <SelectTrigger className="w-[320px] border-0 rounded-none shadow-none">
+          <SelectTrigger className="w-[320px] rounded-none border-0 shadow-none">
             <SelectValue>
               <span className="font-mono">{value}</span>
               {selectedOption && (
@@ -77,7 +77,7 @@ export function UtmMediumSelect({ campaignId, currentValue }: UtmMediumSelectPro
           </SelectContent>
         </Select>
       </div>
-      <Button variant="ghost" size="sm" onClick={handleCopy} className="h-8 w-8 p-0 mr-2">
+      <Button variant="ghost" size="sm" onClick={handleCopy} className="mr-2 h-8 w-8 p-0">
         <Copy className="h-4 w-4" />
         <span className="sr-only">Copy utm_medium</span>
       </Button>

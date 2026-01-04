@@ -19,15 +19,25 @@ export async function sendInvite(formData: FormData) {
   }
 
   // Validate role
-  const validRoles: Array<'admin' | 'team_member' | 'client_viewer'> = ['admin', 'team_member', 'client_viewer']
+  const validRoles: Array<'admin' | 'team_member' | 'client_viewer'> = [
+    'admin',
+    'team_member',
+    'client_viewer',
+  ]
   if (!validRoles.includes(role)) {
-    console.error('[Send Invite Error]', { type: 'invalid_role', role, timestamp: new Date().toISOString() })
+    console.error('[Send Invite Error]', {
+      type: 'invalid_role',
+      role,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Invalid role selected' }
   }
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -116,21 +126,23 @@ export async function sendInvite(formData: FormData) {
     return {
       success: true,
       inviteLink,
-      warning: `Invite created but email failed to send: ${emailError}. Share this link manually: ${inviteLink}`
+      warning: `Invite created but email failed to send: ${emailError}. Share this link manually: ${inviteLink}`,
     }
   }
 
   return {
     success: true,
     inviteLink,
-    message: `Invite sent to ${email}!`
+    message: `Invite sent to ${email}!`,
   }
 }
 
 export async function resendInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -168,7 +180,11 @@ export async function resendInvite(inviteId: string) {
     .eq('id', inviteId)
 
   if (updateError) {
-    console.error('[Resend Invite Error]', { type: 'update_error', error: updateError, timestamp: new Date().toISOString() })
+    console.error('[Resend Invite Error]', {
+      type: 'update_error',
+      error: updateError,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to update invite expiration' }
   }
 
@@ -212,14 +228,16 @@ export async function resendInvite(inviteId: string) {
 
   return {
     success: true,
-    message: `Invite resent to ${invite.email}!`
+    message: `Invite resent to ${invite.email}!`,
   }
 }
 
 export async function deleteInvite(inviteId: string) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -232,7 +250,11 @@ export async function deleteInvite(inviteId: string) {
     .single()
 
   if (!userRecord || userRecord.role !== 'admin') {
-    console.error('[Delete Invite Error]', { type: 'unauthorized', userId: user.id, timestamp: new Date().toISOString() })
+    console.error('[Delete Invite Error]', {
+      type: 'unauthorized',
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Only admins can delete invites' }
   }
 
@@ -243,7 +265,10 @@ export async function deleteInvite(inviteId: string) {
     .eq('organization_id', userRecord.organization_id) // Ensure invite belongs to user's org
 
   if (error) {
-    console.error('[Delete Invite Error]', { type: 'database_error', timestamp: new Date().toISOString() })
+    console.error('[Delete Invite Error]', {
+      type: 'database_error',
+      timestamp: new Date().toISOString(),
+    })
     return { error: 'Failed to delete invite. Please try again.' }
   }
 

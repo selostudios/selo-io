@@ -96,7 +96,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           {buttonText}
         </Button>
       </DialogTrigger>
@@ -132,7 +132,9 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-            <p className={`text-xs text-right ${descriptionLength > MAX_DESCRIPTION_LENGTH ? 'text-red-600' : 'text-muted-foreground'}`}>
+            <p
+              className={`text-right text-xs ${descriptionLength > MAX_DESCRIPTION_LENGTH ? 'text-red-600' : 'text-muted-foreground'}`}
+            >
               {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
             </p>
           </div>

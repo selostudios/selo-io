@@ -8,15 +8,21 @@ export interface DateRange {
 export function getDateRange(period: DateRangePeriod): DateRange {
   const now = new Date()
   // Use UTC to avoid timezone issues
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
+  const end = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)
+  )
 
   if (period === '7d') {
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6, 0, 0, 0, 0))
+    const start = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6, 0, 0, 0, 0)
+    )
     return { start, end }
   }
 
   if (period === '30d') {
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29, 0, 0, 0, 0))
+    const start = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29, 0, 0, 0, 0)
+    )
     return { start, end }
   }
 
@@ -25,12 +31,17 @@ export function getDateRange(period: DateRangePeriod): DateRange {
   return { start: quarterStart, end }
 }
 
-export function getPreviousPeriodRange(currentRange: DateRange, period: DateRangePeriod): DateRange {
+export function getPreviousPeriodRange(
+  currentRange: DateRange,
+  period: DateRangePeriod
+): DateRange {
   if (period === 'quarter') {
     return getPreviousQuarterRange(currentRange.start)
   }
 
-  const daysDiff = Math.ceil((currentRange.end.getTime() - currentRange.start.getTime()) / (1000 * 60 * 60 * 24))
+  const daysDiff = Math.ceil(
+    (currentRange.end.getTime() - currentRange.start.getTime()) / (1000 * 60 * 60 * 24)
+  )
 
   const startYear = currentRange.start.getUTCFullYear()
   const startMonth = currentRange.start.getUTCMonth()

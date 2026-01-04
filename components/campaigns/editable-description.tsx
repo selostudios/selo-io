@@ -51,7 +51,7 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
             placeholder="Brief description of the campaign goals"
             disabled={isLoading}
             rows={3}
-            className="flex-1 px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50"
+            className="focus:ring-ring flex-1 resize-none rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
           />
           <div className="flex flex-col gap-1">
             <Button size="sm" variant="ghost" onClick={handleSave} disabled={isLoading}>
@@ -62,7 +62,9 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
             </Button>
           </div>
         </div>
-        <p className={`text-xs text-right ${description.length > MAX_LENGTH ? 'text-red-600' : 'text-muted-foreground'}`}>
+        <p
+          className={`text-right text-xs ${description.length > MAX_LENGTH ? 'text-red-600' : 'text-muted-foreground'}`}
+        >
           {description.length}/{MAX_LENGTH}
         </p>
       </div>
@@ -70,15 +72,13 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
   }
 
   return (
-    <div className="flex items-center gap-2 group">
-      <p className="text-sm text-muted-foreground">
-        {currentDescription || 'No description'}
-      </p>
+    <div className="group flex items-center gap-2">
+      <p className="text-muted-foreground text-sm">{currentDescription || 'No description'}</p>
       <Button
         size="sm"
         variant="ghost"
         onClick={() => setIsEditing(true)}
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
       >
         <Pencil className="h-3 w-3" />
       </Button>

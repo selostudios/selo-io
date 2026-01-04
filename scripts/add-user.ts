@@ -35,7 +35,9 @@ async function addUser() {
   if (!email || !password) {
     console.error('❌ Error: --email and --password are required')
     console.log('\nUsage:')
-    console.log('  npm run add-user -- --email=user@example.com --password=secure123 [--org="Org Name"] [--industry="Industry"]')
+    console.log(
+      '  npm run add-user -- --email=user@example.com --password=secure123 [--org="Org Name"] [--industry="Industry"]'
+    )
     process.exit(1)
   }
 
@@ -128,7 +130,6 @@ async function addUser() {
     console.log(`👤 Role:         admin`)
     console.log('═══════════════════════════════════════')
     console.log('\n🎉 User can now sign in at your application!')
-
   } catch (error) {
     console.error('❌ Unexpected error:', error)
     process.exit(1)

@@ -13,6 +13,7 @@
 ## Task 1: Install Testing Dependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 **Step 1: Install Vitest and Testing Library**
@@ -56,6 +57,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2: Create Vitest Configuration
 
 **Files:**
+
 - Create: `vitest.config.ts`
 
 **Step 1: Create vitest.config.ts**
@@ -74,14 +76,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'tests/', '.next/', 'out/']
-    }
+      exclude: ['node_modules/', 'tests/', '.next/', 'out/'],
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './')
-    }
-  }
+      '@': path.resolve(__dirname, './'),
+    },
+  },
 })
 ```
 
@@ -108,6 +110,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3: Create Playwright Configuration
 
 **Files:**
+
 - Create: `playwright.config.ts`
 
 **Step 1: Create playwright.config.ts**
@@ -163,6 +166,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4: Add Test Scripts to Package.json
 
 **Files:**
+
 - Modify: `package.json`
 
 **Step 1: Add test scripts**
@@ -206,11 +210,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 5: Create Test Directory Structure
 
 **Files:**
+
 - Create: `tests/` directory structure
 
 **Step 1: Create test directories**
 
 Run:
+
 ```bash
 mkdir -p tests/unit/components tests/unit/lib
 mkdir -p tests/integration/actions tests/integration/rls
@@ -229,6 +235,7 @@ Expected: Shows created directories
 **Step 3: Create placeholder .gitkeep files**
 
 Run:
+
 ```bash
 touch tests/unit/components/.gitkeep
 touch tests/unit/lib/.gitkeep
@@ -254,6 +261,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 6: Create Global Test Setup
 
 **Files:**
+
 - Create: `tests/setup.ts`
 
 **Step 1: Create tests/setup.ts**
@@ -297,6 +305,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 7: Create Test Fixtures
 
 **Files:**
+
 - Create: `tests/fixtures/index.ts`
 
 **Step 1: Create tests/fixtures/index.ts**
@@ -307,40 +316,40 @@ export const testUsers = {
     email: 'admin@test.com',
     password: 'TestPassword123!',
     firstName: 'Admin',
-    lastName: 'User'
+    lastName: 'User',
   },
   teamMember: {
     email: 'member@test.com',
     password: 'TestPassword123!',
     firstName: 'Team',
-    lastName: 'Member'
+    lastName: 'Member',
   },
   viewer: {
     email: 'viewer@test.com',
     password: 'TestPassword123!',
     firstName: 'Client',
-    lastName: 'Viewer'
-  }
+    lastName: 'Viewer',
+  },
 }
 
 export const testOrganization = {
   name: 'Test Organization',
   primaryColor: '#000000',
   secondaryColor: '#F5F5F0',
-  accentColor: '#666666'
+  accentColor: '#666666',
 }
 
 export const testCampaign = {
   name: 'Test Campaign',
   description: 'A test campaign for E2E testing',
   startDate: new Date().toISOString(),
-  endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
 }
 
 export const testIndustries = {
   marketing: 'Marketing',
   software: 'Software',
-  accounting: 'Accounting'
+  accounting: 'Accounting',
 }
 ```
 
@@ -361,6 +370,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 8: Create Mock Utilities
 
 **Files:**
+
 - Create: `tests/helpers/mocks.ts`
 
 **Step 1: Create tests/helpers/mocks.ts**
@@ -375,11 +385,11 @@ export function mockResend() {
         send: vi.fn().mockResolvedValue({
           id: 'mock-email-id',
           from: 'noreply@selo.io',
-          to: 'test@example.com'
-        })
-      }
+          to: 'test@example.com',
+        }),
+      },
     },
-    FROM_EMAIL: 'noreply@selo.io'
+    FROM_EMAIL: 'noreply@selo.io',
   }))
 }
 
@@ -391,11 +401,11 @@ export function mockSupabaseClient() {
           user: {
             id: 'user-123',
             email: 'test@example.com',
-            created_at: new Date().toISOString()
-          }
+            created_at: new Date().toISOString(),
+          },
         },
-        error: null
-      })
+        error: null,
+      }),
     },
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
@@ -403,8 +413,8 @@ export function mockSupabaseClient() {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: {}, error: null })
-    })
+      single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    }),
   }
 }
 
@@ -431,6 +441,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 9: Create Database Test Helpers
 
 **Files:**
+
 - Create: `tests/helpers/db.ts`
 
 **Step 1: Create tests/helpers/db.ts**
@@ -442,7 +453,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export const testDb = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false }
+  auth: { persistSession: false },
 })
 
 export async function createTestUser(
@@ -454,7 +465,7 @@ export async function createTestUser(
     email,
     password,
     email_confirm: true,
-    user_metadata: metadata
+    user_metadata: metadata,
   })
   if (error) throw error
   return data.user
@@ -468,7 +479,7 @@ export async function createTestOrganization(name: string, industryId?: string) 
       industry: industryId,
       primary_color: '#000000',
       secondary_color: '#F5F5F0',
-      accent_color: '#666666'
+      accent_color: '#666666',
     })
     .select()
     .single()
@@ -491,7 +502,7 @@ export async function linkUserToOrganization(
       organization_id: organizationId,
       role,
       first_name: firstName,
-      last_name: lastName
+      last_name: lastName,
     })
     .select()
     .single()
@@ -532,6 +543,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 10: Create Database Seed Script
 
 **Files:**
+
 - Create: `tests/helpers/seed.ts`
 
 **Step 1: Create tests/helpers/seed.ts**
@@ -549,11 +561,9 @@ export async function seedTestData() {
   console.log('🌱 Seeding test data...')
 
   // Get Marketing industry
-  const { data: industries } = await supabase
-    .from('industries')
-    .select('id, name')
+  const { data: industries } = await supabase.from('industries').select('id, name')
 
-  const marketingIndustry = industries?.find(i => i.name === 'Marketing')
+  const marketingIndustry = industries?.find((i) => i.name === 'Marketing')
 
   // Create admin user
   const adminUser = await supabase.auth.admin.createUser({
@@ -562,8 +572,8 @@ export async function seedTestData() {
     email_confirm: true,
     user_metadata: {
       first_name: testUsers.admin.firstName,
-      last_name: testUsers.admin.lastName
-    }
+      last_name: testUsers.admin.lastName,
+    },
   })
 
   // Create team member user
@@ -573,8 +583,8 @@ export async function seedTestData() {
     email_confirm: true,
     user_metadata: {
       first_name: testUsers.teamMember.firstName,
-      last_name: testUsers.teamMember.lastName
-    }
+      last_name: testUsers.teamMember.lastName,
+    },
   })
 
   // Create test organization
@@ -585,7 +595,7 @@ export async function seedTestData() {
       industry: marketingIndustry?.id,
       primary_color: testOrganization.primaryColor,
       secondary_color: testOrganization.secondaryColor,
-      accent_color: testOrganization.accentColor
+      accent_color: testOrganization.accentColor,
     })
     .select()
     .single()
@@ -597,15 +607,15 @@ export async function seedTestData() {
       organization_id: org!.id,
       role: 'admin',
       first_name: testUsers.admin.firstName,
-      last_name: testUsers.admin.lastName
+      last_name: testUsers.admin.lastName,
     },
     {
       id: teamMemberUser.data.user!.id,
       organization_id: org!.id,
       role: 'team_member',
       first_name: testUsers.teamMember.firstName,
-      last_name: testUsers.teamMember.lastName
-    }
+      last_name: testUsers.teamMember.lastName,
+    },
   ])
 
   // Create test campaign
@@ -614,7 +624,7 @@ export async function seedTestData() {
     description: testCampaign.description,
     organization_id: org!.id,
     start_date: testCampaign.startDate,
-    end_date: testCampaign.endDate
+    end_date: testCampaign.endDate,
   })
 
   console.log('✅ Test data seeded successfully')
@@ -666,6 +676,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 11: Create First Unit Test (Organization Form)
 
 **Files:**
+
 - Create: `tests/unit/components/organization-form.test.tsx`
 
 **Step 1: Write test file**
@@ -755,6 +766,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 12: Create Unit Test for Profile Form
 
 **Files:**
+
 - Create: `tests/unit/components/profile-form.test.tsx`
 
 **Step 1: Write test file**
@@ -837,6 +849,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 13: Create Utility Function Tests
 
 **Files:**
+
 - Create: `tests/unit/lib/utils.test.ts`
 
 **Step 1: Write test file**
@@ -905,6 +918,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 14: Create E2E Helper Functions
 
 **Files:**
+
 - Create: `tests/e2e/helpers.ts`
 
 **Step 1: Create helper file**
@@ -960,6 +974,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 15: Create First E2E Test (Authentication)
 
 **Files:**
+
 - Create: `tests/e2e/auth.spec.ts`
 
 **Step 1: Write test file**
@@ -1031,6 +1046,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 16: Create E2E Settings Test
 
 **Files:**
+
 - Create: `tests/e2e/settings.spec.ts`
 
 **Step 1: Write test file**
@@ -1111,6 +1127,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 17: Create GitHub Actions Workflow
 
 **Files:**
+
 - Create: `.github/workflows/test.yml`
 
 **Step 1: Create workflow directory**
@@ -1225,16 +1242,18 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 18: Create Testing Documentation
 
 **Files:**
+
 - Create: `docs/testing.md`
 
 **Step 1: Create documentation**
 
-```markdown
+````markdown
 # Testing Guide
 
 ## Overview
 
 This project uses a comprehensive testing strategy:
+
 - **Unit Tests**: Vitest + Testing Library for components and utilities
 - **Integration Tests**: Vitest + Local Supabase for server actions and RLS
 - **E2E Tests**: Playwright for critical user journeys
@@ -1242,32 +1261,41 @@ This project uses a comprehensive testing strategy:
 ## Running Tests
 
 \`\`\`bash
+
 # Run all tests
+
 npm test
 
 # Run specific test types
-npm run test:unit          # Fast unit tests
-npm run test:integration   # Integration tests with DB
-npm run test:e2e          # E2E tests with Playwright
+
+npm run test:unit # Fast unit tests
+npm run test:integration # Integration tests with DB
+npm run test:e2e # E2E tests with Playwright
 
 # Watch mode for development
+
 npm run test:watch
 
 # Coverage report
+
 npm run test:coverage
 \`\`\`
 
 ## Local Supabase Setup
 
 \`\`\`bash
+
 # First time setup
+
 supabase init
 supabase start
 
 # Run migrations
+
 supabase db reset
 
 # Seed test data for E2E
+
 npm run test:seed
 \`\`\`
 
@@ -1282,10 +1310,10 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
 describe('MyComponent', () => {
-  it('renders correctly', () => {
-    render(<MyComponent />)
-    expect(screen.getByText('Hello')).toBeInTheDocument()
-  })
+it('renders correctly', () => {
+render(<MyComponent />)
+expect(screen.getByText('Hello')).toBeInTheDocument()
+})
 })
 \`\`\`
 
@@ -1299,8 +1327,8 @@ Use real database with \`testDb\` helper:
 import { testDb, createTestUser } from '../helpers/db'
 
 it('creates user with correct role', async () => {
-  const user = await createTestUser('test@example.com', 'password')
-  expect(user.email).toBe('test@example.com')
+const user = await createTestUser('test@example.com', 'password')
+expect(user.email).toBe('test@example.com')
 })
 \`\`\`
 
@@ -1312,10 +1340,10 @@ Location: \`tests/e2e/\`
 import { test, expect } from '@playwright/test'
 
 test('user can login', async ({ page }) => {
-  await page.goto('/login')
-  await page.fill('input[name="email"]', 'test@example.com')
-  await page.click('button[type="submit"]')
-  await expect(page).toHaveURL('/dashboard')
+await page.goto('/login')
+await page.fill('input[name="email"]', 'test@example.com')
+await page.click('button[type="submit"]')
+await expect(page).toHaveURL('/dashboard')
 })
 \`\`\`
 
@@ -1331,6 +1359,7 @@ test('user can login', async ({ page }) => {
 ## CI/CD
 
 Tests run automatically on:
+
 - Every push to main or feature branches
 - Every pull request
 
@@ -1342,7 +1371,7 @@ GitHub Actions runs all test suites with local Supabase.
 - Integration tests: 100% of server actions
 - E2E tests: All critical user paths
 - RLS policies: 100% tested
-\`\`\`
+  \`\`\`
 
 **Step 2: Commit**
 
@@ -1355,12 +1384,14 @@ Document how to run and write tests for the project.
 🤖 Generated with Claude Code
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```
+````
 
 ---
 
 ## Task 19: Update .gitignore for Test Artifacts
 
 **Files:**
+
 - Modify: `.gitignore`
 
 **Step 1: Add test artifacts to .gitignore**
@@ -1402,6 +1433,7 @@ All tasks completed! The testing infrastructure is now set up with:
 ✅ Comprehensive documentation
 
 **Next steps:**
+
 1. Initialize Supabase locally: `supabase init && supabase start`
 2. Seed test data: `npm run test:seed`
 3. Run tests: `npm test`

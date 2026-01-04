@@ -6,7 +6,9 @@ import { OrgLogo } from '@/components/dashboard/org-logo'
 export async function Header() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     redirect('/login')
   }
@@ -21,7 +23,11 @@ export async function Header() {
     redirect('/login')
   }
 
-  const org = userRecord?.organization as unknown as { name: string; logo_url: string | null; primary_color: string | null } | null
+  const org = userRecord?.organization as unknown as {
+    name: string
+    logo_url: string | null
+    primary_color: string | null
+  } | null
   const orgName = org?.name || 'Organization'
   const logoUrl = org?.logo_url || null
   const primaryColor = org?.primary_color || null
@@ -35,12 +41,17 @@ export async function Header() {
     : firstName.substring(0, 2).toUpperCase()
 
   return (
-    <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
       <div className="flex items-center gap-3">
         <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
-      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} initials={initials} />
+      <UserMenu
+        userEmail={userEmail}
+        firstName={firstName}
+        lastName={lastName}
+        initials={initials}
+      />
     </header>
   )
 }

@@ -14,7 +14,7 @@ export class LinkedInClient {
   private async fetch<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${LINKEDIN_API_BASE}${endpoint}`, {
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`,
         'X-Restli-Protocol-Version': '2.0.0',
       },
     })
@@ -34,22 +34,33 @@ export class LinkedInClient {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ followerGains: { organicFollowerGain: number; paidFollowerGain: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ followerGains: { organicFollowerGain: number; paidFollowerGain: number } }>
+    }>(
       `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 
     const totalGain = data.elements.reduce((sum, el) => {
-      return sum + (el.followerGains?.organicFollowerGain || 0) + (el.followerGains?.paidFollowerGain || 0)
+      return (
+        sum +
+        (el.followerGains?.organicFollowerGain || 0) +
+        (el.followerGains?.paidFollowerGain || 0)
+      )
     }, 0)
 
     return { followers: totalGain }
   }
 
-  async getPageStatistics(startDate: Date, endDate: Date): Promise<{ pageViews: number; uniqueVisitors: number }> {
+  async getPageStatistics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{ pageViews: number; uniqueVisitors: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ views: { allPageViews: { pageViews: number }; uniqueVisitors: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ views: { allPageViews: { pageViews: number }; uniqueVisitors: number } }>
+    }>(
       `/organizationPageStatistics?q=organization&organization=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 
@@ -64,11 +75,16 @@ export class LinkedInClient {
     return totals
   }
 
-  async getShareStatistics(startDate: Date, endDate: Date): Promise<{ impressions: number; reactions: number }> {
+  async getShareStatistics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{ impressions: number; reactions: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ totalShareStatistics: { impressionCount: number; reactionCount: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ totalShareStatistics: { impressionCount: number; reactionCount: number } }>
+    }>(
       `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 

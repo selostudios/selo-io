@@ -3,6 +3,7 @@
 ## Overview
 
 This project uses a comprehensive testing strategy:
+
 - **Unit Tests**: Vitest + Testing Library for components and utilities
 - **Integration Tests**: Vitest + Local Supabase for server actions and RLS
 - **E2E Tests**: Playwright for critical user journeys
@@ -99,6 +100,7 @@ test('user can login', async ({ page }) => {
 ## CI/CD
 
 Tests run automatically on:
+
 - Every push to main or feature branches
 - Every pull request
 

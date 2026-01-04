@@ -21,7 +21,11 @@ export class LinkedInAdapter {
     return this.client.getAllMetrics(startDate, endDate)
   }
 
-  normalizeToDbRecords(metrics: LinkedInMetrics, organizationId: string, date: Date): MetricRecord[] {
+  normalizeToDbRecords(
+    metrics: LinkedInMetrics,
+    organizationId: string,
+    date: Date
+  ): MetricRecord[] {
     const dateStr = date.toISOString().split('T')[0]
 
     return [

@@ -49,9 +49,7 @@ export function CreateOrganizationForm({ industries }: CreateOrganizationFormPro
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Create Your Organization</CardTitle>
-        <CardDescription>
-          Set up your first client organization to get started
-        </CardDescription>
+        <CardDescription>Set up your first client organization to get started</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
@@ -81,11 +79,7 @@ export function CreateOrganizationForm({ industries }: CreateOrganizationFormPro
               </SelectContent>
             </Select>
           </div>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Creating...' : 'Create Organization'}
           </Button>

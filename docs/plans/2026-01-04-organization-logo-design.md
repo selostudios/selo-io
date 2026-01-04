@@ -20,10 +20,12 @@ Add file upload for organization logos, stored in Supabase Storage, displayed in
 **Bucket**: `organization-logos` (public)
 
 **File path pattern**: `{org_id}/logo.{ext}`
+
 - Each org has one logo (new upload replaces old)
 - Public URL: `https://{project}.supabase.co/storage/v1/object/public/organization-logos/{org_id}/logo.png`
 
 **RLS Policies**:
+
 - SELECT: Public (anyone can view)
 - INSERT/UPDATE/DELETE: Only org admins
 
@@ -39,6 +41,7 @@ Replace URL input in `organization-form.tsx` with:
 - Error states for validation failures
 
 **Upload flow**:
+
 1. User selects/drops file
 2. Client-side validation (size ≤ 2MB, format in PNG/JPG/SVG)
 3. Upload to Supabase Storage
@@ -63,16 +66,17 @@ Update `emails/invite-email.tsx`:
 - If no logo, show only org name (no initials)
 
 Update `app/settings/team/actions.ts`:
+
 - Fetch org's `logo_url`
 - Pass to email template
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `supabase/migrations/` | New migration for storage bucket + policies |
-| `components/settings/organization-form.tsx` | Replace URL input with file upload |
-| `app/settings/organization/actions.ts` | Add uploadLogo, removeLogo actions |
-| `components/dashboard/header.tsx` | Add logo/initials display |
-| `emails/invite-email.tsx` | Add logo + org name header |
-| `app/settings/team/actions.ts` | Pass logoUrl to email template |
+| File                                        | Change                                      |
+| ------------------------------------------- | ------------------------------------------- |
+| `supabase/migrations/`                      | New migration for storage bucket + policies |
+| `components/settings/organization-form.tsx` | Replace URL input with file upload          |
+| `app/settings/organization/actions.ts`      | Add uploadLogo, removeLogo actions          |
+| `components/dashboard/header.tsx`           | Add logo/initials display                   |
+| `emails/invite-email.tsx`                   | Add logo + org name header                  |
+| `app/settings/team/actions.ts`              | Pass logoUrl to email template              |

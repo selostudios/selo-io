@@ -13,6 +13,7 @@
 ## Task 1: Database Migration
 
 **Files:**
+
 - Create: `supabase/migrations/20260103000020_add_org_to_campaign_metrics.sql`
 
 **Step 1: Write the migration**
@@ -57,6 +58,7 @@ git commit -m "feat(db): add organization_id to campaign_metrics for org-level m
 ## Task 2: LinkedIn Types
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/types.ts`
 
 **Step 1: Write LinkedIn-specific types**
@@ -159,6 +161,7 @@ git commit -m "feat(linkedin): add TypeScript types for LinkedIn API responses"
 ## Task 3: LinkedIn API Client
 
 **Files:**
+
 - Create: `tests/unit/lib/platforms/linkedin/client.test.ts`
 - Create: `lib/platforms/linkedin/client.ts`
 
@@ -190,11 +193,14 @@ describe('LinkedInClient', () => {
       // Mock fetch
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 },
+              },
+            ],
+          }),
       })
 
       const result = await client.getFollowerStatistics(startDate, endDate)
@@ -207,11 +213,12 @@ describe('LinkedInClient', () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
-      await expect(client.getFollowerStatistics(new Date(), new Date()))
-        .rejects.toThrow('LinkedIn API error: 401')
+      await expect(client.getFollowerStatistics(new Date(), new Date())).rejects.toThrow(
+        'LinkedIn API error: 401'
+      )
     })
   })
 
@@ -221,14 +228,17 @@ describe('LinkedInClient', () => {
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            views: {
-              allPageViews: { pageViews: 500 },
-              uniqueVisitors: 250
-            }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                views: {
+                  allPageViews: { pageViews: 500 },
+                  uniqueVisitors: 250,
+                },
+              },
+            ],
+          }),
       })
 
       const result = await client.getPageStatistics(new Date(), new Date())
@@ -243,14 +253,17 @@ describe('LinkedInClient', () => {
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          elements: [{
-            totalShareStatistics: {
-              impressionCount: 3000,
-              reactionCount: 50
-            }
-          }]
-        })
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                totalShareStatistics: {
+                  impressionCount: 3000,
+                  reactionCount: 50,
+                },
+              },
+            ],
+          }),
       })
 
       const result = await client.getShareStatistics(new Date(), new Date())
@@ -285,7 +298,7 @@ export class LinkedInClient {
   private async fetch<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${LINKEDIN_API_BASE}${endpoint}`, {
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`,
         'X-Restli-Protocol-Version': '2.0.0',
       },
     })
@@ -305,22 +318,33 @@ export class LinkedInClient {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ followerGains: { organicFollowerGain: number; paidFollowerGain: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ followerGains: { organicFollowerGain: number; paidFollowerGain: number } }>
+    }>(
       `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 
     const totalGain = data.elements.reduce((sum, el) => {
-      return sum + (el.followerGains?.organicFollowerGain || 0) + (el.followerGains?.paidFollowerGain || 0)
+      return (
+        sum +
+        (el.followerGains?.organicFollowerGain || 0) +
+        (el.followerGains?.paidFollowerGain || 0)
+      )
     }, 0)
 
     return { followers: totalGain }
   }
 
-  async getPageStatistics(startDate: Date, endDate: Date): Promise<{ pageViews: number; uniqueVisitors: number }> {
+  async getPageStatistics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{ pageViews: number; uniqueVisitors: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ views: { allPageViews: { pageViews: number }; uniqueVisitors: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ views: { allPageViews: { pageViews: number }; uniqueVisitors: number } }>
+    }>(
       `/organizationPageStatistics?q=organization&organization=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 
@@ -335,11 +359,16 @@ export class LinkedInClient {
     return totals
   }
 
-  async getShareStatistics(startDate: Date, endDate: Date): Promise<{ impressions: number; reactions: number }> {
+  async getShareStatistics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{ impressions: number; reactions: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{ elements: Array<{ totalShareStatistics: { impressionCount: number; reactionCount: number } }> }>(
+    const data = await this.fetch<{
+      elements: Array<{ totalShareStatistics: { impressionCount: number; reactionCount: number } }>
+    }>(
       `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
     )
 
@@ -389,6 +418,7 @@ git commit -m "feat(linkedin): add LinkedIn API client with follower, page, and 
 ## Task 4: Date Utilities for Period Comparison
 
 **Files:**
+
 - Create: `tests/unit/lib/utils/date-ranges.test.ts`
 - Create: `lib/utils/date-ranges.ts`
 
@@ -505,12 +535,17 @@ export function getDateRange(period: DateRangePeriod): DateRange {
   return { start: quarterStart, end }
 }
 
-export function getPreviousPeriodRange(currentRange: DateRange, period: DateRangePeriod): DateRange {
+export function getPreviousPeriodRange(
+  currentRange: DateRange,
+  period: DateRangePeriod
+): DateRange {
   if (period === 'quarter') {
     return getPreviousQuarterRange(currentRange.start)
   }
 
-  const daysDiff = Math.ceil((currentRange.end.getTime() - currentRange.start.getTime()) / (1000 * 60 * 60 * 24))
+  const daysDiff = Math.ceil(
+    (currentRange.end.getTime() - currentRange.start.getTime()) / (1000 * 60 * 60 * 24)
+  )
 
   const end = new Date(currentRange.start)
   end.setDate(end.getDate() - 1)
@@ -585,6 +620,7 @@ git commit -m "feat(utils): add date range utilities for period comparison"
 ## Task 5: LinkedIn Adapter
 
 **Files:**
+
 - Create: `tests/unit/lib/platforms/linkedin/adapter.test.ts`
 - Create: `lib/platforms/linkedin/adapter.ts`
 
@@ -613,9 +649,12 @@ describe('LinkedInAdapter', () => {
         reactions: 50,
       })
 
-      vi.mocked(LinkedInClient).mockImplementation(() => ({
-        getAllMetrics: mockGetAllMetrics,
-      } as unknown as LinkedInClient))
+      vi.mocked(LinkedInClient).mockImplementation(
+        () =>
+          ({
+            getAllMetrics: mockGetAllMetrics,
+          }) as unknown as LinkedInClient
+      )
 
       const adapter = new LinkedInAdapter(mockCredentials)
       const startDate = new Date('2026-01-01')
@@ -693,7 +732,11 @@ export class LinkedInAdapter {
     return this.client.getAllMetrics(startDate, endDate)
   }
 
-  normalizeToDbRecords(metrics: LinkedInMetrics, organizationId: string, date: Date): MetricRecord[] {
+  normalizeToDbRecords(
+    metrics: LinkedInMetrics,
+    organizationId: string,
+    date: Date
+  ): MetricRecord[] {
     const dateStr = date.toISOString().split('T')[0]
 
     return [
@@ -759,6 +802,7 @@ git commit -m "feat(linkedin): add adapter to fetch and normalize LinkedIn metri
 ## Task 6: LinkedIn Server Actions
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/actions.ts`
 
 **Step 1: Implement sync action**
@@ -775,7 +819,9 @@ export async function syncLinkedInMetrics() {
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -826,9 +872,7 @@ export async function syncLinkedInMetrics() {
       .eq('platform_type', 'linkedin')
       .eq('date', today)
 
-    const { error: insertError } = await supabase
-      .from('campaign_metrics')
-      .insert(records)
+    const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
 
     if (insertError) {
       console.error('[LinkedIn Sync Error]', insertError)
@@ -855,7 +899,9 @@ export async function syncLinkedInMetrics() {
 export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -871,7 +917,8 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   }
 
   // Import date utilities
-  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } = await import('@/lib/utils/date-ranges')
+  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } =
+    await import('@/lib/utils/date-ranges')
 
   const currentRange = getDateRange(period)
   const previousRange = getPreviousPeriodRange(currentRange, period)
@@ -897,7 +944,7 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   // Aggregate by metric type
   const aggregate = (metrics: Array<{ metric_type: string; value: number }> | null) => {
     const result: Record<string, number> = {}
-    metrics?.forEach(m => {
+    metrics?.forEach((m) => {
       result[m.metric_type] = (result[m.metric_type] || 0) + Number(m.value)
     })
     return result
@@ -936,6 +983,7 @@ git commit -m "feat(linkedin): add server actions for syncing and fetching metri
 ## Task 7: Metric Card Component
 
 **Files:**
+
 - Create: `tests/unit/components/dashboard/metric-card.test.tsx`
 - Create: `components/dashboard/metric-card.tsx`
 
@@ -1037,6 +1085,7 @@ git commit -m "feat(ui): add MetricCard component with percentage change indicat
 ## Task 8: LinkedIn Dashboard Section
 
 **Files:**
+
 - Create: `components/dashboard/linkedin-section.tsx`
 
 **Step 1: Implement LinkedIn section component**
@@ -1198,6 +1247,7 @@ git commit -m "feat(ui): add LinkedIn dashboard section with period selector and
 ## Task 9: Update Dashboard Page
 
 **Files:**
+
 - Modify: `app/dashboard/page.tsx`
 
 **Step 1: Update dashboard to include LinkedIn section**
@@ -1333,6 +1383,7 @@ git commit -m "feat(dashboard): add LinkedIn metrics section to main dashboard"
 ## Task 10: LinkedIn Connect Dialog
 
 **Files:**
+
 - Create: `components/integrations/linkedin-connect-dialog.tsx`
 
 **Step 1: Implement connect dialog**
@@ -1459,6 +1510,7 @@ git commit -m "feat(ui): add LinkedIn connect dialog for credential entry"
 ## Task 11: Update Platform Connection Card for LinkedIn
 
 **Files:**
+
 - Modify: `components/settings/platform-connection-card.tsx`
 
 **Step 1: Add LinkedIn connect dialog to card**
@@ -1568,6 +1620,7 @@ git commit -m "feat(integrations): add LinkedIn connect dialog to platform card"
 ## Task 12: Create Index Exports
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/index.ts`
 
 **Step 1: Create barrel export**
@@ -1623,19 +1676,19 @@ git push origin feature/mvp-implementation
 
 ## Summary
 
-| Task | Description | Files |
-|------|-------------|-------|
-| 1 | Database migration | `supabase/migrations/20260103000020_*.sql` |
-| 2 | LinkedIn types | `lib/platforms/linkedin/types.ts` |
-| 3 | LinkedIn API client | `lib/platforms/linkedin/client.ts` |
-| 4 | Date utilities | `lib/utils/date-ranges.ts` |
-| 5 | LinkedIn adapter | `lib/platforms/linkedin/adapter.ts` |
-| 6 | Server actions | `lib/platforms/linkedin/actions.ts` |
-| 7 | Metric card component | `components/dashboard/metric-card.tsx` |
-| 8 | LinkedIn dashboard section | `components/dashboard/linkedin-section.tsx` |
-| 9 | Update dashboard page | `app/dashboard/page.tsx` |
-| 10 | LinkedIn connect dialog | `components/integrations/linkedin-connect-dialog.tsx` |
-| 11 | Update platform card | `components/settings/platform-connection-card.tsx` |
-| 12 | Index exports | `lib/platforms/linkedin/index.ts` |
-| 13 | Run tests | - |
-| 14 | Push | - |
+| Task | Description                | Files                                                 |
+| ---- | -------------------------- | ----------------------------------------------------- |
+| 1    | Database migration         | `supabase/migrations/20260103000020_*.sql`            |
+| 2    | LinkedIn types             | `lib/platforms/linkedin/types.ts`                     |
+| 3    | LinkedIn API client        | `lib/platforms/linkedin/client.ts`                    |
+| 4    | Date utilities             | `lib/utils/date-ranges.ts`                            |
+| 5    | LinkedIn adapter           | `lib/platforms/linkedin/adapter.ts`                   |
+| 6    | Server actions             | `lib/platforms/linkedin/actions.ts`                   |
+| 7    | Metric card component      | `components/dashboard/metric-card.tsx`                |
+| 8    | LinkedIn dashboard section | `components/dashboard/linkedin-section.tsx`           |
+| 9    | Update dashboard page      | `app/dashboard/page.tsx`                              |
+| 10   | LinkedIn connect dialog    | `components/integrations/linkedin-connect-dialog.tsx` |
+| 11   | Update platform card       | `components/settings/platform-connection-card.tsx`    |
+| 12   | Index exports              | `lib/platforms/linkedin/index.ts`                     |
+| 13   | Run tests                  | -                                                     |
+| 14   | Push                       | -                                                     |
