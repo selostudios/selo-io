@@ -77,6 +77,9 @@ export async function sendInvite(formData: FormData) {
     const { resend, FROM_EMAIL } = await import('@/lib/email/client')
     const InviteEmail = (await import('@/emails/invite-email')).default
 
+    console.log('[Email Debug] Sending invite email to:', email)
+    console.log('[Email Debug] From:', FROM_EMAIL)
+
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
@@ -89,11 +92,17 @@ export async function sendInvite(formData: FormData) {
       }),
     })
 
+    console.log('[Email Debug] Resend result:', JSON.stringify(result, null, 2))
+
     if (result.error) {
       console.error('Resend API error:', result.error)
       emailError = result.error.message
-    } else {
+    } else if (result.data?.id) {
+      console.log('[Email Debug] Email sent successfully, ID:', result.data.id)
       emailSent = true
+    } else {
+      console.error('[Email Debug] No error but no ID returned')
+      emailError = 'Email service returned unexpected response'
     }
   } catch (err) {
     console.error('Failed to send invite email:', err)
