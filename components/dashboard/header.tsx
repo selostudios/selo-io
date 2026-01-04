@@ -42,7 +42,7 @@ export async function Header() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
