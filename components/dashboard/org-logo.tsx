@@ -3,7 +3,7 @@ import Image from 'next/image'
 interface OrgLogoProps {
   logoUrl: string | null
   orgName: string
-  primaryColor?: string
+  primaryColor?: string | null
   size?: number
 }
 
