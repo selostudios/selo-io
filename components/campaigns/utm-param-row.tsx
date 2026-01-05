@@ -1,12 +1,16 @@
+'use client'
+
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface UtmParamRowProps {
   label: string
   value: string
   description?: string
+  onChange?: (value: string) => void
 }
 
-export function UtmParamRow({ label, value, description }: UtmParamRowProps) {
+export function UtmParamRow({ label, value, description, onChange }: UtmParamRowProps) {
   return (
     <div className="flex items-center overflow-hidden rounded-l bg-neutral-50">
       <TooltipProvider>
@@ -21,9 +25,13 @@ export function UtmParamRow({ label, value, description }: UtmParamRowProps) {
           )}
         </Tooltip>
       </TooltipProvider>
-      <code className="px-4 text-sm" style={{ color: value ? '#171717' : '#9ca3af' }}>
-        {value || 'Not set'}
-      </code>
+      <Input
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        className="flex-1 rounded-none border-0 font-mono text-sm shadow-none"
+        style={{ color: value ? '#171717' : '#9ca3af' }}
+        placeholder="Not set"
+      />
     </div>
   )
 }

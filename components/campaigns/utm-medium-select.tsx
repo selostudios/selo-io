@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { Copy } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -11,8 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { showSuccess, showError } from '@/components/ui/sonner'
-import { updateUtmMedium } from '@/app/dashboard/campaigns/actions'
 
 const MEDIUM_OPTIONS = [
   { value: 'email', description: 'Email campaigns, newsletters' },
@@ -24,82 +19,52 @@ const MEDIUM_OPTIONS = [
 ]
 
 interface UtmMediumSelectProps {
-  campaignId: string
-  currentValue: string
+  value: string
   description?: string
+  onChange?: (value: string) => void
 }
 
-export function UtmMediumSelect({ campaignId, currentValue, description }: UtmMediumSelectProps) {
-  const [value, setValue] = useState(currentValue)
-  const [isUpdating, setIsUpdating] = useState(false)
-
-  async function handleChange(newValue: string) {
-    setValue(newValue)
-    setIsUpdating(true)
-
-    const result = await updateUtmMedium(campaignId, newValue)
-
-    if (result.error) {
-      showError(result.error)
-      setValue(currentValue) // Revert on error
-    } else {
-      showSuccess('Medium updated')
-    }
-
-    setIsUpdating(false)
-  }
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(value)
-    showSuccess('Copied utm_medium to clipboard')
-  }
-
+export function UtmMediumSelect({ value, description, onChange }: UtmMediumSelectProps) {
   const selectedOption = MEDIUM_OPTIONS.find((opt) => opt.value === value)
 
   return (
-    <div className="flex items-center justify-between overflow-hidden rounded-l bg-neutral-50">
-      <div className="flex items-center">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
-                utm_medium
-              </span>
-            </TooltipTrigger>
-            {description && (
-              <TooltipContent side="top" align="start" className="max-w-xs">
-                <p>{description}</p>
-              </TooltipContent>
+    <div className="flex items-center overflow-hidden rounded-l bg-neutral-50">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="bg-neutral-700 px-4 py-3 font-mono text-sm text-white">
+              utm_medium
+            </span>
+          </TooltipTrigger>
+          {description && (
+            <TooltipContent side="top" align="start" className="max-w-xs">
+              <p>{description}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+      <Select value={value} onValueChange={(val) => onChange?.(val)}>
+        <SelectTrigger className="flex-1 rounded-none border-0 shadow-none">
+          <SelectValue>
+            <span className="font-mono" style={{ color: value ? '#171717' : '#9ca3af' }}>
+              {value || 'Not set'}
+            </span>
+            {selectedOption && (
+              <span className="text-muted-foreground ml-2">- {selectedOption.description}</span>
             )}
-          </Tooltip>
-        </TooltipProvider>
-        <Select value={value} onValueChange={handleChange} disabled={isUpdating}>
-          <SelectTrigger className="w-[320px] rounded-none border-0 shadow-none">
-            <SelectValue>
-              <span className="font-mono" style={{ color: value ? '#171717' : '#9ca3af' }}>
-                {value || 'Not set'}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {MEDIUM_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              <span className="font-mono" style={{ color: '#171717' }}>
+                {option.value}
               </span>
-              {selectedOption && (
-                <span className="text-muted-foreground ml-2">- {selectedOption.description}</span>
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {MEDIUM_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                <span className="font-mono" style={{ color: '#171717' }}>
-                  {option.value}
-                </span>
-                <span className="text-muted-foreground ml-2">- {option.description}</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <Button variant="ghost" size="sm" onClick={handleCopy} className="mr-2 h-8 w-8 p-0">
-        <Copy className="h-4 w-4" />
-        <span className="sr-only">Copy utm_medium</span>
-      </Button>
+              <span className="text-muted-foreground ml-2">- {option.description}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }
