@@ -130,19 +130,29 @@ export async function GET(
 
     // Get current user and organization
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('[OAuth Callback] Auth error', {
+        type: 'auth_error',
+        error: authError,
+        timestamp: new Date().toISOString(),
+      })
       return redirect('/login')
     }
 
-    const { data: userRecord } = await supabase
+    const { data: userRecord, error: userError } = await supabase
       .from('users')
       .select('organization_id')
       .eq('id', user.id)
       .single()
 
-    if (!userRecord) {
+    if (userError || !userRecord) {
+      console.error('[OAuth Callback] User fetch error', {
+        type: 'database_error',
+        error: userError,
+        timestamp: new Date().toISOString(),
+      })
       return redirect('/login')
     }
 
