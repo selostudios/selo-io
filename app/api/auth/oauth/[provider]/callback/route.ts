@@ -17,6 +17,16 @@ export async function GET(
     const { provider: providerParam } = await params
     const platform = providerParam as Platform
 
+    // Validate platform
+    if (!Object.values(Platform).includes(platform)) {
+      const message = getErrorMessage('unknown', {
+        message: 'Invalid platform parameter',
+      })
+      return redirect(
+        `/settings/integrations?error=${encodeURIComponent(message)}`
+      )
+    }
+
     // Get callback params
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
