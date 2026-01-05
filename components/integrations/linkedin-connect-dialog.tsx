@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { connectPlatform } from '@/app/settings/integrations/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
@@ -83,13 +84,14 @@ export function LinkedInConnectDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="accessToken">Access Token</Label>
-            <Input
+            <Textarea
               id="accessToken"
-              type="password"
               placeholder="Enter your access token"
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
               disabled={isLoading}
+              rows={3}
+              className="font-mono text-sm"
             />
             <p className="text-muted-foreground text-xs">
               Generate at developers.linkedin.com with r_organization_social and
