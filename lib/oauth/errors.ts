@@ -83,13 +83,27 @@ export function sanitizeForLogging(data: any): any {
     'code',
   ]
 
-  const sanitized = { ...data }
-
-  REDACTED_FIELDS.forEach((field) => {
-    if (sanitized[field]) {
-      sanitized[field] = '[REDACTED]'
+  function sanitizeValue(value: any): any {
+    if (value === null || value === undefined) {
+      return value
     }
-  })
 
-  return sanitized
+    if (Array.isArray(value)) {
+      return value.map(sanitizeValue)
+    }
+
+    if (typeof value === 'object') {
+      const sanitized: any = {}
+      for (const [key, val] of Object.entries(value)) {
+        sanitized[key] = REDACTED_FIELDS.includes(key)
+          ? '[REDACTED]'
+          : sanitizeValue(val)
+      }
+      return sanitized
+    }
+
+    return value
+  }
+
+  return sanitizeValue(data)
 }
