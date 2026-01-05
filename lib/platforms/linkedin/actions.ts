@@ -40,7 +40,7 @@ export async function syncLinkedInMetrics() {
   const credentials = connection.credentials as LinkedInCredentials
 
   try {
-    const adapter = new LinkedInAdapter(credentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
 
     // Fetch metrics for the last 90 days to cover all time ranges
     const endDate = new Date()
