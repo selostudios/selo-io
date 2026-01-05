@@ -21,11 +21,11 @@ export function Sidebar() {
           <Image
             src="/selo-logo.jpg.webp"
             alt="Selo Studios"
-            width={75}
-            height={30}
+            width={94}
+            height={38}
             priority
             className="cursor-pointer object-contain"
-            style={{ marginLeft: -10, marginTop: -10 }}
+            style={{ marginLeft: -20, marginTop: -20 }}
           />
         </Link>
       </div>
