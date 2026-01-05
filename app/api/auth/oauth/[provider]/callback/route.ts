@@ -7,6 +7,12 @@ import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 import { getErrorMessage } from '@/lib/oauth/errors'
 
+// Helper to clear OAuth cookies
+function clearOAuthCookies(cookieStore: ReturnType<typeof cookies> extends Promise<infer T> ? T : never) {
+  cookieStore.delete('oauth_state')
+  cookieStore.delete('oauth_platform')
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ provider: string }> }
@@ -19,6 +25,7 @@ export async function GET(
 
     // Validate platform
     if (!Object.values(Platform).includes(platform)) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('unknown', {
         message: 'Invalid platform parameter',
       })
@@ -35,6 +42,7 @@ export async function GET(
 
     // Handle user denial
     if (error === 'user_cancelled_authorize' || error === 'access_denied') {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('user_cancelled')
       return redirect(
         `/settings/integrations?error=${encodeURIComponent(message)}`
@@ -43,6 +51,7 @@ export async function GET(
 
     // Validate required params
     if (!code || !state) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('invalid_code', {
         message: 'Missing code or state parameter',
       })
@@ -92,6 +101,7 @@ export async function GET(
     try {
       tokens = await provider.exchangeCodeForTokens(code, redirectUri)
     } catch (err) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('invalid_code', {
         statusCode: err instanceof Error ? 400 : undefined,
         message: err instanceof Error ? err.message : 'Unknown error',
@@ -106,6 +116,7 @@ export async function GET(
     try {
       accounts = await provider.fetchUserAccounts(tokens.access_token)
     } catch (err) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('api_error', {
         endpoint: 'fetchUserAccounts',
         status: err instanceof Error ? 500 : undefined,
@@ -117,6 +128,7 @@ export async function GET(
     }
 
     if (accounts.length === 0) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('no_organizations', {
         scopes: tokens.scopes,
       })
@@ -165,6 +177,7 @@ export async function GET(
       .single()
 
     if (existing) {
+      clearOAuthCookies(cookieStore)
       const message = getErrorMessage('already_connected', {
         orgId: selectedAccount.id,
         connectionId: existing.id,
@@ -194,6 +207,7 @@ export async function GET(
       })
 
     if (insertError) {
+      clearOAuthCookies(cookieStore)
       console.error('[OAuth Callback] Failed to save connection', {
         type: 'database_error',
         error: insertError,
