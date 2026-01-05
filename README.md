@@ -81,6 +81,14 @@ For more details, see [docs/testing.md](docs/testing.md).
 2. Add credentials to Vercel environment variables
 3. Verify `NEXT_PUBLIC_SITE_URL` is set correctly
 
+### Known Limitations
+
+- **Multiple Organization Selection**: If your LinkedIn account has access to multiple organizations, the OAuth flow currently auto-selects the first organization returned by LinkedIn. You cannot choose which organization to connect during the OAuth flow. Future versions will add an organization selection UI.
+
+- **Manual Token Revocation**: If you revoke access in LinkedIn's settings, the connection status won't update until the next sync attempt or token refresh. The system does not currently support real-time revocation notifications via webhooks.
+
+- **LinkedIn App Verification**: LinkedIn apps in development mode have limited API access. You must request and receive approval for the "Marketing Developer Platform" product in your LinkedIn app settings before the OAuth integration will work in production.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
