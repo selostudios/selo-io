@@ -4,11 +4,29 @@ import { Platform, TokenResponse, Account } from '../types'
 
 export class LinkedInOAuthProvider extends OAuthProvider {
   platform = Platform.LINKEDIN
+  private clientId: string
+  private clientSecret: string
+
+  constructor() {
+    super()
+    this.validateConfig()
+    this.clientId = process.env.LINKEDIN_CLIENT_ID!
+    this.clientSecret = process.env.LINKEDIN_CLIENT_SECRET!
+  }
+
+  private validateConfig(): void {
+    if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
+      throw new Error(
+        'Missing required LinkedIn OAuth environment variables. ' +
+        'Please set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env.local'
+      )
+    }
+  }
 
   getAuthorizationUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: process.env.LINKEDIN_CLIENT_ID!,
+      client_id: this.clientId,
       redirect_uri: redirectUri,
       state: state,
       scope: 'r_organization_social r_organization_admin rw_organization_admin',
@@ -41,8 +59,8 @@ export class LinkedInOAuthProvider extends OAuthProvider {
           grant_type: 'authorization_code',
           code,
           redirect_uri: redirectUri,
-          client_id: process.env.LINKEDIN_CLIENT_ID!,
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
         }),
       }
     )
@@ -90,8 +108,8 @@ export class LinkedInOAuthProvider extends OAuthProvider {
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
-          client_id: process.env.LINKEDIN_CLIENT_ID!,
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
         }),
       }
     )
