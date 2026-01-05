@@ -20,6 +20,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           success: 'bg-green-50 text-green-800 border-green-200',
           error: 'bg-red-50 text-red-800 border-red-200',
+          closeButton:
+            'absolute right-2 top-2 left-auto transform-none border-0 bg-transparent hover:bg-transparent',
         },
       }}
       icons={{
