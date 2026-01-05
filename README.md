@@ -59,6 +59,28 @@ npm run test:seed
 
 For more details, see [docs/testing.md](docs/testing.md).
 
+## LinkedIn OAuth Setup
+
+### Development
+
+1. Create LinkedIn App at https://www.linkedin.com/developers/apps
+2. Add redirect URL: `http://localhost:3000/api/auth/oauth/linkedin/callback`
+3. Request scopes:
+   - `r_organization_social`
+   - `r_organization_admin`
+   - `rw_organization_admin`
+4. Add credentials to `.env.local`:
+   ```
+   LINKEDIN_CLIENT_ID=your_client_id
+   LINKEDIN_CLIENT_SECRET=your_client_secret
+   ```
+
+### Production
+
+1. Add production redirect URL: `https://selo-io.vercel.app/api/auth/oauth/linkedin/callback`
+2. Add credentials to Vercel environment variables
+3. Verify `NEXT_PUBLIC_SITE_URL` is set correctly
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
