@@ -25,7 +25,7 @@ export function Sidebar() {
             height={38}
             priority
             className="cursor-pointer object-contain"
-            style={{ marginLeft: -20, marginTop: -20 }}
+            style={{ marginLeft: -10, marginTop: -20 }}
           />
         </Link>
       </div>
