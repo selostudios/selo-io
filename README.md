@@ -89,6 +89,14 @@ For more details, see [docs/testing.md](docs/testing.md).
 
 - **LinkedIn App Verification**: LinkedIn apps in development mode have limited API access. You must request and receive approval for the "Marketing Developer Platform" product in your LinkedIn app settings before the OAuth integration will work in production.
 
+### Security Considerations
+
+⚠️ **Before Production Deployment:**
+
+- **Rate Limiting**: OAuth routes currently lack rate limiting. Before deploying to production, implement rate limiting using Vercel Edge Config, Upstash Redis, or similar to prevent OAuth endpoint abuse. Recommended limits: 5 OAuth initiations per 10 minutes per IP address.
+
+- **Security Event Monitoring**: Integrate a logging/monitoring service (Sentry, Datadog, etc.) to track OAuth security events (CSRF attempts, token refresh failures) for alerting and forensics.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
