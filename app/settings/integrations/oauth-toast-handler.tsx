@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { getPlatformDisplayName } from '@/lib/oauth/utils'
 
 export function OAuthToastHandler() {
   const searchParams = useSearchParams()
@@ -13,27 +14,41 @@ export function OAuthToastHandler() {
     const success = searchParams.get('success')
     const platform = searchParams.get('platform')
 
-    if (error) {
-      toast.error(decodeURIComponent(error), {
-        duration: Infinity,
-        description: process.env.NODE_ENV === 'development' ? error : undefined,
-      })
-      // Clear error from URL
-      router.replace('/settings/integrations')
-    }
+    try {
+      // Handle errors
+      if (error) {
+        try {
+          toast.error(decodeURIComponent(error), {
+            duration: Infinity,
+            closeButton: true,
+            description: process.env.NODE_ENV === 'development' ? error : undefined,
+          })
+        } catch {
+          // Fallback if URL decoding fails
+          toast.error(error, {
+            duration: Infinity,
+            closeButton: true,
+          })
+        }
+        router.replace('/settings/integrations')
+        return
+      }
 
-    if (success === 'connected' && platform) {
-      const platformName =
-        platform === 'linkedin'
-          ? 'LinkedIn'
-          : platform === 'google_analytics'
-          ? 'Google Analytics'
-          : platform
-      toast.success(`${platformName} connected successfully`, {
-        duration: 5000,
+      // Handle success
+      if (success === 'connected' && platform) {
+        const platformName = getPlatformDisplayName(platform)
+        toast.success(`${platformName} connected successfully`, {
+          duration: 5000,
+        })
+        router.replace('/settings/integrations')
+        return
+      }
+    } catch (err) {
+      console.error('[OAuth Toast Handler] Failed to process query params', {
+        type: 'toast_handler_error',
+        error: err instanceof Error ? err.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
       })
-      // Clear success from URL
-      router.replace('/settings/integrations')
     }
   }, [searchParams, router])
 
