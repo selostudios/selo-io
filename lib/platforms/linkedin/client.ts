@@ -68,6 +68,31 @@ export class LinkedInClient {
           error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date().toISOString(),
         })
+
+        // Mark connection as failed so user knows to reconnect
+        if (this.connectionId) {
+          try {
+            const { createClient } = await import('@/lib/supabase/server')
+            const supabase = await createClient()
+            await supabase
+              .from('platform_connections')
+              .update({ status: 'failed' })
+              .eq('id', this.connectionId)
+
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[LinkedIn Client] Connection marked as failed', {
+                connectionId: this.connectionId,
+              })
+            }
+          } catch (updateError) {
+            console.error('[LinkedIn Client] Failed to update connection status', {
+              type: 'database_update_error',
+              error: updateError instanceof Error ? updateError.message : 'Unknown error',
+              timestamp: new Date().toISOString(),
+            })
+          }
+        }
+
         throw error
       }
     }
