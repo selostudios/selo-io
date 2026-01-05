@@ -118,7 +118,20 @@ _[User to document actual behavior]_
 
 ---
 
-### 8. Token Refresh - Proactive Refresh
+### 8. Error Handling - No Organizations
+- [ ] Note: This test requires a LinkedIn account with NO organization pages
+- [ ] Click "Connect" on LinkedIn card
+- [ ] Approve on LinkedIn
+- [ ] Expected: Error toast: "No LinkedIn organizations found. Please ensure your account has access to at least one organization page."
+- [ ] Expected: No connection saved in database
+- [ ] Check server logs for error: `no_organizations`
+
+**Notes:**
+_[User to document actual behavior - This test may be difficult to perform without a test LinkedIn account that has no organization access]_
+
+---
+
+### 9. Token Refresh - Proactive Refresh
 - [ ] After successful connection, manually update the database to simulate near-expiration:
   ```sql
   UPDATE platform_connections
@@ -140,7 +153,7 @@ _[User to document actual behavior]_
 
 ---
 
-### 9. Token Refresh - Expired Token
+### 10. Token Refresh - Expired Token
 - [ ] Manually update database to set expired token:
   ```sql
   UPDATE platform_connections
@@ -187,7 +200,7 @@ _[User to document actual responses]_
 
 ## Summary
 
-**Total Test Cases:** 11
+**Total Test Cases:** 12
 **Passed:** _[User to fill in]_
 **Failed:** _[User to fill in]_
 **Not Tested:** _[User to fill in]_
