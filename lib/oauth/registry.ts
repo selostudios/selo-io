@@ -12,7 +12,7 @@ const providers = {
 } as const
 
 export function getOAuthProvider(platform: Platform): OAuthProvider {
-  const ProviderClass = providers[platform]
+  const ProviderClass = providers[platform as keyof typeof providers]
 
   if (!ProviderClass) {
     throw new Error(`OAuth provider not found for platform: ${platform}`)
