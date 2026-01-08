@@ -27,92 +27,68 @@ export class LinkedInClient {
     return response.json()
   }
 
-  private formatDate(date: Date): number {
-    return date.getTime()
-  }
-
-  async getFollowerStatistics(startDate: Date, endDate: Date): Promise<{ followers: number }> {
+  // Get total follower count (works without MDP access)
+  async getFollowerCount(): Promise<number> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
-    const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
     const data = await this.fetch<{
-      elements: Array<{ followerGains: { organicFollowerGain: number; paidFollowerGain: number } }>
-    }>(
-      `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
-    )
+      firstDegreeSize: number
+    }>(`/networkSizes/${encodeURIComponent(orgUrn)}?edgeType=CompanyFollowedByMember`)
 
-    const totalGain = data.elements.reduce((sum, el) => {
-      return (
-        sum +
-        (el.followerGains?.organicFollowerGain || 0) +
-        (el.followerGains?.paidFollowerGain || 0)
-      )
-    }, 0)
-
-    return { followers: totalGain }
+    return data.firstDegreeSize || 0
   }
 
-  async getPageStatistics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<{ pageViews: number; uniqueVisitors: number }> {
+  // Get recent posts and their engagement (works without MDP access)
+  async getPostEngagement(): Promise<{ impressions: number; reactions: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
-    const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
 
-    const data = await this.fetch<{
-      elements: Array<{ views: { allPageViews: { pageViews: number }; uniqueVisitors: number } }>
-    }>(
-      `/organizationPageStatistics?q=organization&organization=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
-    )
+    try {
+      const data = await this.fetch<{
+        elements: Array<{
+          id: string
+          socialMetadata?: {
+            totalSocialActivityCounts?: {
+              numLikes?: number
+              numComments?: number
+              numShares?: number
+            }
+          }
+        }>
+      }>(`/posts?author=${encodeURIComponent(orgUrn)}&q=author&count=50`)
 
-    const totals = data.elements.reduce(
-      (acc, el) => ({
-        pageViews: acc.pageViews + (el.views?.allPageViews?.pageViews || 0),
-        uniqueVisitors: acc.uniqueVisitors + (el.views?.uniqueVisitors || 0),
-      }),
-      { pageViews: 0, uniqueVisitors: 0 }
-    )
+      // Sum up engagement from recent posts
+      let totalReactions = 0
+      for (const post of data.elements || []) {
+        const counts = post.socialMetadata?.totalSocialActivityCounts
+        if (counts) {
+          totalReactions +=
+            (counts.numLikes || 0) + (counts.numComments || 0) + (counts.numShares || 0)
+        }
+      }
 
-    return totals
+      return {
+        impressions: 0, // Not available without MDP
+        reactions: totalReactions,
+      }
+    } catch {
+      // Posts endpoint may not be available, return zeros
+      return { impressions: 0, reactions: 0 }
+    }
   }
 
-  async getShareStatistics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<{ impressions: number; reactions: number }> {
-    const orgUrn = `urn:li:organization:${this.organizationId}`
-    const timeRange = `(start:${this.formatDate(startDate)},end:${this.formatDate(endDate)})`
-
-    const data = await this.fetch<{
-      elements: Array<{ totalShareStatistics: { impressionCount: number; reactionCount: number } }>
-    }>(
-      `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
-    )
-
-    const totals = data.elements.reduce(
-      (acc, el) => ({
-        impressions: acc.impressions + (el.totalShareStatistics?.impressionCount || 0),
-        reactions: acc.reactions + (el.totalShareStatistics?.reactionCount || 0),
-      }),
-      { impressions: 0, reactions: 0 }
-    )
-
-    return totals
-  }
-
-  async getAllMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {
-    const [followers, pageStats, shareStats] = await Promise.all([
-      this.getFollowerStatistics(startDate, endDate),
-      this.getPageStatistics(startDate, endDate),
-      this.getShareStatistics(startDate, endDate),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getAllMetrics(_startDate: Date, _endDate: Date): Promise<LinkedInMetrics> {
+    const [followers, engagement] = await Promise.all([
+      this.getFollowerCount(),
+      this.getPostEngagement(),
     ])
 
     return {
-      followers: followers.followers,
-      pageViews: pageStats.pageViews,
-      uniqueVisitors: pageStats.uniqueVisitors,
-      impressions: shareStats.impressions,
-      reactions: shareStats.reactions,
+      followers,
+      pageViews: 0, // Not available without MDP
+      uniqueVisitors: 0, // Not available without MDP
+      impressions: engagement.impressions,
+      reactions: engagement.reactions,
     }
   }
 }

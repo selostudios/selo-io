@@ -14,26 +14,20 @@ describe('LinkedInClient', () => {
     })
   })
 
-  describe('getFollowerStatistics', () => {
-    it('should fetch follower statistics for date range', async () => {
+  describe('getFollowerCount', () => {
+    it('should fetch total follower count', async () => {
       const client = new LinkedInClient(mockCredentials)
-      const startDate = new Date('2026-01-01')
-      const endDate = new Date('2026-01-07')
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
-            elements: [
-              {
-                followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 },
-              },
-            ],
+            firstDegreeSize: 1500,
           }),
       })
 
-      const result = await client.getFollowerStatistics(startDate, endDate)
-      expect(result.followers).toBe(30)
+      const result = await client.getFollowerCount()
+      expect(result).toBe(1500)
     })
 
     it('should throw on API error', async () => {
@@ -42,17 +36,15 @@ describe('LinkedInClient', () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized',
+        text: () => Promise.resolve('Unauthorized'),
       })
 
-      await expect(client.getFollowerStatistics(new Date(), new Date())).rejects.toThrow(
-        'LinkedIn API error: 401'
-      )
+      await expect(client.getFollowerCount()).rejects.toThrow('LinkedIn API error 401')
     })
   })
 
-  describe('getPageStatistics', () => {
-    it('should fetch page views and unique visitors', async () => {
+  describe('getPostEngagement', () => {
+    it('should fetch engagement from recent posts', async () => {
       const client = new LinkedInClient(mockCredentials)
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -61,43 +53,84 @@ describe('LinkedInClient', () => {
           Promise.resolve({
             elements: [
               {
-                views: {
-                  allPageViews: { pageViews: 500 },
-                  uniqueVisitors: 250,
+                id: 'post-1',
+                socialMetadata: {
+                  totalSocialActivityCounts: {
+                    numLikes: 10,
+                    numComments: 5,
+                    numShares: 2,
+                  },
+                },
+              },
+              {
+                id: 'post-2',
+                socialMetadata: {
+                  totalSocialActivityCounts: {
+                    numLikes: 20,
+                    numComments: 3,
+                    numShares: 1,
+                  },
                 },
               },
             ],
           }),
       })
 
-      const result = await client.getPageStatistics(new Date(), new Date())
-      expect(result.pageViews).toBe(500)
-      expect(result.uniqueVisitors).toBe(250)
+      const result = await client.getPostEngagement()
+      expect(result.reactions).toBe(41) // 10+5+2 + 20+3+1
+      expect(result.impressions).toBe(0) // Not available without MDP
     })
-  })
 
-  describe('getShareStatistics', () => {
-    it('should fetch impressions and reactions', async () => {
+    it('should return zeros if posts endpoint fails', async () => {
       const client = new LinkedInClient(mockCredentials)
 
       global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            elements: [
-              {
-                totalShareStatistics: {
-                  impressionCount: 3000,
-                  reactionCount: 50,
-                },
-              },
-            ],
-          }),
+        ok: false,
+        status: 403,
+        text: () => Promise.resolve('Forbidden'),
       })
 
-      const result = await client.getShareStatistics(new Date(), new Date())
-      expect(result.impressions).toBe(3000)
-      expect(result.reactions).toBe(50)
+      const result = await client.getPostEngagement()
+      expect(result.reactions).toBe(0)
+      expect(result.impressions).toBe(0)
+    })
+  })
+
+  describe('getAllMetrics', () => {
+    it('should combine follower count and engagement', async () => {
+      const client = new LinkedInClient(mockCredentials)
+
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ firstDegreeSize: 1000 }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              elements: [
+                {
+                  id: 'post-1',
+                  socialMetadata: {
+                    totalSocialActivityCounts: {
+                      numLikes: 50,
+                      numComments: 10,
+                      numShares: 5,
+                    },
+                  },
+                },
+              ],
+            }),
+        })
+
+      const result = await client.getAllMetrics(new Date(), new Date())
+      expect(result.followers).toBe(1000)
+      expect(result.reactions).toBe(65)
+      expect(result.pageViews).toBe(0)
+      expect(result.uniqueVisitors).toBe(0)
+      expect(result.impressions).toBe(0)
     })
   })
 })
