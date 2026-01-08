@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { updateUtmParameters } from '@/app/dashboard/campaigns/actions'
+import { updateUtmParameters } from '@/app/campaigns/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { useRouter } from 'next/navigation'
 

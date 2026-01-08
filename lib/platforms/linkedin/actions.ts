@@ -79,8 +79,11 @@ export async function syncLinkedInMetrics() {
     return { success: true }
   } catch (error) {
     console.error('[LinkedIn Sync Error]', error)
-    if (error instanceof Error && error.message.includes('401')) {
-      return { error: 'LinkedIn token expired. Please reconnect.' }
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        return { error: 'LinkedIn token expired. Please reconnect.' }
+      }
+      return { error: error.message }
     }
     return { error: 'Failed to fetch LinkedIn metrics' }
   }

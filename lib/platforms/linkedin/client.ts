@@ -20,7 +20,8 @@ export class LinkedInClient {
     })
 
     if (!response.ok) {
-      throw new Error(`LinkedIn API error: ${response.status}`)
+      const errorBody = await response.text()
+      throw new Error(`LinkedIn API error ${response.status}: ${errorBody}`)
     }
 
     return response.json()
