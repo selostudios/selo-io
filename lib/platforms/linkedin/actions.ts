@@ -52,15 +52,13 @@ export async function syncLinkedInMetrics() {
     const metrics = await adapter.fetchMetrics(startDate, endDate)
     const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, endDate)
 
-    // Upsert metrics (delete existing for today, insert new)
-    const today = endDate.toISOString().split('T')[0]
-
+    // Delete ALL existing LinkedIn metrics and insert fresh snapshot
+    // (LinkedIn API returns totals, not daily deltas)
     await supabase
       .from('campaign_metrics')
       .delete()
       .eq('organization_id', userRecord.organization_id)
       .eq('platform_type', 'linkedin')
-      .eq('date', today)
 
     const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
 
@@ -89,7 +87,8 @@ export async function syncLinkedInMetrics() {
   }
 }
 
-export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getLinkedInMetrics(_period: '7d' | '30d' | 'quarter') {
   const supabase = await createClient()
 
   const {
@@ -109,42 +108,18 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
     return { error: 'User not found' }
   }
 
-  // Import date utilities
-  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } =
-    await import('@/lib/utils/date-ranges')
-
-  const currentRange = getDateRange(period)
-  const previousRange = getPreviousPeriodRange(currentRange, period)
-
-  // Fetch current period metrics
-  const { data: currentMetrics } = await supabase
+  // Fetch latest metrics (we store snapshots, not time-series)
+  const { data: metrics } = await supabase
     .from('campaign_metrics')
     .select('metric_type, value')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
-    .gte('date', currentRange.start.toISOString().split('T')[0])
-    .lte('date', currentRange.end.toISOString().split('T')[0])
 
-  // Fetch previous period metrics
-  const { data: previousMetrics } = await supabase
-    .from('campaign_metrics')
-    .select('metric_type, value')
-    .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'linkedin')
-    .gte('date', previousRange.start.toISOString().split('T')[0])
-    .lte('date', previousRange.end.toISOString().split('T')[0])
-
-  // Aggregate by metric type
-  const aggregate = (metrics: Array<{ metric_type: string; value: number }> | null) => {
-    const result: Record<string, number> = {}
-    metrics?.forEach((m) => {
-      result[m.metric_type] = (result[m.metric_type] || 0) + Number(m.value)
-    })
-    return result
-  }
-
-  const current = aggregate(currentMetrics)
-  const previous = aggregate(previousMetrics)
+  // Build metrics map
+  const metricsMap: Record<string, number> = {}
+  metrics?.forEach((m) => {
+    metricsMap[m.metric_type] = Number(m.value)
+  })
 
   // Only show metrics available without MDP access
   const metricTypes = [
@@ -154,8 +129,8 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
 
   const result = metricTypes.map(({ key, label }) => ({
     label,
-    value: current[key] || 0,
-    change: calculatePercentageChange(current[key] || 0, previous[key] || 0),
+    value: metricsMap[key] || 0,
+    change: null, // No historical data for snapshots
   }))
 
   return { metrics: result }
