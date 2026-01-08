@@ -146,12 +146,10 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   const current = aggregate(currentMetrics)
   const previous = aggregate(previousMetrics)
 
+  // Only show metrics available without MDP access
   const metricTypes = [
-    { key: 'linkedin_followers', label: 'New followers' },
-    { key: 'linkedin_page_views', label: 'Page views' },
-    { key: 'linkedin_unique_visitors', label: 'Unique visitors' },
-    { key: 'linkedin_impressions', label: 'Impressions' },
-    { key: 'linkedin_reactions', label: 'Reactions' },
+    { key: 'linkedin_followers', label: 'Followers' },
+    { key: 'linkedin_reactions', label: 'Engagements' },
   ]
 
   const result = metricTypes.map(({ key, label }) => ({

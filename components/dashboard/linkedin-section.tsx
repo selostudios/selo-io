@@ -84,7 +84,14 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>LinkedIn</CardTitle>
+          <div>
+            <CardTitle>LinkedIn</CardTitle>
+            {lastSyncAt && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                Last synced: {new Date(lastSyncAt).toLocaleString()}
+              </p>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger className="w-[130px]">
@@ -108,17 +115,12 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
             </Button>
           </div>
         </div>
-        {lastSyncAt && (
-          <p className="text-muted-foreground text-xs">
-            Last synced: {new Date(lastSyncAt).toLocaleString()}
-          </p>
-        )}
       </CardHeader>
       <CardContent>
         {isPending ? (
           <p className="text-muted-foreground">Loading metrics...</p>
         ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-6">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.label}
