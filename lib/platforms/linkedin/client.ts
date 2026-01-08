@@ -21,10 +21,31 @@ export class LinkedInClient {
 
     if (!response.ok) {
       const errorBody = await response.text()
-      throw new Error(`LinkedIn API error ${response.status}: ${errorBody}`)
+      throw new Error(this.formatError(response.status, errorBody))
     }
 
     return response.json()
+  }
+
+  private formatError(status: number, body: string): string {
+    switch (status) {
+      case 401:
+        return 'LinkedIn token expired or invalid. Please reconnect your account.'
+      case 403:
+        return 'LinkedIn access denied. Your app may need additional permissions.'
+      case 404:
+        return 'LinkedIn organization not found. Please check your organization ID.'
+      case 429:
+        return 'LinkedIn rate limit exceeded. Please try again later.'
+      default:
+        // Try to extract message from JSON error response
+        try {
+          const parsed = JSON.parse(body)
+          return parsed.message || `LinkedIn error: ${body}`
+        } catch {
+          return `LinkedIn error (${status}): ${body}`
+        }
+    }
   }
 
   // Get total follower count (works without MDP access)

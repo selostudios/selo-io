@@ -30,7 +30,7 @@ describe('LinkedInClient', () => {
       expect(result).toBe(1500)
     })
 
-    it('should throw on API error', async () => {
+    it('should throw user-friendly error on 401', async () => {
       const client = new LinkedInClient(mockCredentials)
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -39,7 +39,9 @@ describe('LinkedInClient', () => {
         text: () => Promise.resolve('Unauthorized'),
       })
 
-      await expect(client.getFollowerCount()).rejects.toThrow('LinkedIn API error 401')
+      await expect(client.getFollowerCount()).rejects.toThrow(
+        'LinkedIn token expired or invalid. Please reconnect your account.'
+      )
     })
   })
 
