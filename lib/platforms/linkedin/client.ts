@@ -163,7 +163,10 @@ export class LinkedInClient {
   }
 
   // Get share/engagement statistics (requires r_organization_admin)
-  async getShareStatistics(): Promise<{
+  async getShareStatistics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
     impressions: number
     clicks: number
     likes: number
@@ -172,6 +175,7 @@ export class LinkedInClient {
     engagement: number
   }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
+    const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
 
     try {
       const data = await this.fetch<{
@@ -186,19 +190,34 @@ export class LinkedInClient {
           }
         }>
       }>(
-        `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}`
+        `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
       )
 
       console.log('[LinkedIn] Share stats response:', JSON.stringify(data, null, 2))
 
-      const stats = data.elements?.[0]?.totalShareStatistics || {}
+      // Sum up stats across all time intervals
+      let impressions = 0
+      let clicks = 0
+      let likes = 0
+      let comments = 0
+      let shares = 0
+
+      for (const el of data.elements || []) {
+        const stats = el.totalShareStatistics || {}
+        impressions += Number(stats.impressionCount) || 0
+        clicks += Number(stats.clickCount) || 0
+        likes += Number(stats.likeCount) || 0
+        comments += Number(stats.commentCount) || 0
+        shares += Number(stats.shareCount) || 0
+      }
+
       return {
-        impressions: Number(stats.impressionCount) || 0,
-        clicks: Number(stats.clickCount) || 0,
-        likes: Number(stats.likeCount) || 0,
-        comments: Number(stats.commentCount) || 0,
-        shares: Number(stats.shareCount) || 0,
-        engagement: Number(stats.engagement) || 0,
+        impressions,
+        clicks,
+        likes,
+        comments,
+        shares,
+        engagement: 0, // Engagement rate doesn't sum meaningfully
       }
     } catch (error) {
       console.error('[LinkedIn] Share stats error:', error)
@@ -210,7 +229,7 @@ export class LinkedInClient {
     const [followerStats, pageStats, shareStats] = await Promise.all([
       this.getFollowerStatistics(startDate, endDate),
       this.getPageStatistics(startDate, endDate),
-      this.getShareStatistics(),
+      this.getShareStatistics(startDate, endDate),
     ])
 
     return {

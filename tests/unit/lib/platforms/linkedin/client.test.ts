@@ -109,8 +109,10 @@ describe('LinkedInClient', () => {
   })
 
   describe('getShareStatistics', () => {
-    it('should fetch engagement stats', async () => {
+    it('should fetch engagement stats for date range', async () => {
       const client = new LinkedInClient(mockCredentials)
+      const startDate = new Date('2026-01-01')
+      const endDate = new Date('2026-01-07')
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
@@ -119,19 +121,28 @@ describe('LinkedInClient', () => {
             elements: [
               {
                 totalShareStatistics: {
-                  impressionCount: 5000,
-                  clickCount: 100,
-                  likeCount: 50,
-                  commentCount: 10,
-                  shareCount: 5,
-                  engagement: 0.033,
+                  impressionCount: 3000,
+                  clickCount: 60,
+                  likeCount: 30,
+                  commentCount: 5,
+                  shareCount: 3,
+                },
+              },
+              {
+                totalShareStatistics: {
+                  impressionCount: 2000,
+                  clickCount: 40,
+                  likeCount: 20,
+                  commentCount: 5,
+                  shareCount: 2,
                 },
               },
             ],
           }),
       })
 
-      const result = await client.getShareStatistics()
+      const result = await client.getShareStatistics(startDate, endDate)
+      // Should sum across all time intervals
       expect(result.impressions).toBe(5000)
       expect(result.clicks).toBe(100)
       expect(result.likes).toBe(50)
