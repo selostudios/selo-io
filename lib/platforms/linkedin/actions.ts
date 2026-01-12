@@ -83,7 +83,7 @@ export async function syncLinkedInMetrics() {
 
     if (insertError) {
       console.error('[LinkedIn Sync Error]', insertError)
-      return { error: 'Failed to save metrics' }
+      return { error: `Failed to save metrics: ${insertError.message}` }
     }
 
     // Update last_sync_at
