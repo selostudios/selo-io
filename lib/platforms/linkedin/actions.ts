@@ -152,9 +152,9 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
 
     // All metrics are now period-specific based on the selected date range
     const result = [
+      { label: 'New Followers', value: metrics.followerGrowth, change: null },
       { label: 'Impressions', value: metrics.impressions, change: null },
       { label: 'Reactions', value: metrics.reactions, change: null },
-      { label: 'New Followers', value: metrics.followerGrowth, change: null },
       { label: 'Page Views', value: metrics.pageViews, change: null },
       { label: 'Unique Visitors', value: metrics.uniqueVisitors, change: null },
     ]
