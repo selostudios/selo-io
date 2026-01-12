@@ -112,10 +112,12 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <LinkedInSection
-        isConnected={!!linkedInConnection}
-        lastSyncAt={linkedInConnection?.last_sync_at || null}
-      />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <LinkedInSection
+          isConnected={!!linkedInConnection}
+          lastSyncAt={linkedInConnection?.last_sync_at || null}
+        />
+      </div>
     </div>
   )
 }
