@@ -61,6 +61,7 @@ export class LinkedInClient {
       // First get lifetime stats (total follower count)
       const lifetimeData = await this.fetch<{
         elements: Array<{
+          followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
           followerCountsByAssociationType?: Array<{
             followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
           }>
