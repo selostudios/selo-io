@@ -42,7 +42,6 @@ export function PlatformConnectionCard({
   }
 
   async function handleDisconnect() {
-    'use server'
     if (connection) {
       await disconnectPlatform(connection.id)
     }
@@ -91,11 +90,9 @@ export function PlatformConnectionCard({
               Last synced: {new Date(connection.last_sync_at).toLocaleString()}
             </p>
           )}
-          <form action={handleDisconnect}>
-            <Button type="submit" variant="outline" size="sm">
-              Disconnect
-            </Button>
-          </form>
+          <Button variant="outline" size="sm" onClick={handleDisconnect}>
+            Disconnect
+          </Button>
         </div>
       </CardContent>
     </Card>
