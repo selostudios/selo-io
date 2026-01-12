@@ -61,6 +61,7 @@ export interface LinkedInCredentials {
 
 export interface LinkedInMetrics {
   followers: number
+  followerGrowth: number
   pageViews: number
   uniqueVisitors: number
   impressions: number
@@ -69,6 +70,7 @@ export interface LinkedInMetrics {
 
 export type LinkedInMetricType =
   | 'linkedin_followers'
+  | 'linkedin_follower_growth'
   | 'linkedin_page_views'
   | 'linkedin_unique_visitors'
   | 'linkedin_impressions'
@@ -76,6 +78,7 @@ export type LinkedInMetricType =
 
 export const LINKEDIN_METRIC_TYPES: LinkedInMetricType[] = [
   'linkedin_followers',
+  'linkedin_follower_growth',
   'linkedin_page_views',
   'linkedin_unique_visitors',
   'linkedin_impressions',

@@ -1,12 +1,18 @@
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 import { createClient } from '@supabase/supabase-js'
+import { encryptCredentials } from '../lib/utils/crypto'
 
 const LINKEDIN_ACCESS_TOKEN = process.env.LINKEDIN_ACCESS_TOKEN
 const LINKEDIN_REFRESH_TOKEN = process.env.LINKEDIN_REFRESH_TOKEN
 
 if (!LINKEDIN_ACCESS_TOKEN) {
   console.error('Missing LINKEDIN_ACCESS_TOKEN in environment')
+  process.exit(1)
+}
+
+if (!process.env.CREDENTIALS_ENCRYPTION_KEY) {
+  console.error('Missing CREDENTIALS_ENCRYPTION_KEY in environment')
   process.exit(1)
 }
 
@@ -77,16 +83,18 @@ async function setupLinkedIn(organizationId: string, userEmail: string) {
     process.exit(1)
   }
 
-  // Store the LinkedIn connection
+  // Encrypt and store the LinkedIn connection
+  const encryptedCredentials = encryptCredentials({
+    access_token: LINKEDIN_ACCESS_TOKEN,
+    refresh_token: LINKEDIN_REFRESH_TOKEN,
+    organization_id: organizationId,
+  })
+
   const { error } = await supabase.from('platform_connections').upsert(
     {
       organization_id: userRecord.organization_id,
       platform_type: 'linkedin',
-      credentials: {
-        access_token: LINKEDIN_ACCESS_TOKEN,
-        refresh_token: LINKEDIN_REFRESH_TOKEN,
-        organization_id: organizationId,
-      },
+      credentials: { encrypted: encryptedCredentials },
     },
     { onConflict: 'organization_id,platform_type' }
   )

@@ -3,7 +3,24 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { LinkedInAdapter } from './adapter'
+import { decryptCredentials } from '@/lib/utils/crypto'
 import type { LinkedInCredentials } from './types'
+
+interface StoredCredentials {
+  encrypted?: string
+  access_token?: string
+  refresh_token?: string
+  organization_id?: string
+}
+
+function getCredentials(stored: StoredCredentials): LinkedInCredentials {
+  // Handle encrypted credentials (new format)
+  if (stored.encrypted) {
+    return decryptCredentials<LinkedInCredentials>(stored.encrypted)
+  }
+  // Handle legacy unencrypted credentials
+  return stored as LinkedInCredentials
+}
 
 export async function syncLinkedInMetrics() {
   const supabase = await createClient()
@@ -39,9 +56,8 @@ export async function syncLinkedInMetrics() {
     return { error: 'LinkedIn not connected' }
   }
 
-  const credentials = connection.credentials as LinkedInCredentials
-
   try {
+    const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new LinkedInAdapter(credentials)
 
     // Fetch metrics for the last 90 days to cover all time ranges
@@ -159,9 +175,12 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
     return Math.round(((current - previous) / previous) * 100)
   }
 
-  // Only show metrics available without MDP access
+  // Show all available metrics
   const metricTypes = [
     { key: 'linkedin_followers', label: 'Followers' },
+    { key: 'linkedin_follower_growth', label: 'New Followers' },
+    { key: 'linkedin_page_views', label: 'Page Views' },
+    { key: 'linkedin_impressions', label: 'Impressions' },
     { key: 'linkedin_reactions', label: 'Engagements' },
   ]
 

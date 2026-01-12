@@ -45,45 +45,29 @@ describe('LinkedInClient', () => {
     })
   })
 
-  describe('getPostEngagement', () => {
-    it('should fetch engagement from recent posts', async () => {
+  describe('getFollowerStatistics', () => {
+    it('should fetch follower gains for date range', async () => {
       const client = new LinkedInClient(mockCredentials)
+      const startDate = new Date('2026-01-01')
+      const endDate = new Date('2026-01-07')
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             elements: [
-              {
-                id: 'post-1',
-                socialMetadata: {
-                  totalSocialActivityCounts: {
-                    numLikes: 10,
-                    numComments: 5,
-                    numShares: 2,
-                  },
-                },
-              },
-              {
-                id: 'post-2',
-                socialMetadata: {
-                  totalSocialActivityCounts: {
-                    numLikes: 20,
-                    numComments: 3,
-                    numShares: 1,
-                  },
-                },
-              },
+              { followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 } },
+              { followerGains: { organicFollowerGain: 10, paidFollowerGain: 0 } },
             ],
           }),
       })
 
-      const result = await client.getPostEngagement()
-      expect(result.reactions).toBe(41) // 10+5+2 + 20+3+1
-      expect(result.impressions).toBe(0) // Not available without MDP
+      const result = await client.getFollowerStatistics(startDate, endDate)
+      expect(result.organicGain).toBe(35)
+      expect(result.paidGain).toBe(5)
     })
 
-    it('should return zeros if posts endpoint fails', async () => {
+    it('should return zeros on error', async () => {
       const client = new LinkedInClient(mockCredentials)
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -92,35 +76,83 @@ describe('LinkedInClient', () => {
         text: () => Promise.resolve('Forbidden'),
       })
 
-      const result = await client.getPostEngagement()
-      expect(result.reactions).toBe(0)
-      expect(result.impressions).toBe(0)
+      const result = await client.getFollowerStatistics(new Date(), new Date())
+      expect(result.organicGain).toBe(0)
+      expect(result.paidGain).toBe(0)
+    })
+  })
+
+  describe('getShareStatistics', () => {
+    it('should fetch engagement stats', async () => {
+      const client = new LinkedInClient(mockCredentials)
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            elements: [
+              {
+                totalShareStatistics: {
+                  impressionCount: 5000,
+                  clickCount: 100,
+                  likeCount: 50,
+                  commentCount: 10,
+                  shareCount: 5,
+                  engagement: 0.033,
+                },
+              },
+            ],
+          }),
+      })
+
+      const result = await client.getShareStatistics()
+      expect(result.impressions).toBe(5000)
+      expect(result.clicks).toBe(100)
+      expect(result.likes).toBe(50)
+      expect(result.comments).toBe(10)
+      expect(result.shares).toBe(5)
     })
   })
 
   describe('getAllMetrics', () => {
-    it('should combine follower count and engagement', async () => {
+    it('should combine all metrics', async () => {
       const client = new LinkedInClient(mockCredentials)
 
       global.fetch = vi
         .fn()
+        // getFollowerCount
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ firstDegreeSize: 1000 }),
         })
+        // getFollowerStatistics
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              elements: [{ followerGains: { organicFollowerGain: 50, paidFollowerGain: 10 } }],
+            }),
+        })
+        // getPageStatistics
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              elements: [{ totalPageStatistics: { views: { allPageViews: 500 } } }],
+            }),
+        })
+        // getShareStatistics
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
             Promise.resolve({
               elements: [
                 {
-                  id: 'post-1',
-                  socialMetadata: {
-                    totalSocialActivityCounts: {
-                      numLikes: 50,
-                      numComments: 10,
-                      numShares: 5,
-                    },
+                  totalShareStatistics: {
+                    impressionCount: 3000,
+                    likeCount: 100,
+                    commentCount: 20,
+                    shareCount: 10,
                   },
                 },
               ],
@@ -129,10 +161,10 @@ describe('LinkedInClient', () => {
 
       const result = await client.getAllMetrics(new Date(), new Date())
       expect(result.followers).toBe(1000)
-      expect(result.reactions).toBe(65)
-      expect(result.pageViews).toBe(0)
-      expect(result.uniqueVisitors).toBe(0)
-      expect(result.impressions).toBe(0)
+      expect(result.followerGrowth).toBe(60)
+      expect(result.pageViews).toBe(500)
+      expect(result.impressions).toBe(3000)
+      expect(result.reactions).toBe(130)
     })
   })
 })

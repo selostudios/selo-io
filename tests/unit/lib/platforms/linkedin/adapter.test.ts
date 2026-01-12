@@ -25,6 +25,7 @@ describe('LinkedInAdapter', () => {
     it('should fetch all metrics for a date range', async () => {
       mockGetAllMetrics.mockResolvedValue({
         followers: 30,
+        followerGrowth: 5,
         pageViews: 500,
         uniqueVisitors: 250,
         impressions: 3000,
@@ -39,6 +40,7 @@ describe('LinkedInAdapter', () => {
 
       expect(metrics).toEqual({
         followers: 30,
+        followerGrowth: 5,
         pageViews: 500,
         uniqueVisitors: 250,
         impressions: 3000,
@@ -52,6 +54,7 @@ describe('LinkedInAdapter', () => {
       const adapter = new LinkedInAdapter(mockCredentials)
       const metrics = {
         followers: 30,
+        followerGrowth: 5,
         pageViews: 500,
         uniqueVisitors: 250,
         impressions: 3000,
@@ -62,7 +65,7 @@ describe('LinkedInAdapter', () => {
 
       const records = adapter.normalizeToDbRecords(metrics, orgId, date)
 
-      expect(records).toHaveLength(5)
+      expect(records).toHaveLength(6)
       expect(records).toContainEqual({
         organization_id: orgId,
         campaign_id: null,
@@ -70,6 +73,14 @@ describe('LinkedInAdapter', () => {
         date: '2026-01-07',
         metric_type: 'linkedin_followers',
         value: 30,
+      })
+      expect(records).toContainEqual({
+        organization_id: orgId,
+        campaign_id: null,
+        platform_type: 'linkedin',
+        date: '2026-01-07',
+        metric_type: 'linkedin_follower_growth',
+        value: 5,
       })
     })
   })

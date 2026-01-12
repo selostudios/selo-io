@@ -120,7 +120,7 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
         {isPending ? (
           <p className="text-muted-foreground">Loading metrics...</p>
         ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.label}
