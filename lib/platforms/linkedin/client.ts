@@ -134,6 +134,8 @@ export class LinkedInClient {
         `/organizationPageStatistics?q=organization&organization=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
       )
 
+      console.log('[LinkedIn] Page stats response:', JSON.stringify(data, null, 2))
+
       let pageViews = 0
       for (const el of data.elements || []) {
         pageViews += Number(el.totalPageStatistics?.views?.allPageViews) || 0
@@ -141,7 +143,8 @@ export class LinkedInClient {
 
       // Unique visitors not available in time-series, use lifetime query
       return { pageViews, uniqueVisitors: 0 }
-    } catch {
+    } catch (error) {
+      console.error('[LinkedIn] Page stats error:', error)
       return { pageViews: 0, uniqueVisitors: 0 }
     }
   }
@@ -173,6 +176,8 @@ export class LinkedInClient {
         `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}`
       )
 
+      console.log('[LinkedIn] Share stats response:', JSON.stringify(data, null, 2))
+
       const stats = data.elements?.[0]?.totalShareStatistics || {}
       return {
         impressions: Number(stats.impressionCount) || 0,
@@ -182,7 +187,8 @@ export class LinkedInClient {
         shares: Number(stats.shareCount) || 0,
         engagement: Number(stats.engagement) || 0,
       }
-    } catch {
+    } catch (error) {
+      console.error('[LinkedIn] Share stats error:', error)
       return { impressions: 0, clicks: 0, likes: 0, comments: 0, shares: 0, engagement: 0 }
     }
   }
