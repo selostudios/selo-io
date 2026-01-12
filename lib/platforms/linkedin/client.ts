@@ -72,11 +72,19 @@ export class LinkedInClient {
       // Calculate total followers from lifetime stats
       let totalFollowers = 0
       const firstElement = lifetimeData.elements?.[0]
+
+      // Debug: log the structure we receive
+      console.log('[LinkedIn] Follower stats response:', JSON.stringify(firstElement, null, 2))
+
       if (firstElement?.followerCountsByAssociationType) {
-        for (const assoc of firstElement.followerCountsByAssociationType) {
-          totalFollowers +=
-            (assoc.followerCounts?.organicFollowerCount || 0) +
-            (assoc.followerCounts?.paidFollowerCount || 0)
+        const associations = firstElement.followerCountsByAssociationType
+        // Ensure we're iterating over an array
+        if (Array.isArray(associations)) {
+          for (const assoc of associations) {
+            const organic = Number(assoc.followerCounts?.organicFollowerCount) || 0
+            const paid = Number(assoc.followerCounts?.paidFollowerCount) || 0
+            totalFollowers += organic + paid
+          }
         }
       }
 
@@ -95,8 +103,8 @@ export class LinkedInClient {
         )
 
         for (const el of timeData.elements || []) {
-          organicGain += el.followerGains?.organicFollowerGain || 0
-          paidGain += el.followerGains?.paidFollowerGain || 0
+          organicGain += Number(el.followerGains?.organicFollowerGain) || 0
+          paidGain += Number(el.followerGains?.paidFollowerGain) || 0
         }
       }
 
@@ -128,7 +136,7 @@ export class LinkedInClient {
 
       let pageViews = 0
       for (const el of data.elements || []) {
-        pageViews += el.totalPageStatistics?.views?.allPageViews || 0
+        pageViews += Number(el.totalPageStatistics?.views?.allPageViews) || 0
       }
 
       // Unique visitors not available in time-series, use lifetime query
@@ -167,12 +175,12 @@ export class LinkedInClient {
 
       const stats = data.elements?.[0]?.totalShareStatistics || {}
       return {
-        impressions: stats.impressionCount || 0,
-        clicks: stats.clickCount || 0,
-        likes: stats.likeCount || 0,
-        comments: stats.commentCount || 0,
-        shares: stats.shareCount || 0,
-        engagement: stats.engagement || 0,
+        impressions: Number(stats.impressionCount) || 0,
+        clicks: Number(stats.clickCount) || 0,
+        likes: Number(stats.likeCount) || 0,
+        comments: Number(stats.commentCount) || 0,
+        shares: Number(stats.shareCount) || 0,
+        engagement: Number(stats.engagement) || 0,
       }
     } catch {
       return { impressions: 0, clicks: 0, likes: 0, comments: 0, shares: 0, engagement: 0 }
