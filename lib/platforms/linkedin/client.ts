@@ -142,18 +142,20 @@ export class LinkedInClient {
       console.log('[LinkedIn] Page stats response:', JSON.stringify(data, null, 2))
 
       let pageViews = 0
+      let uniqueVisitors = 0
       for (const el of data.elements || []) {
-        // allPageViews is an object with pageViews property inside
+        // allPageViews is an object with pageViews and uniquePageViews inside
         const views = el.totalPageStatistics?.views?.allPageViews
         if (typeof views === 'object' && views !== null) {
-          pageViews += Number((views as { pageViews?: number }).pageViews) || 0
+          const viewsObj = views as { pageViews?: number; uniquePageViews?: number }
+          pageViews += Number(viewsObj.pageViews) || 0
+          uniqueVisitors += Number(viewsObj.uniquePageViews) || 0
         } else {
           pageViews += Number(views) || 0
         }
       }
 
-      // Unique visitors not available in time-series, use lifetime query
-      return { pageViews, uniqueVisitors: 0 }
+      return { pageViews, uniqueVisitors }
     } catch (error) {
       console.error('[LinkedIn] Page stats error:', error)
       return { pageViews: 0, uniqueVisitors: 0 }

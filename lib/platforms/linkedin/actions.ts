@@ -151,14 +151,14 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
     const metrics = await adapter.fetchMetrics(startDate, endDate)
 
     // Return period-specific metrics
-    // Note: Followers and Impressions are lifetime totals from LinkedIn
-    // Follower Growth and Page Views are period-specific
+    // Note: Impressions and Reactions are lifetime totals from LinkedIn
+    // New Followers, Page Views, Unique Visitors are period-specific
     const result = [
-      { label: 'Followers', value: metrics.followers, change: null },
+      { label: 'Impressions', value: metrics.impressions, change: null },
+      { label: 'Reactions', value: metrics.reactions, change: null },
       { label: 'New Followers', value: metrics.followerGrowth, change: null },
       { label: 'Page Views', value: metrics.pageViews, change: null },
-      { label: 'Impressions', value: metrics.impressions, change: null },
-      { label: 'Engagements', value: metrics.reactions, change: null },
+      { label: 'Unique Visitors', value: metrics.uniqueVisitors, change: null },
     ]
 
     return { metrics: result }
