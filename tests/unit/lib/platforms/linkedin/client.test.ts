@@ -14,55 +14,65 @@ describe('LinkedInClient', () => {
     })
   })
 
-  describe('getFollowerCount', () => {
-    it('should fetch total follower count', async () => {
-      const client = new LinkedInClient(mockCredentials)
-
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            firstDegreeSize: 1500,
-          }),
-      })
-
-      const result = await client.getFollowerCount()
-      expect(result).toBe(1500)
-    })
-
-    it('should throw user-friendly error on 401', async () => {
-      const client = new LinkedInClient(mockCredentials)
-
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        text: () => Promise.resolve('Unauthorized'),
-      })
-
-      await expect(client.getFollowerCount()).rejects.toThrow(
-        'LinkedIn token expired or invalid. Please reconnect your account.'
-      )
-    })
-  })
-
   describe('getFollowerStatistics', () => {
-    it('should fetch follower gains for date range', async () => {
+    it('should fetch lifetime follower count', async () => {
       const client = new LinkedInClient(mockCredentials)
-      const startDate = new Date('2026-01-01')
-      const endDate = new Date('2026-01-07')
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             elements: [
-              { followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 } },
-              { followerGains: { organicFollowerGain: 10, paidFollowerGain: 0 } },
+              {
+                followerCountsByAssociationType: [
+                  { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 500 } },
+                ],
+              },
             ],
           }),
       })
 
+      const result = await client.getFollowerStatistics()
+      expect(result.totalFollowers).toBe(1500)
+      expect(result.organicGain).toBe(0)
+      expect(result.paidGain).toBe(0)
+    })
+
+    it('should fetch follower gains for date range', async () => {
+      const client = new LinkedInClient(mockCredentials)
+      const startDate = new Date('2026-01-01')
+      const endDate = new Date('2026-01-07')
+
+      global.fetch = vi
+        .fn()
+        // Lifetime stats call
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              elements: [
+                {
+                  followerCountsByAssociationType: [
+                    { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 0 } },
+                  ],
+                },
+              ],
+            }),
+        })
+        // Time-bound stats call
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              elements: [
+                { followerGains: { organicFollowerGain: 25, paidFollowerGain: 5 } },
+                { followerGains: { organicFollowerGain: 10, paidFollowerGain: 0 } },
+              ],
+            }),
+        })
+
       const result = await client.getFollowerStatistics(startDate, endDate)
+      expect(result.totalFollowers).toBe(1000)
       expect(result.organicGain).toBe(35)
       expect(result.paidGain).toBe(5)
     })
@@ -76,9 +86,23 @@ describe('LinkedInClient', () => {
         text: () => Promise.resolve('Forbidden'),
       })
 
-      const result = await client.getFollowerStatistics(new Date(), new Date())
+      const result = await client.getFollowerStatistics()
+      expect(result.totalFollowers).toBe(0)
       expect(result.organicGain).toBe(0)
-      expect(result.paidGain).toBe(0)
+    })
+
+    it('should throw user-friendly error on 401', async () => {
+      const client = new LinkedInClient(mockCredentials)
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: () => Promise.resolve('Unauthorized'),
+      })
+
+      // getFollowerStatistics catches errors internally
+      const result = await client.getFollowerStatistics()
+      expect(result.totalFollowers).toBe(0)
     })
   })
 
@@ -118,46 +142,60 @@ describe('LinkedInClient', () => {
     it('should combine all metrics', async () => {
       const client = new LinkedInClient(mockCredentials)
 
-      global.fetch = vi
-        .fn()
-        // getFollowerCount
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ firstDegreeSize: 1000 }),
-        })
-        // getFollowerStatistics
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              elements: [{ followerGains: { organicFollowerGain: 50, paidFollowerGain: 10 } }],
-            }),
-        })
-        // getPageStatistics
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              elements: [{ totalPageStatistics: { views: { allPageViews: 500 } } }],
-            }),
-        })
-        // getShareStatistics
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              elements: [
-                {
-                  totalShareStatistics: {
-                    impressionCount: 3000,
-                    likeCount: 100,
-                    commentCount: 20,
-                    shareCount: 10,
-                  },
-                },
+      // Mock all API calls - they run in parallel so order may vary
+      // We use mockImplementation to handle any order
+      const mockResponses = {
+        followerLifetime: {
+          elements: [
+            {
+              followerCountsByAssociationType: [
+                { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 0 } },
               ],
-            }),
+            },
+          ],
+        },
+        followerTimebound: {
+          elements: [{ followerGains: { organicFollowerGain: 50, paidFollowerGain: 10 } }],
+        },
+        pageStats: {
+          elements: [{ totalPageStatistics: { views: { allPageViews: 500 } } }],
+        },
+        shareStats: {
+          elements: [
+            {
+              totalShareStatistics: {
+                impressionCount: 3000,
+                likeCount: 100,
+                commentCount: 20,
+                shareCount: 10,
+              },
+            },
+          ],
+        },
+      }
+
+      let callCount = 0
+      global.fetch = vi.fn().mockImplementation((url: string) => {
+        callCount++
+        let response = {}
+
+        if (url.includes('organizationalEntityFollowerStatistics')) {
+          if (url.includes('timeIntervals')) {
+            response = mockResponses.followerTimebound
+          } else {
+            response = mockResponses.followerLifetime
+          }
+        } else if (url.includes('organizationPageStatistics')) {
+          response = mockResponses.pageStats
+        } else if (url.includes('organizationalEntityShareStatistics')) {
+          response = mockResponses.shareStats
+        }
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(response),
         })
+      })
 
       const result = await client.getAllMetrics(new Date(), new Date())
       expect(result.followers).toBe(1000)

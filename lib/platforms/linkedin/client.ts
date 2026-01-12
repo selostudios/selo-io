@@ -50,44 +50,60 @@ export class LinkedInClient {
     }
   }
 
-  // Get total follower count
-  async getFollowerCount(): Promise<number> {
-    const orgUrn = `urn:li:organization:${this.organizationId}`
-
-    const data = await this.fetch<{
-      firstDegreeSize: number
-    }>(`/networkSizes/${encodeURIComponent(orgUrn)}?edgeType=COMPANY_FOLLOWED_BY_MEMBER`)
-
-    return data.firstDegreeSize || 0
-  }
-
-  // Get follower statistics with time range (requires r_organization_admin)
+  // Get follower statistics (lifetime and time-bound)
   async getFollowerStatistics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<{ organicGain: number; paidGain: number }> {
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{ totalFollowers: number; organicGain: number; paidGain: number }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
-    const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
 
     try {
-      const data = await this.fetch<{
+      // First get lifetime stats (total follower count)
+      const lifetimeData = await this.fetch<{
         elements: Array<{
-          followerGains?: { organicFollowerGain: number; paidFollowerGain: number }
+          followerCountsByAssociationType?: Array<{
+            followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
+          }>
         }>
       }>(
-        `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
+        `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}`
       )
 
-      let organicGain = 0
-      let paidGain = 0
-      for (const el of data.elements || []) {
-        organicGain += el.followerGains?.organicFollowerGain || 0
-        paidGain += el.followerGains?.paidFollowerGain || 0
+      // Calculate total followers from lifetime stats
+      let totalFollowers = 0
+      const firstElement = lifetimeData.elements?.[0]
+      if (firstElement?.followerCountsByAssociationType) {
+        for (const assoc of firstElement.followerCountsByAssociationType) {
+          totalFollowers +=
+            (assoc.followerCounts?.organicFollowerCount || 0) +
+            (assoc.followerCounts?.paidFollowerCount || 0)
+        }
       }
 
-      return { organicGain, paidGain }
-    } catch {
-      return { organicGain: 0, paidGain: 0 }
+      // If dates provided, get time-bound gains
+      let organicGain = 0
+      let paidGain = 0
+
+      if (startDate && endDate) {
+        const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
+        const timeData = await this.fetch<{
+          elements: Array<{
+            followerGains?: { organicFollowerGain: number; paidFollowerGain: number }
+          }>
+        }>(
+          `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
+        )
+
+        for (const el of timeData.elements || []) {
+          organicGain += el.followerGains?.organicFollowerGain || 0
+          paidGain += el.followerGains?.paidFollowerGain || 0
+        }
+      }
+
+      return { totalFollowers, organicGain, paidGain }
+    } catch (error) {
+      console.error('[LinkedIn] Follower stats error:', error)
+      return { totalFollowers: 0, organicGain: 0, paidGain: 0 }
     }
   }
 
@@ -164,15 +180,14 @@ export class LinkedInClient {
   }
 
   async getAllMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {
-    const [followers, followerStats, pageStats, shareStats] = await Promise.all([
-      this.getFollowerCount(),
+    const [followerStats, pageStats, shareStats] = await Promise.all([
       this.getFollowerStatistics(startDate, endDate),
       this.getPageStatistics(startDate, endDate),
       this.getShareStatistics(),
     ])
 
     return {
-      followers,
+      followers: followerStats.totalFollowers,
       followerGrowth: followerStats.organicGain + followerStats.paidGain,
       pageViews: pageStats.pageViews,
       uniqueVisitors: pageStats.uniqueVisitors,
