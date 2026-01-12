@@ -73,18 +73,29 @@ export class LinkedInClient {
       let totalFollowers = 0
       const firstElement = lifetimeData.elements?.[0]
 
-      // Debug: log the structure we receive
-      console.log('[LinkedIn] Follower stats response:', JSON.stringify(firstElement, null, 2))
+      // Debug: log the full response structure
+      console.log('[LinkedIn] Follower stats full response:', JSON.stringify(lifetimeData, null, 2))
 
-      if (firstElement?.followerCountsByAssociationType) {
-        const associations = firstElement.followerCountsByAssociationType
-        // Ensure we're iterating over an array
-        if (Array.isArray(associations)) {
-          for (const assoc of associations) {
-            const organic = Number(assoc.followerCounts?.organicFollowerCount) || 0
-            const paid = Number(assoc.followerCounts?.paidFollowerCount) || 0
-            totalFollowers += organic + paid
+      if (firstElement) {
+        // Try direct followerCounts first (simpler structure)
+        if (firstElement.followerCounts) {
+          const counts = firstElement.followerCounts
+          totalFollowers =
+            (Number(counts.organicFollowerCount) || 0) +
+            (Number(counts.paidFollowerCount) || 0)
+          console.log('[LinkedIn] Using direct followerCounts:', totalFollowers)
+        }
+        // Fall back to followerCountsByAssociationType
+        else if (firstElement.followerCountsByAssociationType) {
+          const associations = firstElement.followerCountsByAssociationType
+          if (Array.isArray(associations)) {
+            for (const assoc of associations) {
+              const organic = Number(assoc.followerCounts?.organicFollowerCount) || 0
+              const paid = Number(assoc.followerCounts?.paidFollowerCount) || 0
+              totalFollowers += organic + paid
+            }
           }
+          console.log('[LinkedIn] Using followerCountsByAssociationType:', totalFollowers)
         }
       }
 
