@@ -1,9 +1,10 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { disconnectPlatform } from '@/app/settings/integrations/actions'
 import { displayName } from '@/lib/utils'
-import { LinkedInConnectDialog } from '@/components/integrations/linkedin-connect-dialog'
 
 type Connection = {
   id: string
@@ -60,15 +61,13 @@ export function PlatformConnectionCard({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-end">
-            {platformType === 'linkedin' ? (
-              <LinkedInConnectDialog />
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Connect {info.name} to track performance metrics.
-              </p>
-            )}
-          </div>
+          <Button
+            onClick={() => {
+              window.location.href = `/api/auth/oauth/${platformType}`
+            }}
+          >
+            Connect
+          </Button>
         </CardContent>
       </Card>
     )

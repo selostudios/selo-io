@@ -13,8 +13,8 @@ interface MetricRecord {
 export class LinkedInAdapter {
   private client: LinkedInClient
 
-  constructor(credentials: LinkedInCredentials) {
-    this.client = new LinkedInClient(credentials)
+  constructor(credentials: LinkedInCredentials, connectionId?: string) {
+    this.client = new LinkedInClient(credentials, connectionId)
   }
 
   async fetchMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {

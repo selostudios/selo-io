@@ -1,4 +1,7 @@
 import type { LinkedInCredentials, LinkedInMetrics } from './types'
+import { getOAuthProvider } from '@/lib/oauth/registry'
+import { Platform } from '@/lib/oauth/types'
+import type { OAuthProvider } from '@/lib/oauth/base'
 
 // Use REST API (not v2) for full analytics access
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/rest'
@@ -7,13 +10,99 @@ const LINKEDIN_VERSION = '202411' // November 2024 version
 export class LinkedInClient {
   private accessToken: string
   private organizationId: string
+  private credentials: LinkedInCredentials
+  private connectionId: string | null
+  private oauthProvider: OAuthProvider | null
 
-  constructor(credentials: LinkedInCredentials) {
+  constructor(credentials: LinkedInCredentials, connectionId?: string) {
+    this.credentials = credentials
     this.accessToken = credentials.access_token
     this.organizationId = credentials.organization_id
+    this.connectionId = connectionId || null
+    this.oauthProvider =
+      connectionId && credentials.refresh_token
+        ? getOAuthProvider(Platform.LINKEDIN)
+        : null
+  }
+
+  private async ensureFreshToken(): Promise<void> {
+    // Skip refresh if no OAuth provider or connection ID
+    if (!this.oauthProvider || !this.connectionId) {
+      return
+    }
+
+    // Check if token needs refresh
+    if (this.oauthProvider.shouldRefreshToken(this.credentials.expires_at)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[LinkedIn Client] Refreshing token', {
+          expiresAt: this.credentials.expires_at,
+          connectionId: this.connectionId,
+        })
+      }
+
+      try {
+        const newTokens = await this.oauthProvider.refreshAccessToken(
+          this.credentials.refresh_token
+        )
+
+        await this.oauthProvider.updateTokensInDatabase(
+          this.connectionId,
+          newTokens
+        )
+
+        // Update local credentials
+        this.credentials = {
+          ...this.credentials,
+          access_token: newTokens.access_token,
+          refresh_token: newTokens.refresh_token,
+          expires_at: this.oauthProvider.calculateExpiresAt(
+            newTokens.expires_in
+          ),
+        }
+        this.accessToken = newTokens.access_token
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[LinkedIn Client] Token refreshed successfully')
+        }
+      } catch (error) {
+        console.error('[LinkedIn Client] Token refresh failed', {
+          type: 'token_refresh_error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        })
+
+        // Mark connection as failed so user knows to reconnect
+        if (this.connectionId) {
+          try {
+            const { createClient } = await import('@/lib/supabase/server')
+            const supabase = await createClient()
+            await supabase
+              .from('platform_connections')
+              .update({ status: 'failed' })
+              .eq('id', this.connectionId)
+
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[LinkedIn Client] Connection marked as failed', {
+                connectionId: this.connectionId,
+              })
+            }
+          } catch (updateError) {
+            console.error('[LinkedIn Client] Failed to update connection status', {
+              type: 'database_update_error',
+              error: updateError instanceof Error ? updateError.message : 'Unknown error',
+              timestamp: new Date().toISOString(),
+            })
+          }
+        }
+
+        throw error
+      }
+    }
   }
 
   private async fetch<T>(endpoint: string): Promise<T> {
+    await this.ensureFreshToken()
+
     const response = await fetch(`${LINKEDIN_API_BASE}${endpoint}`, {
       headers: {
         Authorization: `Bearer ${this.accessToken}`,

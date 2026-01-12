@@ -59,6 +59,44 @@ npm run test:seed
 
 For more details, see [docs/testing.md](docs/testing.md).
 
+## LinkedIn OAuth Setup
+
+### Development
+
+1. Create LinkedIn App at https://www.linkedin.com/developers/apps
+2. Add redirect URL: `http://localhost:3000/api/auth/oauth/linkedin/callback`
+3. Request scopes:
+   - `r_organization_social`
+   - `r_organization_admin`
+   - `rw_organization_admin`
+4. Add credentials to `.env.local`:
+   ```
+   LINKEDIN_CLIENT_ID=your_client_id
+   LINKEDIN_CLIENT_SECRET=your_client_secret
+   ```
+
+### Production
+
+1. Add production redirect URL: `https://selo-io.vercel.app/api/auth/oauth/linkedin/callback`
+2. Add credentials to Vercel environment variables
+3. Verify `NEXT_PUBLIC_SITE_URL` is set correctly
+
+### Known Limitations
+
+- **Multiple Organization Selection**: If your LinkedIn account has access to multiple organizations, the OAuth flow currently auto-selects the first organization returned by LinkedIn. You cannot choose which organization to connect during the OAuth flow. Future versions will add an organization selection UI.
+
+- **Manual Token Revocation**: If you revoke access in LinkedIn's settings, the connection status won't update until the next sync attempt or token refresh. The system does not currently support real-time revocation notifications via webhooks.
+
+- **LinkedIn App Verification**: LinkedIn apps in development mode have limited API access. You must request and receive approval for the "Marketing Developer Platform" product in your LinkedIn app settings before the OAuth integration will work in production.
+
+### Security Considerations
+
+⚠️ **Before Production Deployment:**
+
+- **Rate Limiting**: OAuth routes currently lack rate limiting. Before deploying to production, implement rate limiting using Vercel Edge Config, Upstash Redis, or similar to prevent OAuth endpoint abuse. Recommended limits: 5 OAuth initiations per 10 minutes per IP address.
+
+- **Security Event Monitoring**: Integrate a logging/monitoring service (Sentry, Datadog, etc.) to track OAuth security events (CSRF attempts, token refresh failures) for alerting and forensics.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

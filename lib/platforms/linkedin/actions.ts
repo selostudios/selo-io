@@ -58,7 +58,7 @@ export async function syncLinkedInMetrics() {
 
   try {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
-    const adapter = new LinkedInAdapter(credentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
 
     // Fetch metrics for the last 90 days to cover all time ranges
     const endDate = new Date()
@@ -129,7 +129,7 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   // Get LinkedIn connection
   const { data: connection } = await supabase
     .from('platform_connections')
-    .select('credentials')
+    .select('id, credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
     .single()
@@ -147,7 +147,7 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
 
     // Fetch fresh metrics from LinkedIn for the selected period
     const credentials = getCredentials(connection.credentials as StoredCredentials)
-    const adapter = new LinkedInAdapter(credentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
     const metrics = await adapter.fetchMetrics(startDate, endDate)
 
     // All metrics are now period-specific based on the selected date range

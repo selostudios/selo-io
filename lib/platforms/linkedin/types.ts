@@ -56,7 +56,11 @@ export interface LinkedInShareStatistics {
 
 export interface LinkedInCredentials {
   access_token: string
+  refresh_token: string
+  expires_at: string // ISO 8601 timestamp
   organization_id: string
+  organization_name: string
+  scopes: string[]
 }
 
 export interface LinkedInMetrics {
