@@ -126,69 +126,47 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
     return { error: 'User not found' }
   }
 
-  // Calculate date range for comparison
-  const now = new Date()
-  const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
-  const periodStart = new Date(now)
-  periodStart.setDate(periodStart.getDate() - daysBack)
-
-  // Get latest metrics (most recent date)
-  const { data: latestMetrics } = await supabase
-    .from('campaign_metrics')
-    .select('metric_type, value, date')
+  // Get LinkedIn connection
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
-    .order('date', { ascending: false })
-    .limit(10) // Get enough to cover all metric types
+    .single()
 
-  // Get metrics from the start of the period for comparison
-  const { data: periodStartMetrics } = await supabase
-    .from('campaign_metrics')
-    .select('metric_type, value, date')
-    .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'linkedin')
-    .lte('date', periodStart.toISOString().split('T')[0])
-    .order('date', { ascending: false })
-    .limit(10)
-
-  // Build maps for latest and period start values
-  const latestMap: Record<string, number> = {}
-  const periodStartMap: Record<string, number> = {}
-
-  // Get the most recent value for each metric type
-  latestMetrics?.forEach((m) => {
-    if (!(m.metric_type in latestMap)) {
-      latestMap[m.metric_type] = Number(m.value)
-    }
-  })
-
-  periodStartMetrics?.forEach((m) => {
-    if (!(m.metric_type in periodStartMap)) {
-      periodStartMap[m.metric_type] = Number(m.value)
-    }
-  })
-
-  // Calculate change (current - previous, as a delta not percentage)
-  const calculateChange = (current: number, previous: number | undefined): number | null => {
-    if (previous === undefined || previous === 0) return null
-    // Return percentage change
-    return Math.round(((current - previous) / previous) * 100)
+  if (!connection) {
+    return { error: 'LinkedIn not connected' }
   }
 
-  // Show all available metrics
-  const metricTypes = [
-    { key: 'linkedin_followers', label: 'Followers' },
-    { key: 'linkedin_follower_growth', label: 'New Followers' },
-    { key: 'linkedin_page_views', label: 'Page Views' },
-    { key: 'linkedin_impressions', label: 'Impressions' },
-    { key: 'linkedin_reactions', label: 'Engagements' },
-  ]
+  try {
+    // Calculate date range based on period
+    const endDate = new Date()
+    const startDate = new Date()
+    const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
+    startDate.setDate(startDate.getDate() - daysBack)
 
-  const result = metricTypes.map(({ key, label }) => ({
-    label,
-    value: latestMap[key] || 0,
-    change: calculateChange(latestMap[key] || 0, periodStartMap[key]),
-  }))
+    // Fetch fresh metrics from LinkedIn for the selected period
+    const credentials = getCredentials(connection.credentials as StoredCredentials)
+    const adapter = new LinkedInAdapter(credentials)
+    const metrics = await adapter.fetchMetrics(startDate, endDate)
 
-  return { metrics: result }
+    // Return period-specific metrics
+    // Note: Followers and Impressions are lifetime totals from LinkedIn
+    // Follower Growth and Page Views are period-specific
+    const result = [
+      { label: 'Followers', value: metrics.followers, change: null },
+      { label: 'New Followers', value: metrics.followerGrowth, change: null },
+      { label: 'Page Views', value: metrics.pageViews, change: null },
+      { label: 'Impressions', value: metrics.impressions, change: null },
+      { label: 'Engagements', value: metrics.reactions, change: null },
+    ]
+
+    return { metrics: result }
+  } catch (error) {
+    console.error('[LinkedIn Metrics Error]', error)
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to fetch LinkedIn metrics' }
+  }
 }
