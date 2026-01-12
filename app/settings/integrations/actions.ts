@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { encryptCredentials } from '@/lib/utils/crypto'
 
 export async function connectPlatform(formData: FormData) {
   const platform_type = formData.get('platform_type') as string
@@ -58,14 +59,14 @@ export async function connectPlatform(formData: FormData) {
     return { error: 'Missing required credentials for this platform' }
   }
 
-  // TODO: Encrypt credentials before storing
-  // For MVP, storing as-is (SECURITY: Must encrypt in production!)
+  // Encrypt credentials before storing
+  const encryptedCredentials = encryptCredentials(credentialsObj)
 
   const { error } = await supabase.from('platform_connections').upsert(
     {
       organization_id: userRecord.organization_id,
       platform_type,
-      credentials: credentialsObj,
+      credentials: { encrypted: encryptedCredentials },
       status: 'active',
     },
     {
