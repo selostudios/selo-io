@@ -72,31 +72,24 @@ export class LinkedInClient {
 
       // Calculate total followers from lifetime stats
       let totalFollowers = 0
-      const firstElement = lifetimeData.elements?.[0]
 
-      // Debug: log the full response structure
-      console.log('[LinkedIn] Follower stats full response:', JSON.stringify(lifetimeData, null, 2))
+      // Calculate total followers from followerCountsBySeniority (most reliable total)
+      // followerCountsByAssociationType only shows EMPLOYEE followers, not total
+      const firstElement = lifetimeData.elements?.[0] as Record<string, unknown> | undefined
 
       if (firstElement) {
-        // Try direct followerCounts first (simpler structure)
-        if (firstElement.followerCounts) {
-          const counts = firstElement.followerCounts
-          totalFollowers =
-            (Number(counts.organicFollowerCount) || 0) +
-            (Number(counts.paidFollowerCount) || 0)
-          console.log('[LinkedIn] Using direct followerCounts:', totalFollowers)
-        }
-        // Fall back to followerCountsByAssociationType
-        else if (firstElement.followerCountsByAssociationType) {
-          const associations = firstElement.followerCountsByAssociationType
-          if (Array.isArray(associations)) {
-            for (const assoc of associations) {
-              const organic = Number(assoc.followerCounts?.organicFollowerCount) || 0
-              const paid = Number(assoc.followerCounts?.paidFollowerCount) || 0
-              totalFollowers += organic + paid
-            }
+        // Use followerCountsBySeniority to get true total (everyone has a seniority)
+        const bySeniority = firstElement.followerCountsBySeniority as Array<{
+          followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
+        }> | undefined
+
+        if (Array.isArray(bySeniority)) {
+          for (const item of bySeniority) {
+            const organic = Number(item.followerCounts?.organicFollowerCount) || 0
+            const paid = Number(item.followerCounts?.paidFollowerCount) || 0
+            totalFollowers += organic + paid
           }
-          console.log('[LinkedIn] Using followerCountsByAssociationType:', totalFollowers)
+          console.log('[LinkedIn] Total followers from seniority breakdown:', totalFollowers)
         }
       }
 
@@ -150,7 +143,13 @@ export class LinkedInClient {
 
       let pageViews = 0
       for (const el of data.elements || []) {
-        pageViews += Number(el.totalPageStatistics?.views?.allPageViews) || 0
+        // allPageViews is an object with pageViews property inside
+        const views = el.totalPageStatistics?.views?.allPageViews
+        if (typeof views === 'object' && views !== null) {
+          pageViews += Number((views as { pageViews?: number }).pageViews) || 0
+        } else {
+          pageViews += Number(views) || 0
+        }
       }
 
       // Unique visitors not available in time-series, use lifetime query

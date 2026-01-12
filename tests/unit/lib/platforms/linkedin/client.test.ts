@@ -24,8 +24,9 @@ describe('LinkedInClient', () => {
           Promise.resolve({
             elements: [
               {
-                followerCountsByAssociationType: [
+                followerCountsBySeniority: [
                   { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 500 } },
+                  { followerCounts: { organicFollowerCount: 200, paidFollowerCount: 0 } },
                 ],
               },
             ],
@@ -33,7 +34,7 @@ describe('LinkedInClient', () => {
       })
 
       const result = await client.getFollowerStatistics()
-      expect(result.totalFollowers).toBe(1500)
+      expect(result.totalFollowers).toBe(1700)
       expect(result.organicGain).toBe(0)
       expect(result.paidGain).toBe(0)
     })
@@ -52,8 +53,9 @@ describe('LinkedInClient', () => {
             Promise.resolve({
               elements: [
                 {
-                  followerCountsByAssociationType: [
-                    { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 0 } },
+                  followerCountsBySeniority: [
+                    { followerCounts: { organicFollowerCount: 800, paidFollowerCount: 0 } },
+                    { followerCounts: { organicFollowerCount: 200, paidFollowerCount: 0 } },
                   ],
                 },
               ],
@@ -148,8 +150,9 @@ describe('LinkedInClient', () => {
         followerLifetime: {
           elements: [
             {
-              followerCountsByAssociationType: [
-                { followerCounts: { organicFollowerCount: 1000, paidFollowerCount: 0 } },
+              followerCountsBySeniority: [
+                { followerCounts: { organicFollowerCount: 800, paidFollowerCount: 0 } },
+                { followerCounts: { organicFollowerCount: 200, paidFollowerCount: 0 } },
               ],
             },
           ],
@@ -174,9 +177,7 @@ describe('LinkedInClient', () => {
         },
       }
 
-      let callCount = 0
       global.fetch = vi.fn().mockImplementation((url: string) => {
-        callCount++
         let response = {}
 
         if (url.includes('organizationalEntityFollowerStatistics')) {
