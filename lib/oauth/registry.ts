@@ -2,11 +2,12 @@
 import { Platform } from './types'
 import { OAuthProvider } from './base'
 import { LinkedInOAuthProvider } from './providers/linkedin'
+import { GoogleOAuthProvider } from './providers/google'
 
 const providers = {
   [Platform.LINKEDIN]: LinkedInOAuthProvider,
+  [Platform.GOOGLE_ANALYTICS]: GoogleOAuthProvider,
   // Future providers:
-  // [Platform.GOOGLE_ANALYTICS]: GoogleOAuthProvider,
   // [Platform.INSTAGRAM]: MetaOAuthProvider,
   // [Platform.HUBSPOT]: HubSpotOAuthProvider,
 } as const

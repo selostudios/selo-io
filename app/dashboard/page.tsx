@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LinkedInSection } from '@/components/dashboard/linkedin-section'
+import { GoogleAnalyticsSection } from '@/components/dashboard/google-analytics-section'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -56,6 +57,14 @@ export default async function DashboardPage() {
     .select('id, last_sync_at')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
+    .single()
+
+  // Get Google Analytics connection status
+  const { data: gaConnection } = await supabase
+    .from('platform_connections')
+    .select('id, last_sync_at')
+    .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'google_analytics')
     .single()
 
   // Get platform connection count
@@ -116,6 +125,10 @@ export default async function DashboardPage() {
         <LinkedInSection
           isConnected={!!linkedInConnection}
           lastSyncAt={linkedInConnection?.last_sync_at || null}
+        />
+        <GoogleAnalyticsSection
+          isConnected={!!gaConnection}
+          lastSyncAt={gaConnection?.last_sync_at || null}
         />
       </div>
     </div>
