@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LinkedInSection } from '@/components/dashboard/linkedin-section'
 import { GoogleAnalyticsSection } from '@/components/dashboard/google-analytics-section'
+import { HubSpotSection } from '@/components/dashboard/hubspot-section'
 import { MetricCard } from '@/components/dashboard/metric-card'
 
 const TOTAL_PLATFORMS = 4
@@ -78,6 +79,14 @@ export default async function DashboardPage() {
     .eq('platform_type', 'google_analytics')
     .single()
 
+  // Get HubSpot connection status
+  const { data: hubspotConnection } = await supabase
+    .from('platform_connections')
+    .select('id, last_sync_at')
+    .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'hubspot')
+    .single()
+
   // Get platform connection count
   const { count: connectionCount } = await supabase
     .from('platform_connections')
@@ -133,6 +142,13 @@ export default async function DashboardPage() {
         <GoogleAnalyticsSection
           isConnected={!!gaConnection}
           lastSyncAt={gaConnection?.last_sync_at || null}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <HubSpotSection
+          isConnected={!!hubspotConnection}
+          lastSyncAt={hubspotConnection?.last_sync_at || null}
         />
       </div>
     </div>
