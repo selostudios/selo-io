@@ -67,17 +67,45 @@ export abstract class OAuthProvider {
     const supabase = await createClient()
     const expiresAt = this.calculateExpiresAt(tokens.expires_in)
 
-    const { error } = await supabase.rpc('update_oauth_tokens', {
-      p_connection_id: connectionId,
-      p_access_token: tokens.access_token,
-      p_refresh_token: tokens.refresh_token,
-      p_expires_at: expiresAt,
-    })
+    // Get current credentials to preserve other fields
+    const { data: connection, error: fetchError } = await supabase
+      .from('platform_connections')
+      .select('credentials')
+      .eq('id', connectionId)
+      .single()
+
+    if (fetchError || !connection) {
+      console.error('[OAuth Token Update Error]', {
+        type: 'fetch_error',
+        connectionId,
+        error: fetchError?.message,
+        timestamp: new Date().toISOString(),
+      })
+      throw new Error('Failed to fetch connection for token update')
+    }
+
+    // Merge new tokens with existing credentials
+    const updatedCredentials = {
+      ...(connection.credentials as Record<string, unknown>),
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expires_at: expiresAt,
+    }
+
+    const { error } = await supabase
+      .from('platform_connections')
+      .update({
+        credentials: updatedCredentials,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', connectionId)
 
     if (error) {
       console.error('[OAuth Token Update Error]', {
-        type: 'database_error',
+        type: 'update_error',
         connectionId,
+        error: error.message,
+        code: error.code,
         timestamp: new Date().toISOString(),
       })
       throw new Error('Failed to update tokens in database')
