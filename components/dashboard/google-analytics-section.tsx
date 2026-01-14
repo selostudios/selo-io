@@ -152,7 +152,7 @@ export function GoogleAnalyticsSection({
 
             {/* Traffic Acquisition */}
             <div>
-              <h4 className="text-sm font-medium mb-3">Traffic Acquisition</h4>
+              <h4 className="text-sm font-medium mb-4">Traffic Acquisition</h4>
               <div className="flex justify-between">
                 <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.direct}</p>
