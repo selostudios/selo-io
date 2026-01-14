@@ -118,19 +118,21 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Platform Connections
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
+                Platform Connections
+              </CardTitle>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/settings/integrations">
+                  Manage
+                </Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <p className={`text-3xl font-bold ${getConnectionColor(connectionCount || 0)}`}>
               {connectionCount || 0}/{TOTAL_PLATFORMS}
             </p>
-            <Button asChild variant="outline" size="sm" className="mt-3">
-              <Link href="/settings/integrations">
-                Manage Integrations
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
