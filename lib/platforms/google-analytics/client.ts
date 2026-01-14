@@ -80,7 +80,10 @@ export class GoogleAnalyticsClient {
   private async fetch<T>(endpoint: string, body?: object): Promise<T> {
     await this.ensureFreshToken()
 
-    const response = await fetch(`${GA_DATA_API_BASE}${endpoint}`, {
+    const url = `${GA_DATA_API_BASE}${endpoint}`
+    console.log('[GA Client] API request:', { url, method: body ? 'POST' : 'GET' })
+
+    const response = await fetch(url, {
       method: body ? 'POST' : 'GET',
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
@@ -91,6 +94,11 @@ export class GoogleAnalyticsClient {
 
     if (!response.ok) {
       const errorBody = await response.text()
+      console.error('[GA Client] API error:', {
+        status: response.status,
+        url,
+        errorBody,
+      })
       throw new Error(this.formatError(response.status, errorBody))
     }
 
@@ -134,18 +142,23 @@ export class GoogleAnalyticsClient {
     }
 
     try {
+      // GA Data API requires properties/ prefix
+      const propertyPath = this.propertyId.startsWith('properties/')
+        ? this.propertyId
+        : `properties/${this.propertyId}`
+
       console.log('[GA Client] Fetching metrics:', {
         propertyId: this.propertyId,
+        propertyPath,
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),
       })
 
-      // Fetch basic metrics (activeUsers, newUsers, sessions)
       const basicData = await this.fetch<{
         rows?: Array<{
           metricValues: Array<{ value: string }>
         }>
-      }>(`/${this.propertyId}:runReport`, {
+      }>(`/${propertyPath}:runReport`, {
         dateRanges: [
           {
             startDate: formatDate(startDate),
@@ -163,7 +176,7 @@ export class GoogleAnalyticsClient {
           dimensionValues: Array<{ value: string }>
           metricValues: Array<{ value: string }>
         }>
-      }>(`/${this.propertyId}:runReport`, {
+      }>(`/${propertyPath}:runReport`, {
         dateRanges: [
           {
             startDate: formatDate(startDate),
