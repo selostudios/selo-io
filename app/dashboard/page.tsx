@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LinkedInSection } from '@/components/dashboard/linkedin-section'
 import { GoogleAnalyticsSection } from '@/components/dashboard/google-analytics-section'
+import { MetricCard } from '@/components/dashboard/metric-card'
 
 const TOTAL_PLATFORMS = 4
 
@@ -104,14 +105,8 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex gap-8">
-              <div>
-                <p className="text-3xl font-bold">{activeCount || 0}</p>
-                <p className="text-muted-foreground text-xs">Active</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{campaignCount || 0}</p>
-                <p className="text-muted-foreground text-xs">Total</p>
-              </div>
+              <MetricCard label="Active" value={activeCount || 0} change={null} />
+              <MetricCard label="Total" value={campaignCount || 0} change={null} />
             </div>
           </CardContent>
         </Card>
