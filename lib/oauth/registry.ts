@@ -3,13 +3,12 @@ import { Platform } from './types'
 import { OAuthProvider } from './base'
 import { LinkedInOAuthProvider } from './providers/linkedin'
 import { GoogleOAuthProvider } from './providers/google'
+import { HubSpotOAuthProvider } from './providers/hubspot'
 
 const providers = {
   [Platform.LINKEDIN]: LinkedInOAuthProvider,
   [Platform.GOOGLE_ANALYTICS]: GoogleOAuthProvider,
-  // Future providers:
-  // [Platform.INSTAGRAM]: MetaOAuthProvider,
-  // [Platform.HUBSPOT]: HubSpotOAuthProvider,
+  [Platform.HUBSPOT]: HubSpotOAuthProvider,
 } as const
 
 export function getOAuthProvider(platform: Platform): OAuthProvider {
