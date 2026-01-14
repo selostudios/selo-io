@@ -24,11 +24,17 @@ interface UserMenuProps {
   userEmail: string
   firstName: string
   lastName: string
-  initials: string
 }
 
-export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuProps) {
+export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
   const [profileOpen, setProfileOpen] = useState(false)
+  const [currentFirstName, setCurrentFirstName] = useState(firstName)
+  const [currentLastName, setCurrentLastName] = useState(lastName)
+
+  // Compute initials from current name state
+  const initials = currentLastName
+    ? `${currentFirstName.charAt(0)}${currentLastName.charAt(0)}`.toUpperCase()
+    : currentFirstName.substring(0, 2).toUpperCase()
 
   return (
     <>
@@ -60,7 +66,15 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
             <DialogTitle>Profile</DialogTitle>
             <DialogDescription>Update your personal information</DialogDescription>
           </DialogHeader>
-          <ProfileForm email={userEmail} firstName={firstName} lastName={lastName} />
+          <ProfileForm
+            email={userEmail}
+            firstName={currentFirstName}
+            lastName={currentLastName}
+            onUpdate={(newFirstName, newLastName) => {
+              setCurrentFirstName(newFirstName)
+              setCurrentLastName(newLastName)
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>
