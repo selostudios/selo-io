@@ -99,9 +99,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Campaigns
-            </CardTitle>
+            <CardTitle>Campaigns</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-8">
@@ -113,9 +111,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                Platform Connections
-              </CardTitle>
+              <CardTitle>Platform Connections</CardTitle>
               <Button asChild variant="outline" size="sm">
                 <Link href="/settings/integrations">
                   Manage
