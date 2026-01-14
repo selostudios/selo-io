@@ -95,25 +95,24 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-muted-foreground text-sm font-medium">
-              Total Campaigns
+              Campaigns
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{campaignCount || 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Active Campaigns
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{activeCount || 0}</p>
+            <div className="flex gap-8">
+              <div>
+                <p className="text-3xl font-bold">{activeCount || 0}</p>
+                <p className="text-muted-foreground text-xs">Active</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">{campaignCount || 0}</p>
+                <p className="text-muted-foreground text-xs">Total</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
