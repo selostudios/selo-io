@@ -153,24 +153,24 @@ export function GoogleAnalyticsSection({
             {/* Traffic Acquisition */}
             <div>
               <h4 className="text-sm font-medium mb-3">Traffic Acquisition</h4>
-              <div className="flex gap-6">
-                <div>
+              <div className="flex justify-between">
+                <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.direct}</p>
                   <p className="text-muted-foreground text-xs">Direct</p>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSearch}</p>
                   <p className="text-muted-foreground text-xs">Organic Search</p>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.email}</p>
                   <p className="text-muted-foreground text-xs">Email</p>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSocial}</p>
                   <p className="text-muted-foreground text-xs">Organic Social</p>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.referral}</p>
                   <p className="text-muted-foreground text-xs">Referral</p>
                 </div>
