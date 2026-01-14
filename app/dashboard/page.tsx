@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { LinkedInSection } from '@/components/dashboard/linkedin-section'
 import { GoogleAnalyticsSection } from '@/components/dashboard/google-analytics-section'
+
+const TOTAL_PLATFORMS = 4
+
+function getConnectionColor(count: number): string {
+  if (count <= 1) return 'text-red-500'
+  if (count <= 3) return 'text-yellow-500'
+  return 'text-green-500'
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -113,10 +123,14 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{connectionCount || 0}</p>
-            {!connectionCount && (
-              <p className="text-muted-foreground mt-2 text-sm">Connect platforms in Settings</p>
-            )}
+            <p className={`text-3xl font-bold ${getConnectionColor(connectionCount || 0)}`}>
+              {connectionCount || 0}/{TOTAL_PLATFORMS}
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-3">
+              <Link href="/settings/integrations">
+                Manage Integrations
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
