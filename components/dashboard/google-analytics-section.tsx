@@ -17,13 +17,15 @@ import {
   getGoogleAnalyticsMetrics,
 } from '@/lib/platforms/google-analytics/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
+import type { TrafficAcquisition } from '@/lib/platforms/google-analytics/types'
 
 type Period = '7d' | '30d' | 'quarter'
 
-interface Metric {
-  label: string
-  value: number
-  change: number | null
+interface GAMetrics {
+  activeUsers: number
+  newUsers: number
+  sessions: number
+  trafficAcquisition: TrafficAcquisition
 }
 
 interface GoogleAnalyticsSectionProps {
@@ -36,7 +38,7 @@ export function GoogleAnalyticsSection({
   lastSyncAt,
 }: GoogleAnalyticsSectionProps) {
   const [period, setPeriod] = useState<Period>('7d')
-  const [metrics, setMetrics] = useState<Metric[]>([])
+  const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [isPending, startTransition] = useTransition()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -127,16 +129,53 @@ export function GoogleAnalyticsSection({
       <CardContent>
         {isPending ? (
           <p className="text-muted-foreground">Loading metrics...</p>
-        ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6">
-            {metrics.map((metric) => (
+        ) : metrics ? (
+          <div className="space-y-6">
+            {/* Main metrics */}
+            <div className="grid grid-cols-3 gap-4">
               <MetricCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-                change={metric.change}
+                label="Active Users"
+                value={metrics.activeUsers}
+                change={null}
               />
-            ))}
+              <MetricCard
+                label="New Users"
+                value={metrics.newUsers}
+                change={null}
+              />
+              <MetricCard
+                label="Sessions"
+                value={metrics.sessions}
+                change={null}
+              />
+            </div>
+
+            {/* Traffic Acquisition */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Traffic Acquisition</h4>
+              <div className="grid grid-cols-5 gap-3">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.direct}</p>
+                  <p className="text-muted-foreground text-xs">Direct</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSearch}</p>
+                  <p className="text-muted-foreground text-xs">Organic Search</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.email}</p>
+                  <p className="text-muted-foreground text-xs">Email</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSocial}</p>
+                  <p className="text-muted-foreground text-xs">Organic Social</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.referral}</p>
+                  <p className="text-muted-foreground text-xs">Referral</p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>

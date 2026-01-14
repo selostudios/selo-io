@@ -148,13 +148,14 @@ export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter'
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
     const metrics = await adapter.fetchMetrics(startDate, endDate)
 
-    const result = [
-      { label: 'Users', value: metrics.users, change: null },
-      { label: 'Sessions', value: metrics.sessions, change: null },
-      { label: 'Page Views', value: metrics.pageViews, change: null },
-    ]
-
-    return { metrics: result }
+    return {
+      metrics: {
+        activeUsers: metrics.activeUsers,
+        newUsers: metrics.newUsers,
+        sessions: metrics.sessions,
+        trafficAcquisition: metrics.trafficAcquisition,
+      },
+    }
   } catch (error) {
     console.error('[GA Metrics Error]', error)
     if (error instanceof Error) {

@@ -122,6 +122,19 @@ export class GoogleAnalyticsClient {
   async getMetrics(startDate: Date, endDate: Date): Promise<GoogleAnalyticsMetrics> {
     const formatDate = (d: Date) => d.toISOString().split('T')[0]
 
+    const emptyMetrics: GoogleAnalyticsMetrics = {
+      activeUsers: 0,
+      newUsers: 0,
+      sessions: 0,
+      trafficAcquisition: {
+        direct: 0,
+        organicSearch: 0,
+        email: 0,
+        organicSocial: 0,
+        referral: 0,
+      },
+    }
+
     try {
       console.log('[GA Client] Fetching metrics:', {
         propertyId: this.propertyId,
@@ -129,7 +142,8 @@ export class GoogleAnalyticsClient {
         endDate: formatDate(endDate),
       })
 
-      const data = await this.fetch<{
+      // Fetch basic metrics (activeUsers, newUsers, sessions)
+      const basicData = await this.fetch<{
         rows?: Array<{
           metricValues: Array<{ value: string }>
         }>
@@ -142,30 +156,72 @@ export class GoogleAnalyticsClient {
         ],
         metrics: [
           { name: 'activeUsers' },
+          { name: 'newUsers' },
           { name: 'sessions' },
-          { name: 'screenPageViews' },
         ],
       })
 
-      console.log('[GA Client] Metrics response:', JSON.stringify(data, null, 2))
+      console.log('[GA Client] Basic metrics response:', JSON.stringify(basicData, null, 2))
 
-      const row = data.rows?.[0]
-      if (!row) {
-        console.log('[GA Client] No rows returned - property may have no data')
-        return { users: 0, sessions: 0, pageViews: 0 }
+      // Fetch traffic acquisition by channel
+      const trafficData = await this.fetch<{
+        rows?: Array<{
+          dimensionValues: Array<{ value: string }>
+          metricValues: Array<{ value: string }>
+        }>
+      }>(`/${this.propertyId}:runReport`, {
+        dateRanges: [
+          {
+            startDate: formatDate(startDate),
+            endDate: formatDate(endDate),
+          },
+        ],
+        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+        metrics: [{ name: 'sessions' }],
+      })
+
+      console.log('[GA Client] Traffic acquisition response:', JSON.stringify(trafficData, null, 2))
+
+      // Parse basic metrics
+      const basicRow = basicData.rows?.[0]
+      const metrics: GoogleAnalyticsMetrics = {
+        activeUsers: basicRow ? Number(basicRow.metricValues[0]?.value) || 0 : 0,
+        newUsers: basicRow ? Number(basicRow.metricValues[1]?.value) || 0 : 0,
+        sessions: basicRow ? Number(basicRow.metricValues[2]?.value) || 0 : 0,
+        trafficAcquisition: {
+          direct: 0,
+          organicSearch: 0,
+          email: 0,
+          organicSocial: 0,
+          referral: 0,
+        },
       }
 
-      const metrics = {
-        users: Number(row.metricValues[0]?.value) || 0,
-        sessions: Number(row.metricValues[1]?.value) || 0,
-        pageViews: Number(row.metricValues[2]?.value) || 0,
+      // Parse traffic acquisition
+      if (trafficData.rows) {
+        for (const row of trafficData.rows) {
+          const channel = row.dimensionValues[0]?.value?.toLowerCase() || ''
+          const sessions = Number(row.metricValues[0]?.value) || 0
+
+          if (channel === 'direct') {
+            metrics.trafficAcquisition.direct = sessions
+          } else if (channel === 'organic search') {
+            metrics.trafficAcquisition.organicSearch = sessions
+          } else if (channel === 'email') {
+            metrics.trafficAcquisition.email = sessions
+          } else if (channel === 'organic social') {
+            metrics.trafficAcquisition.organicSocial = sessions
+          } else if (channel === 'referral') {
+            metrics.trafficAcquisition.referral = sessions
+          }
+        }
       }
 
       console.log('[GA Client] Parsed metrics:', metrics)
       return metrics
     } catch (error) {
       console.error('[GA Client] Metrics error:', error)
-      return { users: 0, sessions: 0, pageViews: 0 }
+      return emptyMetrics
     }
   }
 }

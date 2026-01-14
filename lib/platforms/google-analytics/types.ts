@@ -7,21 +7,41 @@ export interface GoogleAnalyticsCredentials {
   property_name: string
 }
 
+// Traffic acquisition breakdown
+export interface TrafficAcquisition {
+  direct: number
+  organicSearch: number
+  email: number
+  organicSocial: number
+  referral: number
+}
+
 // Metrics returned from GA4 Data API
 export interface GoogleAnalyticsMetrics {
-  users: number
+  activeUsers: number
+  newUsers: number
   sessions: number
-  pageViews: number
+  trafficAcquisition: TrafficAcquisition
 }
 
 // Metric types stored in campaign_metrics table
 export type GoogleAnalyticsMetricType =
-  | 'ga_users'
+  | 'ga_active_users'
+  | 'ga_new_users'
   | 'ga_sessions'
-  | 'ga_page_views'
+  | 'ga_traffic_direct'
+  | 'ga_traffic_organic_search'
+  | 'ga_traffic_email'
+  | 'ga_traffic_organic_social'
+  | 'ga_traffic_referral'
 
 export const GA_METRIC_TYPES: GoogleAnalyticsMetricType[] = [
-  'ga_users',
+  'ga_active_users',
+  'ga_new_users',
   'ga_sessions',
-  'ga_page_views',
+  'ga_traffic_direct',
+  'ga_traffic_organic_search',
+  'ga_traffic_email',
+  'ga_traffic_organic_social',
+  'ga_traffic_referral',
 ]
