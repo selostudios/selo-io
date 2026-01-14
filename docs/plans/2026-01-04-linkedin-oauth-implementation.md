@@ -15,6 +15,7 @@
 ### Task 1: Create OAuth Types and Platform Enum
 
 **Files:**
+
 - Create: `lib/oauth/types.ts`
 
 **Step 1: Create OAuth types file with Platform enum**
@@ -27,7 +28,7 @@ export enum Platform {
   GOOGLE_ANALYTICS = 'google_analytics',
   INSTAGRAM = 'instagram',
   HUBSPOT = 'hubspot',
-  META = 'meta'
+  META = 'meta',
 }
 
 export type PlatformType = `${Platform}`
@@ -79,6 +80,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 2: Create OAuth Base Class
 
 **Files:**
+
 - Create: `lib/oauth/base.ts`
 
 **Step 1: Create abstract OAuth provider base class**
@@ -100,10 +102,7 @@ export abstract class OAuthProvider {
   /**
    * Exchange authorization code for access + refresh tokens
    */
-  abstract exchangeCodeForTokens(
-    code: string,
-    redirectUri: string
-  ): Promise<TokenResponse>
+  abstract exchangeCodeForTokens(code: string, redirectUri: string): Promise<TokenResponse>
 
   /**
    * Refresh access token using refresh token
@@ -128,8 +127,7 @@ export abstract class OAuthProvider {
   shouldRefreshToken(expiresAt: string): boolean {
     const expiresDate = new Date(expiresAt)
     const now = new Date()
-    const daysUntilExpiration =
-      (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    const daysUntilExpiration = (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
 
     return daysUntilExpiration < 7
   }
@@ -146,10 +144,7 @@ export abstract class OAuthProvider {
   /**
    * Update tokens in database after refresh
    */
-  async updateTokensInDatabase(
-    connectionId: string,
-    tokens: TokenResponse
-  ): Promise<void> {
+  async updateTokensInDatabase(connectionId: string, tokens: TokenResponse): Promise<void> {
     const supabase = await createClient()
 
     const expiresAt = this.calculateExpiresAt(tokens.expires_in)
@@ -216,6 +211,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 3: Create LinkedIn OAuth Provider
 
 **Files:**
+
 - Create: `lib/oauth/providers/linkedin.ts`
 
 **Step 1: Create LinkedIn OAuth provider**
@@ -251,24 +247,18 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     return url
   }
 
-  async exchangeCodeForTokens(
-    code: string,
-    redirectUri: string
-  ): Promise<TokenResponse> {
-    const response = await fetch(
-      'https://www.linkedin.com/oauth/v2/accessToken',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: redirectUri,
-          client_id: process.env.LINKEDIN_CLIENT_ID!,
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
-        }),
-      }
-    )
+  async exchangeCodeForTokens(code: string, redirectUri: string): Promise<TokenResponse> {
+    const response = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        client_id: process.env.LINKEDIN_CLIENT_ID!,
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+      }),
+    })
 
     if (!response.ok) {
       const error = await response.json()
@@ -300,19 +290,16 @@ export class LinkedInOAuthProvider extends OAuthProvider {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
-    const response = await fetch(
-      'https://www.linkedin.com/oauth/v2/accessToken',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-          client_id: process.env.LINKEDIN_CLIENT_ID!,
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
-        }),
-      }
-    )
+    const response = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: process.env.LINKEDIN_CLIENT_ID!,
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+      }),
+    })
 
     if (!response.ok) {
       const error = await response.json()
@@ -406,6 +393,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 4: Create OAuth Provider Registry
 
 **Files:**
+
 - Create: `lib/oauth/registry.ts`
 
 **Step 1: Create provider registry and factory**
@@ -467,6 +455,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 5: Create OAuth Error Utilities
 
 **Files:**
+
 - Create: `lib/oauth/errors.ts`
 
 **Step 1: Create error message handler with dev/prod split**
@@ -497,16 +486,10 @@ interface ErrorDetails {
   connectionId?: string
 }
 
-export function getErrorMessage(
-  error: OAuthErrorType,
-  details?: ErrorDetails
-): string {
+export function getErrorMessage(error: OAuthErrorType, details?: ErrorDetails): string {
   const isDev = process.env.NODE_ENV === 'development'
 
-  const messages: Record<
-    OAuthErrorType,
-    { user: string; dev: string }
-  > = {
+  const messages: Record<OAuthErrorType, { user: string; dev: string }> = {
     user_cancelled: {
       user: 'LinkedIn connection cancelled',
       dev: 'User denied authorization at LinkedIn consent screen',
@@ -597,6 +580,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 6: Create OAuth Initiation Route
 
 **Files:**
+
 - Create: `app/api/auth/oauth/[provider]/route.ts`
 
 **Step 1: Create OAuth initiation route**
@@ -609,20 +593,14 @@ import { cookies } from 'next/headers'
 import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ provider: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   try {
     const { provider: providerParam } = await params
     const platform = providerParam as Platform
 
     // Validate platform
     if (!Object.values(Platform).includes(platform)) {
-      return NextResponse.json(
-        { error: 'Invalid platform' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid platform' }, { status: 400 })
     }
 
     const provider = getOAuthProvider(platform)
@@ -693,6 +671,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 7: Create OAuth Callback Route (Part 1 - Setup and Validation)
 
 **Files:**
+
 - Create: `app/api/auth/oauth/[provider]/callback/route.ts`
 
 **Step 1: Create callback route with error handling and state validation**
@@ -707,10 +686,7 @@ import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 import { getErrorMessage } from '@/lib/oauth/errors'
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ provider: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const cookieStore = await cookies()
 
   try {
@@ -726,9 +702,7 @@ export async function GET(
     // Handle user denial
     if (error === 'user_cancelled_authorize' || error === 'access_denied') {
       const message = getErrorMessage('user_cancelled')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Validate required params
@@ -736,9 +710,7 @@ export async function GET(
       const message = getErrorMessage('invalid_code', {
         message: 'Missing code or state parameter',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Validate state (CSRF protection)
@@ -751,9 +723,7 @@ export async function GET(
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     if (storedPlatform !== platform) {
@@ -764,9 +734,7 @@ export async function GET(
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Clear state cookies
@@ -791,9 +759,7 @@ export async function GET(
       message: error instanceof Error ? error.message : 'Unknown error',
     })
 
-    return redirect(
-      `/settings/integrations?error=${encodeURIComponent(message)}`
-    )
+    return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
   }
 }
 ```
@@ -824,6 +790,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 8: Complete OAuth Callback Route (Part 2 - Token Exchange and Save)
 
 **Files:**
+
 - Modify: `app/api/auth/oauth/[provider]/callback/route.ts`
 
 **Step 1: Add token exchange and connection saving**
@@ -831,129 +798,119 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 Replace the comment `// Continue with token exchange in next step...` with:
 
 ```typescript
-    // Get OAuth provider
-    const provider = getOAuthProvider(platform)
-    const redirectUri = getRedirectUri(platform)
+// Get OAuth provider
+const provider = getOAuthProvider(platform)
+const redirectUri = getRedirectUri(platform)
 
-    // Exchange code for tokens
-    let tokens
-    try {
-      tokens = await provider.exchangeCodeForTokens(code, redirectUri)
-    } catch (err) {
-      const message = getErrorMessage('invalid_code', {
-        statusCode: err instanceof Error ? 400 : undefined,
-        message: err instanceof Error ? err.message : 'Unknown error',
-      })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
-    }
+// Exchange code for tokens
+let tokens
+try {
+  tokens = await provider.exchangeCodeForTokens(code, redirectUri)
+} catch (err) {
+  const message = getErrorMessage('invalid_code', {
+    statusCode: err instanceof Error ? 400 : undefined,
+    message: err instanceof Error ? err.message : 'Unknown error',
+  })
+  return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+}
 
-    // Fetch user's organizations/accounts
-    let accounts
-    try {
-      accounts = await provider.fetchUserAccounts(tokens.access_token)
-    } catch (err) {
-      const message = getErrorMessage('api_error', {
-        endpoint: 'fetchUserAccounts',
-        status: err instanceof Error ? 500 : undefined,
-        response: err instanceof Error ? err.message : 'Unknown error',
-      })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
-    }
+// Fetch user's organizations/accounts
+let accounts
+try {
+  accounts = await provider.fetchUserAccounts(tokens.access_token)
+} catch (err) {
+  const message = getErrorMessage('api_error', {
+    endpoint: 'fetchUserAccounts',
+    status: err instanceof Error ? 500 : undefined,
+    response: err instanceof Error ? err.message : 'Unknown error',
+  })
+  return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+}
 
-    if (accounts.length === 0) {
-      const message = getErrorMessage('no_organizations', {
-        scopes: tokens.scopes,
-      })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
-    }
+if (accounts.length === 0) {
+  const message = getErrorMessage('no_organizations', {
+    scopes: tokens.scopes,
+  })
+  return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+}
 
-    // Auto-select first account (future: show selection UI for multiple)
-    const selectedAccount = accounts[0]
+// Auto-select first account (future: show selection UI for multiple)
+const selectedAccount = accounts[0]
 
-    // Get current user and organization
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+// Get current user and organization
+const supabase = await createClient()
+const {
+  data: { user },
+} = await supabase.auth.getUser()
 
-    if (!user) {
-      return redirect('/login')
-    }
+if (!user) {
+  return redirect('/login')
+}
 
-    const { data: userRecord } = await supabase
-      .from('users')
-      .select('organization_id')
-      .eq('id', user.id)
-      .single()
+const { data: userRecord } = await supabase
+  .from('users')
+  .select('organization_id')
+  .eq('id', user.id)
+  .single()
 
-    if (!userRecord) {
-      return redirect('/login')
-    }
+if (!userRecord) {
+  return redirect('/login')
+}
 
-    // Check if already connected
-    const { data: existing } = await supabase
-      .from('platform_connections')
-      .select('id')
-      .eq('organization_id', userRecord.organization_id)
-      .eq('platform_type', platform)
-      .single()
+// Check if already connected
+const { data: existing } = await supabase
+  .from('platform_connections')
+  .select('id')
+  .eq('organization_id', userRecord.organization_id)
+  .eq('platform_type', platform)
+  .single()
 
-    if (existing) {
-      const message = getErrorMessage('already_connected', {
-        orgId: selectedAccount.id,
-        connectionId: existing.id,
-      })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
-    }
+if (existing) {
+  const message = getErrorMessage('already_connected', {
+    orgId: selectedAccount.id,
+    connectionId: existing.id,
+  })
+  return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+}
 
-    // Save connection
-    const expiresAt = provider.calculateExpiresAt(tokens.expires_in)
+// Save connection
+const expiresAt = provider.calculateExpiresAt(tokens.expires_in)
 
-    const { error: insertError } = await supabase
-      .from('platform_connections')
-      .insert({
-        organization_id: userRecord.organization_id,
-        platform_type: platform,
-        credentials: {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: expiresAt,
-          organization_id: selectedAccount.id,
-          organization_name: selectedAccount.name,
-          scopes: tokens.scopes || [],
-        },
-        status: 'active',
-      })
+const { error: insertError } = await supabase.from('platform_connections').insert({
+  organization_id: userRecord.organization_id,
+  platform_type: platform,
+  credentials: {
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expires_at: expiresAt,
+    organization_id: selectedAccount.id,
+    organization_name: selectedAccount.name,
+    scopes: tokens.scopes || [],
+  },
+  status: 'active',
+})
 
-    if (insertError) {
-      console.error('[OAuth Callback] Failed to save connection', {
-        type: 'database_error',
-        error: insertError,
-        timestamp: new Date().toISOString(),
-      })
-      const message = getErrorMessage('unknown', {
-        message: 'Failed to save connection',
-      })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
-    }
+if (insertError) {
+  console.error('[OAuth Callback] Failed to save connection', {
+    type: 'database_error',
+    error: insertError,
+    timestamp: new Date().toISOString(),
+  })
+  const message = getErrorMessage('unknown', {
+    message: 'Failed to save connection',
+  })
+  return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+}
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[OAuth Callback] Connection saved successfully', {
-        platform,
-        organizationId: selectedAccount.id,
-        organizationName: selectedAccount.name,
-      })
-    }
+if (process.env.NODE_ENV === 'development') {
+  console.log('[OAuth Callback] Connection saved successfully', {
+    platform,
+    organizationId: selectedAccount.id,
+    organizationName: selectedAccount.name,
+  })
+}
 
-    return redirect(`/settings/integrations?success=connected&platform=${platform}`)
+return redirect(`/settings/integrations?success=connected&platform=${platform}`)
 ```
 
 **Step 2: Verify file compiles**
@@ -985,6 +942,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 9: Update LinkedIn Types for OAuth
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/types.ts:57-60`
 
 **Step 1: Update LinkedInCredentials interface**
@@ -1028,6 +986,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 10: Update LinkedIn Client with Auto-Refresh
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/client.ts`
 
 **Step 1: Update client constructor and add auto-refresh**
@@ -1055,9 +1014,7 @@ export class LinkedInClient {
     this.organizationId = credentials.organization_id
     this.connectionId = connectionId || null
     this.oauthProvider =
-      connectionId && credentials.refresh_token
-        ? getOAuthProvider(Platform.LINKEDIN)
-        : null
+      connectionId && credentials.refresh_token ? getOAuthProvider(Platform.LINKEDIN) : null
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -1080,19 +1037,14 @@ export class LinkedInClient {
           this.credentials.refresh_token
         )
 
-        await this.oauthProvider.updateTokensInDatabase(
-          this.connectionId,
-          newTokens
-        )
+        await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
 
         // Update local credentials
         this.credentials = {
           ...this.credentials,
           access_token: newTokens.access_token,
           refresh_token: newTokens.refresh_token,
-          expires_at: this.oauthProvider.calculateExpiresAt(
-            newTokens.expires_in
-          ),
+          expires_at: this.oauthProvider.calculateExpiresAt(newTokens.expires_in),
         }
         this.accessToken = newTokens.access_token
 
@@ -1168,16 +1120,19 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 11: Update LinkedIn Actions to Pass Connection ID
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/actions.ts:43`
 
 **Step 1: Update syncLinkedInMetrics to pass connection ID**
 
 Find this line:
+
 ```typescript
 const adapter = new LinkedInAdapter(credentials)
 ```
 
 Replace with:
+
 ```typescript
 const adapter = new LinkedInAdapter(credentials, connection.id)
 ```
@@ -1225,6 +1180,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 12: Update Platform Connection Card for OAuth
 
 **Files:**
+
 - Modify: `components/settings/platform-connection-card.tsx`
 
 **Step 1: Update Connect button to use OAuth**
@@ -1256,6 +1212,7 @@ Replace with:
 **Step 2: Remove LinkedInConnectDialog import**
 
 Remove this line from top of file:
+
 ```typescript
 import { LinkedInConnectDialog } from '@/components/integrations/linkedin-connect-dialog'
 ```
@@ -1285,6 +1242,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 13: Delete Manual Token Entry Dialog
 
 **Files:**
+
 - Delete: `components/integrations/linkedin-connect-dialog.tsx`
 
 **Step 1: Delete the file**
@@ -1313,6 +1271,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 14: Add Toast Notifications to Integrations Page
 
 **Files:**
+
 - Modify: `app/settings/integrations/page.tsx`
 
 **Step 1: Add toast handling for OAuth callback**
@@ -1363,8 +1322,8 @@ export function OAuthToastHandler() {
         platform === 'linkedin'
           ? 'LinkedIn'
           : platform === 'google_analytics'
-          ? 'Google Analytics'
-          : platform
+            ? 'Google Analytics'
+            : platform
       showSuccess(`${platformName} connected successfully`, {
         duration: 5000,
       })
@@ -1382,11 +1341,13 @@ export function OAuthToastHandler() {
 Modify: `app/settings/integrations/page.tsx`
 
 Add import at top:
+
 ```typescript
 import { OAuthToastHandler } from './oauth-toast-handler'
 ```
 
 Add component to return statement (before the div):
+
 ```typescript
 return (
   <>
@@ -1426,6 +1387,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 15: Add Environment Variables
 
 **Files:**
+
 - Modify: `.env.local`
 
 **Step 1: Add LinkedIn OAuth credentials**
@@ -1488,12 +1450,14 @@ Run: `npm run dev`
 **Step 3: Verify routes exist**
 
 Check:
+
 - `/api/auth/oauth/linkedin` exists
 - `/api/auth/oauth/linkedin/callback` exists
 
 **Step 4: Test with real credentials (if available)**
 
 If you have LinkedIn app credentials:
+
 1. Add to `.env.local`
 2. Restart dev server
 3. Click Connect → should redirect to LinkedIn
@@ -1502,11 +1466,13 @@ If you have LinkedIn app credentials:
 **Step 5: Check database**
 
 After successful connection, verify:
+
 ```sql
 SELECT * FROM platform_connections WHERE platform_type = 'linkedin';
 ```
 
 Should show:
+
 - `credentials` JSONB with `access_token`, `refresh_token`, `expires_at`, etc.
 - `status` = 'active'
 
@@ -1523,23 +1489,27 @@ Tester: Claude Code
 ## Test Cases
 
 ### OAuth Initiation
+
 - [ ] Click Connect → redirects to LinkedIn
 - [ ] State cookie is set
 - [ ] Platform cookie is set
 
 ### OAuth Callback
+
 - [ ] LinkedIn approval → successful redirect
 - [ ] Credentials saved to database
 - [ ] Success toast shown
 - [ ] Connection status updated
 
 ### Error Handling
+
 - [ ] User cancellation → error toast
 - [ ] Invalid state → CSRF error
 - [ ] No organizations → appropriate error
 - [ ] Duplicate connection → error
 
 ### Token Refresh
+
 - [ ] Manual expiration test (set expires_at to tomorrow)
 - [ ] Sync triggers refresh
 - [ ] New tokens saved
@@ -1553,6 +1523,7 @@ Tester: Claude Code
 ### Task 17: Update README with OAuth Setup
 
 **Files:**
+
 - Modify: `README.md`
 
 **Step 1: Add OAuth setup section**
@@ -1571,10 +1542,12 @@ Add after the "Testing" section:
    - `r_organization_admin`
    - `rw_organization_admin`
 4. Add credentials to `.env.local`:
-   ```
-   LINKEDIN_CLIENT_ID=your_client_id
-   LINKEDIN_CLIENT_SECRET=your_client_secret
-   ```
+```
+
+LINKEDIN_CLIENT_ID=your_client_id
+LINKEDIN_CLIENT_SECRET=your_client_secret
+
+```
 
 ### Production
 
@@ -1605,6 +1578,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Summary
 
 **17 Tasks Completed:**
+
 1. ✅ OAuth types and Platform enum
 2. ✅ OAuth base class
 3. ✅ LinkedIn OAuth provider
@@ -1624,6 +1598,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 17. ✅ Documentation
 
 **Features Delivered:**
+
 - Generic OAuth infrastructure for all platforms
 - LinkedIn OAuth 2.0 with refresh token
 - Automatic token refresh (7-day threshold)
@@ -1634,6 +1609,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 - Security best practices
 
 **Next Steps:**
+
 - Add real LinkedIn app credentials
 - Test full OAuth flow
 - Deploy to production

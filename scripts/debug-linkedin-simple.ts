@@ -22,12 +22,12 @@ if (!accessToken || !orgId) {
   console.error('Get these from Supabase dashboard SQL editor:')
   console.error('')
   console.error('  SELECT ')
-  console.error('    credentials->>\'access_token\' as token,')
-  console.error('    credentials->>\'organization_id\' as org_id,')
-  console.error('    credentials->>\'expires_at\' as expires,')
-  console.error('    credentials->\'scopes\' as scopes')
+  console.error("    credentials->>'access_token' as token,")
+  console.error("    credentials->>'organization_id' as org_id,")
+  console.error("    credentials->>'expires_at' as expires,")
+  console.error("    credentials->'scopes' as scopes")
   console.error('  FROM platform_connections')
-  console.error('  WHERE platform_type = \'linkedin\'')
+  console.error("  WHERE platform_type = 'linkedin'")
   console.error('  ORDER BY created_at DESC')
   console.error('  LIMIT 1;')
   console.error('')
@@ -48,9 +48,9 @@ async function testLinkedInAPI() {
   try {
     const response = await fetch(orgUrl, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'X-Restli-Protocol-Version': '2.0.0',
-      }
+      },
     })
 
     console.log(`  Status: ${response.status} ${response.statusText}`)
@@ -93,7 +93,7 @@ async function testLinkedInAPI() {
   // Test 2: Follower statistics (requires scope)
   console.log('📊 Test 2: Fetch follower statistics')
   const now = Date.now()
-  const weekAgo = now - (7 * 24 * 60 * 60 * 1000)
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000
   const orgUrn = `urn:li:organization:${orgId}`
   const timeRange = `(start:${weekAgo},end:${now})`
   const followerUrl = `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals.timeGranularityType=DAY&timeIntervals.timeRange=${timeRange}`
@@ -103,9 +103,9 @@ async function testLinkedInAPI() {
   try {
     const response = await fetch(`https://api.linkedin.com/v2${followerUrl}`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'X-Restli-Protocol-Version': '2.0.0',
-      }
+      },
     })
 
     console.log(`  Status: ${response.status} ${response.statusText}`)
@@ -139,7 +139,7 @@ async function testLinkedInAPI() {
   console.log('  1. LinkedIn app verification status')
   console.log('  2. OAuth scopes granted during connection')
   console.log('  3. Your LinkedIn account has admin access')
-  console.log('  4. Token hasn\'t expired (check expires_at in database)')
+  console.log("  4. Token hasn't expired (check expires_at in database)")
   console.log('='.repeat(60))
 }
 

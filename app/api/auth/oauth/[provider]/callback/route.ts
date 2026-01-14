@@ -1,5 +1,4 @@
 // app/api/auth/oauth/[provider]/callback/route.ts
-import { NextResponse } from 'next/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -8,15 +7,14 @@ import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 import { getErrorMessage } from '@/lib/oauth/errors'
 
 // Helper to clear OAuth cookies
-function clearOAuthCookies(cookieStore: ReturnType<typeof cookies> extends Promise<infer T> ? T : never) {
+function clearOAuthCookies(
+  cookieStore: ReturnType<typeof cookies> extends Promise<infer T> ? T : never
+) {
   cookieStore.delete('oauth_state')
   cookieStore.delete('oauth_platform')
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ provider: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const cookieStore = await cookies()
 
   try {
@@ -29,9 +27,7 @@ export async function GET(
       const message = getErrorMessage('unknown', {
         message: 'Invalid platform parameter',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Get callback params
@@ -44,9 +40,7 @@ export async function GET(
     if (error === 'user_cancelled_authorize' || error === 'access_denied') {
       clearOAuthCookies(cookieStore)
       const message = getErrorMessage('user_cancelled')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Validate required params
@@ -55,9 +49,7 @@ export async function GET(
       const message = getErrorMessage('invalid_code', {
         message: 'Missing code or state parameter',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Validate state (CSRF protection)
@@ -70,9 +62,7 @@ export async function GET(
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     if (storedPlatform !== platform) {
@@ -83,9 +73,7 @@ export async function GET(
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Clear state cookies
@@ -106,9 +94,7 @@ export async function GET(
         statusCode: err instanceof Error ? 400 : undefined,
         message: err instanceof Error ? err.message : 'Unknown error',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Fetch user's organizations/accounts
@@ -122,9 +108,7 @@ export async function GET(
         status: err instanceof Error ? 500 : undefined,
         response: err instanceof Error ? err.message : 'Unknown error',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     if (accounts.length === 0) {
@@ -132,9 +116,7 @@ export async function GET(
       const message = getErrorMessage('no_organizations', {
         scopes: tokens.scopes,
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Auto-select first account (future: show selection UI for multiple)
@@ -142,7 +124,10 @@ export async function GET(
 
     // Get current user and organization
     const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
       console.error('[OAuth Callback] Auth error', {
@@ -182,29 +167,25 @@ export async function GET(
         orgId: selectedAccount.id,
         connectionId: existing.id,
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     // Save connection
     const expiresAt = provider.calculateExpiresAt(tokens.expires_in)
 
-    const { error: insertError } = await supabase
-      .from('platform_connections')
-      .insert({
-        organization_id: userRecord.organization_id,
-        platform_type: platform,
-        credentials: {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: expiresAt,
-          organization_id: selectedAccount.id,
-          organization_name: selectedAccount.name,
-          scopes: tokens.scopes || [],
-        },
-        status: 'active',
-      })
+    const { error: insertError } = await supabase.from('platform_connections').insert({
+      organization_id: userRecord.organization_id,
+      platform_type: platform,
+      credentials: {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: expiresAt,
+        organization_id: selectedAccount.id,
+        organization_name: selectedAccount.name,
+        scopes: tokens.scopes || [],
+      },
+      status: 'active',
+    })
 
     if (insertError) {
       clearOAuthCookies(cookieStore)
@@ -216,9 +197,7 @@ export async function GET(
       const message = getErrorMessage('unknown', {
         message: 'Failed to save connection',
       })
-      return redirect(
-        `/settings/integrations?error=${encodeURIComponent(message)}`
-      )
+      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -249,8 +228,6 @@ export async function GET(
       message: error instanceof Error ? error.message : 'Unknown error',
     })
 
-    return redirect(
-      `/settings/integrations?error=${encodeURIComponent(message)}`
-    )
+    return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
   }
 }

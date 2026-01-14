@@ -5,20 +5,14 @@ import { cookies } from 'next/headers'
 import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ provider: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   try {
     const { provider: providerParam } = await params
     const platform = providerParam as Platform
 
     // Validate platform
     if (!Object.values(Platform).includes(platform)) {
-      return NextResponse.json(
-        { error: 'Invalid platform' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid platform' }, { status: 400 })
     }
 
     const provider = getOAuthProvider(platform)

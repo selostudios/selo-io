@@ -18,7 +18,7 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
       throw new Error(
         'Missing required LinkedIn OAuth environment variables. ' +
-        'Please set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env.local'
+          'Please set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env.local'
       )
     }
   }
@@ -46,24 +46,18 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     return url
   }
 
-  async exchangeCodeForTokens(
-    code: string,
-    redirectUri: string
-  ): Promise<TokenResponse> {
-    const response = await fetch(
-      'https://www.linkedin.com/oauth/v2/accessToken',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: redirectUri,
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-        }),
-      }
-    )
+  async exchangeCodeForTokens(code: string, redirectUri: string): Promise<TokenResponse> {
+    const response = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+      }),
+    })
 
     if (!response.ok) {
       let error
@@ -100,19 +94,16 @@ export class LinkedInOAuthProvider extends OAuthProvider {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
-    const response = await fetch(
-      'https://www.linkedin.com/oauth/v2/accessToken',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-        }),
-      }
-    )
+    const response = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+      }),
+    })
 
     if (!response.ok) {
       let error
@@ -168,7 +159,14 @@ export class LinkedInOAuthProvider extends OAuthProvider {
 
     const data = await response.json()
 
-    const accounts = data.elements.map((el: any) => ({
+    interface LinkedInOrgElement {
+      'organization~': {
+        id: number
+        localizedName: string
+      }
+    }
+
+    const accounts = data.elements.map((el: LinkedInOrgElement) => ({
       id: el['organization~'].id.toString(),
       name: el['organization~'].localizedName,
     }))

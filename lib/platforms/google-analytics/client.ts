@@ -18,9 +18,7 @@ export class GoogleAnalyticsClient {
     this.propertyId = credentials.property_id
     this.connectionId = connectionId || null
     this.oauthProvider =
-      connectionId && credentials.refresh_token
-        ? getOAuthProvider(Platform.GOOGLE_ANALYTICS)
-        : null
+      connectionId && credentials.refresh_token ? getOAuthProvider(Platform.GOOGLE_ANALYTICS) : null
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -69,7 +67,7 @@ export class GoogleAnalyticsClient {
               .from('platform_connections')
               .update({ status: 'failed' })
               .eq('id', this.connectionId)
-          } catch (updateError) {
+          } catch {
             console.error('[GA Client] Failed to update connection status')
           }
         }
@@ -154,11 +152,7 @@ export class GoogleAnalyticsClient {
             endDate: formatDate(endDate),
           },
         ],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'newUsers' },
-          { name: 'sessions' },
-        ],
+        metrics: [{ name: 'activeUsers' }, { name: 'newUsers' }, { name: 'sessions' }],
       })
 
       console.log('[GA Client] Basic metrics response:', JSON.stringify(basicData, null, 2))

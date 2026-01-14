@@ -5,7 +5,7 @@ export enum Platform {
   GOOGLE_ANALYTICS = 'google_analytics',
   INSTAGRAM = 'instagram',
   HUBSPOT = 'hubspot',
-  META = 'meta'
+  META = 'meta',
 }
 
 export type PlatformType = `${Platform}`

@@ -36,7 +36,7 @@ async function debugLinkedInToken() {
   console.log(`   Status: ${connection.status}`)
   console.log(`   Organization ID: ${connection.organization_id}\n`)
 
-  const credentials = connection.credentials as any
+  const credentials = connection.credentials as Record<string, unknown>
 
   // 2. Check token expiration
   console.log('📅 Token Expiration Check')
@@ -45,7 +45,9 @@ async function debugLinkedInToken() {
   } else {
     const expiresAt = new Date(credentials.expires_at)
     const now = new Date()
-    const daysUntilExpiry = Math.round((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const daysUntilExpiry = Math.round(
+      (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    )
 
     console.log(`   Expires at: ${expiresAt.toISOString()}`)
     console.log(`   Days until expiry: ${daysUntilExpiry}`)
@@ -67,7 +69,7 @@ async function debugLinkedInToken() {
 
   console.log(`   Granted scopes: ${scopes.join(', ')}`)
 
-  const missingScopes = requiredScopes.filter(s => !scopes.includes(s))
+  const missingScopes = requiredScopes.filter((s) => !scopes.includes(s))
   if (missingScopes.length > 0) {
     console.log(`   ❌ Missing scopes: ${missingScopes.join(', ')}`)
     console.log('   → Go to LinkedIn app settings and request these scopes')
@@ -99,9 +101,9 @@ async function debugLinkedInToken() {
   try {
     const response = await fetch(testUrl, {
       headers: {
-        'Authorization': `Bearer ${credentials.access_token}`,
+        Authorization: `Bearer ${credentials.access_token}`,
         'X-Restli-Protocol-Version': '2.0.0',
-      }
+      },
     })
 
     console.log(`   Response status: ${response.status} ${response.statusText}`)

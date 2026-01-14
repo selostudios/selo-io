@@ -17,22 +17,16 @@ interface ErrorDetails {
   description?: string
   endpoint?: string
   status?: number
-  response?: any
+  response?: unknown
   scopes?: string[]
   orgId?: string
   connectionId?: string
 }
 
-export function getErrorMessage(
-  error: OAuthErrorType,
-  details?: ErrorDetails
-): string {
+export function getErrorMessage(error: OAuthErrorType, details?: ErrorDetails): string {
   const isDev = process.env.NODE_ENV === 'development'
 
-  const messages: Record<
-    OAuthErrorType,
-    { user: string; dev: string }
-  > = {
+  const messages: Record<OAuthErrorType, { user: string; dev: string }> = {
     user_cancelled: {
       user: 'LinkedIn connection cancelled',
       dev: 'User denied authorization at LinkedIn consent screen',
@@ -74,7 +68,7 @@ export function getErrorMessage(
     : errorMessages.user
 }
 
-export function sanitizeForLogging(data: any): any {
+export function sanitizeForLogging(data: unknown): unknown {
   const REDACTED_FIELDS = [
     'access_token',
     'refresh_token',
@@ -83,7 +77,7 @@ export function sanitizeForLogging(data: any): any {
     'code',
   ]
 
-  function sanitizeValue(value: any): any {
+  function sanitizeValue(value: unknown): unknown {
     if (value === null || value === undefined) {
       return value
     }
@@ -93,11 +87,9 @@ export function sanitizeForLogging(data: any): any {
     }
 
     if (typeof value === 'object') {
-      const sanitized: any = {}
+      const sanitized: Record<string, unknown> = {}
       for (const [key, val] of Object.entries(value)) {
-        sanitized[key] = REDACTED_FIELDS.includes(key)
-          ? '[REDACTED]'
-          : sanitizeValue(val)
+        sanitized[key] = REDACTED_FIELDS.includes(key) ? '[REDACTED]' : sanitizeValue(val)
       }
       return sanitized
     }

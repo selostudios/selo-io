@@ -20,9 +20,7 @@ export class LinkedInClient {
     this.organizationId = credentials.organization_id
     this.connectionId = connectionId || null
     this.oauthProvider =
-      connectionId && credentials.refresh_token
-        ? getOAuthProvider(Platform.LINKEDIN)
-        : null
+      connectionId && credentials.refresh_token ? getOAuthProvider(Platform.LINKEDIN) : null
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -45,19 +43,14 @@ export class LinkedInClient {
           this.credentials.refresh_token
         )
 
-        await this.oauthProvider.updateTokensInDatabase(
-          this.connectionId,
-          newTokens
-        )
+        await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
 
         // Update local credentials
         this.credentials = {
           ...this.credentials,
           access_token: newTokens.access_token,
           refresh_token: newTokens.refresh_token,
-          expires_at: this.oauthProvider.calculateExpiresAt(
-            newTokens.expires_in
-          ),
+          expires_at: this.oauthProvider.calculateExpiresAt(newTokens.expires_in),
         }
         this.accessToken = newTokens.access_token
 
@@ -168,9 +161,11 @@ export class LinkedInClient {
 
       if (firstElement) {
         // Use followerCountsBySeniority to get true total (everyone has a seniority)
-        const bySeniority = firstElement.followerCountsBySeniority as Array<{
-          followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
-        }> | undefined
+        const bySeniority = firstElement.followerCountsBySeniority as
+          | Array<{
+              followerCounts?: { organicFollowerCount?: number; paidFollowerCount?: number }
+            }>
+          | undefined
 
         if (Array.isArray(bySeniority)) {
           for (const item of bySeniority) {

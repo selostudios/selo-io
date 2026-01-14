@@ -14,10 +14,7 @@ export abstract class OAuthProvider {
   /**
    * Exchange authorization code for access + refresh tokens
    */
-  abstract exchangeCodeForTokens(
-    code: string,
-    redirectUri: string
-  ): Promise<TokenResponse>
+  abstract exchangeCodeForTokens(code: string, redirectUri: string): Promise<TokenResponse>
 
   /**
    * Refresh access token using refresh token
@@ -42,8 +39,7 @@ export abstract class OAuthProvider {
   shouldRefreshToken(expiresAt: string): boolean {
     const expiresDate = new Date(expiresAt)
     const now = new Date()
-    const daysUntilExpiration =
-      (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    const daysUntilExpiration = (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
 
     return daysUntilExpiration < 7
   }
@@ -60,10 +56,7 @@ export abstract class OAuthProvider {
   /**
    * Update tokens in database after refresh
    */
-  async updateTokensInDatabase(
-    connectionId: string,
-    tokens: TokenResponse
-  ): Promise<void> {
+  async updateTokensInDatabase(connectionId: string, tokens: TokenResponse): Promise<void> {
     const supabase = await createClient()
     const expiresAt = this.calculateExpiresAt(tokens.expires_in)
 

@@ -113,9 +113,7 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
               <CardTitle>Platform Connections</CardTitle>
               <Button asChild variant="outline" size="sm">
-                <Link href="/settings/integrations">
-                  Manage
-                </Link>
+                <Link href="/settings/integrations">Manage</Link>
               </Button>
             </div>
           </CardHeader>

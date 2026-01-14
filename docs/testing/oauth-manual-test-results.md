@@ -11,6 +11,7 @@ This document tracks manual testing of the LinkedIn OAuth 2.0 implementation. Th
 ## Prerequisites
 
 Before testing, ensure:
+
 - [ ] Development server is running (`npm run dev`)
 - [ ] `.env.local` has LinkedIn OAuth credentials:
   ```bash
@@ -23,6 +24,7 @@ Before testing, ensure:
 ## Test Cases
 
 ### 1. OAuth Initiation
+
 - [ ] Visit `http://localhost:3000/settings/integrations`
 - [ ] Click "Connect" on LinkedIn card
 - [ ] Expected: Redirects to `/api/auth/oauth/linkedin`
@@ -36,6 +38,7 @@ _[User to document actual behavior]_
 ---
 
 ### 2. OAuth Authorization
+
 - [ ] LinkedIn authorization page displays correctly
 - [ ] App name and requested permissions are shown
 - [ ] Click "Allow" to approve
@@ -47,6 +50,7 @@ _[User to document actual behavior]_
 ---
 
 ### 3. OAuth Callback Success
+
 - [ ] Callback processes successfully
 - [ ] Expected: Redirects to `/settings/integrations?success=connected&platform=linkedin`
 - [ ] Expected: Success toast appears: "LinkedIn connected successfully"
@@ -60,6 +64,7 @@ _[User to document actual behavior]_
 ---
 
 ### 4. Database Verification
+
 - [ ] Check database for saved connection:
   ```sql
   SELECT * FROM platform_connections WHERE platform_type = 'linkedin';
@@ -79,6 +84,7 @@ _[User to document actual values - redact sensitive tokens]_
 ---
 
 ### 5. Error Handling - User Cancellation
+
 - [ ] Clear any existing LinkedIn connections
 - [ ] Click "Connect" on LinkedIn card
 - [ ] On LinkedIn authorization page, click "Cancel" or "Deny"
@@ -93,6 +99,7 @@ _[User to document actual behavior]_
 ---
 
 ### 6. Error Handling - CSRF Attack Simulation
+
 - [ ] Click "Connect" on LinkedIn card
 - [ ] On LinkedIn auth page, DON'T approve yet
 - [ ] In DevTools, delete the `oauth_state` cookie
@@ -107,6 +114,7 @@ _[User to document actual behavior]_
 ---
 
 ### 7. Error Handling - Duplicate Connection
+
 - [ ] Ensure you already have an active LinkedIn connection
 - [ ] Click "Connect" on LinkedIn card again
 - [ ] Approve on LinkedIn
@@ -119,6 +127,7 @@ _[User to document actual behavior]_
 ---
 
 ### 8. Error Handling - No Organizations
+
 - [ ] Note: This test requires a LinkedIn account with NO organization pages
 - [ ] Click "Connect" on LinkedIn card
 - [ ] Approve on LinkedIn
@@ -132,6 +141,7 @@ _[User to document actual behavior - This test may be difficult to perform witho
 ---
 
 ### 9. Token Refresh - Proactive Refresh
+
 - [ ] After successful connection, manually update the database to simulate near-expiration:
   ```sql
   UPDATE platform_connections
@@ -154,6 +164,7 @@ _[User to document actual behavior]_
 ---
 
 ### 10. Token Refresh - Expired Token
+
 - [ ] Manually update database to set expired token:
   ```sql
   UPDATE platform_connections
@@ -177,6 +188,7 @@ _[User to document actual behavior]_
 ## Development Mode Error Display
 
 Test that error details are shown in development:
+
 - [ ] Set `NODE_ENV=development`
 - [ ] Trigger an error (e.g., user cancellation)
 - [ ] Expected: Error toast shows detailed error message
@@ -190,6 +202,7 @@ _[User to document actual behavior]_
 ## Routes Verification
 
 Verify routes are accessible:
+
 - [ ] `/api/auth/oauth/linkedin` - Returns 405 if accessed directly (method not allowed)
 - [ ] `/api/auth/oauth/linkedin/callback` - Returns error if accessed without code param
 

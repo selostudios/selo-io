@@ -33,10 +33,7 @@ interface GoogleAnalyticsSectionProps {
   lastSyncAt: string | null
 }
 
-export function GoogleAnalyticsSection({
-  isConnected,
-  lastSyncAt,
-}: GoogleAnalyticsSectionProps) {
+export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyticsSectionProps) {
   const [period, setPeriod] = useState<Period>('7d')
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -133,26 +130,14 @@ export function GoogleAnalyticsSection({
           <div className="space-y-6">
             {/* Main metrics */}
             <div className="grid grid-cols-3 gap-4">
-              <MetricCard
-                label="Active Users"
-                value={metrics.activeUsers}
-                change={null}
-              />
-              <MetricCard
-                label="New Users"
-                value={metrics.newUsers}
-                change={null}
-              />
-              <MetricCard
-                label="Sessions"
-                value={metrics.sessions}
-                change={null}
-              />
+              <MetricCard label="Active Users" value={metrics.activeUsers} change={null} />
+              <MetricCard label="New Users" value={metrics.newUsers} change={null} />
+              <MetricCard label="Sessions" value={metrics.sessions} change={null} />
             </div>
 
             {/* Traffic Acquisition */}
             <div>
-              <h4 className="text-sm font-medium mb-4">Traffic Acquisition</h4>
+              <h4 className="mb-4 text-sm font-medium">Traffic Acquisition</h4>
               <div className="flex flex-row justify-between">
                 <div className="flex-1">
                   <p className="text-2xl font-bold">{metrics.trafficAcquisition.direct}</p>

@@ -142,14 +142,11 @@ export class GoogleOAuthProvider extends OAuthProvider {
 
   async fetchUserAccounts(accessToken: string): Promise<Account[]> {
     // Fetch GA4 properties via Admin API
-    const response = await fetch(
-      'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    )
+    const response = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
 
     if (!response.ok) {
       let errorBody
@@ -163,7 +160,9 @@ export class GoogleOAuthProvider extends OAuthProvider {
         error: errorBody,
         timestamp: new Date().toISOString(),
       })
-      throw new Error(`Failed to fetch Google Analytics properties: ${response.status} - ${JSON.stringify(errorBody)}`)
+      throw new Error(
+        `Failed to fetch Google Analytics properties: ${response.status} - ${JSON.stringify(errorBody)}`
+      )
     }
 
     const data = await response.json()
