@@ -231,6 +231,11 @@ export async function GET(
 
     return redirect(`/settings/integrations?success=connected&platform=${platform}`)
   } catch (error) {
+    // Re-throw redirect errors - they're not real errors
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error
+    }
+
     console.error('[OAuth Callback Error]', {
       type: 'oauth_callback_error',
       error: error instanceof Error ? error.message : 'Unknown error',

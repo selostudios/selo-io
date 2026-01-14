@@ -152,11 +152,18 @@ export class GoogleOAuthProvider extends OAuthProvider {
     )
 
     if (!response.ok) {
+      let errorBody
+      try {
+        errorBody = await response.json()
+      } catch {
+        errorBody = await response.text()
+      }
       console.error('[Google OAuth] Fetch accounts failed:', {
         status: response.status,
+        error: errorBody,
         timestamp: new Date().toISOString(),
       })
-      throw new Error(`Failed to fetch Google Analytics properties: ${response.status}`)
+      throw new Error(`Failed to fetch Google Analytics properties: ${response.status} - ${JSON.stringify(errorBody)}`)
     }
 
     const data = await response.json()

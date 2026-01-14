@@ -46,6 +46,11 @@ export async function GET(
 
     return redirect(authUrl)
   } catch (error) {
+    // Re-throw redirect errors - they're not real errors
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error
+    }
+
     console.error('[OAuth Initiation Error]', {
       type: 'oauth_init_error',
       error: error instanceof Error ? error.message : 'Unknown error',
