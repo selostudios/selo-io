@@ -10,14 +10,27 @@ interface StoredCredentials {
   encrypted?: string
   access_token?: string
   refresh_token?: string
+  expires_at?: string
+  // OAuth callback stores these as organization_id/name (generic)
+  // but GA needs property_id/name
   property_id?: string
+  property_name?: string
+  organization_id?: string
+  organization_name?: string
 }
 
 function getCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
   if (stored.encrypted) {
     return decryptCredentials<GoogleAnalyticsCredentials>(stored.encrypted)
   }
-  return stored as GoogleAnalyticsCredentials
+  // Map organization_id to property_id (OAuth callback uses generic field names)
+  return {
+    access_token: stored.access_token || '',
+    refresh_token: stored.refresh_token || '',
+    expires_at: stored.expires_at || '',
+    property_id: stored.property_id || stored.organization_id || '',
+    property_name: stored.property_name || stored.organization_name || '',
+  }
 }
 
 export async function syncGoogleAnalyticsMetrics() {
