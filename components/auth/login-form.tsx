@@ -105,26 +105,15 @@ export function LoginForm() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleOAuthSignIn('google')}
-            disabled={isLoading}
-          >
-            Continue with Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleOAuthSignIn('azure')}
-            disabled={isLoading}
-          >
-            Continue with Microsoft
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => handleOAuthSignIn('google')}
+          disabled={isLoading}
+        >
+          Continue with Google
+        </Button>
       </CardContent>
     </Card>
   )
