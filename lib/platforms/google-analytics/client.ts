@@ -123,6 +123,12 @@ export class GoogleAnalyticsClient {
     const formatDate = (d: Date) => d.toISOString().split('T')[0]
 
     try {
+      console.log('[GA Client] Fetching metrics:', {
+        propertyId: this.propertyId,
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      })
+
       const data = await this.fetch<{
         rows?: Array<{
           metricValues: Array<{ value: string }>
@@ -141,20 +147,22 @@ export class GoogleAnalyticsClient {
         ],
       })
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[GA Client] Metrics response:', JSON.stringify(data, null, 2))
-      }
+      console.log('[GA Client] Metrics response:', JSON.stringify(data, null, 2))
 
       const row = data.rows?.[0]
       if (!row) {
+        console.log('[GA Client] No rows returned - property may have no data')
         return { users: 0, sessions: 0, pageViews: 0 }
       }
 
-      return {
+      const metrics = {
         users: Number(row.metricValues[0]?.value) || 0,
         sessions: Number(row.metricValues[1]?.value) || 0,
         pageViews: Number(row.metricValues[2]?.value) || 0,
       }
+
+      console.log('[GA Client] Parsed metrics:', metrics)
+      return metrics
     } catch (error) {
       console.error('[GA Client] Metrics error:', error)
       return { users: 0, sessions: 0, pageViews: 0 }
