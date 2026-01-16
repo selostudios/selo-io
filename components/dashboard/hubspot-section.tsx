@@ -102,12 +102,10 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
               <div className="grid grid-cols-3 gap-4">
                 <MetricCard label="Total Contacts" value={metrics.crm.totalContacts} change={null} />
                 <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
-                <MetricCard
-                  label="Pipeline Value"
-                  value={metrics.crm.totalPipelineValue}
-                  change={null}
-                  prefix="$"
-                />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold">${metrics.crm.totalPipelineValue.toLocaleString()}</span>
+                  <span className="text-muted-foreground text-sm">Pipeline Value</span>
+                </div>
               </div>
               <div className="mt-4 flex flex-row justify-start gap-8">
                 <div>
@@ -126,8 +124,14 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
               <h4 className="mb-4 text-sm font-medium">Email Marketing</h4>
               <div className="grid grid-cols-3 gap-4">
                 <MetricCard label="Emails Sent" value={metrics.marketing.emailsSent} change={null} />
-                <MetricCard label="Open Rate" value={metrics.marketing.openRate} change={null} suffix="%" />
-                <MetricCard label="Click Rate" value={metrics.marketing.clickRate} change={null} suffix="%" />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold">{metrics.marketing.openRate}%</span>
+                  <span className="text-muted-foreground text-sm">Open Rate</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold">{metrics.marketing.clickRate}%</span>
+                  <span className="text-muted-foreground text-sm">Click Rate</span>
+                </div>
               </div>
             </div>
 

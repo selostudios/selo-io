@@ -43,7 +43,7 @@ async function debugLinkedInToken() {
   if (!credentials.expires_at) {
     console.error('❌ expires_at is missing!')
   } else {
-    const expiresAt = new Date(credentials.expires_at)
+    const expiresAt = new Date(credentials.expires_at as string)
     const now = new Date()
     const daysUntilExpiry = Math.round(
       (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
@@ -64,7 +64,7 @@ async function debugLinkedInToken() {
 
   // 3. Check scopes
   console.log('🔐 OAuth Scopes Check')
-  const scopes = credentials.scopes || []
+  const scopes = (credentials.scopes as string[]) || []
   const requiredScopes = ['r_organization_social', 'r_organization_admin', 'rw_organization_admin']
 
   console.log(`   Granted scopes: ${scopes.join(', ')}`)
@@ -91,7 +91,7 @@ async function debugLinkedInToken() {
     return
   }
 
-  console.log(`   Access token: ${credentials.access_token.substring(0, 20)}...`)
+  console.log(`   Access token: ${(credentials.access_token as string).substring(0, 20)}...`)
   console.log(`   Organization ID: ${orgId}`)
 
   // Test a simple API call
