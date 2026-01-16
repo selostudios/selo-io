@@ -214,20 +214,22 @@ export class HubSpotClient {
         console.log('[HubSpot Client] Marketing emails not available:', emailError)
       }
 
-      // Get form submissions count
+      // Get form submissions count (parallelized for performance)
       let formSubmissions = 0
       try {
         const formsResponse = await this.fetch<Array<{ guid: string }>>('/forms/v2/forms')
+        const forms = formsResponse || []
 
-        for (const form of formsResponse || []) {
-          try {
-            const submissionsResponse = await this.fetch<{ totalCount: number }>(
+        if (forms.length > 0) {
+          // Fetch all form submissions in parallel
+          const submissionPromises = forms.map((form) =>
+            this.fetch<{ totalCount: number }>(
               `/form-integrations/v1/submissions/forms/${form.guid}?limit=1`
-            )
-            formSubmissions += submissionsResponse.totalCount || 0
-          } catch {
-            // Individual form submission fetch failed, continue
-          }
+            ).catch(() => ({ totalCount: 0 }))
+          )
+
+          const results = await Promise.all(submissionPromises)
+          formSubmissions = results.reduce((sum, r) => sum + (r.totalCount || 0), 0)
         }
       } catch (formsError) {
         console.log('[HubSpot Client] Forms not available:', formsError)
