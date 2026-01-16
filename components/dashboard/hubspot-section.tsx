@@ -66,7 +66,7 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Connect HubSpot to view CRM and marketing metrics.
+            Connect HubSpot to view CRM metrics and form submissions.
           </p>
         </CardContent>
       </Card>
@@ -121,22 +121,6 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
                 <div>
                   <p className="text-2xl font-bold text-red-600">{metrics.crm.dealsLost}</p>
                   <p className="text-muted-foreground text-xs">Deals Lost</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Marketing Metrics */}
-            <div>
-              <h4 className="mb-4 text-sm font-medium">Email Marketing</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <MetricCard label="Emails Sent" value={metrics.marketing.emailsSent} change={null} />
-                <div className="flex flex-col">
-                  <span className="text-2xl font-bold">{metrics.marketing.openRate}%</span>
-                  <span className="text-muted-foreground text-sm">Open Rate</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl font-bold">{metrics.marketing.clickRate}%</span>
-                  <span className="text-muted-foreground text-sm">Click Rate</span>
                 </div>
               </div>
             </div>

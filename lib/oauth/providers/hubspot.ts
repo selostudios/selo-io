@@ -28,8 +28,6 @@ export class HubSpotOAuthProvider extends OAuthProvider {
       'crm.objects.contacts.read',
       'crm.objects.deals.read',
       'forms',
-      'marketing-email',
-      'marketing.campaigns.read',
     ].join(' ')
 
     const params = new URLSearchParams({
