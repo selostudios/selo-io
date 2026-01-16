@@ -77,15 +77,17 @@ export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyt
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Google Analytics</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Google Analytics</CardTitle>
+            <Button asChild size="sm">
+              <Link href="/settings/integrations">Configure</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground">
             Connect Google Analytics to view website traffic metrics.
           </p>
-          <Button asChild>
-            <Link href="/settings/integrations">Configure</Link>
-          </Button>
         </CardContent>
       </Card>
     )

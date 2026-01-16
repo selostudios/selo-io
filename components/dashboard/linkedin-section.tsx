@@ -72,15 +72,17 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>LinkedIn</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>LinkedIn</CardTitle>
+            <Button asChild size="sm">
+              <Link href="/settings/integrations">Configure</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground">
             Connect LinkedIn to view engagement metrics.
           </p>
-          <Button asChild>
-            <Link href="/settings/integrations">Configure</Link>
-          </Button>
         </CardContent>
       </Card>
     )

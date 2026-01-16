@@ -57,15 +57,17 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle>HubSpot</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>HubSpot</CardTitle>
+            <Button asChild size="sm">
+              <Link href="/settings/integrations">Configure</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground">
             Connect HubSpot to view CRM and marketing metrics.
           </p>
-          <Button asChild>
-            <Link href="/settings/integrations">Configure</Link>
-          </Button>
         </CardContent>
       </Card>
     )
