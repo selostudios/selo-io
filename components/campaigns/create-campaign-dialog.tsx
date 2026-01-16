@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createCampaign } from '@/app/campaigns/actions'
+import { createCampaign } from '@/app/dashboard/campaigns/actions'
 import { useRouter } from 'next/navigation'
 import { showSuccess, showError } from '@/components/ui/sonner'
 
