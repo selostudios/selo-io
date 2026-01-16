@@ -117,6 +117,28 @@ export class HubSpotClient {
     }
   }
 
+  private async postSearch<T>(endpoint: string, body: object): Promise<T> {
+    await this.ensureFreshToken()
+
+    const url = `${HUBSPOT_API_BASE}${endpoint}`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(this.formatError(response.status, errorBody))
+    }
+
+    return response.json()
+  }
+
   async getCRMMetrics(): Promise<HubSpotCRMMetrics> {
     const emptyMetrics: HubSpotCRMMetrics = {
       totalContacts: 0,
@@ -127,21 +149,26 @@ export class HubSpotClient {
     }
 
     try {
-      // Get total contacts count
-      const contactsResponse = await this.fetch<{ total: number }>(
-        '/crm/v3/objects/contacts?limit=1'
-      )
-
-      // Get deals with their properties
-      const dealsResponse = await this.fetch<{
-        total: number
-        results: Array<{
-          properties: {
-            amount?: string
-            dealstage?: string
-          }
-        }>
-      }>('/crm/v3/objects/deals?limit=100&properties=amount,dealstage')
+      // Use search API to get total counts (list API doesn't return totals)
+      const [contactsResponse, dealsResponse] = await Promise.all([
+        this.postSearch<{ total: number }>('/crm/v3/objects/contacts/search', {
+          filterGroups: [],
+          limit: 1,
+        }),
+        this.postSearch<{
+          total: number
+          results: Array<{
+            properties: {
+              amount?: string
+              dealstage?: string
+            }
+          }>
+        }>('/crm/v3/objects/deals/search', {
+          filterGroups: [],
+          properties: ['amount', 'dealstage'],
+          limit: 100,
+        }),
+      ])
 
       let totalPipelineValue = 0
       let dealsWon = 0
