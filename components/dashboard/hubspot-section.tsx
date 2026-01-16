@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { RefreshCw } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MetricCard } from './metric-card'
@@ -59,9 +60,12 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
           <CardTitle>HubSpot</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Connect HubSpot in Settings to view metrics.
+          <p className="text-muted-foreground mb-4">
+            Connect HubSpot to view CRM and marketing metrics.
           </p>
+          <Button asChild>
+            <Link href="/settings/integrations">Configure</Link>
+          </Button>
         </CardContent>
       </Card>
     )

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { RefreshCw } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -74,7 +75,12 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
           <CardTitle>LinkedIn</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Connect LinkedIn in Settings to view metrics.</p>
+          <p className="text-muted-foreground mb-4">
+            Connect LinkedIn to view engagement metrics.
+          </p>
+          <Button asChild>
+            <Link href="/settings/integrations">Configure</Link>
+          </Button>
         </CardContent>
       </Card>
     )
