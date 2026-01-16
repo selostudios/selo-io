@@ -145,7 +145,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <HubSpotSection
           isConnected={!!hubspotConnection}
           lastSyncAt={hubspotConnection?.last_sync_at || null}
