@@ -143,14 +143,20 @@ export class HubSpotClient {
     const emptyMetrics: HubSpotCRMMetrics = {
       totalContacts: 0,
       totalDeals: 0,
+      newDeals: 0,
       totalPipelineValue: 0,
       dealsWon: 0,
       dealsLost: 0,
     }
 
     try {
+      // Calculate date 30 days ago for "new deals" filter
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const thirtyDaysAgoMs = thirtyDaysAgo.getTime()
+
       // Use search API to get total counts (list API doesn't return totals)
-      const [contactsResponse, dealsResponse] = await Promise.all([
+      const [contactsResponse, dealsResponse, newDealsResponse] = await Promise.all([
         this.postSearch<{ total: number }>('/crm/v3/objects/contacts/search', {
           filterGroups: [],
           limit: 1,
@@ -167,6 +173,21 @@ export class HubSpotClient {
           filterGroups: [],
           properties: ['amount', 'dealstage'],
           limit: 100,
+        }),
+        // Get deals created in the last 30 days
+        this.postSearch<{ total: number }>('/crm/v3/objects/deals/search', {
+          filterGroups: [
+            {
+              filters: [
+                {
+                  propertyName: 'createdate',
+                  operator: 'GTE',
+                  value: thirtyDaysAgoMs.toString(),
+                },
+              ],
+            },
+          ],
+          limit: 1,
         }),
       ])
 
@@ -189,6 +210,7 @@ export class HubSpotClient {
       const metrics: HubSpotCRMMetrics = {
         totalContacts: contactsResponse.total || 0,
         totalDeals: dealsResponse.total || 0,
+        newDeals: newDealsResponse.total || 0,
         totalPipelineValue,
         dealsWon,
         dealsLost,

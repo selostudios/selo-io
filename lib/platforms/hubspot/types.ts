@@ -11,6 +11,7 @@ export interface HubSpotCredentials {
 export interface HubSpotCRMMetrics {
   totalContacts: number
   totalDeals: number
+  newDeals: number
   totalPipelineValue: number
   dealsWon: number
   dealsLost: number

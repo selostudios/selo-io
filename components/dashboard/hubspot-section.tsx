@@ -106,12 +106,13 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
               <div className="grid grid-cols-3 gap-4">
                 <MetricCard label="Total Contacts" value={metrics.crm.totalContacts} change={null} />
                 <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
+                <MetricCard label="New Deals (30d)" value={metrics.crm.newDeals} change={null} />
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-4">
                 <div className="flex flex-col">
                   <span className="text-2xl font-bold">${metrics.crm.totalPipelineValue.toLocaleString()}</span>
                   <span className="text-muted-foreground text-sm">Pipeline Value</span>
                 </div>
-              </div>
-              <div className="mt-4 flex flex-row justify-start gap-8">
                 <div>
                   <p className="text-2xl font-bold text-green-600">{metrics.crm.dealsWon}</p>
                   <p className="text-muted-foreground text-xs">Deals Won</p>
