@@ -99,11 +99,9 @@ export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyt
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Google Analytics</CardTitle>
-            {lastSyncAt && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                Last synced: {new Date(lastSyncAt).toLocaleString()}
-              </p>
-            )}
+            <p className="text-muted-foreground mt-1 text-xs">
+              Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>

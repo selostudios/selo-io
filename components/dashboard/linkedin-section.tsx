@@ -94,11 +94,9 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>LinkedIn</CardTitle>
-            {lastSyncAt && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                Last synced: {new Date(lastSyncAt).toLocaleString()}
-              </p>
-            )}
+            <p className="text-muted-foreground mt-1 text-xs">
+              Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
