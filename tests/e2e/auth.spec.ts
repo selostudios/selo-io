@@ -39,3 +39,31 @@ test.describe('Authentication', () => {
     await expect(submitButton).toBeDisabled()
   })
 })
+
+test.describe('Access Denied Page', () => {
+  test('displays access denied message with Selo logo', async ({ page }) => {
+    await page.goto('/access-denied')
+
+    // Should show access denied heading
+    await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible()
+
+    // Should show invitation-only message
+    await expect(
+      page.getByText(/Access to this application is by invitation only/)
+    ).toBeVisible()
+
+    // Should show Selo logo
+    await expect(page.getByAltText('Selo')).toBeVisible()
+
+    // Should have link back to login
+    await expect(page.getByRole('link', { name: 'Back to Login' })).toBeVisible()
+  })
+
+  test('back to login link works', async ({ page }) => {
+    await page.goto('/access-denied')
+
+    await page.click('text=Back to Login')
+
+    await expect(page).toHaveURL('/login')
+  })
+})
