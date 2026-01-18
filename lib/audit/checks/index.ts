@@ -10,6 +10,11 @@ import { headingHierarchy } from './seo/heading-hierarchy'
 import { imagesMissingAlt } from './seo/images-missing-alt'
 import { missingCanonical } from './seo/missing-canonical'
 import { thinContent } from './seo/thin-content'
+// AI-Readiness checks
+import { missingLlmsTxt } from './ai/missing-llms-txt'
+import { aiCrawlersBlocked } from './ai/ai-crawlers-blocked'
+import { missingStructuredData } from './ai/missing-structured-data'
+import { noFaqContent } from './ai/no-faq-content'
 
 export const allChecks: AuditCheckDefinition[] = [
   // SEO - Critical
@@ -25,6 +30,12 @@ export const allChecks: AuditCheckDefinition[] = [
   missingCanonical,
   // SEO - Optional
   thinContent,
+  // AI-Readiness - Critical
+  missingLlmsTxt,
+  aiCrawlersBlocked,
+  missingStructuredData,
+  // AI-Readiness - Recommended
+  noFaqContent,
 ]
 
 export function getChecksByType(
