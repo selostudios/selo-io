@@ -41,7 +41,7 @@ export function CreateCampaignForm() {
               id="name"
               name="name"
               type="text"
-              placeholder="e.g., Q1 2026 Thought Leadership"
+              placeholder="e.g., Q1 2026 Thought Leadership…"
               required
               disabled={isLoading}
             />
@@ -56,9 +56,17 @@ export function CreateCampaignForm() {
               <Input id="end_date" name="end_date" type="date" disabled={isLoading} />
             </div>
           </div>
-          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Campaign'}
+            {isLoading ? 'Creating…' : 'Create Campaign'}
           </Button>
         </form>
       </CardContent>

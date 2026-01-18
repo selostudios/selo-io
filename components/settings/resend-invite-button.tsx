@@ -56,7 +56,7 @@ export function ResendInviteButton({ inviteId, email }: ResendInviteButtonProps)
             Cancel
           </Button>
           <Button onClick={handleResend} disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Resend Invite'}
+            {isLoading ? 'Sending…' : 'Resend Invite'}
           </Button>
         </DialogFooter>
       </DialogContent>

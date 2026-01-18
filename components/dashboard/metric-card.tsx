@@ -11,7 +11,7 @@ export function MetricCard({ label, value, change }: MetricCardProps) {
 
   return (
     <div className="flex flex-col">
-      <span className="text-2xl font-bold">{formattedValue}</span>
+      <span className="text-2xl font-bold tabular-nums">{formattedValue}</span>
       <span className="text-muted-foreground text-sm">{label}</span>
       {change !== null && (
         <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>

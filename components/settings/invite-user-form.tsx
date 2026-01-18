@@ -62,7 +62,7 @@ export function InviteUserForm() {
               id="email"
               name="email"
               type="email"
-              placeholder="colleague@example.com"
+              placeholder="colleague@example.com…"
               required
               disabled={isLoading}
             />
@@ -80,19 +80,35 @@ export function InviteUserForm() {
               </SelectContent>
             </Select>
           </div>
-          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
           {warning && (
-            <div className="rounded bg-amber-50 p-3 text-sm break-all text-amber-700">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-amber-50 p-3 text-sm break-all text-amber-700"
+            >
               {warning}
             </div>
           )}
           {success && (
-            <div className="rounded bg-green-50 p-3 text-sm break-all text-green-600">
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded bg-green-50 p-3 text-sm break-all text-green-600"
+            >
               {success}
             </div>
           )}
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send Invite'}
+            {isLoading ? 'Sending…' : 'Send Invite'}
           </Button>
         </form>
       </CardContent>

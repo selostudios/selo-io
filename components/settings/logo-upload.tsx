@@ -145,6 +145,8 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
           </div>
         ) : (
           <div
+            role="img"
+            aria-label={`${organizationName} logo placeholder`}
             className="flex shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
             style={{
               backgroundColor: primaryColor || '#6B7280',
@@ -206,6 +208,8 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
                   </div>
                 ) : (
                   <div
+                    role="img"
+                    aria-label={`${organizationName} logo placeholder`}
                     className="flex h-20 w-20 items-center justify-center rounded-lg text-2xl font-bold text-white"
                     style={{ backgroundColor: primaryColor || '#6B7280' }}
                   >
@@ -216,7 +220,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
 
               {/* Instructions */}
               <p className="text-sm text-neutral-600">
-                {isUploading ? 'Uploading...' : 'Drag and drop your logo here, or click to browse'}
+                {isUploading ? 'Uploading…' : 'Drag and drop your logo here, or click to browse'}
               </p>
 
               {/* Actions */}
@@ -228,7 +232,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading || isRemoving}
                 >
-                  {isUploading ? 'Uploading...' : 'Choose File'}
+                  {isUploading ? 'Uploading…' : 'Choose File'}
                 </Button>
                 {previewUrl && (
                   <Button
@@ -239,7 +243,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
                     disabled={isUploading || isRemoving}
                     className="text-red-600 hover:text-red-700"
                   >
-                    {isRemoving ? 'Removing...' : 'Remove'}
+                    {isRemoving ? 'Removing…' : 'Remove'}
                   </Button>
                 )}
               </div>

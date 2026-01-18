@@ -1,57 +1,34 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MetricCard } from './metric-card'
-import { syncHubSpotMetrics, getHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
-import { showSuccess, showError } from '@/components/ui/sonner'
+import { getHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
 import type { HubSpotMetrics } from '@/lib/platforms/hubspot/types'
+import type { Period } from './integrations-panel'
 
 interface HubSpotSectionProps {
   isConnected: boolean
-  lastSyncAt: string | null
+  period: Period
 }
 
-export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps) {
+export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
   const [metrics, setMetrics] = useState<HubSpotMetrics | null>(null)
   const [isPending, startTransition] = useTransition()
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     if (isConnected) {
       startTransition(async () => {
-        const result = await getHubSpotMetrics()
+        const result = await getHubSpotMetrics(period)
         if (result.metrics) {
           setMetrics(result.metrics)
         }
       })
     }
-  }, [isConnected])
-
-  async function loadMetrics() {
-    startTransition(async () => {
-      const result = await getHubSpotMetrics()
-      if (result.metrics) {
-        setMetrics(result.metrics)
-      }
-    })
-  }
-
-  async function handleRefresh() {
-    setIsRefreshing(true)
-    const result = await syncHubSpotMetrics()
-
-    if (result.error) {
-      showError(result.error)
-    } else {
-      showSuccess('HubSpot metrics updated')
-      await loadMetrics()
-    }
-    setIsRefreshing(false)
-  }
+  }, [isConnected, period])
 
   if (!isConnected) {
     return (
@@ -76,41 +53,32 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>HubSpot</CardTitle>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="h-8 w-8 p-0"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="sr-only">Refresh</span>
-          </Button>
-        </div>
+        <CardTitle>HubSpot</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-h-[280px]">
         {isPending ? (
-          <p className="text-muted-foreground">Loading metrics...</p>
+          <div className="flex h-[260px] items-center justify-center">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+          </div>
         ) : metrics ? (
           <div className="space-y-6">
             {/* CRM Metrics */}
             <div>
               <h4 className="mb-4 text-sm font-medium">CRM</h4>
               <div className="grid grid-cols-3 gap-4">
-                <MetricCard label="Total Contacts" value={metrics.crm.totalContacts} change={null} />
+                <MetricCard
+                  label="Total Contacts"
+                  value={metrics.crm.totalContacts}
+                  change={null}
+                />
                 <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
-                <MetricCard label="New Deals (30d)" value={metrics.crm.newDeals} change={null} />
+                <MetricCard label="New Deals" value={metrics.crm.newDeals} change={null} />
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4">
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold">${metrics.crm.totalPipelineValue.toLocaleString()}</span>
+                  <span className="text-2xl font-bold">
+                    ${metrics.crm.totalPipelineValue.toLocaleString()}
+                  </span>
                   <span className="text-muted-foreground text-sm">Pipeline Value</span>
                 </div>
                 <div>
@@ -127,7 +95,11 @@ export function HubSpotSection({ isConnected, lastSyncAt }: HubSpotSectionProps)
             {/* Forms */}
             <div>
               <h4 className="mb-4 text-sm font-medium">Forms</h4>
-              <MetricCard label="Form Submissions" value={metrics.marketing.formSubmissions} change={null} />
+              <MetricCard
+                label="Form Submissions"
+                value={metrics.marketing.formSubmissions}
+                change={null}
+              />
             </div>
           </div>
         ) : (

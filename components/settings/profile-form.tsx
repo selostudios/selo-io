@@ -60,7 +60,7 @@ export function ProfileForm({
             id="firstName"
             name="firstName"
             type="text"
-            placeholder="First name"
+            placeholder="First name…"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             required
@@ -76,7 +76,7 @@ export function ProfileForm({
             id="lastName"
             name="lastName"
             type="text"
-            placeholder="Last name"
+            placeholder="Last name…"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             disabled={isLoading}
@@ -95,11 +95,23 @@ export function ProfileForm({
         />
         <p className="text-muted-foreground text-xs">Email cannot be changed</p>
       </div>
-      {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
-      {success && <div className="rounded bg-green-50 p-3 text-sm text-green-600">{success}</div>}
+      {error && (
+        <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded bg-green-50 p-3 text-sm text-green-600"
+        >
+          {success}
+        </div>
+      )}
       <div className="flex justify-end">
         <Button type="submit" disabled={isSaveDisabled}>
-          {isLoading ? 'Saving...' : 'Save Changes'}
+          {isLoading ? 'Saving…' : 'Save Changes'}
         </Button>
       </div>
     </form>

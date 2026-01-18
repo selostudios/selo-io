@@ -24,11 +24,7 @@ export class HubSpotOAuthProvider extends OAuthProvider {
   }
 
   getAuthorizationUrl(state: string, redirectUri: string): string {
-    const scopes = [
-      'crm.objects.contacts.read',
-      'crm.objects.deals.read',
-      'forms',
-    ].join(' ')
+    const scopes = ['crm.objects.contacts.read', 'crm.objects.deals.read', 'forms'].join(' ')
 
     const params = new URLSearchParams({
       client_id: this.clientId,

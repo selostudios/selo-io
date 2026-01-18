@@ -25,11 +25,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
         },
       }}
       icons={{
-        success: <CircleCheckIcon className="size-5 text-green-600" />,
-        info: <InfoIcon className="size-5" />,
-        warning: <TriangleAlertIcon className="size-5" />,
-        error: <CircleXIcon className="size-5 text-red-600" />,
-        loading: <Loader2Icon className="size-5 animate-spin" />,
+        success: <CircleCheckIcon className="size-5 text-green-600" aria-hidden="true" />,
+        info: <InfoIcon className="size-5" aria-hidden="true" />,
+        warning: <TriangleAlertIcon className="size-5" aria-hidden="true" />,
+        error: <CircleXIcon className="size-5 text-red-600" aria-hidden="true" />,
+        loading: <Loader2Icon className="size-5 animate-spin" aria-hidden="true" />,
       }}
       style={
         {
