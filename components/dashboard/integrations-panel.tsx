@@ -116,15 +116,15 @@ export function IntegrationsPanel({
               <SelectItem value="quarter">This quarter</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={handleRefreshAll} disabled={isRefreshing}>
+          <Button variant="outline" size="icon" onClick={handleRefreshAll} disabled={isRefreshing}>
             {isRefreshing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
             )}
-            Refresh All
+            <span className="sr-only">Refresh All</span>
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="default" asChild>
             <Link href="/settings/integrations">Manage</Link>
           </Button>
         </div>

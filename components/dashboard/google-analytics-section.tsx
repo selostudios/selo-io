@@ -44,7 +44,7 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
           <div className="flex items-center justify-between">
             <CardTitle>Google Analytics</CardTitle>
             <Button asChild size="sm">
-              <Link href="/settings/integrations">Configure</Link>
+              <Link href="/settings/integrations">Connect</Link>
             </Button>
           </div>
         </CardHeader>
