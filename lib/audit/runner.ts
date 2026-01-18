@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { crawlSite } from './crawler'
 import { allChecks } from './checks'
 import { fetchPage } from './fetcher'
+import { generateExecutiveSummary } from './summary'
 import type { SiteAuditCheck, CheckContext } from './types'
 
 export async function runAudit(auditId: string, url: string): Promise<void> {
@@ -76,12 +77,21 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Calculate scores
     const scores = calculateScores(allCheckResults)
 
-    // Update audit with scores
+    // Generate executive summary
+    let executive_summary: string | null = null
+    try {
+      executive_summary = await generateExecutiveSummary(url, pages.length, scores, allCheckResults)
+    } catch (error) {
+      console.error('[Audit] Failed to generate executive summary:', error)
+    }
+
+    // Update audit with scores and summary
     await supabase
       .from('site_audits')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
+        executive_summary,
         ...scores,
       })
       .eq('id', auditId)
