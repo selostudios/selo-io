@@ -3,9 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LinkedInSection } from '@/components/dashboard/linkedin-section'
-import { GoogleAnalyticsSection } from '@/components/dashboard/google-analytics-section'
-import { HubSpotSection } from '@/components/dashboard/hubspot-section'
+import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { MetricCard } from '@/components/dashboard/metric-card'
 
 const TOTAL_PLATFORMS = 4
@@ -134,23 +132,20 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <LinkedInSection
-          isConnected={!!linkedInConnection}
-          lastSyncAt={linkedInConnection?.last_sync_at || null}
-        />
-        <GoogleAnalyticsSection
-          isConnected={!!gaConnection}
-          lastSyncAt={gaConnection?.last_sync_at || null}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <HubSpotSection
-          isConnected={!!hubspotConnection}
-          lastSyncAt={hubspotConnection?.last_sync_at || null}
-        />
-      </div>
+      <IntegrationsPanel
+        linkedIn={{
+          isConnected: !!linkedInConnection,
+          lastSyncAt: linkedInConnection?.last_sync_at || null,
+        }}
+        googleAnalytics={{
+          isConnected: !!gaConnection,
+          lastSyncAt: gaConnection?.last_sync_at || null,
+        }}
+        hubspot={{
+          isConnected: !!hubspotConnection,
+          lastSyncAt: hubspotConnection?.last_sync_at || null,
+        }}
+      />
     </div>
   )
 }

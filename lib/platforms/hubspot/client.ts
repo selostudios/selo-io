@@ -139,7 +139,7 @@ export class HubSpotClient {
     return response.json()
   }
 
-  async getCRMMetrics(): Promise<HubSpotCRMMetrics> {
+  async getCRMMetrics(days: number = 30): Promise<HubSpotCRMMetrics> {
     const emptyMetrics: HubSpotCRMMetrics = {
       totalContacts: 0,
       totalDeals: 0,
@@ -150,10 +150,10 @@ export class HubSpotClient {
     }
 
     try {
-      // Calculate date 30 days ago for "new deals" filter
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      const thirtyDaysAgoMs = thirtyDaysAgo.getTime()
+      // Calculate date range for "new deals" filter
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - days)
+      const startDateMs = startDate.getTime()
 
       // Use search API to get total counts (list API doesn't return totals)
       const [contactsResponse, dealsResponse, newDealsResponse] = await Promise.all([
@@ -174,7 +174,7 @@ export class HubSpotClient {
           properties: ['amount', 'dealstage'],
           limit: 100,
         }),
-        // Get deals created in the last 30 days
+        // Get deals created in the selected period
         this.postSearch<{ total: number }>('/crm/v3/objects/deals/search', {
           filterGroups: [
             {
@@ -182,7 +182,7 @@ export class HubSpotClient {
                 {
                   propertyName: 'createdate',
                   operator: 'GTE',
-                  value: thirtyDaysAgoMs.toString(),
+                  value: startDateMs.toString(),
                 },
               ],
             },
@@ -304,9 +304,9 @@ export class HubSpotClient {
     }
   }
 
-  async getMetrics(): Promise<HubSpotMetrics> {
+  async getMetrics(days: number = 30): Promise<HubSpotMetrics> {
     const [crm, marketing] = await Promise.all([
-      this.getCRMMetrics(),
+      this.getCRMMetrics(days),
       this.getMarketingMetrics(),
     ])
 

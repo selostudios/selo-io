@@ -93,7 +93,20 @@ export async function syncHubSpotMetrics() {
   }
 }
 
-export async function getHubSpotMetrics() {
+type Period = '7d' | '30d' | 'quarter'
+
+function getPeriodDays(period: Period): number {
+  switch (period) {
+    case '7d':
+      return 7
+    case '30d':
+      return 30
+    case 'quarter':
+      return 90
+  }
+}
+
+export async function getHubSpotMetrics(period: Period = '30d') {
   const supabase = await createClient()
 
   const {
@@ -127,7 +140,8 @@ export async function getHubSpotMetrics() {
   try {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
-    const metrics = await adapter.fetchMetrics()
+    const days = getPeriodDays(period)
+    const metrics = await adapter.fetchMetrics(days)
 
     return { metrics }
   } catch (error) {

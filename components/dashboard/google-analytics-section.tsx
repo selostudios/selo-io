@@ -1,26 +1,14 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { MetricCard } from './metric-card'
-import {
-  syncGoogleAnalyticsMetrics,
-  getGoogleAnalyticsMetrics,
-} from '@/lib/platforms/google-analytics/actions'
-import { showSuccess, showError } from '@/components/ui/sonner'
+import { getGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import type { TrafficAcquisition } from '@/lib/platforms/google-analytics/types'
-
-type Period = '7d' | '30d' | 'quarter'
+import type { Period } from './integrations-panel'
 
 interface GAMetrics {
   activeUsers: number
@@ -31,14 +19,15 @@ interface GAMetrics {
 
 interface GoogleAnalyticsSectionProps {
   isConnected: boolean
-  lastSyncAt: string | null
+  period: Period
 }
 
-export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyticsSectionProps) {
-  const [period, setPeriod] = useState<Period>('7d')
+export function GoogleAnalyticsSection({
+  isConnected,
+  period,
+}: GoogleAnalyticsSectionProps) {
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [isPending, startTransition] = useTransition()
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     if (isConnected) {
@@ -50,28 +39,6 @@ export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyt
       })
     }
   }, [isConnected, period])
-
-  async function loadMetrics() {
-    startTransition(async () => {
-      const result = await getGoogleAnalyticsMetrics(period)
-      if (result.metrics) {
-        setMetrics(result.metrics)
-      }
-    })
-  }
-
-  async function handleRefresh() {
-    setIsRefreshing(true)
-    const result = await syncGoogleAnalyticsMetrics()
-
-    if (result.error) {
-      showError(result.error)
-    } else {
-      showSuccess('Google Analytics metrics updated')
-      await loadMetrics()
-    }
-    setIsRefreshing(false)
-  }
 
   if (!isConnected) {
     return (
@@ -96,40 +63,13 @@ export function GoogleAnalyticsSection({ isConnected, lastSyncAt }: GoogleAnalyt
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Google Analytics</CardTitle>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">7 days</SelectItem>
-                <SelectItem value="30d">30 days</SelectItem>
-                <SelectItem value="quarter">This quarter</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="h-8 w-8 p-0"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="sr-only">Refresh</span>
-            </Button>
-          </div>
-        </div>
+        <CardTitle>Google Analytics</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-h-[200px]">
         {isPending ? (
-          <p className="text-muted-foreground">Loading metrics...</p>
+          <div className="flex h-[180px] items-center justify-center">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+          </div>
         ) : metrics ? (
           <div className="space-y-6">
             {/* Main metrics */}
