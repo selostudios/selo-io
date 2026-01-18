@@ -11,12 +11,14 @@ interface ProfileFormProps {
   email: string
   firstName: string
   lastName: string
+  onUpdate?: (firstName: string, lastName: string) => void
 }
 
 export function ProfileForm({
   email,
   firstName: initialFirstName,
   lastName: initialLastName,
+  onUpdate,
 }: ProfileFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -44,6 +46,7 @@ export function ProfileForm({
     } else if (result?.success) {
       setSuccess('Profile updated successfully!')
       setIsLoading(false)
+      onUpdate?.(firstName.trim(), lastName.trim())
       router.refresh()
     }
   }

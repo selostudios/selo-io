@@ -1,8 +1,10 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { disconnectPlatform } from '@/app/settings/integrations/actions'
-import { LinkedInConnectDialog } from '@/components/integrations/linkedin-connect-dialog'
+import { displayName } from '@/lib/utils'
 
 type Connection = {
   id: string
@@ -40,7 +42,6 @@ export function PlatformConnectionCard({
   }
 
   async function handleDisconnect() {
-    'use server'
     if (connection) {
       await disconnectPlatform(connection.id)
     }
@@ -50,20 +51,22 @@ export function PlatformConnectionCard({
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>{info.name}</CardTitle>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{info.name}</CardTitle>
+              <CardDescription className="mt-1">{info.description}</CardDescription>
+            </div>
             <Badge variant="warning">Not connected</Badge>
           </div>
-          <CardDescription>{info.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          {platformType === 'linkedin' ? (
-            <LinkedInConnectDialog />
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Connect {info.name} to track performance metrics.
-            </p>
-          )}
+          <Button
+            onClick={() => {
+              window.location.href = `/api/auth/oauth/${platformType}`
+            }}
+          >
+            Connect
+          </Button>
         </CardContent>
       </Card>
     )
@@ -72,11 +75,13 @@ export function PlatformConnectionCard({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle>{info.name}</CardTitle>
-          <Badge variant="success">{connection.status}</Badge>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>{info.name}</CardTitle>
+            <CardDescription className="mt-1">{info.description}</CardDescription>
+          </div>
+          <Badge variant="success">{displayName(connection.status)}</Badge>
         </div>
-        <CardDescription>{info.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -85,11 +90,9 @@ export function PlatformConnectionCard({
               Last synced: {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(connection.last_sync_at))}
             </p>
           )}
-          <form action={handleDisconnect}>
-            <Button type="submit" variant="outline" size="sm">
-              Disconnect
-            </Button>
-          </form>
+          <Button variant="outline" size="sm" onClick={handleDisconnect}>
+            Disconnect
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -13,8 +13,8 @@ interface MetricRecord {
 export class LinkedInAdapter {
   private client: LinkedInClient
 
-  constructor(credentials: LinkedInCredentials) {
-    this.client = new LinkedInClient(credentials)
+  constructor(credentials: LinkedInCredentials, connectionId?: string) {
+    this.client = new LinkedInClient(credentials, connectionId)
   }
 
   async fetchMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {
@@ -36,6 +36,14 @@ export class LinkedInAdapter {
         date: dateStr,
         metric_type: 'linkedin_followers',
         value: metrics.followers,
+      },
+      {
+        organization_id: organizationId,
+        campaign_id: null,
+        platform_type: 'linkedin',
+        date: dateStr,
+        metric_type: 'linkedin_follower_growth',
+        value: metrics.followerGrowth,
       },
       {
         organization_id: organizationId,

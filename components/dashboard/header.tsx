@@ -35,23 +35,13 @@ export async function Header() {
   const firstName = userRecord?.first_name || userEmail.split('@')[0]
   const lastName = userRecord?.last_name || ''
 
-  // Generate initials from first and last name (or first two chars of firstName if no lastName)
-  const initials = lastName
-    ? `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-    : firstName.substring(0, 2).toUpperCase()
-
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
       <div className="flex items-center gap-4">
         <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
-      <UserMenu
-        userEmail={userEmail}
-        firstName={firstName}
-        lastName={lastName}
-        initials={initials}
-      />
+      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} />
     </header>
   )
 }

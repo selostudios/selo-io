@@ -1,114 +1,149 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { RefreshCw, Check, X } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { showSuccess, showError } from '@/components/ui/sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { LinkedInSection } from './linkedin-section'
+import { GoogleAnalyticsSection } from './google-analytics-section'
+import { HubSpotSection } from './hubspot-section'
 import { syncLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
+import { syncGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
+import { syncHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
+import { showSuccess, showError } from '@/components/ui/sonner'
 
-type Connection = {
-  id: string
-  platform_type: string
-  status: string
-  last_sync_at: string | null
-}
-
-const PLATFORMS = [
-  { key: 'linkedin', name: 'LinkedIn' },
-  { key: 'hubspot', name: 'HubSpot' },
-  { key: 'google_analytics', name: 'Google Analytics' },
-] as const
+export type Period = '7d' | '30d' | 'quarter'
 
 interface IntegrationsPanelProps {
-  connections: Connection[]
+  linkedIn: { isConnected: boolean; lastSyncAt: string | null }
+  googleAnalytics: { isConnected: boolean; lastSyncAt: string | null }
+  hubspot: { isConnected: boolean; lastSyncAt: string | null }
 }
 
-export function IntegrationsPanel({ connections }: IntegrationsPanelProps) {
-  const [isRefreshing, setIsRefreshing] = useState(false)
+function getMostRecentSync(
+  ...syncTimes: (string | null)[]
+): string | null {
+  const validTimes = syncTimes.filter((t): t is string => t !== null)
+  if (validTimes.length === 0) return null
+  return validTimes.reduce((latest, current) =>
+    new Date(current) > new Date(latest) ? current : latest
+  )
+}
 
-  const connectionMap = new Map(connections.map((c) => [c.platform_type, c]))
-  const connectedCount = connections.length
-  const totalCount = PLATFORMS.length
+export function IntegrationsPanel({
+  linkedIn,
+  googleAnalytics,
+  hubspot,
+}: IntegrationsPanelProps) {
+  const [period, setPeriod] = useState<Period>('7d')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(() =>
+    getMostRecentSync(linkedIn.lastSyncAt, googleAnalytics.lastSyncAt, hubspot.lastSyncAt)
+  )
 
   async function handleRefreshAll() {
     setIsRefreshing(true)
 
-    // For now, only LinkedIn has sync capability
-    const linkedInConnection = connectionMap.get('linkedin')
-    if (linkedInConnection) {
-      const result = await syncLinkedInMetrics()
-      if (result.error) {
-        showError(result.error)
+    const results = await Promise.allSettled([
+      linkedIn.isConnected ? syncLinkedInMetrics() : Promise.resolve({ skipped: true }),
+      googleAnalytics.isConnected
+        ? syncGoogleAnalyticsMetrics()
+        : Promise.resolve({ skipped: true }),
+      hubspot.isConnected ? syncHubSpotMetrics() : Promise.resolve({ skipped: true }),
+    ])
+
+    const errors: string[] = []
+    let successCount = 0
+
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        const value = result.value as { error?: string; skipped?: boolean }
+        if (value.skipped) return
+        if (value.error) {
+          errors.push(value.error)
+        } else {
+          successCount++
+        }
       } else {
-        showSuccess('Integrations synced')
+        errors.push(result.reason?.message || 'Unknown error')
       }
-    } else {
-      showSuccess('No connected platforms to sync')
+    })
+
+    if (errors.length > 0) {
+      showError(`Some syncs failed: ${errors.join(', ')}`)
+    }
+    if (successCount > 0) {
+      showSuccess(`${successCount} integration${successCount > 1 ? 's' : ''} synced`)
     }
 
+    setRefreshKey((k) => k + 1)
+    setLastSyncAt(new Date().toISOString())
     setIsRefreshing(false)
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle>Integrations</CardTitle>
-            <span className="text-muted-foreground text-sm font-normal">
-              {connectedCount}/{totalCount}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefreshAll}
-              disabled={isRefreshing || connectedCount === 0}
-              className="h-8 w-8 p-0"
-              aria-label="Refresh all integrations"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/settings/integrations">Manage</Link>
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Integrations</h2>
+          <p className="text-muted-foreground text-xs">
+            Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {PLATFORMS.map((platform) => {
-            const connection = connectionMap.get(platform.key)
-            const isConnected = !!connection
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">7 days</SelectItem>
+              <SelectItem value="30d">30 days</SelectItem>
+              <SelectItem value="quarter">This quarter</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshAll}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+            )}
+            Refresh All
+          </Button>
+        </div>
+      </div>
 
-            return (
-              <div
-                key={platform.key}
-                className="flex items-center justify-between rounded-lg border px-4 py-3"
-              >
-                <span className="font-medium">{platform.name}</span>
-                {isConnected ? (
-                  <div className="flex items-center gap-1.5 text-sm text-green-600">
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                    <span>Connected</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                    <X className="h-4 w-4" aria-hidden="true" />
-                    <span>Not connected</span>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <LinkedInSection
+          key={`linkedin-${refreshKey}`}
+          isConnected={linkedIn.isConnected}
+          period={period}
+        />
+        <GoogleAnalyticsSection
+          key={`ga-${refreshKey}`}
+          isConnected={googleAnalytics.isConnected}
+          period={period}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <HubSpotSection
+          key={`hubspot-${refreshKey}`}
+          isConnected={hubspot.isConnected}
+          period={period}
+        />
+      </div>
+    </div>
   )
 }

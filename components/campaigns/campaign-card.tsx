@@ -1,40 +1,57 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
+import { formatDate, displayName, CampaignStatus, type CampaignStatusType } from '@/lib/utils'
 
 type Campaign = {
   id: string
   name: string
-  status: string
+  status: CampaignStatusType
   start_date: string | null
   end_date: string | null
   created_at: string
 }
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
-  const statusColors = {
-    draft: 'bg-gray-100 text-gray-800',
-    active: 'bg-green-100 text-green-800',
-    completed: 'bg-blue-100 text-blue-800',
-  }
-
   return (
     <Link href={`/dashboard/campaigns/${campaign.id}`}>
       <Card className="cursor-pointer transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg">{campaign.name}</CardTitle>
-            <Badge className={statusColors[campaign.status as keyof typeof statusColors]}>
-              {campaign.status}
+            <div>
+              <CardTitle className="text-lg">{campaign.name}</CardTitle>
+              <p className="mt-1 text-sm text-neutral-700">
+                {formatDate(campaign.created_at, false)}
+              </p>
+            </div>
+            <Badge
+              style={{
+                backgroundColor:
+                  campaign.status === CampaignStatus.DRAFT
+                    ? '#fef9c3'
+                    : campaign.status === CampaignStatus.ACTIVE
+                      ? '#dcfce7'
+                      : campaign.status === CampaignStatus.COMPLETED
+                        ? '#dbeafe'
+                        : '#fee2e2',
+                color:
+                  campaign.status === CampaignStatus.DRAFT
+                    ? '#854d0e'
+                    : campaign.status === CampaignStatus.ACTIVE
+                      ? '#166534'
+                      : campaign.status === CampaignStatus.COMPLETED
+                        ? '#1e40af'
+                        : '#991b1b',
+              }}
+            >
+              {displayName(campaign.status)}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-muted-foreground space-y-1 text-sm">
+          <div className="flex justify-between text-sm text-neutral-700">
             {campaign.start_date && <p>Starts: {formatDate(campaign.start_date, false)}</p>}
             {campaign.end_date && <p>Ends: {formatDate(campaign.end_date, false)}</p>}
-            <p>Created: {formatDate(campaign.created_at)}</p>
           </div>
         </CardContent>
       </Card>

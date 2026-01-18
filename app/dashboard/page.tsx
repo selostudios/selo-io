@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LinkedInSection } from '@/components/dashboard/linkedin-section'
+import { Button } from '@/components/ui/button'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
+import { MetricCard } from '@/components/dashboard/metric-card'
+
+const TOTAL_PLATFORMS = 4
+
+function getConnectionColor(count: number): string {
+  if (count <= 1) return 'text-red-500'
+  if (count <= 3) return 'text-yellow-500'
+  return 'text-green-500'
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -51,14 +61,35 @@ export default async function DashboardPage() {
     })
   }
 
-  // Get all platform connections
-  const { data: platformConnections } = await supabase
+  // Get LinkedIn connection status
+  const { data: linkedInConnection } = await supabase
     .from('platform_connections')
-    .select('id, platform_type, status, last_sync_at')
+    .select('id, last_sync_at')
     .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'linkedin')
+    .single()
 
-  // Find LinkedIn connection for the metrics section
-  const linkedInConnection = platformConnections?.find((c) => c.platform_type === 'linkedin')
+  // Get Google Analytics connection status
+  const { data: gaConnection } = await supabase
+    .from('platform_connections')
+    .select('id, last_sync_at')
+    .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'google_analytics')
+    .single()
+
+  // Get HubSpot connection status
+  const { data: hubspotConnection } = await supabase
+    .from('platform_connections')
+    .select('id, last_sync_at')
+    .eq('organization_id', userRecord.organization_id)
+    .eq('platform_type', 'hubspot')
+    .single()
+
+  // Get platform connection count
+  const { count: connectionCount } = await supabase
+    .from('platform_connections')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', userRecord.organization_id)
 
   return (
     <div className="space-y-8 p-8">
@@ -75,31 +106,45 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Total Campaigns
-            </CardTitle>
+            <CardTitle>Campaigns</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tabular-nums">{campaignCount || 0}</p>
+            <div className="flex gap-8">
+              <MetricCard label="Active" value={activeCount || 0} change={null} />
+              <MetricCard label="Total" value={campaignCount || 0} change={null} />
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Active Campaigns
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Platform Connections</CardTitle>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/settings/integrations">Manage</Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold tabular-nums">{activeCount || 0}</p>
+            <p className={`text-3xl font-bold ${getConnectionColor(connectionCount || 0)}`}>
+              {connectionCount || 0}/{TOTAL_PLATFORMS}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <IntegrationsPanel connections={platformConnections || []} />
-
-      <LinkedInSection
-        isConnected={!!linkedInConnection}
-        lastSyncAt={linkedInConnection?.last_sync_at || null}
+      <IntegrationsPanel
+        linkedIn={{
+          isConnected: !!linkedInConnection,
+          lastSyncAt: linkedInConnection?.last_sync_at || null,
+        }}
+        googleAnalytics={{
+          isConnected: !!gaConnection,
+          lastSyncAt: gaConnection?.last_sync_at || null,
+        }}
+        hubspot={{
+          isConnected: !!hubspotConnection,
+          lastSyncAt: hubspotConnection?.last_sync_at || null,
+        }}
       />
     </div>
   )

@@ -4,6 +4,7 @@ import { acceptInvite } from './actions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { displayName } from '@/lib/utils'
 
 interface AcceptInvitePageProps {
   params: Promise<{ id: string }>
@@ -122,8 +123,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
               <strong>Email:</strong> {invite.email}
             </p>
             <p className="text-muted-foreground text-sm">
-              <strong>Role:</strong>{' '}
-              <Badge variant="outline">{invite.role.replace('_', ' ')}</Badge>
+              <strong>Role:</strong> <Badge variant="outline">{displayName(invite.role)}</Badge>
             </p>
             <p className="text-muted-foreground text-sm">
               <strong>Expires:</strong> {expiresAt.toLocaleDateString()}

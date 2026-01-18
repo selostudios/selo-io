@@ -3,7 +3,24 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { LinkedInAdapter } from './adapter'
+import { decryptCredentials } from '@/lib/utils/crypto'
 import type { LinkedInCredentials } from './types'
+
+interface StoredCredentials {
+  encrypted?: string
+  access_token?: string
+  refresh_token?: string
+  organization_id?: string
+}
+
+function getCredentials(stored: StoredCredentials): LinkedInCredentials {
+  // Handle encrypted credentials (new format)
+  if (stored.encrypted) {
+    return decryptCredentials<LinkedInCredentials>(stored.encrypted)
+  }
+  // Handle legacy unencrypted credentials
+  return stored as LinkedInCredentials
+}
 
 export async function syncLinkedInMetrics() {
   const supabase = await createClient()
@@ -39,10 +56,9 @@ export async function syncLinkedInMetrics() {
     return { error: 'LinkedIn not connected' }
   }
 
-  const credentials = connection.credentials as LinkedInCredentials
-
   try {
-    const adapter = new LinkedInAdapter(credentials)
+    const credentials = getCredentials(connection.credentials as StoredCredentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
 
     // Fetch metrics for the last 90 days to cover all time ranges
     const endDate = new Date()
@@ -52,8 +68,9 @@ export async function syncLinkedInMetrics() {
     const metrics = await adapter.fetchMetrics(startDate, endDate)
     const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, endDate)
 
-    // Upsert metrics (delete existing for today, insert new)
-    const today = endDate.toISOString().split('T')[0]
+    // Store daily snapshots for time-series tracking
+    // Delete only today's records, keep history for trend analysis
+    const today = new Date().toISOString().split('T')[0]
 
     await supabase
       .from('campaign_metrics')
@@ -66,7 +83,7 @@ export async function syncLinkedInMetrics() {
 
     if (insertError) {
       console.error('[LinkedIn Sync Error]', insertError)
-      return { error: 'Failed to save metrics' }
+      return { error: `Failed to save metrics: ${insertError.message}` }
     }
 
     // Update last_sync_at
@@ -79,8 +96,11 @@ export async function syncLinkedInMetrics() {
     return { success: true }
   } catch (error) {
     console.error('[LinkedIn Sync Error]', error)
-    if (error instanceof Error && error.message.includes('401')) {
-      return { error: 'LinkedIn token expired. Please reconnect.' }
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        return { error: 'LinkedIn token expired. Please reconnect.' }
+      }
+      return { error: error.message }
     }
     return { error: 'Failed to fetch LinkedIn metrics' }
   }
@@ -106,56 +126,45 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
     return { error: 'User not found' }
   }
 
-  // Import date utilities
-  const { getDateRange, getPreviousPeriodRange, calculatePercentageChange } =
-    await import('@/lib/utils/date-ranges')
-
-  const currentRange = getDateRange(period)
-  const previousRange = getPreviousPeriodRange(currentRange, period)
-
-  // Fetch current period metrics
-  const { data: currentMetrics } = await supabase
-    .from('campaign_metrics')
-    .select('metric_type, value')
+  // Get LinkedIn connection
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('id, credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
-    .gte('date', currentRange.start.toISOString().split('T')[0])
-    .lte('date', currentRange.end.toISOString().split('T')[0])
+    .single()
 
-  // Fetch previous period metrics
-  const { data: previousMetrics } = await supabase
-    .from('campaign_metrics')
-    .select('metric_type, value')
-    .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'linkedin')
-    .gte('date', previousRange.start.toISOString().split('T')[0])
-    .lte('date', previousRange.end.toISOString().split('T')[0])
-
-  // Aggregate by metric type
-  const aggregate = (metrics: Array<{ metric_type: string; value: number }> | null) => {
-    const result: Record<string, number> = {}
-    metrics?.forEach((m) => {
-      result[m.metric_type] = (result[m.metric_type] || 0) + Number(m.value)
-    })
-    return result
+  if (!connection) {
+    return { error: 'LinkedIn not connected' }
   }
 
-  const current = aggregate(currentMetrics)
-  const previous = aggregate(previousMetrics)
+  try {
+    // Calculate date range based on period
+    const endDate = new Date()
+    const startDate = new Date()
+    const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
+    startDate.setDate(startDate.getDate() - daysBack)
 
-  const metricTypes = [
-    { key: 'linkedin_followers', label: 'New followers' },
-    { key: 'linkedin_page_views', label: 'Page views' },
-    { key: 'linkedin_unique_visitors', label: 'Unique visitors' },
-    { key: 'linkedin_impressions', label: 'Impressions' },
-    { key: 'linkedin_reactions', label: 'Reactions' },
-  ]
+    // Fetch fresh metrics from LinkedIn for the selected period
+    const credentials = getCredentials(connection.credentials as StoredCredentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
+    const metrics = await adapter.fetchMetrics(startDate, endDate)
 
-  const result = metricTypes.map(({ key, label }) => ({
-    label,
-    value: current[key] || 0,
-    change: calculatePercentageChange(current[key] || 0, previous[key] || 0),
-  }))
+    // All metrics are now period-specific based on the selected date range
+    const result = [
+      { label: 'New Followers', value: metrics.followerGrowth, change: null },
+      { label: 'Impressions', value: metrics.impressions, change: null },
+      { label: 'Reactions', value: metrics.reactions, change: null },
+      { label: 'Page Views', value: metrics.pageViews, change: null },
+      { label: 'Unique Visitors', value: metrics.uniqueVisitors, change: null },
+    ]
 
-  return { metrics: result }
+    return { metrics: result }
+  } catch (error) {
+    console.error('[LinkedIn Metrics Error]', error)
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: 'Failed to fetch LinkedIn metrics' }
+  }
 }

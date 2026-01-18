@@ -2,12 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { deleteCampaign } from '../actions'
-import { formatDate } from '@/lib/utils'
-import { UtmParamRow } from '@/components/campaigns/utm-param-row'
-import { UtmMediumSelect } from '@/components/campaigns/utm-medium-select'
+import { DeleteCampaignButton } from '@/components/campaigns/delete-campaign-button'
+import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { EditableDescription } from '@/components/campaigns/editable-description'
+import { EditableUtmSection } from '@/components/campaigns/editable-utm-section'
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,6 +17,19 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   if (!campaign) {
     notFound()
   }
+
+  // Get user's role
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+
+  const isAdmin = userRecord?.role === 'admin'
 
   async function handleDelete() {
     'use server'
@@ -30,15 +42,32 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-8 p-8">
       <div className="flex items-start justify-between">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">{campaign.name}</h1>
-          <Badge className="mt-2">{campaign.status}</Badge>
+          <Badge
+            style={{
+              backgroundColor:
+                campaign.status === CampaignStatus.DRAFT
+                  ? '#fef9c3'
+                  : campaign.status === CampaignStatus.ACTIVE
+                    ? '#dcfce7'
+                    : campaign.status === CampaignStatus.COMPLETED
+                      ? '#dbeafe'
+                      : '#fee2e2',
+              color:
+                campaign.status === CampaignStatus.DRAFT
+                  ? '#854d0e'
+                  : campaign.status === CampaignStatus.ACTIVE
+                    ? '#166534'
+                    : campaign.status === CampaignStatus.COMPLETED
+                      ? '#1e40af'
+                      : '#991b1b',
+            }}
+          >
+            {displayName(campaign.status)}
+          </Badge>
         </div>
-        <form action={handleDelete}>
-          <Button type="submit" variant="destructive">
-            Delete Campaign
-          </Button>
-        </form>
+        <DeleteCampaignButton isAdmin={isAdmin} onDelete={handleDelete} />
       </div>
 
       <Card>
@@ -61,22 +90,17 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>UTM Parameters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <UtmParamRow label="utm_source" value={campaign.utm_source} />
-            <UtmMediumSelect campaignId={campaign.id} currentValue={campaign.utm_medium} />
-            <UtmParamRow label="utm_campaign" value={campaign.utm_campaign} />
-            {campaign.utm_term && <UtmParamRow label="utm_term" value={campaign.utm_term} />}
-            {campaign.utm_content && (
-              <UtmParamRow label="utm_content" value={campaign.utm_content} />
-            )}
-          </div>
-          <p className="text-muted-foreground mt-4 text-sm">
-            Use these parameters when creating content in HubSpot, LinkedIn, and other platforms.
-          </p>
+        <CardContent className="pt-6">
+          <EditableUtmSection
+            campaignId={campaign.id}
+            initialValues={{
+              utm_source: campaign.utm_source || '',
+              utm_medium: campaign.utm_medium || '',
+              utm_campaign: campaign.utm_campaign || '',
+              utm_term: campaign.utm_term || '',
+              utm_content: campaign.utm_content || '',
+            }}
+          />
         </CardContent>
       </Card>
 

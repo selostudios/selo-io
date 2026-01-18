@@ -13,11 +13,9 @@ test.describe('Authentication', () => {
     await page.fill('input[name="password"]', testUsers.admin.password)
     await page.click('button[type="submit"]')
 
-    // Should redirect to dashboard
+    // Should redirect to dashboard and show welcome heading
     await expect(page).toHaveURL('/dashboard')
-    await expect(
-      page.getByRole('heading', { name: 'Test Organization', exact: true })
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Welcome to/ })).toBeVisible()
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
@@ -39,5 +37,33 @@ test.describe('Authentication', () => {
 
     const submitButton = page.locator('button[type="submit"]')
     await expect(submitButton).toBeDisabled()
+  })
+})
+
+test.describe('Access Denied Page', () => {
+  test('displays access denied message with Selo logo', async ({ page }) => {
+    await page.goto('/access-denied')
+
+    // Should show access denied heading
+    await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible()
+
+    // Should show invitation-only message
+    await expect(
+      page.getByText(/Access to this application is by invitation only/)
+    ).toBeVisible()
+
+    // Should show Selo logo
+    await expect(page.getByAltText('Selo')).toBeVisible()
+
+    // Should have link back to login
+    await expect(page.getByRole('link', { name: 'Back to Login' })).toBeVisible()
+  })
+
+  test('back to login link works', async ({ page }) => {
+    await page.goto('/access-denied')
+
+    await page.click('text=Back to Login')
+
+    await expect(page).toHaveURL('/login')
   })
 })

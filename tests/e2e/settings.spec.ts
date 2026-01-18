@@ -9,12 +9,22 @@ test.describe('Settings', () => {
   test('admin can update organization name', async ({ page }) => {
     await page.goto('/settings/organization')
 
-    // Update organization name
-    const nameInput = page.locator('input[name="name"]')
-    await nameInput.fill('Updated Org Name')
+    // Wait for hydration
+    await page.waitForLoadState('networkidle')
 
-    // Save changes
-    await page.click('button:has-text("Save Changes")')
+    // Get current name and change it to something different
+    const nameInput = page.locator('input[name="name"]')
+    const currentValue = await nameInput.inputValue()
+    const newName = currentValue === 'Test Organization' ? 'Updated Org Name' : 'Test Organization'
+
+    // Clear and type new name to ensure React state updates
+    await nameInput.clear()
+    await nameInput.type(newName)
+
+    // Save changes - wait for button to be enabled
+    const saveButton = page.locator('button:has-text("Save Changes")')
+    await expect(saveButton).toBeEnabled({ timeout: 5000 })
+    await saveButton.click()
 
     // Should show success message
     await expect(page.locator('text=/successfully/i')).toBeVisible()

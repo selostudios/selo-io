@@ -1,21 +1,13 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { MetricCard } from './metric-card'
-import { syncLinkedInMetrics, getLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
-import { showSuccess, showError } from '@/components/ui/sonner'
-
-type Period = '7d' | '30d' | 'quarter'
+import { getLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
+import type { Period } from './integrations-panel'
 
 interface Metric {
   label: string
@@ -25,14 +17,12 @@ interface Metric {
 
 interface LinkedInSectionProps {
   isConnected: boolean
-  lastSyncAt: string | null
+  period: Period
 }
 
-export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProps) {
-  const [period, setPeriod] = useState<Period>('7d')
+export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
   const [metrics, setMetrics] = useState<Metric[]>([])
   const [isPending, startTransition] = useTransition()
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     if (isConnected) {
@@ -45,36 +35,21 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
     }
   }, [isConnected, period])
 
-  async function loadMetrics() {
-    startTransition(async () => {
-      const result = await getLinkedInMetrics(period)
-      if (result.metrics) {
-        setMetrics(result.metrics)
-      }
-    })
-  }
-
-  async function handleRefresh() {
-    setIsRefreshing(true)
-    const result = await syncLinkedInMetrics()
-
-    if (result.error) {
-      showError(result.error)
-    } else {
-      showSuccess('LinkedIn metrics updated')
-      await loadMetrics()
-    }
-    setIsRefreshing(false)
-  }
-
   if (!isConnected) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>LinkedIn</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>LinkedIn</CardTitle>
+            <Button asChild size="sm">
+              <Link href="/settings/integrations">Configure</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Connect LinkedIn in Settings to view metrics.</p>
+          <p className="text-muted-foreground">
+            Connect LinkedIn to view engagement metrics.
+          </p>
         </CardContent>
       </Card>
     )
@@ -83,40 +58,13 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>LinkedIn</CardTitle>
-          <div className="flex items-center gap-2">
-            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">7 days</SelectItem>
-                <SelectItem value="30d">30 days</SelectItem>
-                <SelectItem value="quarter">This quarter</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="h-8 w-8 p-0"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="sr-only">Refresh</span>
-            </Button>
-          </div>
-        </div>
-        {lastSyncAt && (
-          <p className="text-muted-foreground text-xs">
-            Last synced: {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastSyncAt))}
-          </p>
-        )}
+        <CardTitle>LinkedIn</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-h-[80px]">
         {isPending ? (
-          <p className="text-muted-foreground">Loading metrics…</p>
+          <div className="flex h-[60px] items-center justify-center">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
+          </div>
         ) : metrics.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
             {metrics.map((metric) => (

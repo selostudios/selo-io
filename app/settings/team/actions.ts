@@ -53,15 +53,37 @@ export async function sendInvite(formData: FormData) {
     return { error: 'Only admins can send invites' }
   }
 
-  // Create invite
+  // Check if there's an existing accepted invite for this email
+  const { data: existingInvite } = await supabase
+    .from('invites')
+    .select('status')
+    .eq('email', email.toLowerCase())
+    .single()
+
+  if (existingInvite?.status === 'accepted') {
+    return { error: 'This email has already accepted an invite' }
+  }
+
+  // Calculate new expiry (7 days from now)
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + 7)
+
+  // Upsert invite - create new or update existing (extends expiry)
   const { data: invite, error } = await supabase
     .from('invites')
-    .insert({
-      email,
-      organization_id: userRecord.organization_id,
-      role,
-      invited_by: user.id,
-    })
+    .upsert(
+      {
+        email: email.toLowerCase(),
+        organization_id: userRecord.organization_id,
+        role,
+        invited_by: user.id,
+        status: 'pending',
+        expires_at: expiresAt.toISOString(),
+      },
+      {
+        onConflict: 'email',
+      }
+    )
     .select()
     .single()
 
