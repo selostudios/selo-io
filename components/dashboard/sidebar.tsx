@@ -5,13 +5,24 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
-const navigation = [
+interface NavigationItem {
+  name: string
+  href: string
+  requiresWebsiteUrl?: boolean
+}
+
+const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Campaigns', href: '/dashboard/campaigns' },
+  { name: 'SEO / AIO Audit', href: '/audit', requiresWebsiteUrl: true },
   { name: 'Settings', href: '/settings/organization' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  websiteUrl?: string | null
+}
+
+export function Sidebar({ websiteUrl }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -33,14 +44,31 @@ export function Sidebar() {
         {navigation.map((item) => {
           // Dashboard should only be active on exact match
           // Settings should be active on any /settings/* route
+          // Audit should be active on any /audit/* route
           // Campaigns can match child routes
           let isActive = false
           if (item.href === '/dashboard') {
             isActive = pathname === '/dashboard'
           } else if (item.href.startsWith('/settings')) {
             isActive = pathname.startsWith('/settings')
+          } else if (item.href === '/audit') {
+            isActive = pathname === '/audit' || pathname.startsWith('/audit/')
           } else {
             isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          }
+
+          // Check if item is disabled (requires website URL but none provided)
+          const isDisabled = item.requiresWebsiteUrl && !websiteUrl
+
+          if (isDisabled) {
+            return (
+              <span
+                key={item.href}
+                className="block cursor-not-allowed rounded-md px-3 py-2 text-sm font-medium text-neutral-400"
+              >
+                {item.name}
+              </span>
+            )
           }
 
           return (
