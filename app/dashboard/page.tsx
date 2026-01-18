@@ -1,18 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { MetricCard } from '@/components/dashboard/metric-card'
 
 const TOTAL_PLATFORMS = 4
-
-function getConnectionColor(count: number): string {
-  if (count <= 1) return 'text-red-500'
-  if (count <= 3) return 'text-yellow-500'
-  return 'text-green-500'
-}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -103,34 +95,17 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Campaigns</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-8">
-              <MetricCard label="Active" value={activeCount || 0} change={null} />
-              <MetricCard label="Total" value={campaignCount || 0} change={null} />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Platform Connections</CardTitle>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/settings/integrations">Manage</Link>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className={`text-3xl font-bold ${getConnectionColor(connectionCount || 0)}`}>
-              {connectionCount || 0}/{TOTAL_PLATFORMS}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaigns</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-8">
+            <MetricCard label="Active" value={activeCount || 0} change={null} />
+            <MetricCard label="Total" value={campaignCount || 0} change={null} />
+          </div>
+        </CardContent>
+      </Card>
 
       <IntegrationsPanel
         linkedIn={{
@@ -145,6 +120,8 @@ export default async function DashboardPage() {
           isConnected: !!hubspotConnection,
           lastSyncAt: hubspotConnection?.last_sync_at || null,
         }}
+        connectionCount={connectionCount || 0}
+        totalPlatforms={TOTAL_PLATFORMS}
       />
     </div>
   )
