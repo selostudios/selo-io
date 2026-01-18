@@ -48,9 +48,7 @@ test.describe('Access Denied Page', () => {
     await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible()
 
     // Should show invitation-only message
-    await expect(
-      page.getByText(/Access to this application is by invitation only/)
-    ).toBeVisible()
+    await expect(page.getByText(/Access to this application is by invitation only/)).toBeVisible()
 
     // Should show Selo logo
     await expect(page.getByAltText('Selo')).toBeVisible()

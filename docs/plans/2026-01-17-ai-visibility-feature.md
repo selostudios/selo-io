@@ -7,12 +7,12 @@
 
 ## Changelog
 
-| Date | Update |
-|------|--------|
+| Date       | Update                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------- |
 | 2026-01-17 | Initial document - defined core features: AI Visibility Monitoring, Site Audit, Prospect Audit Tool |
-| 2026-01-17 | Added Vercel AI SDK as implementation framework |
-| 2026-01-17 | Added Otterly UX reference as baseline for user experience |
-| 2026-01-17 | Vercel Design Guidelines moved to `/AGENTS.md` |
+| 2026-01-17 | Added Vercel AI SDK as implementation framework                                                     |
+| 2026-01-17 | Added Otterly UX reference as baseline for user experience                                          |
+| 2026-01-17 | Vercel Design Guidelines moved to `/AGENTS.md`                                                      |
 
 ---
 
@@ -30,34 +30,34 @@ AI Visibility is a major new feature that will track how a brand appears in AI-p
 
 ### Competitor Products
 
-| Product | URL | Notes |
-|---------|-----|-------|
-| SemRush AI Visibility Index | https://ai-visibility-index.semrush.com/ | Enterprise-grade, tracks 100M+ prompts globally |
-| SemRush Free Checker | https://www.semrush.com/free-tools/ai-search-visibility-checker/ | Free tier for basic checks |
-| Otterly.ai | https://otterly.ai/ | Monitors ChatGPT, Perplexity, Google AIO, Gemini, Copilot |
-| Peec AI | https://peec.ai/ | Marketing team focused, tracks ChatGPT, Perplexity, Claude, Gemini |
-| ZipTie.dev | https://ziptie.dev/ | AI Overviews + ChatGPT + Perplexity tracker |
-| LLMrefs | https://llmrefs.com/ | Tracks all major AI models including GPT-5, Claude, Grok, DeepSeek |
+| Product                     | URL                                                              | Notes                                                              |
+| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| SemRush AI Visibility Index | https://ai-visibility-index.semrush.com/                         | Enterprise-grade, tracks 100M+ prompts globally                    |
+| SemRush Free Checker        | https://www.semrush.com/free-tools/ai-search-visibility-checker/ | Free tier for basic checks                                         |
+| Otterly.ai                  | https://otterly.ai/                                              | Monitors ChatGPT, Perplexity, Google AIO, Gemini, Copilot          |
+| Peec AI                     | https://peec.ai/                                                 | Marketing team focused, tracks ChatGPT, Perplexity, Claude, Gemini |
+| ZipTie.dev                  | https://ziptie.dev/                                              | AI Overviews + ChatGPT + Perplexity tracker                        |
+| LLMrefs                     | https://llmrefs.com/                                             | Tracks all major AI models including GPT-5, Claude, Grok, DeepSeek |
 
 ### Industry Standards & Developments
 
-| Resource | URL | Description |
-|----------|-----|-------------|
+| Resource | URL                 | Description                                                                                                                         |
+| -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | llms.txt | https://llmstxt.org | Proposed standard for making websites LLM-friendly. A markdown file at `/llms.txt` helps LLMs understand and navigate site content. |
 
 ### API Documentation (for implementation)
 
-| Platform | API Docs | Notes |
-|----------|----------|-------|
-| OpenAI (ChatGPT) | https://platform.openai.com/docs | Well-documented, primary target |
-| Perplexity | https://docs.perplexity.ai | Sonar API for search |
-| Google Gemini | https://ai.google.dev/docs | Gemini API |
-| Anthropic (Claude) | https://docs.anthropic.com | Claude API |
+| Platform           | API Docs                         | Notes                           |
+| ------------------ | -------------------------------- | ------------------------------- |
+| OpenAI (ChatGPT)   | https://platform.openai.com/docs | Well-documented, primary target |
+| Perplexity         | https://docs.perplexity.ai       | Sonar API for search            |
+| Google Gemini      | https://ai.google.dev/docs       | Gemini API                      |
+| Anthropic (Claude) | https://docs.anthropic.com       | Claude API                      |
 
 ### Implementation Framework
 
-| Tool | URL | Notes |
-|------|-----|-------|
+| Tool          | URL                        | Notes                                                                                |
+| ------------- | -------------------------- | ------------------------------------------------------------------------------------ |
 | Vercel AI SDK | https://sdk.vercel.ai/docs | Unified interface for multiple AI providers. Will use this for all AI functionality. |
 
 ---
@@ -73,15 +73,15 @@ AI Visibility is a major new feature that will track how a brand appears in AI-p
 
 ### What to Track
 
-| Metric | Description |
-|--------|-------------|
-| **Brand Mentions** | When and how your brand is referenced in AI responses |
-| **Share of Voice** | How often mentioned vs competitors (1st position = 100% SOV) |
-| **AI Visibility Score** | Mentions compared to industry median |
-| **Sentiment** | Positive/negative/neutral tone when mentioned |
-| **Citation Sources** | Which websites AI platforms cite as authority |
-| **Position** | Where brand appears in the response (1st, 2nd, etc.) |
-| **Full Response Text** | Complete AI answers for detailed analysis |
+| Metric                  | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| **Brand Mentions**      | When and how your brand is referenced in AI responses        |
+| **Share of Voice**      | How often mentioned vs competitors (1st position = 100% SOV) |
+| **AI Visibility Score** | Mentions compared to industry median                         |
+| **Sentiment**           | Positive/negative/neutral tone when mentioned                |
+| **Citation Sources**    | Which websites AI platforms cite as authority                |
+| **Position**            | Where brand appears in the response (1st, 2nd, etc.)         |
+| **Full Response Text**  | Complete AI answers for detailed analysis                    |
 
 ### Key Findings from SemRush Research
 
@@ -99,16 +99,19 @@ AI Visibility is a major new feature that will track how a brand appears in AI-p
 Query each LLM's API directly with industry-relevant prompts.
 
 **Pros:**
+
 - Full control over prompts and parsing
 - Real-time data
 - Can customize for specific use cases
 
 **Cons:**
+
 - API costs scale with usage
 - Need to maintain integrations for multiple platforms
 - Rate limits to manage
 
 **Stack:**
+
 - OpenAI API (ChatGPT/GPT-4)
 - Perplexity Sonar API
 - Google Gemini API
@@ -119,10 +122,12 @@ Query each LLM's API directly with industry-relevant prompts.
 Use Playwright/Puppeteer to simulate user interactions with AI chat interfaces.
 
 **Pros:**
+
 - Access to platforms without official APIs
 - See exactly what users see
 
 **Cons:**
+
 - Fragile (UI changes break automation)
 - ToS concerns
 - Slower and more resource-intensive
@@ -158,6 +163,7 @@ Track how your brand appears in AI responses over time. See improvements as you 
 ### How It Works
 
 **Scheduled monitoring:**
+
 1. System runs each prompt against each platform (daily/weekly)
 2. Parses responses to extract:
    - Was your brand mentioned? (yes/no)
@@ -172,6 +178,7 @@ Track how your brand appears in AI responses over time. See improvements as you 
 ### Dashboard View
 
 **Overview cards:**
+
 - AI Visibility Score (0-100, trend arrow)
 - Share of Voice vs competitors (pie chart)
 - Mentions this period vs last (trend)
@@ -184,6 +191,7 @@ Track how your brand appears in AI responses over time. See improvements as you 
 | "affordable project management" | - | - | - | ↓ |
 
 **Historical chart:**
+
 - Line graph showing visibility score over time
 - Overlay competitor scores for comparison
 - Annotations for key events (e.g., "Published llms.txt")
@@ -191,6 +199,7 @@ Track how your brand appears in AI responses over time. See improvements as you 
 ### Alerts
 
 Notify when:
+
 - Visibility score drops significantly
 - Competitor overtakes you on key prompts
 - New competitor appears in responses
@@ -244,6 +253,7 @@ visibility_metrics_daily
 ### Research Mode (Phase 2)
 
 On-demand exploration for ad-hoc queries:
+
 - User enters any prompt
 - See how AI responds in real-time across platforms
 - Compare responses side-by-side
@@ -267,54 +277,60 @@ Using Otterly's UX as a baseline for our AI Visibility Monitoring feature.
 
 ### Main Dashboard
 
-| Element | Location | Description |
-|---------|----------|-------------|
-| Search prompts list | Center | Blue text links to each tracked prompt |
-| Total prompts count | Top-left | Shows available/used prompts |
-| Add prompts button | Top-right | Purchase more prompts |
-| Delete icon | Per row | Trash icon to remove prompts |
+| Element             | Location  | Description                            |
+| ------------------- | --------- | -------------------------------------- |
+| Search prompts list | Center    | Blue text links to each tracked prompt |
+| Total prompts count | Top-left  | Shows available/used prompts           |
+| Add prompts button  | Top-right | Purchase more prompts                  |
+| Delete icon         | Per row   | Trash icon to remove prompts           |
 
 ### Report View (Per Prompt)
 
 Each prompt expands to show results across platforms (Google AI Overviews, ChatGPT, Perplexity):
 
 **1. Text Output**
+
 - Exact text generated by each AI platform
 - Expandable "More"/"Less" toggle for long responses
 - Side-by-side comparison across platforms
 
 **2. Link Tracking**
+
 - All URLs referenced in AI responses
 - Ranked by appearance order
 - Clickable for deeper analysis
 
 **3. AI Brand Ranking**
+
 - Positions showing how AI perceives competitors
 - Updated weekly
 - Visual ranking display
 
 **4. Snapshot**
+
 - Visual screenshot captures of actual AI responses
 - Expandable via click or arrows
 - Proof of what users would see
 
 **5. Weekly Link Tracking**
+
 - Week-by-week comparison
 - Line graphs showing position changes over time
 - Checkbox toggles to show/hide specific links
 
 **6. Sentiment Analysis**
+
 - Color-coded bar chart (green/gray/red for positive/neutral/negative)
 - Hover reveals bullet points explaining sentiment
 - Per-brand breakdown
 
 ### Navigation
 
-| Element | Function |
-|---------|----------|
-| "Last Update" menu | Browse historical weekly reports |
-| Next update timing | Shows when data refreshes |
-| Empty state | "Not available" notices when no data |
+| Element            | Function                             |
+| ------------------ | ------------------------------------ |
+| "Last Update" menu | Browse historical weekly reports     |
+| Next update timing | Shows when data refreshes            |
+| Empty state        | "Not available" notices when no data |
 
 ### Selo Adaptations
 
@@ -356,23 +372,24 @@ A tool where users provide their website URL, and Selo crawls it to assess SEO a
 
 ### What to Check
 
-| Check | Description | Weight |
-|-------|-------------|--------|
-| **llms.txt** | Does `/llms.txt` exist? Is it well-structured? | High |
-| **Markdown alternatives** | Are `.md` versions of key pages available? | Medium |
-| **Structured data** | Schema.org markup (JSON-LD) for rich context | High |
-| **Meta descriptions** | Present and descriptive for all pages | Medium |
-| **Heading structure** | Proper H1/H2/H3 hierarchy for content parsing | Medium |
-| **Content clarity** | Readable, well-organized content (not hidden in JS) | High |
-| **Canonical URLs** | Proper canonicalization to avoid duplicate content | Medium |
-| **robots.txt** | Allows AI crawlers (GPTBot, PerplexityBot, etc.) | High |
-| **Sitemap** | XML sitemap exists and is accessible | Medium |
-| **Page speed** | Fast-loading pages (affects crawlability) | Low |
-| **Mobile-friendly** | Responsive design | Low |
+| Check                     | Description                                         | Weight |
+| ------------------------- | --------------------------------------------------- | ------ |
+| **llms.txt**              | Does `/llms.txt` exist? Is it well-structured?      | High   |
+| **Markdown alternatives** | Are `.md` versions of key pages available?          | Medium |
+| **Structured data**       | Schema.org markup (JSON-LD) for rich context        | High   |
+| **Meta descriptions**     | Present and descriptive for all pages               | Medium |
+| **Heading structure**     | Proper H1/H2/H3 hierarchy for content parsing       | Medium |
+| **Content clarity**       | Readable, well-organized content (not hidden in JS) | High   |
+| **Canonical URLs**        | Proper canonicalization to avoid duplicate content  | Medium |
+| **robots.txt**            | Allows AI crawlers (GPTBot, PerplexityBot, etc.)    | High   |
+| **Sitemap**               | XML sitemap exists and is accessible                | Medium |
+| **Page speed**            | Fast-loading pages (affects crawlability)           | Low    |
+| **Mobile-friendly**       | Responsive design                                   | Low    |
 
 ### AI Crawler Robots.txt Checks
 
 Modern AI crawlers to check for:
+
 - `GPTBot` (OpenAI)
 - `ChatGPT-User` (ChatGPT browsing)
 - `PerplexityBot` (Perplexity)
@@ -391,14 +408,15 @@ Modern AI crawlers to check for:
 
 For missing files, provide a "Generate" button that creates the file for download.
 
-| Missing Item | Generate Action |
-|--------------|-----------------|
-| **llms.txt** | Crawl site, extract key pages/sections, generate markdown summary following llms.txt spec |
-| **robots.txt additions** | Generate AI-friendly rules to append (allow GPTBot, PerplexityBot, etc.) |
-| **Structured data** | Generate JSON-LD snippets for Organization, WebSite, Article schemas |
-| **Meta descriptions** | Use LLM to generate suggested meta descriptions for pages missing them |
+| Missing Item             | Generate Action                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| **llms.txt**             | Crawl site, extract key pages/sections, generate markdown summary following llms.txt spec |
+| **robots.txt additions** | Generate AI-friendly rules to append (allow GPTBot, PerplexityBot, etc.)                  |
+| **Structured data**      | Generate JSON-LD snippets for Organization, WebSite, Article schemas                      |
+| **Meta descriptions**    | Use LLM to generate suggested meta descriptions for pages missing them                    |
 
 **Workflow:**
+
 1. Audit finds missing `llms.txt`
 2. Report shows: "llms.txt not found" with **Generate** button
 3. User clicks Generate
@@ -408,6 +426,7 @@ For missing files, provide a "Generate" button that creates the file for downloa
 7. User uploads to their website root
 
 **Technical considerations:**
+
 - Use LLM (Claude/GPT) to summarize site content into llms.txt format
 - Cache crawl results to avoid re-crawling for each generation
 - Allow user to edit generated content before download
@@ -431,6 +450,7 @@ An internal, auth-required tool for auditing potential clients' websites as part
 **Internal page:** `/audit` (auth required)
 
 **Flow:**
+
 1. Logged-in user enters any website URL
 2. System crawls and audits the site
 3. Generates branded PDF/web report
@@ -451,12 +471,12 @@ An internal, auth-required tool for auditing potential clients' websites as part
 
 Allow Selo users to configure their service pricing:
 
-| Fix | Default Price | Customizable |
-|-----|---------------|--------------|
-| Generate & implement llms.txt | $200 | Yes |
-| Structured data implementation | $500 | Yes |
-| robots.txt AI optimization | $100 | Yes |
-| Full AI-readiness package | $1,500 | Yes |
+| Fix                            | Default Price | Customizable |
+| ------------------------------ | ------------- | ------------ |
+| Generate & implement llms.txt  | $200          | Yes          |
+| Structured data implementation | $500          | Yes          |
+| robots.txt AI optimization     | $100          | Yes          |
+| Full AI-readiness package      | $1,500        | Yes          |
 
 Prices appear in the generated report.
 
@@ -483,11 +503,13 @@ audit_leads
 **Database change:** Add `website_url` column to `organizations` table.
 
 **Onboarding flow:**
+
 1. User creates organization (name + website URL)
 2. System automatically triggers initial site audit
 3. Dashboard shows AI-readiness score alongside other metrics
 
 **Ongoing:**
+
 - Re-run audit periodically (weekly?) or on-demand
 - Track score changes over time
 - Alert when score drops significantly
@@ -519,9 +541,7 @@ _Add links here as research continues:_
 
 -
 -
--
-
----
+- ***
 
 ## Next Steps
 

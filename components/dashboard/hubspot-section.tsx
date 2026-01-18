@@ -66,13 +66,19 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
             <div>
               <h4 className="mb-4 text-sm font-medium">CRM</h4>
               <div className="grid grid-cols-3 gap-4">
-                <MetricCard label="Total Contacts" value={metrics.crm.totalContacts} change={null} />
+                <MetricCard
+                  label="Total Contacts"
+                  value={metrics.crm.totalContacts}
+                  change={null}
+                />
                 <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
                 <MetricCard label="New Deals" value={metrics.crm.newDeals} change={null} />
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4">
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold">${metrics.crm.totalPipelineValue.toLocaleString()}</span>
+                  <span className="text-2xl font-bold">
+                    ${metrics.crm.totalPipelineValue.toLocaleString()}
+                  </span>
                   <span className="text-muted-foreground text-sm">Pipeline Value</span>
                 </div>
                 <div>
@@ -89,7 +95,11 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
             {/* Forms */}
             <div>
               <h4 className="mb-4 text-sm font-medium">Forms</h4>
-              <MetricCard label="Form Submissions" value={metrics.marketing.formSubmissions} change={null} />
+              <MetricCard
+                label="Form Submissions"
+                value={metrics.marketing.formSubmissions}
+                change={null}
+              />
             </div>
           </div>
         ) : (

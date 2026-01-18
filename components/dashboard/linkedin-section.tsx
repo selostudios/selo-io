@@ -47,9 +47,7 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Connect LinkedIn to view engagement metrics.
-          </p>
+          <p className="text-muted-foreground">Connect LinkedIn to view engagement metrics.</p>
         </CardContent>
       </Card>
     )

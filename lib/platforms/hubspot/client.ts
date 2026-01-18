@@ -1,5 +1,10 @@
 // lib/platforms/hubspot/client.ts
-import type { HubSpotCredentials, HubSpotMetrics, HubSpotCRMMetrics, HubSpotMarketingMetrics } from './types'
+import type {
+  HubSpotCredentials,
+  HubSpotMetrics,
+  HubSpotCRMMetrics,
+  HubSpotMarketingMetrics,
+} from './types'
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
@@ -34,7 +39,9 @@ export class HubSpotClient {
       }
 
       try {
-        const newTokens = await this.oauthProvider.refreshAccessToken(this.credentials.refresh_token)
+        const newTokens = await this.oauthProvider.refreshAccessToken(
+          this.credentials.refresh_token
+        )
         await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
 
         this.credentials = {

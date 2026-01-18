@@ -26,9 +26,7 @@ interface IntegrationsPanelProps {
   hubspot: { isConnected: boolean; lastSyncAt: string | null }
 }
 
-function getMostRecentSync(
-  ...syncTimes: (string | null)[]
-): string | null {
+function getMostRecentSync(...syncTimes: (string | null)[]): string | null {
   const validTimes = syncTimes.filter((t): t is string => t !== null)
   if (validTimes.length === 0) return null
   return validTimes.reduce((latest, current) =>
@@ -36,11 +34,7 @@ function getMostRecentSync(
   )
 }
 
-export function IntegrationsPanel({
-  linkedIn,
-  googleAnalytics,
-  hubspot,
-}: IntegrationsPanelProps) {
+export function IntegrationsPanel({ linkedIn, googleAnalytics, hubspot }: IntegrationsPanelProps) {
   const [period, setPeriod] = useState<Period>('7d')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -108,12 +102,7 @@ export function IntegrationsPanel({
               <SelectItem value="quarter">This quarter</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshAll}
-            disabled={isRefreshing}
-          >
+          <Button variant="outline" size="sm" onClick={handleRefreshAll} disabled={isRefreshing}>
             {isRefreshing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (

@@ -8,13 +8,24 @@ export async function connectPlatform(formData: FormData) {
   const platform_type = formData.get('platform_type') as string
   const credentials = formData.get('credentials') as string
 
+  enum PlatformType {
+    HUBSPOT = 'hubspot',
+    GOOGLE_ANALYTICS = 'google_analytics',
+    LINKEDIN = 'linkedin',
+    META = 'meta',
+    INSTAGRAM = 'instagram',
+  }
+
   // Validate platform type
-  const validPlatforms: Array<'hubspot' | 'google_analytics' | 'linkedin' | 'meta' | 'instagram'> =
-    ['hubspot', 'google_analytics', 'linkedin', 'meta', 'instagram']
-  if (
-    !platform_type ||
-    !validPlatforms.includes(platform_type as (typeof validPlatforms)[number])
-  ) {
+  const validPlatforms: Array<PlatformType> = [
+    PlatformType.HUBSPOT,
+    PlatformType.GOOGLE_ANALYTICS,
+    PlatformType.LINKEDIN,
+    PlatformType.META,
+    PlatformType.INSTAGRAM,
+  ]
+
+  if (!platform_type || !validPlatforms.includes(platform_type as PlatformType)) {
     return { error: 'Invalid platform type' }
   }
 

@@ -40,7 +40,11 @@ export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="Open user menu">
+          <Button
+            variant="ghost"
+            className="relative h-10 w-10 rounded-full"
+            aria-label="Open user menu"
+          >
             <Avatar>
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>

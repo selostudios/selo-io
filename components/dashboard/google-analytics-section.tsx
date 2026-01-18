@@ -22,10 +22,7 @@ interface GoogleAnalyticsSectionProps {
   period: Period
 }
 
-export function GoogleAnalyticsSection({
-  isConnected,
-  period,
-}: GoogleAnalyticsSectionProps) {
+export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsSectionProps) {
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [isPending, startTransition] = useTransition()
 

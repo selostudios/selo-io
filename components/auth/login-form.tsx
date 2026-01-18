@@ -92,7 +92,15 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          {error && <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
             {isLoading ? 'Signing in…' : 'Sign In'}
           </Button>

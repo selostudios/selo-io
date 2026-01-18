@@ -80,14 +80,30 @@ export function InviteUserForm() {
               </SelectContent>
             </Select>
           </div>
-          {error && <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
           {warning && (
-            <div role="alert" aria-live="polite" className="rounded bg-amber-50 p-3 text-sm break-all text-amber-700">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-amber-50 p-3 text-sm break-all text-amber-700"
+            >
               {warning}
             </div>
           )}
           {success && (
-            <div role="status" aria-live="polite" className="rounded bg-green-50 p-3 text-sm break-all text-green-600">
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded bg-green-50 p-3 text-sm break-all text-green-600"
+            >
               {success}
             </div>
           )}

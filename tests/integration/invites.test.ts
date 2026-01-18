@@ -118,8 +118,7 @@ describe('Invites - Database Integration', () => {
       expect(data?.role).toBe('admin')
       expect(new Date(data?.expires_at)).toBeInstanceOf(Date)
       // New expiry should be ~7 days from now
-      const daysDiff =
-        (new Date(data?.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      const daysDiff = (new Date(data?.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       expect(daysDiff).toBeGreaterThan(6)
       expect(daysDiff).toBeLessThan(8)
     })

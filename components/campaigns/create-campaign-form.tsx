@@ -56,7 +56,15 @@ export function CreateCampaignForm() {
               <Input id="end_date" name="end_date" type="date" disabled={isLoading} />
             </div>
           </div>
-          {error && <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Creating…' : 'Create Campaign'}
           </Button>
