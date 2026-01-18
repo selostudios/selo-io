@@ -214,7 +214,7 @@ CREATE INDEX idx_site_audit_checks_audit ON site_audit_checks(audit_id);
 **`GET /api/audit/[id]`**
 - Returns full audit results for completed audits
 
-**`GET /api/audit/[id]/pdf`**
+**`GET /api/audit/[id]/export`**
 - Generates and returns PDF export
 
 ### Background Crawler
