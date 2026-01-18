@@ -34,7 +34,7 @@ export function UserMenu({ userEmail, firstName, lastName, initials }: UserMenuP
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="Open user menu">
             <Avatar>
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>

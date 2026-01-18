@@ -82,7 +82,7 @@ export function PlatformConnectionCard({
         <div className="space-y-4">
           {connection.last_sync_at && (
             <p className="text-muted-foreground text-sm">
-              Last synced: {new Date(connection.last_sync_at).toLocaleString()}
+              Last synced: {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(connection.last_sync_at))}
             </p>
           )}
           <form action={handleDisconnect}>

@@ -97,7 +97,7 @@ export function OrganizationForm({
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="Organization name"
+                  placeholder="Organization name…"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -153,6 +153,7 @@ export function OrganizationForm({
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     disabled={isLoading}
                     placeholder="#000000"
+                    aria-label="Primary color hex value"
                     className="flex-1 font-mono text-sm"
                   />
                 </div>
@@ -176,6 +177,7 @@ export function OrganizationForm({
                     onChange={(e) => setSecondaryColor(e.target.value)}
                     disabled={isLoading}
                     placeholder="#F5F5F0"
+                    aria-label="Secondary color hex value"
                     className="flex-1 font-mono text-sm"
                   />
                 </div>
@@ -199,6 +201,7 @@ export function OrganizationForm({
                     onChange={(e) => setAccentColor(e.target.value)}
                     disabled={isLoading}
                     placeholder="#666666"
+                    aria-label="Accent color hex value"
                     className="flex-1 font-mono text-sm"
                   />
                 </div>
@@ -208,7 +211,7 @@ export function OrganizationForm({
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isSaveDisabled}>
-              {isLoading ? 'Saving...' : 'Save Changes'}
+              {isLoading ? 'Saving…' : 'Save Changes'}
             </Button>
           </div>
         </form>

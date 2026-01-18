@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LinkedInSection } from '@/components/dashboard/linkedin-section'
+import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -50,19 +51,14 @@ export default async function DashboardPage() {
     })
   }
 
-  // Get LinkedIn connection status
-  const { data: linkedInConnection } = await supabase
+  // Get all platform connections
+  const { data: platformConnections } = await supabase
     .from('platform_connections')
-    .select('id, last_sync_at')
+    .select('id, platform_type, status, last_sync_at')
     .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'linkedin')
-    .single()
 
-  // Get platform connection count
-  const { count: connectionCount } = await supabase
-    .from('platform_connections')
-    .select('*', { count: 'exact', head: true })
-    .eq('organization_id', userRecord.organization_id)
+  // Find LinkedIn connection for the metrics section
+  const linkedInConnection = platformConnections?.find((c) => c.platform_type === 'linkedin')
 
   return (
     <div className="space-y-8 p-8">
@@ -76,7 +72,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-muted-foreground text-sm font-medium">
@@ -84,7 +80,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{campaignCount || 0}</p>
+            <p className="text-3xl font-bold tabular-nums">{campaignCount || 0}</p>
           </CardContent>
         </Card>
         <Card>
@@ -94,23 +90,12 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{activeCount || 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-muted-foreground text-sm font-medium">
-              Platform Connections
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{connectionCount || 0}</p>
-            {!connectionCount && (
-              <p className="text-muted-foreground mt-2 text-sm">Connect platforms in Settings</p>
-            )}
+            <p className="text-3xl font-bold tabular-nums">{activeCount || 0}</p>
           </CardContent>
         </Card>
       </div>
+
+      <IntegrationsPanel connections={platformConnections || []} />
 
       <LinkedInSection
         isConnected={!!linkedInConnection}

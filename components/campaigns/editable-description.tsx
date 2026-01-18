@@ -48,17 +48,18 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Brief description of the campaign goals"
+            placeholder="Brief description of the campaign goals…"
+            aria-label="Campaign description"
             disabled={isLoading}
             rows={3}
             className="focus:ring-ring flex-1 resize-none rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
           />
           <div className="flex flex-col gap-1">
-            <Button size="sm" variant="ghost" onClick={handleSave} disabled={isLoading}>
-              <Check className="h-4 w-4" />
+            <Button size="sm" variant="ghost" onClick={handleSave} disabled={isLoading} aria-label="Save description">
+              <Check className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isLoading}>
-              <X className="h-4 w-4" />
+            <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isLoading} aria-label="Cancel editing">
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -79,8 +80,9 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
         variant="ghost"
         onClick={() => setIsEditing(true)}
         className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+        aria-label="Edit description"
       >
-        <Pencil className="h-3 w-3" />
+        <Pencil className="h-3 w-3" aria-hidden="true" />
       </Button>
     </div>
   )

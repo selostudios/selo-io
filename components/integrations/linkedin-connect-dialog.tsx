@@ -72,7 +72,7 @@ export function LinkedInConnectDialog() {
             <Label htmlFor="organizationId">Organization ID</Label>
             <Input
               id="organizationId"
-              placeholder="12345678"
+              placeholder="12345678…"
               value={organizationId}
               onChange={(e) => setOrganizationId(e.target.value)}
               disabled={isLoading}
@@ -86,7 +86,7 @@ export function LinkedInConnectDialog() {
             <Input
               id="accessToken"
               type="password"
-              placeholder="Enter your access token"
+              placeholder="Enter your access token…"
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
               disabled={isLoading}
@@ -106,7 +106,7 @@ export function LinkedInConnectDialog() {
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Connecting...' : 'Connect'}
+              {isLoading ? 'Connecting…' : 'Connect'}
             </Button>
           </div>
         </form>

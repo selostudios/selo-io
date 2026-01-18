@@ -59,7 +59,7 @@ export function CreateOrganizationForm({ industries }: CreateOrganizationFormPro
               id="name"
               name="name"
               type="text"
-              placeholder="e.g., Badger CPA"
+              placeholder="e.g., Badger CPA…"
               required
               disabled={isLoading}
             />
@@ -79,9 +79,9 @@ export function CreateOrganizationForm({ industries }: CreateOrganizationFormPro
               </SelectContent>
             </Select>
           </div>
-          {error && <div className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+          {error && <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Organization'}
+            {isLoading ? 'Creating…' : 'Create Organization'}
           </Button>
         </form>
       </CardContent>

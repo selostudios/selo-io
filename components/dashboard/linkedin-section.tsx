@@ -110,13 +110,13 @@ export function LinkedInSection({ isConnected, lastSyncAt }: LinkedInSectionProp
         </div>
         {lastSyncAt && (
           <p className="text-muted-foreground text-xs">
-            Last synced: {new Date(lastSyncAt).toLocaleString()}
+            Last synced: {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastSyncAt))}
           </p>
         )}
       </CardHeader>
       <CardContent>
         {isPending ? (
-          <p className="text-muted-foreground">Loading metrics...</p>
+          <p className="text-muted-foreground">Loading metrics…</p>
         ) : metrics.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
             {metrics.map((metric) => (

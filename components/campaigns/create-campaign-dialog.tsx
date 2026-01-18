@@ -96,7 +96,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
           {buttonText}
         </Button>
       </DialogTrigger>
@@ -114,7 +114,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
               id="name"
               name="name"
               type="text"
-              placeholder="e.g., Q1 2026 Thought Leadership"
+              placeholder="e.g., Q1 2026 Thought Leadership…"
               required
               disabled={isLoading}
               value={name}
@@ -127,7 +127,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
               id="description"
               name="description"
               type="text"
-              placeholder="Brief description of the campaign goals"
+              placeholder="Brief description of the campaign goals…"
               disabled={isLoading}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -141,8 +141,8 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
           <div className="space-y-2">
             <Label htmlFor="type">Campaign Type</Label>
             <Select value={campaignType} onValueChange={setCampaignType} disabled={isLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select campaign type" />
+              <SelectTrigger aria-label="Campaign type">
+                <SelectValue placeholder="Select campaign type…" />
               </SelectTrigger>
               <SelectContent>
                 {CAMPAIGN_TYPES.map((type) => (
@@ -181,7 +181,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isLoading || !isFormValid}>
-              {isLoading ? 'Creating...' : 'Create Campaign'}
+              {isLoading ? 'Creating…' : 'Create Campaign'}
             </Button>
           </div>
         </form>
