@@ -15,6 +15,11 @@ import { missingLlmsTxt } from './ai/missing-llms-txt'
 import { aiCrawlersBlocked } from './ai/ai-crawlers-blocked'
 import { missingStructuredData } from './ai/missing-structured-data'
 import { noFaqContent } from './ai/no-faq-content'
+// Technical checks
+import { missingSsl } from './technical/missing-ssl'
+import { missingViewport } from './technical/missing-viewport'
+import { missingOgTags } from './technical/missing-og-tags'
+import { missingFavicon } from './technical/missing-favicon'
 
 export const allChecks: AuditCheckDefinition[] = [
   // SEO - Critical
@@ -36,6 +41,13 @@ export const allChecks: AuditCheckDefinition[] = [
   missingStructuredData,
   // AI-Readiness - Recommended
   noFaqContent,
+  // Technical - Critical
+  missingSsl,
+  // Technical - Recommended
+  missingViewport,
+  // Technical - Optional
+  missingOgTags,
+  missingFavicon,
 ]
 
 export function getChecksByType(
