@@ -97,7 +97,7 @@ export function IntegrationsPanel({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">Integrations</h2>
-            <span className="text-muted-foreground text-sm">
+            <span className="text-muted-foreground text-base font-semibold">
               {connectionCount}/{totalPlatforms}
             </span>
           </div>
