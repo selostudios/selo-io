@@ -109,7 +109,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
   }
 }
 
-function calculateScores(checks: SiteAuditCheck[]) {
+export function calculateScores(checks: SiteAuditCheck[]) {
   const scoreByType = (type: string) => {
     const typeChecks = checks.filter((c) => c.check_type === type)
     if (typeChecks.length === 0) return 100
