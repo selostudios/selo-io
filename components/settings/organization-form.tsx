@@ -14,6 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useRouter } from 'next/navigation'
 import { showSuccess, showError } from '@/components/ui/sonner'
 
@@ -31,6 +41,8 @@ interface OrganizationFormProps {
   secondaryColor: string
   accentColor: string
   industries: Industry[]
+  websiteUrl: string
+  existingAuditCount: number
 }
 
 export function OrganizationForm({
@@ -41,6 +53,8 @@ export function OrganizationForm({
   secondaryColor: initialSecondaryColor,
   accentColor: initialAccentColor,
   industries,
+  websiteUrl: initialWebsiteUrl,
+  existingAuditCount,
 }: OrganizationFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(initialName)
@@ -48,6 +62,9 @@ export function OrganizationForm({
   const [primaryColor, setPrimaryColor] = useState(initialPrimaryColor)
   const [secondaryColor, setSecondaryColor] = useState(initialSecondaryColor)
   const [accentColor, setAccentColor] = useState(initialAccentColor)
+  const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl)
+  const [showUrlChangeDialog, setShowUrlChangeDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
   const router = useRouter()
 
   // Check if save button should be disabled
@@ -57,11 +74,12 @@ export function OrganizationForm({
     industryId !== initialIndustryId ||
     primaryColor !== initialPrimaryColor ||
     secondaryColor !== initialSecondaryColor ||
-    accentColor !== initialAccentColor
+    accentColor !== initialAccentColor ||
+    websiteUrl !== initialWebsiteUrl
 
   const isSaveDisabled = !name.trim() || !hasChanges || isLoading
 
-  async function handleSubmit(formData: FormData) {
+  async function submitForm(formData: FormData) {
     setIsLoading(true)
 
     // Add industry to form data
@@ -76,6 +94,29 @@ export function OrganizationForm({
       showSuccess('Organization settings updated successfully!')
       setIsLoading(false)
       router.refresh()
+    }
+  }
+
+  async function handleSubmit(formData: FormData) {
+    const newUrl = formData.get('websiteUrl') as string
+    const urlIsChanging = newUrl !== initialWebsiteUrl && initialWebsiteUrl
+
+    // If URL is changing and audits exist, show confirmation dialog
+    if (urlIsChanging && existingAuditCount > 0) {
+      setPendingFormData(formData)
+      setShowUrlChangeDialog(true)
+      return
+    }
+
+    // Otherwise proceed normally
+    await submitForm(formData)
+  }
+
+  function handleConfirmUrlChange() {
+    if (pendingFormData) {
+      submitForm(pendingFormData)
+      setShowUrlChangeDialog(false)
+      setPendingFormData(null)
     }
   }
 
@@ -120,6 +161,20 @@ export function OrganizationForm({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteUrl">Website URL</Label>
+              <Input
+                id="websiteUrl"
+                name="websiteUrl"
+                type="url"
+                placeholder="https://example.com"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                disabled={isLoading}
+              />
+              <p className="text-muted-foreground text-xs">Used for SEO & AI auditing</p>
             </div>
 
             <div className="space-y-2">
@@ -216,6 +271,35 @@ export function OrganizationForm({
           </div>
         </form>
       </CardContent>
+
+      <AlertDialog open={showUrlChangeDialog} onOpenChange={setShowUrlChangeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Website URL?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  You have {existingAuditCount} audit{existingAuditCount > 1 ? 's' : ''} for{' '}
+                  {initialWebsiteUrl}.
+                </p>
+                <p>Changing your website URL will:</p>
+                <ul className="list-inside list-disc space-y-1">
+                  <li>Archive existing audits under &quot;Previous domain&quot;</li>
+                  <li>Start fresh audit history for {websiteUrl}</li>
+                </ul>
+                <p className="text-muted-foreground text-sm">
+                  Archived audits will still be viewable but won&apos;t appear in your score trend
+                  chart.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmUrlChange}>Change URL</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
