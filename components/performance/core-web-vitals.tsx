@@ -44,7 +44,11 @@ interface MetricCardProps {
 
 function MetricCard({ name, value, target, rating }: MetricCardProps) {
   return (
-    <div className={cn('rounded-lg border p-4', getRatingColor(rating))}>
+    <div
+      role="region"
+      aria-label={`${name}: ${value}, ${getRatingLabel(rating)}, target ${target}`}
+      className={cn('rounded-lg border p-4', getRatingColor(rating))}
+    >
       <div className="mb-1 text-sm font-medium opacity-80">{name}</div>
       <div className="mb-2 text-2xl font-bold tabular-nums">{value}</div>
       <div className="flex items-center justify-between text-xs">
