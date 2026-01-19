@@ -281,19 +281,6 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
                         </TooltipContent>
                       </Tooltip>
                     )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={`/audit/performance?url=${encodeURIComponent(page.url)}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-muted-foreground hover:text-foreground ml-2 cursor-pointer rounded p-1 transition-colors"
-                          aria-label="Run performance audit for this page"
-                        >
-                          <Gauge className="size-4" />
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent>Run performance audit</TooltipContent>
-                    </Tooltip>
                   </>
                 ) : (
                   <span className="truncate text-sm font-medium">{pagePath}</span>
@@ -304,6 +291,21 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
                     <span className="ml-1 text-red-600">({pageFailedCount} failed)</span>
                   )}
                 </span>
+                {page?.url && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/audit/performance?url=${encodeURIComponent(page.url)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-muted-foreground hover:text-foreground ml-2 shrink-0 cursor-pointer rounded p-1 transition-colors"
+                        aria-label="Run performance audit for this page"
+                      >
+                        <Gauge className="size-4" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Run performance audit</TooltipContent>
+                  </Tooltip>
+                )}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-1 ml-6 space-y-1">
                 {pageChecks.map((check) => (
