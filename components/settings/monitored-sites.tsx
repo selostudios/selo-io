@@ -11,13 +11,11 @@ import { formatDate } from '@/lib/utils'
 interface MonitoredSitesManagerProps {
   sites: MonitoredSite[]
   websiteUrl: string | null
-  organizationId: string
 }
 
 export function MonitoredSitesManager({
   sites: initialSites,
   websiteUrl,
-  organizationId,
 }: MonitoredSitesManagerProps) {
   const [sites, setSites] = useState(initialSites)
   const [isAdding, setIsAdding] = useState(false)
@@ -32,10 +30,7 @@ export function MonitoredSitesManager({
       const response = await fetch('/api/settings/monitored-sites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: websiteUrl,
-          organization_id: organizationId,
-        }),
+        body: JSON.stringify({ url: websiteUrl }),
       })
 
       if (response.ok) {

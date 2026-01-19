@@ -44,11 +44,7 @@ export default async function MonitoringSettingsPage() {
           Configure automated monitoring for your website
         </p>
       </div>
-      <MonitoredSitesManager
-        sites={sites ?? []}
-        websiteUrl={org?.website_url ?? null}
-        organizationId={userRecord.organization_id}
-      />
+      <MonitoredSitesManager sites={sites ?? []} websiteUrl={org?.website_url ?? null} />
     </div>
   )
 }
