@@ -96,11 +96,7 @@ export function PerformanceDashboard({
   }
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-balance">Performance Audit</h1>
-      </div>
-
+    <div className="space-y-6">
       {/* Run Audit Card */}
       <Card>
         <CardHeader>

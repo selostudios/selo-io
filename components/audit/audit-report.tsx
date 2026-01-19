@@ -7,9 +7,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScoreCards } from './score-cards'
 import { CheckList } from './check-list'
-import type { SiteAudit, SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
-import { formatDate } from '@/lib/utils'
-import { useState } from 'react'
+import { ResourceList } from './resource-list'
+import type { SiteAudit, SiteAuditCheck, SiteAuditPage, DismissedCheck } from '@/lib/audit/types'
+import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
+import { useState, useEffect, useCallback } from 'react'
 
 interface AuditReportProps {
   audit: SiteAudit
@@ -17,44 +18,81 @@ interface AuditReportProps {
   pages: SiteAuditPage[]
 }
 
-type PriorityFilter = 'all' | 'critical' | 'recommended' | 'optional' | 'passed'
+type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'
 
-export function AuditReport({ audit, checks }: AuditReportProps) {
-  const [activeFilter, setActiveFilter] = useState<PriorityFilter>('all')
+export function AuditReport({ audit, checks, pages }: AuditReportProps) {
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
+  const [dismissedChecks, setDismissedChecks] = useState<DismissedCheck[]>([])
+
+  // Fetch dismissed checks on mount
+  useEffect(() => {
+    fetch('/api/audit/dismiss')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setDismissedChecks(data)
+        }
+      })
+      .catch((err) => console.error('[Fetch Dismissed Checks Error]', err))
+  }, [])
+
+  // Create a map of page_id to page URL for looking up dismissed checks
+  const pageMap = new Map(pages.map((p) => [p.id, p.url]))
+
+  // Filter out dismissed checks
+  const isDismissed = useCallback(
+    (check: SiteAuditCheck) => {
+      const pageUrl = check.page_id ? pageMap.get(check.page_id) : audit.url
+      return dismissedChecks.some((d) => d.check_name === check.check_name && d.url === pageUrl)
+    },
+    [dismissedChecks, pageMap, audit.url]
+  )
+
+  const visibleChecks = checks.filter((c) => !isDismissed(c))
+
+  // Handle dismiss action
+  const handleDismissCheck = useCallback(async (checkName: string, url: string) => {
+    const response = await fetch('/api/audit/dismiss', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ check_name: checkName, url }),
+    })
+
+    if (response.ok) {
+      const dismissed = await response.json()
+      setDismissedChecks((prev) => [...prev, dismissed])
+    }
+  }, [])
 
   // Group checks by type
-  const seoChecks = checks.filter((c) => c.check_type === 'seo')
-  const aiChecks = checks.filter((c) => c.check_type === 'ai_readiness')
-  const technicalChecks = checks.filter((c) => c.check_type === 'technical')
+  const seoChecks = visibleChecks.filter((c) => c.check_type === 'seo')
+  const aiChecks = visibleChecks.filter((c) => c.check_type === 'ai_readiness')
+  const technicalChecks = visibleChecks.filter((c) => c.check_type === 'technical')
 
-  // Count by priority/status
-  const criticalCount = checks.filter(
-    (c) => c.priority === 'critical' && c.status === 'failed'
-  ).length
-  const recommendedCount = checks.filter(
-    (c) => c.priority === 'recommended' && c.status === 'failed'
-  ).length
-  const optionalCount = checks.filter(
-    (c) => c.priority === 'optional' && c.status === 'failed'
-  ).length
-  const passedCount = checks.filter((c) => c.status === 'passed').length
+  // Separate HTML pages from resources
+  const htmlPages = pages.filter((p) => !p.is_resource)
+  const resourcePages = pages.filter((p) => p.is_resource)
+
+  // Count by status
+  const failedCount = visibleChecks.filter((c) => c.status === 'failed').length
+  const warningCount = visibleChecks.filter((c) => c.status === 'warning').length
+  const passedCount = visibleChecks.filter((c) => c.status === 'passed').length
 
   // Filter checks based on active filter
   const filterChecks = (checkList: SiteAuditCheck[]) => {
     if (activeFilter === 'all') return checkList
-    if (activeFilter === 'passed') return checkList.filter((c) => c.status === 'passed')
-    return checkList.filter((c) => c.priority === activeFilter && c.status === 'failed')
+    return checkList.filter((c) => c.status === activeFilter)
   }
 
   // Extract domain from URL for display
   const displayUrl = audit.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link
-          href="/dashboard"
+          href="/audit"
           className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -70,11 +108,33 @@ export function AuditReport({ audit, checks }: AuditReportProps) {
 
       {/* Site Info */}
       <div>
-        <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
+          {audit.status === 'stopped' && (
+            <Badge variant="secondary" className="text-xs">
+              Partial Report
+            </Badge>
+          )}
+          {audit.status === 'failed' && (
+            <Badge variant="destructive" className="text-xs">
+              Failed
+            </Badge>
+          )}
+        </div>
         <p className="text-muted-foreground text-sm">
-          Audited {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'}{' '}
-          &middot; {audit.pages_crawled} page{audit.pages_crawled !== 1 ? 's' : ''} crawled
+          {audit.status === 'stopped' ? 'Stopped' : 'Audited'}{' '}
+          {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
+          {audit.pages_crawled} page{audit.pages_crawled !== 1 ? 's' : ''} crawled
+          {(() => {
+            const duration = calculateDuration(audit.started_at, audit.completed_at)
+            return duration ? ` · ${formatDuration(duration)}` : ''
+          })()}
         </p>
+        {audit.status === 'stopped' && (
+          <p className="mt-1 text-sm text-yellow-600">
+            This audit was stopped early. Results are based on {audit.pages_crawled} pages analyzed.
+          </p>
+        )}
       </div>
 
       {/* Executive Summary */}
@@ -97,50 +157,59 @@ export function AuditReport({ audit, checks }: AuditReportProps) {
         technical={audit.technical_score}
       />
 
-      {/* Priority Filter Badges */}
+      {/* Status Filter Badges */}
       <div className="flex flex-wrap gap-2">
         <Badge
           variant={activeFilter === 'all' ? 'default' : 'outline'}
           className="cursor-pointer"
           onClick={() => setActiveFilter('all')}
         >
-          All ({checks.length})
+          All ({visibleChecks.length})
         </Badge>
         <Badge
-          variant={activeFilter === 'critical' ? 'destructive' : 'outline'}
-          className="cursor-pointer"
-          onClick={() => setActiveFilter('critical')}
+          variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
+          className={failedCount === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+          onClick={() => failedCount > 0 && setActiveFilter('failed')}
         >
-          Critical ({criticalCount})
+          Failed ({failedCount})
         </Badge>
         <Badge
-          variant={activeFilter === 'recommended' ? 'warning' : 'outline'}
-          className="cursor-pointer"
-          onClick={() => setActiveFilter('recommended')}
+          variant={activeFilter === 'warning' ? 'warning' : 'outline'}
+          className={warningCount === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+          onClick={() => warningCount > 0 && setActiveFilter('warning')}
         >
-          Recommended ({recommendedCount})
-        </Badge>
-        <Badge
-          variant={activeFilter === 'optional' ? 'secondary' : 'outline'}
-          className="cursor-pointer"
-          onClick={() => setActiveFilter('optional')}
-        >
-          Optional ({optionalCount})
+          Warnings ({warningCount})
         </Badge>
         <Badge
           variant={activeFilter === 'passed' ? 'success' : 'outline'}
-          className="cursor-pointer"
-          onClick={() => setActiveFilter('passed')}
+          className={passedCount === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+          onClick={() => passedCount > 0 && setActiveFilter('passed')}
         >
           Passed ({passedCount})
         </Badge>
       </div>
 
       {/* Check Lists */}
-      <div className="space-y-4">
-        <CheckList title="SEO Issues" checks={filterChecks(seoChecks)} />
-        <CheckList title="AI-Readiness Issues" checks={filterChecks(aiChecks)} />
-        <CheckList title="Technical Issues" checks={filterChecks(technicalChecks)} />
+      <div className="space-y-4 rounded-lg border p-4">
+        <CheckList
+          title="SEO Issues"
+          checks={filterChecks(seoChecks)}
+          pages={htmlPages}
+          onDismissCheck={handleDismissCheck}
+        />
+        <CheckList
+          title="AI-Readiness Issues"
+          checks={filterChecks(aiChecks)}
+          pages={htmlPages}
+          onDismissCheck={handleDismissCheck}
+        />
+        <CheckList
+          title="Technical Issues"
+          checks={filterChecks(technicalChecks)}
+          pages={htmlPages}
+          onDismissCheck={handleDismissCheck}
+        />
+        <ResourceList resources={resourcePages} baseUrl={audit.url} />
       </div>
     </div>
   )

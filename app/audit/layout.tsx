@@ -38,8 +38,18 @@ export default async function AuditLayout({ children }: { children: React.ReactN
       <Sidebar websiteUrl={org?.website_url ?? null} />
       <div className="flex flex-1 flex-col">
         <Header />
-        <AuditNavTabs />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <div className="space-y-6 p-8">
+            <div>
+              <h1 className="text-3xl font-bold">Site SEO & Performance</h1>
+              <p className="text-muted-foreground mt-2">
+                Analyze your website for SEO issues and performance metrics
+              </p>
+            </div>
+            <AuditNavTabs />
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   )

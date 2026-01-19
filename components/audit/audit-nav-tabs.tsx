@@ -13,7 +13,7 @@ export function AuditNavTabs() {
   ]
 
   return (
-    <div className="border-b px-8">
+    <div className="border-b">
       <nav aria-label="Audit sections" className="flex gap-6">
         {tabs.map((tab) => {
           // Active if exact match or if pathname starts with tab href (for nested routes)
@@ -30,7 +30,7 @@ export function AuditNavTabs() {
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'border-b-2 pb-3 pt-4 text-sm font-medium transition-colors',
+                'border-b-2 pb-3 text-sm font-medium transition-colors',
                 isActive
                   ? 'border-neutral-900 text-neutral-900'
                   : 'border-transparent text-neutral-600 hover:text-neutral-900'
