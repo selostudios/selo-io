@@ -31,7 +31,7 @@ export default async function OrganizationSettingsPage() {
   }
 
   // Get organization details with industry relationship
-  const { data: org, error: orgError } = await supabase
+  const { data: org } = await supabase
     .from('organizations')
     .select(
       'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url'
@@ -39,21 +39,7 @@ export default async function OrganizationSettingsPage() {
     .eq('id', userRecord.organization_id)
     .single()
 
-  if (orgError) {
-    console.error('[Settings Error]', {
-      type: 'org_fetch_error',
-      error: orgError,
-      organizationId: userRecord.organization_id,
-      timestamp: new Date().toISOString(),
-    })
-  }
-
   if (!org) {
-    console.error('[Settings Error]', {
-      type: 'org_not_found',
-      organizationId: userRecord.organization_id,
-      timestamp: new Date().toISOString(),
-    })
     redirect('/dashboard')
   }
 

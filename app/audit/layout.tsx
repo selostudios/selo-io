@@ -2,9 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
-import { SettingsTabs } from '@/components/settings/settings-tabs'
 
-export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function AuditLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
 
   const {
@@ -38,20 +37,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
       <Sidebar websiteUrl={org?.website_url ?? null} />
       <div className="flex flex-1 flex-col">
         <Header />
-        <main className="flex-1">
-          <div className="space-y-6 p-8">
-            <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
-              <p className="text-muted-foreground mt-2">
-                Manage your account and organization preferences
-              </p>
-            </div>
-
-            <SettingsTabs />
-
-            {children}
-          </div>
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   )
