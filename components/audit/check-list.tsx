@@ -297,10 +297,10 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
                       <Link
                         href={`/audit/performance?url=${encodeURIComponent(page.url)}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-muted-foreground hover:text-foreground ml-2 shrink-0 cursor-pointer rounded p-1 transition-colors"
+                        className="text-muted-foreground hover:text-foreground ml-0.5 shrink-0 cursor-pointer rounded p-1 transition-colors"
                         aria-label="Run performance audit for this page"
                       >
-                        <Gauge className="size-4" />
+                        <Gauge className="size-5" />
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>Run performance audit</TooltipContent>
