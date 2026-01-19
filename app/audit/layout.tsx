@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
+import { AuditNavTabs } from '@/components/audit/audit-nav-tabs'
 
 export default async function AuditLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -37,6 +38,7 @@ export default async function AuditLayout({ children }: { children: React.ReactN
       <Sidebar websiteUrl={org?.website_url ?? null} />
       <div className="flex flex-1 flex-col">
         <Header />
+        <AuditNavTabs />
         <main className="flex-1">{children}</main>
       </div>
     </div>
