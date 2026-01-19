@@ -60,9 +60,11 @@ export function AuditReport({ audit, checks, pages: _pages }: AuditReportProps) 
           <ArrowLeft className="h-4 w-4" />
           Back to Audits
         </Link>
-        <Button variant="outline" disabled>
-          <Download className="mr-2 h-4 w-4" />
-          Export PDF
+        <Button variant="outline" asChild>
+          <a href={`/api/audit/${audit.id}/export`} download>
+            <Download className="mr-2 h-4 w-4" />
+            Export PDF
+          </a>
         </Button>
       </div>
 
