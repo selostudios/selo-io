@@ -70,7 +70,7 @@ export function AuditReport({ audit, checks }: AuditReportProps) {
 
       {/* Site Info */}
       <div>
-        <h1 className="text-2xl font-bold">{displayUrl}</h1>
+        <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
         <p className="text-muted-foreground text-sm">
           Audited {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'}{' '}
           &middot; {audit.pages_crawled} page{audit.pages_crawled !== 1 ? 's' : ''} crawled

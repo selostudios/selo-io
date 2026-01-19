@@ -27,7 +27,7 @@ function ScoreCard({ label, score }: { label: string; score: number | null }) {
     <Card className={cn('transition-colors', getScoreBgColor(score))}>
       <CardContent className="flex flex-col items-center justify-center py-6">
         <p className="text-muted-foreground mb-1 text-sm font-medium">{label}</p>
-        <p className={cn('text-4xl font-bold', getScoreColor(score))}>
+        <p className={cn('text-4xl font-bold tabular-nums', getScoreColor(score))}>
           {score !== null ? score : '-'}
         </p>
         <p className="text-muted-foreground text-sm">/100</p>

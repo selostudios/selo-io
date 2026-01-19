@@ -60,7 +60,7 @@ export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDash
   return (
     <div className="space-y-6 p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">SEO / AIO Audit</h1>
+        <h1 className="text-2xl font-bold text-balance">SEO / AIO Audit</h1>
       </div>
 
       {/* Website URL Card */}
