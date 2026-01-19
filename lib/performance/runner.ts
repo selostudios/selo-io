@@ -2,10 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPageSpeedInsights, extractMetrics } from './api'
 import type { DeviceType, PerformanceAuditStatus } from './types'
 
-export async function runPerformanceAudit(
-  auditId: string,
-  urls: string[]
-): Promise<void> {
+export async function runPerformanceAudit(auditId: string, urls: string[]): Promise<void> {
   const supabase = createServiceClient()
 
   // Update status to running
@@ -19,6 +16,9 @@ export async function runPerformanceAudit(
 
   try {
     const devices: DeviceType[] = ['mobile', 'desktop']
+    let successCount = 0
+    let failureCount = 0
+    let lastError: string | null = null
 
     for (const url of urls) {
       for (const device of devices) {
@@ -28,15 +28,13 @@ export async function runPerformanceAudit(
           const result = await fetchPageSpeedInsights({ url, device })
           const metrics = extractMetrics(result)
 
-          const { error: insertError } = await supabase
-            .from('performance_audit_results')
-            .insert({
-              audit_id: auditId,
-              url,
-              device,
-              ...metrics,
-              raw_response: result,
-            })
+          const { error: insertError } = await supabase.from('performance_audit_results').insert({
+            audit_id: auditId,
+            url,
+            device,
+            ...metrics,
+            raw_response: result,
+          })
 
           if (insertError) {
             console.error('[Performance Error]', {
@@ -46,31 +44,51 @@ export async function runPerformanceAudit(
               error: insertError.message,
               timestamp: new Date().toISOString(),
             })
+            failureCount++
+            lastError = insertError.message
+          } else {
+            successCount++
           }
 
           // Small delay to respect rate limits
           await new Promise((resolve) => setTimeout(resolve, 1000))
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
           console.error('[Performance Error]', {
             type: 'audit_failed',
             url,
             device,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMessage,
             timestamp: new Date().toISOString(),
           })
+          failureCount++
+          lastError = errorMessage
           // Continue with other URLs even if one fails
         }
       }
     }
 
-    // Mark as completed
-    await supabase
-      .from('performance_audits')
-      .update({
-        status: 'completed' as PerformanceAuditStatus,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', auditId)
+    // Determine final status based on success/failure counts
+    if (successCount === 0 && failureCount > 0) {
+      // All failed
+      await supabase
+        .from('performance_audits')
+        .update({
+          status: 'failed' as PerformanceAuditStatus,
+          error_message: lastError || 'All page audits failed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', auditId)
+    } else {
+      // At least some succeeded
+      await supabase
+        .from('performance_audits')
+        .update({
+          status: 'completed' as PerformanceAuditStatus,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', auditId)
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('[Performance Error]', {
