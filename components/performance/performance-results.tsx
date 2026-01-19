@@ -8,6 +8,14 @@ import { CoreWebVitals } from './core-web-vitals'
 import type { PerformanceAuditResult, DeviceType } from '@/lib/performance/types'
 import { Smartphone, Monitor } from 'lucide-react'
 
+function getPathname(url: string): string {
+  try {
+    return new URL(url).pathname || '/'
+  } catch {
+    return url
+  }
+}
+
 interface PerformanceResultsProps {
   results: PerformanceAuditResult[]
 }
@@ -42,7 +50,7 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
   return (
     <div className="space-y-6">
       {/* Device Toggle */}
-      <Tabs value={device} onValueChange={(v) => setDevice(v as DeviceType)}>
+      <Tabs value={device} onValueChange={(v) => setDevice(v as DeviceType)} aria-label="Select device type">
         <TabsList>
           <TabsTrigger value="mobile" className="gap-2">
             <Smartphone className="size-4" />
@@ -70,7 +78,8 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
                   rel="noopener noreferrer"
                   className="hover:underline"
                 >
-                  {new URL(url).pathname || '/'}
+                  {getPathname(url)}
+                  <span className="sr-only"> (opens in new tab)</span>
                 </a>
               </CardTitle>
             </CardHeader>
