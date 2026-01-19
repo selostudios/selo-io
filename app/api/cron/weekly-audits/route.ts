@@ -6,7 +6,7 @@ import { runPerformanceAudit } from '@/lib/performance/runner'
 export async function POST(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
