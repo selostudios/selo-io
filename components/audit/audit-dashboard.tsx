@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { ScoreTrendChart } from './score-trend-chart'
 import { AuditHistoryList } from './audit-history-list'
+import { DismissedChecksList } from './dismissed-checks-list'
 import type { SiteAudit } from '@/lib/audit/types'
 
 interface AuditDashboardProps {
@@ -58,11 +59,7 @@ export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDash
   )
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-balance">SEO / AIO Audit</h1>
-      </div>
-
+    <div className="space-y-6">
       {/* Website URL Card */}
       <Card>
         <CardHeader>
@@ -105,6 +102,19 @@ export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDash
         </CardHeader>
         <CardContent>
           <AuditHistoryList audits={audits} />
+        </CardContent>
+      </Card>
+
+      {/* Dismissed Checks */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dismissed Checks</CardTitle>
+          <CardDescription>
+            Checks you&apos;ve marked as not applicable. These will be hidden in future audits.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DismissedChecksList />
         </CardContent>
       </Card>
 
