@@ -4,9 +4,10 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { EmptyState } from '@/components/ui/empty-state'
 import { CheckItem } from './check-item'
 import type { SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
-import { ChevronDown, ChevronsUpDown, ExternalLink, FileText, Gauge, Globe } from 'lucide-react'
+import { CheckCircle, ChevronDown, ChevronsUpDown, ExternalLink, FileText, Gauge, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CheckListProps {
@@ -321,9 +322,11 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
           )
         })}
         {checks.length === 0 && (
-          <p className="text-muted-foreground py-4 text-center text-sm">
-            No checks in this category
-          </p>
+          <EmptyState
+            icon={CheckCircle}
+            title="No checks in this category"
+            className="py-4"
+          />
         )}
       </CollapsibleContent>
     </Collapsible>

@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Gauge, Loader2, Plus, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
 import { formatDate } from '@/lib/utils'
 
@@ -188,9 +189,11 @@ export function PerformanceDashboard({
         </CardHeader>
         <CardContent>
           {audits.length === 0 ? (
-            <p className="text-muted-foreground py-4 text-center text-sm">
-              No audits yet. Run your first performance audit above.
-            </p>
+            <EmptyState
+              icon={Gauge}
+              title="No audits yet"
+              description="Run your first performance audit above."
+            />
           ) : (
             <div className="space-y-2">
               {audits.map((audit) => (

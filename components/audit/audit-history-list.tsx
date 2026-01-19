@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Clock, FileSearch, Loader2 } from 'lucide-react'
 import type { SiteAudit } from '@/lib/audit/types'
+import { formatDuration, calculateDuration } from '@/lib/utils'
 
 interface AuditHistoryListProps {
   audits: SiteAudit[]
@@ -24,9 +26,11 @@ function isInProgress(status: SiteAudit['status']): boolean {
 export function AuditHistoryList({ audits }: AuditHistoryListProps) {
   if (audits.length === 0) {
     return (
-      <div className="text-muted-foreground py-4 text-center">
-        No audits yet. Run your first audit to get started.
-      </div>
+      <EmptyState
+        icon={FileSearch}
+        title="No audits yet"
+        description="Run your first audit to get started."
+      />
     )
   }
 
@@ -46,7 +50,7 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
             ) : audit.status === 'failed' ? (
               <Badge variant="destructive">Failed</Badge>
             ) : (
-              <span className="font-medium">
+              <span className="font-medium tabular-nums">
                 {audit.overall_score !== null ? `${audit.overall_score}/100` : '-'}
               </span>
             )}
@@ -54,9 +58,41 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
               {audit.pages_crawled} {audit.pages_crawled === 1 ? 'page' : 'pages'}
             </span>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/audit/${audit.id}`}>View</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            {audit.status === 'completed' || audit.status === 'stopped' ? (
+              <>
+                <div className="flex items-center gap-2 text-xs">
+                  {audit.failed_count > 0 && (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700 tabular-nums">
+                      {audit.failed_count} failed
+                    </span>
+                  )}
+                  {audit.warning_count > 0 && (
+                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-700 tabular-nums">
+                      {audit.warning_count} warnings
+                    </span>
+                  )}
+                  {audit.passed_count > 0 && (
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-green-700 tabular-nums">
+                      {audit.passed_count} passed
+                    </span>
+                  )}
+                </div>
+                {(() => {
+                  const duration = calculateDuration(audit.started_at, audit.completed_at)
+                  return duration ? (
+                    <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                      <Clock className="size-3" />
+                      {formatDuration(duration)}
+                    </span>
+                  ) : null
+                })()}
+              </>
+            ) : null}
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/audit/${audit.id}`}>View</Link>
+            </Button>
+          </div>
         </div>
       ))}
     </div>
