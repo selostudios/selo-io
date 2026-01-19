@@ -63,9 +63,33 @@ export function OrganizationForm({
   const [secondaryColor, setSecondaryColor] = useState(initialSecondaryColor)
   const [accentColor, setAccentColor] = useState(initialAccentColor)
   const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl)
+  const [websiteUrlError, setWebsiteUrlError] = useState<string | null>(null)
   const [showUrlChangeDialog, setShowUrlChangeDialog] = useState(false)
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
   const router = useRouter()
+
+  // Validate website URL format
+  function validateWebsiteUrl(url: string): string | null {
+    if (!url) return null // Empty is allowed
+
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol !== 'https:') {
+        return 'URL must start with https://'
+      }
+      if (!parsed.hostname.includes('.')) {
+        return 'Please enter a valid domain (e.g., example.com)'
+      }
+      return null
+    } catch {
+      return 'Please enter a valid URL (e.g., https://example.com)'
+    }
+  }
+
+  function handleWebsiteUrlChange(value: string) {
+    setWebsiteUrl(value)
+    setWebsiteUrlError(validateWebsiteUrl(value))
+  }
 
   // Check if save button should be disabled
   // Note: Logo changes are handled separately by LogoUpload component
@@ -77,7 +101,7 @@ export function OrganizationForm({
     accentColor !== initialAccentColor ||
     websiteUrl !== initialWebsiteUrl
 
-  const isSaveDisabled = !name.trim() || !hasChanges || isLoading
+  const isSaveDisabled = !name.trim() || !hasChanges || isLoading || !!websiteUrlError
 
   async function submitForm(formData: FormData) {
     setIsLoading(true)
@@ -171,10 +195,15 @@ export function OrganizationForm({
                 type="url"
                 placeholder="https://example.com"
                 value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
+                onChange={(e) => handleWebsiteUrlChange(e.target.value)}
                 disabled={isLoading}
+                aria-invalid={!!websiteUrlError}
               />
-              <p className="text-muted-foreground text-xs">Used for SEO & AI auditing</p>
+              {websiteUrlError ? (
+                <p className="text-destructive text-xs">{websiteUrlError}</p>
+              ) : (
+                <p className="text-muted-foreground text-xs">Used for SEO & AI auditing</p>
+              )}
             </div>
 
             <div className="space-y-2">

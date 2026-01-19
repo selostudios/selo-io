@@ -37,7 +37,13 @@ export async function updateOrganization(
   // Validate website URL format if provided
   if (websiteUrl && websiteUrl.trim()) {
     try {
-      new URL(websiteUrl.trim())
+      const parsed = new URL(websiteUrl.trim())
+      if (parsed.protocol !== 'https:') {
+        return { error: 'Website URL must start with https://' }
+      }
+      if (!parsed.hostname.includes('.')) {
+        return { error: 'Please enter a valid domain (e.g., example.com)' }
+      }
     } catch {
       return { error: 'Website URL must be a valid URL (e.g., https://example.com)' }
     }
