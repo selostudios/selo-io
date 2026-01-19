@@ -14,7 +14,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Campaigns', href: '/dashboard/campaigns' },
-  { name: 'SEO / AIO Audit', href: '/audit', requiresWebsiteUrl: true },
+  { name: 'Site SEO & Performance', href: '/audit', requiresWebsiteUrl: true },
   { name: 'Settings', href: '/settings/organization' },
 ]
 
