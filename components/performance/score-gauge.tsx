@@ -43,7 +43,12 @@ export function ScoreGauge({ score, label, size = 'md' }: ScoreGaugeProps) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={cn('relative', sizeClasses[size])}>
-        <svg className="size-full -rotate-90" viewBox="0 0 120 120">
+        <svg
+          className="size-full -rotate-90"
+          viewBox="0 0 120 120"
+          role="img"
+          aria-label={`${label}: ${score !== null ? `${score} out of 100` : 'No data'}`}
+        >
           {/* Background circle */}
           <circle
             cx="60"
