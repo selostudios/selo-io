@@ -23,11 +23,20 @@ export async function GET() {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  const { data: pages } = await supabase
+  const { data: pages, error: pagesError } = await supabase
     .from('monitored_pages')
     .select('*')
     .eq('organization_id', userRecord.organization_id)
     .order('created_at', { ascending: false })
+
+  if (pagesError) {
+    console.error('[Monitored Pages Error]', {
+      type: 'list_error',
+      timestamp: new Date().toISOString(),
+      error: pagesError.message,
+    })
+    return NextResponse.json({ error: 'Failed to list pages' }, { status: 500 })
+  }
 
   return NextResponse.json(pages || [])
 }
@@ -104,6 +113,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Add user organization lookup
+  const { data: userRecord, error: userError } = await supabase
+    .from('users')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single()
+
+  if (userError || !userRecord) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
 
@@ -111,13 +131,18 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Page ID is required' }, { status: 400 })
   }
 
-  const { error } = await supabase.from('monitored_pages').delete().eq('id', id)
+  // Add organization_id check to prevent IDOR
+  const { error } = await supabase
+    .from('monitored_pages')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', userRecord.organization_id)
 
   if (error) {
     console.error('[Monitored Pages Error]', {
       type: 'delete_error',
       timestamp: new Date().toISOString(),
-      error,
+      error: error.message,
     })
     return NextResponse.json({ error: 'Failed to remove page' }, { status: 500 })
   }
