@@ -13,18 +13,20 @@ interface PerformanceDashboardProps {
   audits: PerformanceAudit[]
   monitoredPages: MonitoredPage[]
   websiteUrl: string
+  initialUrl?: string
 }
 
 export function PerformanceDashboard({
   audits,
   monitoredPages: initialPages,
   websiteUrl,
+  initialUrl,
 }: PerformanceDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [monitoredPages, setMonitoredPages] = useState(initialPages)
-  const [newUrl, setNewUrl] = useState('')
+  const [newUrl, setNewUrl] = useState(initialUrl ?? '')
 
   const handleRunAudit = () => {
     setError(null)
