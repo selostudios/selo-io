@@ -112,3 +112,50 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Get user's organization
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+
+  if (!id) {
+    return NextResponse.json({ error: 'Site ID is required' }, { status: 400 })
+  }
+
+  // Delete with organization check to prevent IDOR
+  const { error } = await supabase
+    .from('monitored_sites')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', userRecord.organization_id)
+
+  if (error) {
+    console.error('[Monitored Sites Error]', {
+      type: 'delete_failed',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    })
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
+}

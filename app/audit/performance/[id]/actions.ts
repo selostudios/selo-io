@@ -9,6 +9,25 @@ export async function getPerformanceAuditData(id: string): Promise<{
 }> {
   const supabase = await createClient()
 
+  // Get current user and their organization
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { audit: null, results: [] }
+  }
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord) {
+    return { audit: null, results: [] }
+  }
+
   const { data: audit, error: auditError } = await supabase
     .from('performance_audits')
     .select('*')
@@ -25,6 +44,16 @@ export async function getPerformanceAuditData(id: string): Promise<{
   }
 
   if (!audit) {
+    return { audit: null, results: [] }
+  }
+
+  // Verify organization ownership to prevent IDOR
+  if (audit.organization_id !== userRecord.organization_id) {
+    console.error('[Performance Error]', {
+      type: 'unauthorized_audit_access',
+      auditId: id,
+      timestamp: new Date().toISOString(),
+    })
     return { audit: null, results: [] }
   }
 
