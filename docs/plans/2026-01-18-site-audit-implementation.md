@@ -17,6 +17,7 @@
 ### Task 1: Add website_url to organizations
 
 **Files:**
+
 - Create: `supabase/migrations/XXXXXX_add_website_url_to_organizations.sql`
 
 **Step 1: Create migration file**
@@ -52,6 +53,7 @@ git commit -m "feat(db): add website_url column to organizations"
 ### Task 2: Create site_audits table
 
 **Files:**
+
 - Create: `supabase/migrations/XXXXXX_create_site_audits.sql`
 
 **Step 1: Create migration file**
@@ -129,6 +131,7 @@ git commit -m "feat(db): create site_audits table with RLS"
 ### Task 3: Create site_audit_pages table
 
 **Files:**
+
 - Create: `supabase/migrations/XXXXXX_create_site_audit_pages.sql`
 
 **Step 1: Create migration file**
@@ -188,6 +191,7 @@ git commit -m "feat(db): create site_audit_pages table with RLS"
 ### Task 4: Create site_audit_checks table
 
 **Files:**
+
 - Create: `supabase/migrations/XXXXXX_create_site_audit_checks.sql`
 
 **Step 1: Create migration file**
@@ -266,6 +270,7 @@ git commit -m "feat(db): create site_audit_checks table with RLS"
 ### Task 5: Create audit types
 
 **Files:**
+
 - Create: `lib/audit/types.ts`
 
 **Step 1: Create types file**
@@ -363,6 +368,7 @@ git commit -m "feat(audit): add TypeScript types for site audit"
 ### Task 6: Create HTML fetcher utility
 
 **Files:**
+
 - Create: `lib/audit/fetcher.ts`
 - Create: `tests/unit/lib/audit/fetcher.test.ts`
 
@@ -524,6 +530,7 @@ git commit -m "feat(audit): add HTML fetcher with link extraction"
 ### Task 7: Create crawler service
 
 **Files:**
+
 - Create: `lib/audit/crawler.ts`
 
 **Step 1: Write crawler implementation**
@@ -620,6 +627,7 @@ git commit -m "feat(audit): add site crawler service"
 ### Task 8: Create check registry and base checks
 
 **Files:**
+
 - Create: `lib/audit/checks/index.ts`
 - Create: `lib/audit/checks/seo/missing-meta-description.ts`
 - Create: `tests/unit/lib/audit/checks/seo/missing-meta-description.test.ts`
@@ -724,7 +732,9 @@ export const allChecks: AuditCheckDefinition[] = [
   // More checks will be added here
 ]
 
-export function getChecksByType(type: 'seo' | 'ai_readiness' | 'technical'): AuditCheckDefinition[] {
+export function getChecksByType(
+  type: 'seo' | 'ai_readiness' | 'technical'
+): AuditCheckDefinition[] {
   return allChecks.filter((check) => check.type === type)
 }
 ```
@@ -746,6 +756,7 @@ git commit -m "feat(audit): add check registry and missing meta description chec
 ### Task 9: Add remaining SEO checks
 
 **Files:**
+
 - Create: `lib/audit/checks/seo/meta-description-length.ts`
 - Create: `lib/audit/checks/seo/missing-title.ts`
 - Create: `lib/audit/checks/seo/title-length.ts`
@@ -819,6 +830,7 @@ git commit -m "feat(audit): add all SEO checks"
 ### Task 10: Add AI-Readiness checks
 
 **Files:**
+
 - Create: `lib/audit/checks/ai/missing-llms-txt.ts`
 - Create: `lib/audit/checks/ai/ai-crawlers-blocked.ts`
 - Create: `lib/audit/checks/ai/missing-structured-data.ts`
@@ -887,6 +899,7 @@ git commit -m "feat(audit): add AI-readiness checks"
 ### Task 11: Add Technical checks
 
 **Files:**
+
 - Create: `lib/audit/checks/technical/slow-page-load.ts`
 - Create: `lib/audit/checks/technical/not-mobile-friendly.ts`
 - Create: `lib/audit/checks/technical/missing-ssl.ts`
@@ -913,6 +926,7 @@ git commit -m "feat(audit): add technical checks"
 ### Task 12: Create audit runner
 
 **Files:**
+
 - Create: `lib/audit/runner.ts`
 
 **Step 1: Write audit runner**
@@ -942,10 +956,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         await supabase.from('site_audit_pages').insert(page)
 
         // Update pages_crawled count
-        await supabase
-          .from('site_audits')
-          .update({ pages_crawled: pages.length })
-          .eq('id', auditId)
+        await supabase.from('site_audits').update({ pages_crawled: pages.length }).eq('id', auditId)
       },
     })
 
@@ -1053,6 +1064,7 @@ git commit -m "feat(audit): add audit runner with score calculation"
 ### Task 13: Create start audit API route
 
 **Files:**
+
 - Create: `app/api/audit/start/route.ts`
 
 **Step 1: Write API route**
@@ -1129,6 +1141,7 @@ git commit -m "feat(audit): add start audit API route"
 ### Task 14: Create audit status API route
 
 **Files:**
+
 - Create: `app/api/audit/[id]/status/route.ts`
 
 **Step 1: Write API route**
@@ -1190,6 +1203,7 @@ git commit -m "feat(audit): add audit status API route"
 ### Task 15: Create audit results API route
 
 **Files:**
+
 - Create: `app/api/audit/[id]/route.ts`
 
 **Step 1: Write API route**
@@ -1251,6 +1265,7 @@ git commit -m "feat(audit): add audit results API route"
 ### Task 16: Add executive summary generation
 
 **Files:**
+
 - Create: `lib/audit/summary.ts`
 - Modify: `lib/audit/runner.ts`
 
@@ -1343,6 +1358,7 @@ git commit -m "feat(audit): add AI executive summary generation"
 ### Task 17: Add sidebar menu item
 
 **Files:**
+
 - Modify: `components/layout/sidebar.tsx` (or equivalent navigation component)
 
 **Step 1: Find and update sidebar navigation**
@@ -1361,6 +1377,7 @@ git commit -m "feat(audit): add sidebar menu item"
 ### Task 18: Create audit list page
 
 **Files:**
+
 - Create: `app/audit/page.tsx`
 - Create: `app/audit/actions.ts`
 
@@ -1461,6 +1478,7 @@ git commit -m "feat(audit): add audit list page"
 ### Task 19: Create audit dashboard component
 
 **Files:**
+
 - Create: `components/audit/audit-dashboard.tsx`
 - Create: `components/audit/score-trend-chart.tsx`
 - Create: `components/audit/audit-history-list.tsx`
@@ -1482,6 +1500,7 @@ git commit -m "feat(audit): add audit dashboard components"
 ### Task 20: Create audit report page
 
 **Files:**
+
 - Create: `app/audit/[id]/page.tsx`
 - Create: `components/audit/audit-report.tsx`
 - Create: `components/audit/score-cards.tsx`
@@ -1504,6 +1523,7 @@ git commit -m "feat(audit): add audit report page and components"
 ### Task 21: Create live audit progress view
 
 **Files:**
+
 - Create: `components/audit/live-progress.tsx`
 - Create: `hooks/use-audit-polling.ts`
 
@@ -1555,6 +1575,7 @@ git commit -m "feat(audit): add live progress polling"
 ### Task 22: Create PDF export
 
 **Files:**
+
 - Create: `lib/audit/pdf.tsx`
 - Create: `app/api/audit/[id]/export/route.ts`
 
@@ -1653,6 +1674,7 @@ git commit -m "feat(audit): add PDF export"
 ### Task 23: Add URL change confirmation dialog
 
 **Files:**
+
 - Modify: `app/settings/organization/page.tsx` (or form component)
 - Create: `components/audit/url-change-dialog.tsx`
 
@@ -1674,6 +1696,7 @@ git commit -m "feat(audit): add URL change confirmation with archiving"
 ### Task 24: Add website URL toast notification
 
 **Files:**
+
 - Modify: `app/dashboard/page.tsx` or layout component
 - Create: `components/audit/website-url-toast.tsx`
 
@@ -1693,6 +1716,7 @@ git commit -m "feat(audit): add website URL configuration toast"
 ### Task 25: Add integration tests
 
 **Files:**
+
 - Create: `tests/integration/audit.test.ts`
 
 **Step 1: Write integration tests for audit flow**
@@ -1734,19 +1758,19 @@ Expected: Build succeeds
 
 ## Summary
 
-| Phase | Tasks | Description |
-|-------|-------|-------------|
-| 1 | 1-4 | Database schema (4 migrations) |
-| 2 | 5 | TypeScript types |
-| 3 | 6-7 | Crawler service |
-| 4 | 8-11 | Check implementations (28 checks) |
-| 5 | 12 | Audit runner |
-| 6 | 13-15 | API routes |
-| 7 | 16 | AI executive summary |
-| 8 | 17-21 | UI components |
-| 9 | 22 | PDF export |
-| 10 | 23 | URL change handling |
-| 11 | 24 | Empty state & toast |
-| 12 | 25-26 | Testing & cleanup |
+| Phase | Tasks | Description                       |
+| ----- | ----- | --------------------------------- |
+| 1     | 1-4   | Database schema (4 migrations)    |
+| 2     | 5     | TypeScript types                  |
+| 3     | 6-7   | Crawler service                   |
+| 4     | 8-11  | Check implementations (28 checks) |
+| 5     | 12    | Audit runner                      |
+| 6     | 13-15 | API routes                        |
+| 7     | 16    | AI executive summary              |
+| 8     | 17-21 | UI components                     |
+| 9     | 22    | PDF export                        |
+| 10    | 23    | URL change handling               |
+| 11    | 24    | Empty state & toast               |
+| 12    | 25-26 | Testing & cleanup                 |
 
 **Total: 26 tasks**

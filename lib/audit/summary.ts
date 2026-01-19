@@ -14,9 +14,6 @@ export async function generateExecutiveSummary(
   checks: SiteAuditCheck[]
 ): Promise<string> {
   const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
-  const recommendedFails = checks.filter(
-    (c) => c.priority === 'recommended' && c.status === 'failed'
-  )
 
   const prompt = `You are writing an executive summary for a website audit report.
 
@@ -29,10 +26,12 @@ Results:
 - AI-Readiness: ${scores.ai_readiness_score}/100 - ${criticalFails.filter((c) => c.check_type === 'ai_readiness').length} critical issues
 - Technical: ${scores.technical_score}/100 - ${criticalFails.filter((c) => c.check_type === 'technical').length} critical issues
 
-Top critical issues: ${criticalFails
-    .slice(0, 5)
-    .map((c) => c.check_name.replace(/_/g, ' '))
-    .join(', ') || 'None'}
+Top critical issues: ${
+    criticalFails
+      .slice(0, 5)
+      .map((c) => c.check_name.replace(/_/g, ' '))
+      .join(', ') || 'None'
+  }
 
 Write a 2-3 paragraph executive summary that:
 1. Summarizes the overall health of the site

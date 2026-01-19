@@ -56,13 +56,11 @@ function CollapsibleTrigger({
   const { open, onOpenChange } = useCollapsible()
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(
-      children as React.ReactElement<{ onClick?: () => void }>,
-      {
-        onClick: () => onOpenChange(!open),
-        'data-state': open ? 'open' : 'closed',
-      } as React.HTMLAttributes<HTMLElement>
-    )
+    const childProps = {
+      onClick: () => onOpenChange(!open),
+      'data-state': open ? 'open' : 'closed',
+    }
+    return React.cloneElement(children, childProps)
   }
 
   return (

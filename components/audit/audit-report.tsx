@@ -19,7 +19,7 @@ interface AuditReportProps {
 
 type PriorityFilter = 'all' | 'critical' | 'recommended' | 'optional' | 'passed'
 
-export function AuditReport({ audit, checks, pages: _pages }: AuditReportProps) {
+export function AuditReport({ audit, checks }: AuditReportProps) {
   const [activeFilter, setActiveFilter] = useState<PriorityFilter>('all')
 
   // Group checks by type

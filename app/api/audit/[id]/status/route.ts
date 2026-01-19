@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
@@ -16,11 +13,7 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: audit } = await supabase
-    .from('site_audits')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data: audit } = await supabase.from('site_audits').select('*').eq('id', id).single()
 
   if (!audit) {
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })

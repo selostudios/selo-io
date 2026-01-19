@@ -9,12 +9,10 @@ export const imagesMissingAlt: AuditCheckDefinition = {
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
-    const imagesWithoutAlt = $('img')
-      .filter((_, el) => {
-        const alt = $(el).attr('alt')
-        return alt === undefined
-      })
-      .length
+    const imagesWithoutAlt = $('img').filter((_, el) => {
+      const alt = $(el).attr('alt')
+      return alt === undefined
+    }).length
 
     if (imagesWithoutAlt > 0) {
       return {
