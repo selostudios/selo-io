@@ -57,6 +57,7 @@ export function PerformanceDashboard({
   }
 
   const handleAddPage = async () => {
+    setError(null)
     if (!newUrl.trim()) return
 
     try {
@@ -83,8 +84,10 @@ export function PerformanceDashboard({
 
   const handleRemovePage = async (id: string) => {
     try {
-      await fetch(`/api/performance/pages?id=${id}`, { method: 'DELETE' })
-      setMonitoredPages((prev) => prev.filter((p) => p.id !== id))
+      const response = await fetch(`/api/performance/pages?id=${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        setMonitoredPages((prev) => prev.filter((p) => p.id !== id))
+      }
     } catch (err) {
       console.error('[Performance Dashboard] Failed to remove page:', err)
     }
@@ -118,7 +121,11 @@ export function PerformanceDashboard({
               )}
             </Button>
           </div>
-          {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
+          {error && (
+            <p role="alert" aria-live="polite" className="text-destructive mt-2 text-sm">
+              {error}
+            </p>
+          )}
         </CardHeader>
       </Card>
 
@@ -133,7 +140,11 @@ export function PerformanceDashboard({
         <CardContent className="space-y-4">
           {/* Add new page */}
           <div className="flex gap-2">
+            <label htmlFor="new-page-url" className="sr-only">
+              Page URL to monitor
+            </label>
             <Input
+              id="new-page-url"
               placeholder="https://example.com/page"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
@@ -163,6 +174,7 @@ export function PerformanceDashboard({
                 size="sm"
                 onClick={() => handleRemovePage(page.id)}
                 className="text-muted-foreground hover:text-destructive"
+                aria-label={`Remove ${page.url} from monitoring`}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
