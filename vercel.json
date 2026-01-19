@@ -4,5 +4,10 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["iad1"],
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/weekly-audits",
+      "schedule": "0 2 * * 0"
+    }
+  ]
 }
