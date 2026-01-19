@@ -59,9 +59,21 @@ export function PerformanceDashboard({
     })
   }
 
+  const isValidUrl = (url: string): boolean => {
+    if (!url.trim()) return false
+    try {
+      const parsed = new URL(url.trim())
+      return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+    } catch {
+      return false
+    }
+  }
+
+  const canAddPage = isValidUrl(newUrl)
+
   const handleAddPage = async () => {
     setError(null)
-    if (!newUrl.trim()) return
+    if (!canAddPage) return
 
     try {
       const response = await fetch('/api/performance/pages', {
@@ -147,9 +159,9 @@ export function PerformanceDashboard({
               placeholder="https://example.com/page"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddPage()}
+              onKeyDown={(e) => e.key === 'Enter' && canAddPage && handleAddPage()}
             />
-            <Button onClick={handleAddPage} variant="outline">
+            <Button onClick={handleAddPage} variant="outline" disabled={!canAddPage}>
               <Plus className="mr-2 h-4 w-4" />
               Add
             </Button>
