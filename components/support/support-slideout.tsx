@@ -135,21 +135,21 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
           {/* Screenshot Attachment */}
           {feedback.screenshot_url && (
-            <a
-              href={feedback.screenshot_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              <ImageIcon className="h-3 w-3" />
-              <span>
+            <div className="flex items-center gap-2 text-xs">
+              <ImageIcon className="h-3 w-3 text-muted-foreground" />
+              <a
+                href={feedback.screenshot_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+              >
                 {(() => {
                   const url = feedback.screenshot_url
                   const filename = url.split('/').pop() || 'screenshot'
                   return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
                 })()}
-              </span>
-            </a>
+              </a>
+            </div>
           )}
 
           {/* Context */}
