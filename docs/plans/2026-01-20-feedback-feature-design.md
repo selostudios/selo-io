@@ -300,6 +300,100 @@ supabase/
 
 ---
 
+## Testing Strategy
+
+Following the project's testing distribution: 60% unit, 30% integration, 10% E2E.
+
+### Unit Tests (Vitest + Testing Library)
+
+**Location:** `tests/unit/feedback/`
+
+**Components:**
+
+| Test File | Coverage |
+|-----------|----------|
+| `feedback-dialog.test.tsx` | Form rendering, validation, category selection, screenshot preview, submit button states |
+| `feedback-trigger.test.tsx` | Keyboard shortcut detection (CMD+Shift+F), dialog open trigger |
+| `feedback-provider.test.tsx` | Context value, open/close state management |
+| `support-table.test.tsx` | Column rendering, sorting behavior, row click handler |
+| `support-filters.test.tsx` | Filter dropdowns, selected state, clear filters |
+| `support-slideout.test.tsx` | Detail display, form fields, save button disabled state |
+
+**Utilities:**
+
+| Test File | Coverage |
+|-----------|----------|
+| `feedback-utils.test.ts` | Category/status/priority label formatting, color mapping |
+
+**Email Templates:**
+
+| Test File | Coverage |
+|-----------|----------|
+| `feedback-emails.test.tsx` | Email renders with correct props, subject line formatting |
+
+### Integration Tests (Vitest + Local Supabase)
+
+**Location:** `tests/integration/feedback/`
+
+| Test File | Coverage |
+|-----------|----------|
+| `feedback-actions.test.ts` | `submitFeedback` action: inserts record, uploads screenshot, sends dev notification |
+| `feedback-actions.test.ts` | `updateFeedbackStatus` action: updates record, sends user notification when status changes |
+| `feedback-rls.test.ts` | Users can only read own feedback, developers can read/update all |
+| `feedback-rls.test.ts` | Users cannot delete feedback (no delete policy) |
+| `feedback-rls.test.ts` | Non-authenticated users cannot submit feedback |
+| `developer-role.test.ts` | Developer role bypasses org-scoped RLS on existing tables |
+| `developer-role.test.ts` | Developer can access data from any organization |
+| `storage-policies.test.ts` | Screenshot upload permissions, read access rules |
+
+### E2E Tests (Playwright)
+
+**Location:** `tests/e2e/feedback/`
+
+| Test File | User Journey |
+|-----------|--------------|
+| `submit-feedback.spec.ts` | User opens feedback dialog via menu → fills form → uploads screenshot → submits → sees success toast |
+| `submit-feedback.spec.ts` | User opens feedback dialog via CMD+Shift+F → submits minimal feedback (no screenshot) |
+| `support-section.spec.ts` | Developer navigates to /support → sees feedback list → filters by status → clicks row → slide-over opens |
+| `support-section.spec.ts` | Developer updates status with note → saves → record updates |
+| `support-access.spec.ts` | Non-developer tries to access /support → redirected to /dashboard |
+| `email-notifications.spec.ts` | Feedback submitted → developer receives email (check Mailpit) |
+| `email-notifications.spec.ts` | Status changed → submitter receives email with note (check Mailpit) |
+
+### Test Data Requirements
+
+**Seed data for E2E (`tests/helpers/seed.ts`):**
+
+```typescript
+// Add to existing seed
+const feedbackSeeds = {
+  // Test user who submits feedback
+  regularUser: { role: 'team_member', org: 'test-org' },
+
+  // Developer user for support section
+  developerUser: { role: 'developer' },
+
+  // Sample feedback items in various states
+  feedbackItems: [
+    { status: 'new', category: 'bug', priority: null },
+    { status: 'under_review', category: 'feature_request', priority: 'high' },
+    { status: 'resolved', category: 'performance', priority: 'medium' },
+  ]
+}
+```
+
+### Test Coverage Goals
+
+| Area | Target | Notes |
+|------|--------|-------|
+| Feedback submission flow | 90% | Critical user path |
+| Support section CRUD | 85% | Developer workflow |
+| RLS policies | 100% | Security critical |
+| Email notifications | 80% | Integration with external service |
+| Keyboard shortcut | 70% | Browser-specific behavior |
+
+---
+
 ## Future Scope (Not in Initial Build)
 
 - Two-tier navigation (global sidebar + org sidebar)
