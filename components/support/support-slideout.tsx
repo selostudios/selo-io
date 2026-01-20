@@ -139,9 +139,9 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
               href={feedback.screenshot_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 transition-colors"
             >
-              <ImageIcon className="h-4 w-4" />
+              <ImageIcon className="h-3 w-3" />
               <span>
                 {(() => {
                   const url = feedback.screenshot_url
