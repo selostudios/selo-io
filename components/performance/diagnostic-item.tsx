@@ -96,7 +96,7 @@ export function DiagnosticItem({ diagnostic }: DiagnosticItemProps) {
                     <span className="sr-only">Learn more</span>
                   </a>
                 ) : (
-                  <button className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors">
+                  <button className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors" aria-label="More information">
                     <Info className="size-3.5" />
                   </button>
                 )}
