@@ -106,26 +106,26 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
+          <div className="flex items-start justify-between gap-3 pr-8">
+            <SheetTitle className="flex-1">{feedback.title}</SheetTitle>
+            <Badge className={`shrink-0 ${STATUS_COLORS[feedback.status]}`}>
+              {CATEGORY_LABELS[feedback.category]}
+            </Badge>
+          </div>
           <SheetDescription asChild>
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">
-                {submitterEmail ? (
-                  <a
-                    href={`mailto:${submitterEmail}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {submitterDisplay}
-                  </a>
-                ) : (
-                  <span>{submitterDisplay}</span>
-                )}{' '}
-                on {formattedDate}
-              </p>
-              <Badge className={STATUS_COLORS[feedback.status]}>
-                {CATEGORY_LABELS[feedback.category]}
-              </Badge>
-            </div>
+            <p className="text-muted-foreground text-sm">
+              {submitterEmail ? (
+                <a
+                  href={`mailto:${submitterEmail}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {submitterDisplay}
+                </a>
+              ) : (
+                <span>{submitterDisplay}</span>
+              )}{' '}
+              on {formattedDate}
+            </p>
           </SheetDescription>
         </SheetHeader>
 
