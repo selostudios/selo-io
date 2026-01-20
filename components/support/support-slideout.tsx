@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { Building2 } from 'lucide-react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -89,12 +88,18 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
   if (!feedback) return null
 
+  // Build submitter display name
   const submitterName = feedback.submitter
     ? `${feedback.submitter.first_name ?? ''} ${feedback.submitter.last_name ?? ''}`.trim() ||
       'Unknown'
     : 'Unknown'
 
   const submitterEmail = feedback.submitter?.email
+  const orgName = feedback.organization?.name
+  const formattedDate = format(new Date(feedback.created_at), "EEE, d MMMM 'at' h:mmaaa")
+
+  // Build meta line: "Submitted by Name (Org) on Date • [CATEGORY]"
+  const submitterDisplay = orgName ? `${submitterName} (${orgName})` : submitterName
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -102,48 +107,29 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
         <SheetHeader className="px-6 pt-6">
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
-            <div className="flex items-center gap-2">
+            <p className="text-muted-foreground text-sm">
+              Submitted by{' '}
+              {submitterEmail ? (
+                <a
+                  href={`mailto:${submitterEmail}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {submitterDisplay}
+                </a>
+              ) : (
+                <span>{submitterDisplay}</span>
+              )}{' '}
+              on {formattedDate} •{' '}
               <Badge className={STATUS_COLORS[feedback.status]}>
                 {CATEGORY_LABELS[feedback.category]}
               </Badge>
-              <span className="text-muted-foreground">
-                {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
-              </span>
-            </div>
+            </p>
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6 px-6 pb-6">
           {/* Description */}
-          <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs tracking-wider uppercase">
-              Description
-            </Label>
-            <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
-          </div>
-
-          {/* Submitter */}
-          <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs tracking-wider uppercase">
-              Submitted By
-            </Label>
-            {submitterEmail ? (
-              <a
-                href={`mailto:${submitterEmail}`}
-                className="block text-sm font-medium text-blue-600 hover:underline"
-              >
-                {submitterName}
-              </a>
-            ) : (
-              <p className="text-sm">{submitterName}</p>
-            )}
-            {feedback.organization && (
-              <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                <Building2 className="h-3.5 w-3.5" />
-                {feedback.organization.name}
-              </p>
-            )}
-          </div>
+          <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
 
           {/* Context */}
           {(feedback.page_url || feedback.user_agent) && (
