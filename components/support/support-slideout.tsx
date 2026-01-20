@@ -30,6 +30,7 @@ import {
   STATUS_COLORS,
 } from '@/lib/types/feedback'
 import { updateFeedbackStatus } from '@/app/support/actions'
+import { ImageIcon } from 'lucide-react'
 
 interface SupportSlideoutProps {
   feedback: FeedbackWithRelations | null
@@ -126,7 +127,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           </SheetDescription>
         </SheetHeader>
 
-        <hr className="mx-6 mt-3 border-border" />
+        <hr className="mt-3 mx-6 border-border" />
 
         <div className="mt-4 space-y-6 px-6 pb-6">
           {/* Description */}
@@ -149,23 +150,6 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
                   {feedback.user_agent}
                 </p>
               )}
-            </div>
-          )}
-
-          {/* Screenshot */}
-          {feedback.screenshot_url && (
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs tracking-wider uppercase">
-                Screenshot
-              </Label>
-              <a
-                href={feedback.screenshot_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                View Screenshot
-              </a>
             </div>
           )}
 
@@ -228,6 +212,29 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
+
+        {/* Screenshot Footer */}
+        {feedback.screenshot_url && (
+          <>
+            <hr className="mx-6 border-border" />
+            <a
+              href={feedback.screenshot_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span>
+                {(() => {
+                  const url = feedback.screenshot_url
+                  const filename = url.split('/').pop() || 'screenshot'
+                  const ext = filename.split('.').pop()?.toUpperCase() || 'IMG'
+                  return `${filename.length > 30 ? filename.slice(0, 30) + '...' : filename} • ${ext}`
+                })()}
+              </span>
+            </a>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   )
