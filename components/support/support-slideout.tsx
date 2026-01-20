@@ -106,7 +106,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <Badge className={`w-fit -ml-1 mb-1 ${STATUS_COLORS[feedback.status]}`}>
+          <Badge className={`w-fit -ml-2 mb-1 ${STATUS_COLORS[feedback.status]}`}>
             {CATEGORY_LABELS[feedback.category]}
           </Badge>
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
