@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,6 +25,8 @@ interface IntegrationsPanelProps {
   linkedIn: { isConnected: boolean; lastSyncAt: string | null }
   googleAnalytics: { isConnected: boolean; lastSyncAt: string | null }
   hubspot: { isConnected: boolean; lastSyncAt: string | null }
+  connectionCount: number
+  totalPlatforms: number
 }
 
 function getMostRecentSync(...syncTimes: (string | null)[]): string | null {
@@ -34,7 +37,13 @@ function getMostRecentSync(...syncTimes: (string | null)[]): string | null {
   )
 }
 
-export function IntegrationsPanel({ linkedIn, googleAnalytics, hubspot }: IntegrationsPanelProps) {
+export function IntegrationsPanel({
+  linkedIn,
+  googleAnalytics,
+  hubspot,
+  connectionCount,
+  totalPlatforms,
+}: IntegrationsPanelProps) {
   const [period, setPeriod] = useState<Period>('7d')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -86,7 +95,12 @@ export function IntegrationsPanel({ linkedIn, googleAnalytics, hubspot }: Integr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Integrations</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Integrations</h2>
+            <span className="text-muted-foreground text-base font-semibold">
+              {connectionCount}/{totalPlatforms}
+            </span>
+          </div>
           <p className="text-muted-foreground text-xs">
             Last synced: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Never'}
           </p>
@@ -102,13 +116,16 @@ export function IntegrationsPanel({ linkedIn, googleAnalytics, hubspot }: Integr
               <SelectItem value="quarter">This quarter</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={handleRefreshAll} disabled={isRefreshing}>
+          <Button variant="outline" size="icon" onClick={handleRefreshAll} disabled={isRefreshing}>
             {isRefreshing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
             )}
-            Refresh All
+            <span className="sr-only">Refresh All</span>
+          </Button>
+          <Button variant="outline" size="default" asChild>
+            <Link href="/settings/integrations">Manage</Link>
           </Button>
         </div>
       </div>

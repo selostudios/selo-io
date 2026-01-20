@@ -28,6 +28,14 @@ const platformInfo = {
   },
 }
 
+function formatLastSyncAt(lastSyncAt: string | null): string | null {
+  if (!lastSyncAt) return null
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(lastSyncAt))
+}
+
 export function PlatformConnectionCard({
   connection,
   platformType,
@@ -80,24 +88,20 @@ export function PlatformConnectionCard({
             <CardTitle>{info.name}</CardTitle>
             <CardDescription className="mt-1">{info.description}</CardDescription>
           </div>
-          <Badge variant="success">{displayName(connection.status)}</Badge>
+          <div className="flex items-center gap-2">
+            {formatLastSyncAt(connection.last_sync_at) && (
+              <span className="text-muted-foreground text-xs">
+                Last synced: {formatLastSyncAt(connection.last_sync_at)}
+              </span>
+            )}
+            <Badge variant="success">{displayName(connection.status)}</Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {connection.last_sync_at && (
-            <p className="text-muted-foreground text-sm">
-              Last synced:{' '}
-              {new Intl.DateTimeFormat(undefined, {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-              }).format(new Date(connection.last_sync_at))}
-            </p>
-          )}
-          <Button variant="outline" size="sm" onClick={handleDisconnect}>
-            Disconnect
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={handleDisconnect}>
+          Disconnect
+        </Button>
       </CardContent>
     </Card>
   )
