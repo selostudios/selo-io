@@ -1,9 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Info } from 'lucide-react'
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from 'recharts'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+
+// Use useSyncExternalStore to detect client-side rendering without triggering cascading renders
+const subscribe = () => () => {}
+const getSnapshot = () => true
+const getServerSnapshot = () => false
+
+function useIsClient() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
 
 interface ScoreCardsProps {
   overall: number | null
@@ -33,11 +42,7 @@ function getScoreTextClass(score: number | null): string {
 }
 
 export function ScoreCard({ label, score, description }: ScoreCardProps) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const isClient = useIsClient()
 
   const displayScore = score ?? 0
   // Calculate end angle: start at top (90°), go clockwise
@@ -48,7 +53,7 @@ export function ScoreCard({ label, score, description }: ScoreCardProps) {
   return (
     <div className="flex flex-1 flex-col items-center rounded-lg border bg-gray-100 py-4">
       <div className="flex h-[100px] w-[100px] items-center justify-center">
-        {mounted ? (
+        {isClient ? (
           <RadialBarChart
             width={100}
             height={100}

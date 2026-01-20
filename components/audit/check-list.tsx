@@ -15,7 +15,6 @@ import {
   FileText,
   Gauge,
   Globe,
-  Info,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -73,7 +72,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
   const passedCount = checks.filter((c) => c.status === 'passed').length
 
   // Create a map of page_id to page for quick lookup
-  const pageMap = new Map(pages.map((p) => [p.id, p]))
+  const pageMap = useMemo(() => new Map(pages.map((p) => [p.id, p])), [pages])
 
   // Get base URL from first page
   const baseUrl = pages[0]?.url || ''
@@ -88,31 +87,37 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
   )
 
   // Group page-specific checks by page_id
-  const checksByPage = new Map<string | null, SiteAuditCheck[]>()
-  for (const check of pageSpecificChecks) {
-    const pageId = check.page_id
-    const existing = checksByPage.get(pageId) || []
-    existing.push(check)
-    checksByPage.set(pageId, existing)
-  }
-
-  // Sort page groups: pages with failed checks first, then by URL
-  const sortedPageIds = Array.from(checksByPage.keys()).sort((a, b) => {
-    const aChecks = checksByPage.get(a) || []
-    const bChecks = checksByPage.get(b) || []
-    const aHasFailed = aChecks.some((c) => c.status === 'failed')
-    const bHasFailed = bChecks.some((c) => c.status === 'failed')
-
-    if (aHasFailed && !bHasFailed) return -1
-    if (!aHasFailed && bHasFailed) return 1
-
-    // Sort by URL
-    const aUrl = a ? pageMap.get(a)?.url || '' : ''
-    const bUrl = b ? pageMap.get(b)?.url || '' : ''
-    return aUrl.localeCompare(bUrl)
-  })
+  const checksByPage = useMemo(() => {
+    const map = new Map<string | null, SiteAuditCheck[]>()
+    for (const check of pageSpecificChecks) {
+      const pageId = check.page_id
+      const existing = map.get(pageId) || []
+      existing.push(check)
+      map.set(pageId, existing)
+    }
+    return map
+  }, [pageSpecificChecks])
 
   const siteWideFailedCount = uniqueSiteWideChecks.filter((c) => c.status === 'failed').length
+
+  // Sort page groups: pages with failed checks first, then by URL
+  // Memoize to satisfy React Compiler
+  const sortedPageIds = useMemo(() => {
+    return Array.from(checksByPage.keys()).sort((a, b) => {
+      const aChecks = checksByPage.get(a) || []
+      const bChecks = checksByPage.get(b) || []
+      const aHasFailed = aChecks.some((c) => c.status === 'failed')
+      const bHasFailed = bChecks.some((c) => c.status === 'failed')
+
+      if (aHasFailed && !bHasFailed) return -1
+      if (!aHasFailed && bHasFailed) return 1
+
+      // Sort by URL
+      const aUrl = a ? pageMap.get(a)?.url || '' : ''
+      const bUrl = b ? pageMap.get(b)?.url || '' : ''
+      return aUrl.localeCompare(bUrl)
+    })
+  }, [checksByPage, pageMap])
 
   // Build list of all collapsible IDs (site-wide + page IDs)
   const allCollapsibleIds = useMemo(() => {

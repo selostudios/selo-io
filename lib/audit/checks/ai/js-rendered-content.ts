@@ -34,8 +34,6 @@ export const jsRenderedContent: AuditCheckDefinition = {
     const hasHeavyJS = scriptCount > 10
 
     // Check for meaningful content elements
-    const hasMainContent =
-      $('main, article, [role="main"], .content, #content, .post, .article').length > 0
     const paragraphCount = $('p').length
     const headingCount = $('h1, h2, h3, h4, h5, h6').length
 

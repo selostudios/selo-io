@@ -10,7 +10,7 @@ import { CheckList } from './check-list'
 import { ResourceList } from './resource-list'
 import type { SiteAudit, SiteAuditCheck, SiteAuditPage, DismissedCheck } from '@/lib/audit/types'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 interface AuditReportProps {
   audit: SiteAudit
@@ -37,7 +37,7 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
   }, [])
 
   // Create a map of page_id to page URL for looking up dismissed checks
-  const pageMap = new Map(pages.map((p) => [p.id, p.url]))
+  const pageMap = useMemo(() => new Map(pages.map((p) => [p.id, p.url])), [pages])
 
   // Filter out dismissed checks
   const isDismissed = useCallback(

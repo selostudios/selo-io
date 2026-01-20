@@ -1,17 +1,6 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
-interface OrganizationSchema {
-  '@type'?: string
-  name?: string
-  url?: string
-  logo?: string | { '@type': string; url: string }
-  description?: string
-  sameAs?: string[]
-  contactPoint?: unknown
-  address?: unknown
-}
-
 export const missingOrganizationSchema: AuditCheckDefinition = {
   name: 'missing_organization_schema',
   type: 'ai_readiness',

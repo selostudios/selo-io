@@ -18,7 +18,7 @@ export const slowPageResponse: AuditCheckDefinition = {
     const startTime = performance.now()
 
     try {
-      const response = await fetch(baseUrl, {
+      await fetch(baseUrl, {
         method: 'GET',
         signal: AbortSignal.timeout(10000), // 10 second max timeout
         headers: {
