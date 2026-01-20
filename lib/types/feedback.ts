@@ -65,10 +65,9 @@ export const STATUS_COLORS: Record<FeedbackStatus, string> = {
   closed: 'bg-red-100 text-red-700',
 }
 
-// Tailwind safelist: bg-purple-100 text-purple-700 bg-orange-100 text-orange-700
 export const CATEGORY_COLORS: Record<FeedbackCategory, string> = {
   bug: 'bg-red-100 text-red-700',
-  feature_request: 'bg-purple-100 text-purple-700',
+  feature_request: 'bg-yellow-100 text-yellow-700',
   performance: 'bg-orange-100 text-orange-700',
   usability: 'bg-blue-100 text-blue-700',
   other: 'bg-neutral-100 text-neutral-700',
