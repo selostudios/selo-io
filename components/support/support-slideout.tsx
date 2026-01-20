@@ -133,6 +133,26 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           {/* Description */}
           <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
 
+          {/* Screenshot Attachment */}
+          {feedback.screenshot_url && (
+            <a
+              href={feedback.screenshot_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span>
+                {(() => {
+                  const url = feedback.screenshot_url
+                  const filename = url.split('/').pop() || 'screenshot'
+                  const ext = filename.split('.').pop()?.toUpperCase() || 'IMG'
+                  return `${filename.length > 30 ? filename.slice(0, 30) + '...' : filename} • ${ext}`
+                })()}
+              </span>
+            </a>
+          )}
+
           {/* Context */}
           {(feedback.page_url || feedback.user_agent) && (
             <div className="space-y-2">
@@ -212,29 +232,6 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
-
-        {/* Screenshot Footer */}
-        {feedback.screenshot_url && (
-          <>
-            <hr className="mx-6 border-border" />
-            <a
-              href={feedback.screenshot_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ImageIcon className="h-4 w-4" />
-              <span>
-                {(() => {
-                  const url = feedback.screenshot_url
-                  const filename = url.split('/').pop() || 'screenshot'
-                  const ext = filename.split('.').pop()?.toUpperCase() || 'IMG'
-                  return `${filename.length > 30 ? filename.slice(0, 30) + '...' : filename} • ${ext}`
-                })()}
-              </span>
-            </a>
-          </>
-        )}
       </SheetContent>
     </Sheet>
   )
