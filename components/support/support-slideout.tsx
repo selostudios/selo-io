@@ -96,7 +96,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
   const submitterEmail = feedback.submitter?.email
   const orgName = feedback.organization?.name
-  const formattedDate = format(new Date(feedback.created_at), "EEE, d MMMM 'at' h:mmaaa")
+  const formattedDate = format(new Date(feedback.created_at), "EEE, d MMM 'at' h:mmaaa")
 
   // Build meta line: "Submitted by Name (Org) on Date • [CATEGORY]"
   const submitterDisplay = orgName ? `${submitterName} (${orgName})` : submitterName
@@ -126,7 +126,9 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6 px-6 pb-6">
+        <hr className="mx-6 mt-3 border-border" />
+
+        <div className="mt-4 space-y-6 px-6 pb-6">
           {/* Description */}
           <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
 
