@@ -119,7 +119,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
               ) : (
                 <span>{submitterDisplay}</span>
               )}{' '}
-              on {formattedDate} •{' '}
+              on {formattedDate}{' '}
               <Badge className={STATUS_COLORS[feedback.status]}>
                 {CATEGORY_LABELS[feedback.category]}
               </Badge>
