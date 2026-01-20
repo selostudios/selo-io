@@ -108,7 +108,6 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">
-              Submitted by{' '}
               {submitterEmail ? (
                 <a
                   href={`mailto:${submitterEmail}`}
