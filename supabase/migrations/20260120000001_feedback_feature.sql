@@ -1,5 +1,4 @@
--- Add developer role to existing enum
-ALTER TYPE user_role ADD VALUE 'developer';
+-- Note: developer role enum value is added in 20260119000001_add_developer_role.sql
 
 -- Create feedback-specific enums
 CREATE TYPE feedback_category AS ENUM (
