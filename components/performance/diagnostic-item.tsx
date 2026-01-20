@@ -24,9 +24,9 @@ function parseDescription(description: string): { text: string; learnMoreUrl: st
   // Remove all markdown links from text and clean up trailing punctuation
   const text = description
     .replace(linkRegex, '')
-    .replace(/\s+\./g, '.')  // Remove space before period
-    .replace(/\.+$/g, '.')   // Remove multiple trailing periods
-    .replace(/\s+$/g, '')    // Trim trailing whitespace
+    .replace(/\s+\./g, '.') // Remove space before period
+    .replace(/\.+$/g, '.') // Remove multiple trailing periods
+    .replace(/\s+$/g, '') // Trim trailing whitespace
     .trim()
 
   return { text, learnMoreUrl }
@@ -47,7 +47,7 @@ function formatItemInfo(item: Record<string, unknown>): string {
     parts.push(formatMs(item.total))
   }
   if (typeof item.transferSize === 'number') {
-    const kb = item.transferSize as number / 1024
+    const kb = (item.transferSize as number) / 1024
     parts.push(kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`)
   }
   if (typeof item.wastedMs === 'number') {
@@ -96,17 +96,20 @@ export function DiagnosticItem({ diagnostic }: DiagnosticItemProps) {
                     <span className="sr-only">Learn more</span>
                   </a>
                 ) : (
-                  <button className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors" aria-label="More information">
+                  <button
+                    className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors"
+                    aria-label="More information"
+                  >
                     <Info className="size-3.5" />
                   </button>
                 )}
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p className="text-pretty text-xs">{descriptionText}</p>
+                <p className="text-xs text-pretty">{descriptionText}</p>
               </TooltipContent>
             </Tooltip>
           </div>
-          <p className="text-muted-foreground text-pretty mt-0.5 text-xs leading-relaxed">
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed text-pretty">
             {descriptionText}
           </p>
           {urlGroups.length > 0 && (
@@ -116,7 +119,7 @@ export function DiagnosticItem({ diagnostic }: DiagnosticItemProps) {
             />
           )}
         </div>
-        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium tabular-nums text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 tabular-nums dark:bg-slate-800 dark:text-slate-300">
           {diagnostic.displayValue}
         </span>
       </div>

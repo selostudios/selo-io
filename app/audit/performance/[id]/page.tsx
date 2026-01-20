@@ -33,7 +33,7 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
       </div>
 
       {/* Show live progress for pending/running audits */}
-      {(audit.status === 'pending' || audit.status === 'running') ? (
+      {audit.status === 'pending' || audit.status === 'running' ? (
         <PerformanceLiveProgress auditId={id} initialStatus={audit.status} />
       ) : (
         <>

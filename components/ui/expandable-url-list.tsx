@@ -27,17 +27,12 @@ export function ExpandableUrlList({ groups, label }: ExpandableUrlListProps) {
   if (totalUrls === 0) return null
 
   return (
-    <Collapsible className="mt-2 group/urls">
+    <Collapsible className="group/urls mt-2">
       <CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors">
         <ChevronDown
-          className={cn(
-            'size-3 transition-transform',
-            'group-data-[state=closed]/urls:-rotate-90'
-          )}
+          className={cn('size-3 transition-transform', 'group-data-[state=closed]/urls:-rotate-90')}
         />
-        <span>
-          {label || `View ${totalUrls} affected URL${totalUrls !== 1 ? 's' : ''}`}
-        </span>
+        <span>{label || `View ${totalUrls} affected URL${totalUrls !== 1 ? 's' : ''}`}</span>
       </CollapsibleTrigger>
       <CollapsibleContent className="mt-2 space-y-3">
         {groups.map((group, groupIndex) => (

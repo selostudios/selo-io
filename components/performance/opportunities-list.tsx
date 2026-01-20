@@ -29,7 +29,7 @@ export function OpportunitiesList({ opportunities }: OpportunitiesListProps) {
               'group-data-[state=closed]/list:-rotate-90'
             )}
           />
-          <span className="text-balance text-lg font-semibold">Opportunities</span>
+          <span className="text-lg font-semibold text-balance">Opportunities</span>
         </CollapsibleTrigger>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground tabular-nums">

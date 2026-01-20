@@ -1,10 +1,4 @@
-import type {
-  PageSpeedResult,
-  CWVRating,
-  DeviceType,
-  Opportunity,
-  Diagnostic,
-} from './types'
+import type { PageSpeedResult, CWVRating, DeviceType, Opportunity, Diagnostic } from './types'
 
 const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
@@ -125,7 +119,10 @@ export function extractDiagnostics(result: PageSpeedResult): Diagnostic[] {
     .filter((audit): audit is Record<string, unknown> => {
       if (typeof audit !== 'object' || audit === null) return false
       const auditObj = audit as Record<string, unknown>
-      return typeof auditObj['displayValue'] === 'string' && (auditObj['displayValue'] as string).length > 0
+      return (
+        typeof auditObj['displayValue'] === 'string' &&
+        (auditObj['displayValue'] as string).length > 0
+      )
     })
     .map((audit) => ({
       id: audit['id'] as string,

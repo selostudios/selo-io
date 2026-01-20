@@ -62,9 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     // Generate PDF
-    const pdfBuffer = await renderToBuffer(
-      <PerformancePDF audit={audit} results={results || []} />
-    )
+    const pdfBuffer = await renderToBuffer(<PerformancePDF audit={audit} results={results || []} />)
 
     // Generate filename
     const dateStr = new Date().toISOString().split('T')[0]

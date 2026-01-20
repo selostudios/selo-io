@@ -23,9 +23,9 @@ export function DiagnosticsList({ diagnostics }: DiagnosticsListProps) {
               'group-data-[state=closed]/list:-rotate-90'
             )}
           />
-          <span className="text-balance text-lg font-semibold">Diagnostics</span>
+          <span className="text-lg font-semibold text-balance">Diagnostics</span>
         </CollapsibleTrigger>
-        <span className="text-muted-foreground tabular-nums text-sm">
+        <span className="text-muted-foreground text-sm tabular-nums">
           {count} item{count !== 1 ? 's' : ''}
         </span>
       </div>

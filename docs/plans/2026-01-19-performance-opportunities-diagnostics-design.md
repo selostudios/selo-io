@@ -18,12 +18,12 @@ Filter audits where `score < 1` and `numericValue > 0`:
 
 ```typescript
 interface Opportunity {
-  id: string                    // e.g., "render-blocking-resources"
-  title: string                 // e.g., "Eliminate render-blocking resources"
-  description: string           // Explanation of the issue
-  score: number                 // 0-1 (0 = needs work, 1 = good)
-  numericValue: number          // Savings in ms
-  displayValue: string          // e.g., "Potential savings of 1,230 ms"
+  id: string // e.g., "render-blocking-resources"
+  title: string // e.g., "Eliminate render-blocking resources"
+  description: string // Explanation of the issue
+  score: number // 0-1 (0 = needs work, 1 = good)
+  numericValue: number // Savings in ms
+  displayValue: string // e.g., "Potential savings of 1,230 ms"
   details?: {
     items?: Array<{
       url?: string
@@ -41,10 +41,10 @@ Filter audits that are informational (no savings, but have diagnostic value):
 
 ```typescript
 interface Diagnostic {
-  id: string                    // e.g., "dom-size"
-  title: string                 // e.g., "Avoid an excessive DOM size"
-  description: string           // Explanation
-  displayValue: string          // e.g., "1,234 elements"
+  id: string // e.g., "dom-size"
+  title: string // e.g., "Avoid an excessive DOM size"
+  description: string // Explanation
+  displayValue: string // e.g., "1,234 elements"
   details?: {
     items?: Array<Record<string, unknown>>
   }
@@ -132,14 +132,10 @@ In `performance-results.tsx`, add below Core Web Vitals:
   <div>...</div>
 
   {/* Opportunities - collapsed by default */}
-  {opportunities.length > 0 && (
-    <OpportunitiesList opportunities={opportunities} />
-  )}
+  {opportunities.length > 0 && <OpportunitiesList opportunities={opportunities} />}
 
   {/* Diagnostics - collapsed by default */}
-  {diagnostics.length > 0 && (
-    <DiagnosticsList diagnostics={diagnostics} />
-  )}
+  {diagnostics.length > 0 && <DiagnosticsList diagnostics={diagnostics} />}
 </CardContent>
 ```
 
@@ -158,6 +154,7 @@ In `performance-results.tsx`, add below Core Web Vitals:
 ## Known Opportunity IDs to Extract
 
 Priority opportunities (common high-impact items):
+
 - `render-blocking-resources`
 - `unused-javascript`
 - `unused-css-rules`
@@ -177,6 +174,7 @@ Priority opportunities (common high-impact items):
 ## Known Diagnostic IDs to Extract
 
 Priority diagnostics:
+
 - `dom-size`
 - `total-byte-weight`
 - `mainthread-work-breakdown`

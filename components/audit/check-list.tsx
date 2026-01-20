@@ -7,7 +7,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { EmptyState } from '@/components/ui/empty-state'
 import { CheckItem } from './check-item'
 import type { SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
-import { CheckCircle, ChevronDown, ChevronsUpDown, ExternalLink, FileText, Gauge, Globe, Info } from 'lucide-react'
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronsUpDown,
+  ExternalLink,
+  FileText,
+  Gauge,
+  Globe,
+  Info,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CheckListProps {
@@ -322,11 +331,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
           )
         })}
         {checks.length === 0 && (
-          <EmptyState
-            icon={CheckCircle}
-            title="No checks in this category"
-            className="py-4"
-          />
+          <EmptyState icon={CheckCircle} title="No checks in this category" className="py-4" />
         )}
       </CollapsibleContent>
     </Collapsible>

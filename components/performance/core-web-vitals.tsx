@@ -25,7 +25,7 @@ const METRIC_DEFINITIONS = {
   CLS: {
     name: 'Cumulative Layout Shift',
     description:
-      'Measures visual stability. CLS quantifies how much a page\'s content shifts unexpectedly. A good CLS score is 0.1 or less.',
+      "Measures visual stability. CLS quantifies how much a page's content shifts unexpectedly. A good CLS score is 0.1 or less.",
   },
 }
 

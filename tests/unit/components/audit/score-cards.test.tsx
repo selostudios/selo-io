@@ -38,11 +38,14 @@ describe('ScoreCards', () => {
     expect(dashes).toHaveLength(2)
   })
 
-  it('renders /100 suffix for all cards', () => {
+  it('renders score values without /100 suffix', () => {
     render(<ScoreCards overall={72} seo={81} ai={58} technical={77} />)
 
-    const suffixes = screen.getAllByText('/100')
-    expect(suffixes).toHaveLength(4)
+    // ScoreCards display just the numeric score in the radial chart
+    expect(screen.getByText('72')).toBeInTheDocument()
+    expect(screen.getByText('81')).toBeInTheDocument()
+    expect(screen.getByText('58')).toBeInTheDocument()
+    expect(screen.getByText('77')).toBeInTheDocument()
   })
 
   it('applies correct color classes based on score thresholds', () => {
@@ -61,13 +64,13 @@ describe('ScoreCards', () => {
     expect(container.textContent).toContain('30')
     expect(container.textContent).toContain('70')
 
-    // Check for color classes in the HTML
-    // Green scores (70+) should have text-green-600
-    expect(container.querySelector('.text-green-600')).toBeInTheDocument()
-    // Yellow scores (40-69) should have text-yellow-600
-    expect(container.querySelector('.text-yellow-600')).toBeInTheDocument()
-    // Red scores (<40) should have text-red-600
-    expect(container.querySelector('.text-red-600')).toBeInTheDocument()
+    // Check for fill classes in the SVG chart text elements
+    // Green scores (70+) should have fill-green-600
+    expect(container.querySelector('.fill-green-600')).toBeInTheDocument()
+    // Yellow scores (40-69) should have fill-yellow-700
+    expect(container.querySelector('.fill-yellow-700')).toBeInTheDocument()
+    // Red scores (<40) should have fill-red-600
+    expect(container.querySelector('.fill-red-600')).toBeInTheDocument()
   })
 
   it('handles edge case scores correctly', () => {

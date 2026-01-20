@@ -118,14 +118,28 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
 
             {/* Lighthouse Scores */}
             <div>
-              <h4 className="text-muted-foreground mb-4 text-sm font-medium">
-                Lighthouse Scores
-              </h4>
+              <h4 className="text-muted-foreground mb-4 text-sm font-medium">Lighthouse Scores</h4>
               <div className="flex gap-4">
-                <ScoreCard score={result.performance_score} label="Performance" description={METRIC_DESCRIPTIONS.Performance} />
-                <ScoreCard score={result.accessibility_score} label="Accessibility" description={METRIC_DESCRIPTIONS.Accessibility} />
-                <ScoreCard score={result.best_practices_score} label="Best Practices" description={METRIC_DESCRIPTIONS['Best Practices']} />
-                <ScoreCard score={result.seo_score} label="SEO" description={METRIC_DESCRIPTIONS.SEO} />
+                <ScoreCard
+                  score={result.performance_score}
+                  label="Performance"
+                  description={METRIC_DESCRIPTIONS.Performance}
+                />
+                <ScoreCard
+                  score={result.accessibility_score}
+                  label="Accessibility"
+                  description={METRIC_DESCRIPTIONS.Accessibility}
+                />
+                <ScoreCard
+                  score={result.best_practices_score}
+                  label="Best Practices"
+                  description={METRIC_DESCRIPTIONS['Best Practices']}
+                />
+                <ScoreCard
+                  score={result.seo_score}
+                  label="SEO"
+                  description={METRIC_DESCRIPTIONS.SEO}
+                />
               </div>
             </div>
 
@@ -142,26 +156,25 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
             </div>
 
             {/* Opportunities and Diagnostics */}
-            {result.raw_response && (() => {
-              const rawResponse = result.raw_response as unknown as PageSpeedResult
-              const opportunities = extractOpportunities(rawResponse)
-              const diagnostics = extractDiagnostics(rawResponse)
+            {result.raw_response &&
+              (() => {
+                const rawResponse = result.raw_response as unknown as PageSpeedResult
+                const opportunities = extractOpportunities(rawResponse)
+                const diagnostics = extractDiagnostics(rawResponse)
 
-              if (opportunities.length === 0 && diagnostics.length === 0) {
-                return null
-              }
+                if (opportunities.length === 0 && diagnostics.length === 0) {
+                  return null
+                }
 
-              return (
-                <div className="space-y-4 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                  {opportunities.length > 0 && (
-                    <OpportunitiesList opportunities={opportunities} />
-                  )}
-                  {diagnostics.length > 0 && (
-                    <DiagnosticsList diagnostics={diagnostics} />
-                  )}
-                </div>
-              )
-            })()}
+                return (
+                  <div className="space-y-4 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                    {opportunities.length > 0 && (
+                      <OpportunitiesList opportunities={opportunities} />
+                    )}
+                    {diagnostics.length > 0 && <DiagnosticsList diagnostics={diagnostics} />}
+                  </div>
+                )
+              })()}
           </div>
         )
       })}

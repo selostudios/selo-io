@@ -60,9 +60,9 @@ function parseDescription(description: string): { text: string; learnMoreUrl: st
   // Remove all markdown links from text and clean up trailing punctuation
   const text = description
     .replace(linkRegex, '')
-    .replace(/\s+\./g, '.')  // Remove space before period
-    .replace(/\.+$/g, '.')   // Remove multiple trailing periods
-    .replace(/\s+$/g, '')    // Trim trailing whitespace
+    .replace(/\s+\./g, '.') // Remove space before period
+    .replace(/\.+$/g, '.') // Remove multiple trailing periods
+    .replace(/\s+$/g, '') // Trim trailing whitespace
     .trim()
 
   return { text, learnMoreUrl }
@@ -103,17 +103,20 @@ export function OpportunityItem({ opportunity }: OpportunityItemProps) {
                     <span className="sr-only">Learn more</span>
                   </a>
                 ) : (
-                  <button className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors" aria-label="More information">
+                  <button
+                    className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer transition-colors"
+                    aria-label="More information"
+                  >
                     <Info className="size-3.5" />
                   </button>
                 )}
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p className="text-pretty text-xs">{descriptionText}</p>
+                <p className="text-xs text-pretty">{descriptionText}</p>
               </TooltipContent>
             </Tooltip>
           </div>
-          <p className="text-muted-foreground text-pretty mt-0.5 text-xs leading-relaxed">
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed text-pretty">
             {descriptionText}
           </p>
           {urlGroups.length > 0 && (
@@ -123,7 +126,7 @@ export function OpportunityItem({ opportunity }: OpportunityItemProps) {
             />
           )}
         </div>
-        <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium tabular-nums text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+        <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 tabular-nums dark:bg-yellow-900/30 dark:text-yellow-400">
           Save {savingsDisplay}
         </span>
       </div>
