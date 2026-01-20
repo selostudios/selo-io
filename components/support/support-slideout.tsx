@@ -127,9 +127,6 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           </SheetDescription>
         </SheetHeader>
 
-        <div className="px-6 pt-1">
-          <hr className="border-border" />
-        </div>
 
         {/* Content area - scrollable and grows */}
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4">
