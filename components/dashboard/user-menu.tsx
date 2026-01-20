@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ProfileForm } from '@/components/settings/profile-form'
+import { useFeedback } from '@/components/feedback/feedback-provider'
 
 interface UserMenuProps {
   userEmail: string
@@ -30,6 +31,7 @@ export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [currentFirstName, setCurrentFirstName] = useState(firstName)
   const [currentLastName, setCurrentLastName] = useState(lastName)
+  const { openFeedback } = useFeedback()
 
   // Compute initials from current name state
   const initials = currentLastName
@@ -54,6 +56,7 @@ export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
           <DropdownMenuLabel>{userEmail}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setProfileOpen(true)}>Profile</DropdownMenuItem>
+          <DropdownMenuItem onSelect={openFeedback}>Report an Issue</DropdownMenuItem>
           <DropdownMenuItem>
             <form action="/auth/sign-out" method="post" className="w-full">
               <button type="submit" className="w-full text-left">
