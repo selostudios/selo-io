@@ -180,43 +180,44 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           {/* Divider */}
           <hr className="border-border" />
 
-          {/* Status Select */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={status} onValueChange={(value) => setStatus(value as FeedbackStatus)}>
-              <SelectTrigger id="status" className="w-full">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Status & Priority */}
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as FeedbackStatus)}>
+                <SelectTrigger id="status" className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Priority Select */}
-          <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select
-              value={priority ?? ''}
-              onValueChange={(value) =>
-                setPriority(value ? (value as FeedbackPriority) : undefined)
-              }
-            >
-              <SelectTrigger id="priority" className="w-full">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                {PRIORITY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select
+                value={priority ?? ''}
+                onValueChange={(value) =>
+                  setPriority(value ? (value as FeedbackPriority) : undefined)
+                }
+              >
+                <SelectTrigger id="priority" className="w-full">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Note Textarea */}
