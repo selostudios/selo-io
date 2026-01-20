@@ -106,12 +106,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <div className="flex items-start justify-between gap-3 pr-8">
-            <SheetTitle className="flex-1">{feedback.title}</SheetTitle>
-            <Badge className={`shrink-0 ${STATUS_COLORS[feedback.status]}`}>
-              {CATEGORY_LABELS[feedback.category]}
-            </Badge>
-          </div>
+          <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">
               {submitterEmail ? (
@@ -135,27 +130,34 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           {/* Description */}
           <p className="text-sm whitespace-pre-wrap mb-4">{feedback.description}</p>
 
-          {/* Screenshot Attachment */}
-          {feedback.screenshot_url && (
-            <div className="mt-3">
-              <hr className="border-border mb-2" />
-              <div className="flex items-center gap-2 text-xs">
-                <ImageIcon className="h-3 w-3 text-muted-foreground" />
-                <a
-                  href={feedback.screenshot_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                >
-                  {(() => {
-                    const url = feedback.screenshot_url
-                    const filename = url.split('/').pop() || 'screenshot'
-                    return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
-                  })()}
-                </a>
-              </div>
+          {/* Footer: Screenshot & Category */}
+          <div className="mt-3">
+            <hr className="border-border mb-2" />
+            <div className="flex items-center justify-between">
+              {feedback.screenshot_url ? (
+                <div className="flex items-center gap-2 text-xs">
+                  <ImageIcon className="h-3 w-3 text-muted-foreground" />
+                  <a
+                    href={feedback.screenshot_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    {(() => {
+                      const url = feedback.screenshot_url
+                      const filename = url.split('/').pop() || 'screenshot'
+                      return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
+                    })()}
+                  </a>
+                </div>
+              ) : (
+                <div />
+              )}
+              <Badge className={STATUS_COLORS[feedback.status]}>
+                {CATEGORY_LABELS[feedback.category]}
+              </Badge>
             </div>
-          )}
+          </div>
 
           {/* Context */}
           {(feedback.page_url || feedback.user_agent) && (
