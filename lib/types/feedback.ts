@@ -65,6 +65,14 @@ export const STATUS_COLORS: Record<FeedbackStatus, string> = {
   closed: 'bg-red-100 text-red-700',
 }
 
+export const CATEGORY_COLORS: Record<FeedbackCategory, string> = {
+  bug: 'bg-red-100 text-red-700',
+  feature_request: 'bg-purple-100 text-purple-700',
+  performance: 'bg-orange-100 text-orange-700',
+  usability: 'bg-blue-100 text-blue-700',
+  other: 'bg-neutral-100 text-neutral-700',
+}
+
 export const PRIORITY_COLORS: Record<FeedbackPriority, string> = {
   critical: 'bg-red-100 text-red-700',
   high: 'bg-orange-100 text-orange-700',

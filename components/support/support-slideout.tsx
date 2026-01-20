@@ -27,7 +27,7 @@ import {
   STATUS_OPTIONS,
   PRIORITY_OPTIONS,
   CATEGORY_LABELS,
-  STATUS_COLORS,
+  CATEGORY_COLORS,
 } from '@/lib/types/feedback'
 import { updateFeedbackStatus } from '@/app/support/actions'
 import { ImageIcon } from 'lucide-react'
@@ -106,7 +106,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <Badge className={`w-fit mb-1 ${STATUS_COLORS[feedback.status]}`} style={{ marginLeft: '-2px' }}>
+          <Badge className={`w-fit mb-1 ${CATEGORY_COLORS[feedback.category]}`} style={{ marginLeft: '-2px' }}>
             {CATEGORY_LABELS[feedback.category]}
           </Badge>
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
