@@ -107,7 +107,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   // Show loading state while fetching initial data
   if (isLoading && shouldPoll) {
     return (
-      <div className="flex h-dvh items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center py-12">
             <Loader2 className="text-primary mb-4 size-12 animate-spin" />
@@ -122,7 +122,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   // Show failed state
   if (progress?.status === 'failed') {
     return (
-      <div className="flex h-dvh items-center justify-center p-4">
+      <div className="flex min-h-[60vh] items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center py-12">
             <div className="mb-4 rounded-full bg-red-100 p-4">
@@ -152,7 +152,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const status = progress?.status ?? initialStatus
 
   return (
-    <div className="flex h-dvh items-center justify-center p-4">
+    <div className="flex min-h-[60vh] items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
