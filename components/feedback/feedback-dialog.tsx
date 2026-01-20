@@ -26,10 +26,15 @@ import { CATEGORY_OPTIONS, type FeedbackCategory } from '@/lib/types/feedback'
 import { X, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
-function SubmitButton() {
+// Validation constants matching server-side requirements
+const TITLE_MIN_LENGTH = 3
+const TITLE_MAX_LENGTH = 200
+const DESCRIPTION_MIN_LENGTH = 10
+
+function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={disabled || pending}>
       {pending ? 'Submitting...' : 'Submit'}
     </Button>
   )
@@ -38,11 +43,18 @@ function SubmitButton() {
 export function FeedbackDialog() {
   const { isOpen, closeFeedback } = useFeedback()
   const { toast } = useToast()
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [category, setCategory] = useState<FeedbackCategory>('bug')
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
+
+  // Validation state
+  const isTitleValid = title.trim().length >= TITLE_MIN_LENGTH
+  const isDescriptionValid = description.trim().length >= DESCRIPTION_MIN_LENGTH
+  const isFormValid = isTitleValid && isDescriptionValid
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -87,6 +99,8 @@ export function FeedbackDialog() {
       toast({ title: 'Feedback submitted', description: 'Thank you for your feedback!' })
       closeFeedback()
       formRef.current?.reset()
+      setTitle('')
+      setDescription('')
       setCategory('bug')
       removeScreenshot()
     }
@@ -109,9 +123,16 @@ export function FeedbackDialog() {
               name="title"
               placeholder="Brief summary of the issue"
               required
-              minLength={3}
-              maxLength={200}
+              minLength={TITLE_MIN_LENGTH}
+              maxLength={TITLE_MAX_LENGTH}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
+            {title.length > 0 && !isTitleValid && (
+              <p className="text-sm text-destructive">
+                Title must be at least {TITLE_MIN_LENGTH} characters
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -121,9 +142,16 @@ export function FeedbackDialog() {
               name="description"
               placeholder="Describe the issue in detail..."
               required
-              minLength={10}
+              minLength={DESCRIPTION_MIN_LENGTH}
               rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
+            {description.length > 0 && !isDescriptionValid && (
+              <p className="text-sm text-destructive">
+                Description must be at least {DESCRIPTION_MIN_LENGTH} characters
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -186,7 +214,7 @@ export function FeedbackDialog() {
             <Button type="button" variant="outline" onClick={closeFeedback}>
               Cancel
             </Button>
-            <SubmitButton />
+            <SubmitButton disabled={!isFormValid} />
           </div>
         </form>
       </DialogContent>
