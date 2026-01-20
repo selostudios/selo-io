@@ -13,6 +13,7 @@
 ## Task 1: Database Migration - Enums and Feedback Table
 
 **Files:**
+
 - Create: `supabase/migrations/20260120000001_feedback_feature.sql`
 
 **Step 1: Write the migration file**
@@ -163,6 +164,7 @@ git commit -m "feat(db): add feedback table, enums, and RLS policies"
 ## Task 2: TypeScript Types for Feedback
 
 **Files:**
+
 - Create: `lib/types/feedback.ts`
 
 **Step 1: Write the types file**
@@ -278,6 +280,7 @@ git commit -m "feat: add TypeScript types for feedback feature"
 ## Task 3: Feedback Context Provider
 
 **Files:**
+
 - Create: `components/feedback/feedback-provider.tsx`
 
 **Step 1: Write the provider**
@@ -329,6 +332,7 @@ git commit -m "feat: add feedback context provider"
 ## Task 4: Feedback Dialog Component
 
 **Files:**
+
 - Create: `components/feedback/feedback-dialog.tsx`
 
 **Step 1: Write the dialog component**
@@ -536,6 +540,7 @@ git commit -m "feat: add feedback dialog component"
 ## Task 5: Keyboard Shortcut Trigger
 
 **Files:**
+
 - Create: `components/feedback/feedback-trigger.tsx`
 
 **Step 1: Write the keyboard trigger component**
@@ -578,6 +583,7 @@ git commit -m "feat: add CMD+Shift+F keyboard shortcut for feedback"
 ## Task 6: Submit Feedback Server Action
 
 **Files:**
+
 - Create: `app/feedback/actions.ts`
 
 **Step 1: Write the server action**
@@ -640,9 +646,7 @@ export async function submitFeedback(formData: FormData) {
       })
       // Continue without screenshot
     } else {
-      const { data: urlData } = supabase.storage
-        .from('feedback-screenshots')
-        .getPublicUrl(fileName)
+      const { data: urlData } = supabase.storage.from('feedback-screenshots').getPublicUrl(fileName)
       screenshotUrl = urlData.publicUrl
     }
   }
@@ -699,10 +703,7 @@ async function notifyDevelopers(
   const supabase = await createClient()
 
   // Get all developers
-  const { data: developers } = await supabase
-    .from('users')
-    .select('id')
-    .eq('role', 'developer')
+  const { data: developers } = await supabase.from('users').select('id').eq('role', 'developer')
 
   if (!developers || developers.length === 0) {
     return
@@ -745,6 +746,7 @@ git commit -m "feat: add submit feedback server action with email notification"
 ## Task 7: Feedback Submitted Email Template
 
 **Files:**
+
 - Create: `emails/feedback-submitted-email.tsx`
 
 **Step 1: Write the email template**
@@ -835,6 +837,7 @@ git commit -m "feat: add feedback submitted email template"
 ## Task 8: Feedback Status Changed Email Template
 
 **Files:**
+
 - Create: `emails/feedback-status-email.tsx`
 
 **Step 1: Write the email template**
@@ -922,21 +925,25 @@ git commit -m "feat: add feedback status changed email template"
 ## Task 9: Update User Menu with Report an Issue
 
 **Files:**
+
 - Modify: `components/dashboard/user-menu.tsx`
 
 **Step 1: Update the user menu**
 
 Add import at top:
+
 ```typescript
 import { useFeedback } from '@/components/feedback/feedback-provider'
 ```
 
 Add inside the component, before the return:
+
 ```typescript
 const { openFeedback } = useFeedback()
 ```
 
 Add new menu item after Profile and before Sign out (after line 56):
+
 ```typescript
 <DropdownMenuItem onSelect={openFeedback}>Report an Issue</DropdownMenuItem>
 ```
@@ -953,11 +960,13 @@ git commit -m "feat: add 'Report an Issue' to user menu"
 ## Task 10: Update Dashboard Layout with Feedback Provider
 
 **Files:**
+
 - Modify: `app/dashboard/layout.tsx`
 
 **Step 1: Update the layout**
 
 Add imports at top:
+
 ```typescript
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
@@ -965,6 +974,7 @@ import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 ```
 
 Wrap the return JSX with FeedbackProvider and add FeedbackDialog + FeedbackTrigger:
+
 ```typescript
 return (
   <FeedbackProvider>
@@ -993,6 +1003,7 @@ git commit -m "feat: integrate feedback provider into dashboard layout"
 ## Task 11: Support Page Layout (Developer Only)
 
 **Files:**
+
 - Create: `app/support/layout.tsx`
 
 **Step 1: Write the layout**
@@ -1047,6 +1058,7 @@ git commit -m "feat: add support layout with developer-only access"
 ## Task 12: Support Filters Component
 
 **Files:**
+
 - Create: `components/support/support-filters.tsx`
 
 **Step 1: Write the filters component**
@@ -1160,6 +1172,7 @@ git commit -m "feat: add support filters component"
 ## Task 13: Support Table Component
 
 **Files:**
+
 - Create: `components/support/support-table.tsx`
 
 **Step 1: Write the table component**
@@ -1270,6 +1283,7 @@ git commit -m "feat: add support table component"
 ## Task 14: Support Slideout Component
 
 **Files:**
+
 - Create: `components/support/support-slideout.tsx`
 
 **Step 1: Write the slideout component**
@@ -1525,6 +1539,7 @@ git commit -m "feat: add support slideout panel"
 ## Task 15: Update Feedback Status Server Action
 
 **Files:**
+
 - Create: `app/support/actions.ts`
 
 **Step 1: Write the server action**
@@ -1653,6 +1668,7 @@ git commit -m "feat: add update feedback status server action"
 ## Task 16: Support Page
 
 **Files:**
+
 - Create: `app/support/page.tsx`
 
 **Step 1: Write the page**
@@ -1802,6 +1818,7 @@ git commit -m "feat: add support page with filtering and slideout"
 ## Task 17: Update Existing RLS for Developer Bypass
 
 **Files:**
+
 - Create: `supabase/migrations/20260120000002_developer_rls_bypass.sql`
 
 **Step 1: Write the migration**
@@ -1879,6 +1896,7 @@ git commit -m "feat(db): add developer bypass to existing RLS policies"
 ## Task 18: Unit Tests - Feedback Types and Utils
 
 **Files:**
+
 - Create: `tests/unit/lib/types/feedback.test.ts`
 
 **Step 1: Write the test**
@@ -1975,6 +1993,7 @@ git commit -m "test: add unit tests for feedback types"
 ## Task 19: Unit Tests - Feedback Provider
 
 **Files:**
+
 - Create: `tests/unit/components/feedback/feedback-provider.test.tsx`
 
 **Step 1: Write the test**
@@ -2060,6 +2079,7 @@ git commit -m "test: add unit tests for feedback provider"
 ## Task 20: Unit Tests - Support Filters
 
 **Files:**
+
 - Create: `tests/unit/components/support/support-filters.test.tsx`
 
 **Step 1: Write the test**
@@ -2128,6 +2148,7 @@ git commit -m "test: add unit tests for support filters"
 ## Task 21: Unit Tests - Support Table
 
 **Files:**
+
 - Create: `tests/unit/components/support/support-table.test.tsx`
 
 **Step 1: Write the test**
@@ -2212,6 +2233,7 @@ git commit -m "test: add unit tests for support table"
 ## Task 22: Integration Tests - Feedback RLS
 
 **Files:**
+
 - Create: `tests/integration/feedback-rls.test.ts`
 
 **Step 1: Write the test**
@@ -2295,10 +2317,7 @@ describe('Feedback RLS Policies', () => {
       })
 
       // Query as the same user would (simulated via service role filter)
-      const { data } = await testDb
-        .from('feedback')
-        .select('*')
-        .eq('submitted_by', regularUser.id)
+      const { data } = await testDb.from('feedback').select('*').eq('submitted_by', regularUser.id)
 
       expect(data).toHaveLength(1)
       expect(data?.[0].title).toBe('My feedback')
@@ -2357,11 +2376,7 @@ describe('Feedback RLS Policies', () => {
 
       // Attempt to delete (should fail or be blocked by RLS)
       // Note: Service role bypasses RLS, so this tests schema constraints
-      const { data } = await testDb
-        .from('feedback')
-        .delete()
-        .eq('id', feedback?.id)
-        .select()
+      const { data } = await testDb.from('feedback').delete().eq('id', feedback?.id).select()
 
       // With no delete policy, this should still work with service role
       // but would fail for regular users - test validates the behavior
@@ -2389,6 +2404,7 @@ git commit -m "test: add integration tests for feedback RLS policies"
 ## Task 23: Integration Tests - Feedback Actions
 
 **Files:**
+
 - Create: `tests/integration/feedback-actions.test.ts`
 
 **Step 1: Write the test**
@@ -2532,14 +2548,23 @@ describe('Feedback Database Operations', () => {
 
     it('filters by status', async () => {
       await testDb.from('feedback').insert([
-        { title: 'New One', description: 'Test', category: 'bug', submitted_by: testUser.id, status: 'new' },
-        { title: 'In Progress', description: 'Test', category: 'bug', submitted_by: testUser.id, status: 'in_progress' },
+        {
+          title: 'New One',
+          description: 'Test',
+          category: 'bug',
+          submitted_by: testUser.id,
+          status: 'new',
+        },
+        {
+          title: 'In Progress',
+          description: 'Test',
+          category: 'bug',
+          submitted_by: testUser.id,
+          status: 'in_progress',
+        },
       ])
 
-      const { data } = await testDb
-        .from('feedback')
-        .select('title')
-        .eq('status', 'in_progress')
+      const { data } = await testDb.from('feedback').select('title').eq('status', 'in_progress')
 
       expect(data).toHaveLength(1)
       expect(data?.[0].title).toBe('In Progress')
@@ -2566,6 +2591,7 @@ git commit -m "test: add integration tests for feedback database operations"
 ## Task 24: E2E Tests - Feedback Submission
 
 **Files:**
+
 - Create: `tests/e2e/feedback.spec.ts`
 
 **Step 1: Write the test**
@@ -2611,7 +2637,10 @@ test.describe('Feedback Submission', () => {
 
     // Fill form
     await page.fill('input[name="title"]', 'Test Bug Report')
-    await page.fill('textarea[name="description"]', 'This is a detailed description of the bug I found.')
+    await page.fill(
+      'textarea[name="description"]',
+      'This is a detailed description of the bug I found.'
+    )
 
     // Select category (bug is default)
     await page.click('button[role="combobox"]')
@@ -2657,6 +2686,7 @@ git commit -m "test: add E2E tests for feedback submission"
 ## Task 25: E2E Tests - Support Section
 
 **Files:**
+
 - Create: `tests/e2e/support.spec.ts`
 
 **Step 1: Update test fixtures to include developer user**
@@ -2718,6 +2748,7 @@ git commit -m "test: add E2E tests for support section access control"
 ## Task 26: Update Test Helpers for Feedback
 
 **Files:**
+
 - Modify: `tests/helpers/db.ts`
 
 **Step 1: Add feedback helpers**

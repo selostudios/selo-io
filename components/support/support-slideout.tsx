@@ -96,12 +96,14 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>{feedback.title}</SheetTitle>
           <SheetDescription>
-            <Badge className={STATUS_COLORS[feedback.status]}>{CATEGORY_LABELS[feedback.category]}</Badge>
-            <span className="ml-2 text-muted-foreground">
+            <Badge className={STATUS_COLORS[feedback.status]}>
+              {CATEGORY_LABELS[feedback.category]}
+            </Badge>
+            <span className="text-muted-foreground ml-2">
               {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
             </span>
           </SheetDescription>
@@ -110,7 +112,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
         <div className="mt-6 space-y-6">
           {/* Description */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+            <Label className="text-muted-foreground text-xs tracking-wider uppercase">
               Description
             </Label>
             <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
@@ -118,19 +120,19 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
           {/* Submitter */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+            <Label className="text-muted-foreground text-xs tracking-wider uppercase">
               Submitted By
             </Label>
             <p className="text-sm">{submitterName}</p>
             {feedback.organization && (
-              <p className="text-sm text-muted-foreground">{feedback.organization.name}</p>
+              <p className="text-muted-foreground text-sm">{feedback.organization.name}</p>
             )}
           </div>
 
           {/* Context */}
           {(feedback.page_url || feedback.user_agent) && (
             <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+              <Label className="text-muted-foreground text-xs tracking-wider uppercase">
                 Context
               </Label>
               {feedback.page_url && (
@@ -140,7 +142,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
                 </p>
               )}
               {feedback.user_agent && (
-                <p className="text-sm text-muted-foreground truncate" title={feedback.user_agent}>
+                <p className="text-muted-foreground truncate text-sm" title={feedback.user_agent}>
                   {feedback.user_agent}
                 </p>
               )}
@@ -150,7 +152,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           {/* Screenshot */}
           {feedback.screenshot_url && (
             <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+              <Label className="text-muted-foreground text-xs tracking-wider uppercase">
                 Screenshot
               </Label>
               <a

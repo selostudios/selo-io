@@ -26,9 +26,7 @@ interface SupportTableProps {
 
 export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
   if (feedback.length === 0) {
-    return (
-      <div className="text-muted-foreground py-8 text-center">No feedback items found.</div>
-    )
+    return <div className="text-muted-foreground py-8 text-center">No feedback items found.</div>
   }
 
   return (
@@ -48,7 +46,7 @@ export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
           <TableRow
             key={item.id}
             onClick={() => onRowClick(item)}
-            className="cursor-pointer hover:bg-muted/50"
+            className="hover:bg-muted/50 cursor-pointer"
           >
             <TableCell className="font-medium">{item.title}</TableCell>
             <TableCell>

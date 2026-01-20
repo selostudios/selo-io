@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SupportFilters } from '@/components/support/support-filters'
+import type { FeedbackStatus, FeedbackCategory, FeedbackPriority } from '@/lib/types/feedback'
 
 describe('SupportFilters', () => {
   const defaultProps = {
-    status: undefined as any,
-    category: undefined as any,
-    priority: undefined as any,
+    status: undefined as FeedbackStatus | undefined,
+    category: undefined as FeedbackCategory | undefined,
+    priority: undefined as FeedbackPriority | undefined,
     onStatusChange: vi.fn(),
     onCategoryChange: vi.fn(),
     onPriorityChange: vi.fn(),
