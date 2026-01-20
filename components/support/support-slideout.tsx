@@ -131,7 +131,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
         {/* Content area - scrollable and grows */}
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4">
           {/* Description */}
-          <p className="text-sm whitespace-pre-wrap pb-4">{feedback.description}</p>
+          <p className="text-sm whitespace-pre-wrap mb-4">{feedback.description}</p>
 
           {/* Screenshot Attachment */}
           {feedback.screenshot_url && (
