@@ -123,3 +123,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Safelist for dynamic category colors */
+@layer utilities {
+  .bg-purple-100 { background-color: oklch(0.95 0.03 300); }
+  .text-purple-700 { color: oklch(0.45 0.15 300); }
+}
