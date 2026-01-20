@@ -146,8 +146,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
                 {(() => {
                   const url = feedback.screenshot_url
                   const filename = url.split('/').pop() || 'screenshot'
-                  const ext = filename.split('.').pop()?.toUpperCase() || 'IMG'
-                  return `${filename.length > 30 ? filename.slice(0, 30) + '...' : filename} • ${ext}`
+                  return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
                 })()}
               </span>
             </a>
