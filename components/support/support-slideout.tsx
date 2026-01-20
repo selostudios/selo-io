@@ -105,7 +105,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader className="px-6 pt-6">
+        <SheetHeader className="gap-1 px-6 pt-6">
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">
