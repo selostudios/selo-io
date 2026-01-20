@@ -195,22 +195,25 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
             )}
           </div>
 
-          {/* Stop button */}
-          {pagesCrawled > 0 && (
-            <Button variant="outline" className="w-full" onClick={handleStop} disabled={isStopping}>
-              {isStopping ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Stopping...
-                </>
-              ) : (
-                <>
-                  <StopCircle className="mr-2 size-4" />
-                  Stop &amp; Generate Report
-                </>
-              )}
-            </Button>
-          )}
+          {/* Stop button - always show for in-progress audits */}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleStop}
+            disabled={isStopping}
+          >
+            {isStopping ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Stopping...
+              </>
+            ) : (
+              <>
+                <StopCircle className="mr-2 size-4" />
+                {pagesCrawled > 0 ? 'Stop & Generate Report' : 'Cancel Audit'}
+              </>
+            )}
+          </Button>
 
           {/* Recent checks */}
           {recentChecks.length > 0 && (
