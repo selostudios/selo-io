@@ -104,7 +104,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6">
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
@@ -131,13 +131,14 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           <hr className="border-border" />
         </div>
 
-        <div className="px-6 pb-6">
+        {/* Content area - scrollable and grows */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {/* Description */}
           <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
 
           {/* Screenshot Attachment */}
           {feedback.screenshot_url && (
-            <div>
+            <div className="mt-4">
               <hr className="border-border mb-2" />
               <div className="flex items-center gap-2 text-xs">
                 <ImageIcon className="h-3 w-3 text-muted-foreground" />
@@ -159,7 +160,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
           {/* Context */}
           {(feedback.page_url || feedback.user_agent) && (
-            <div className="space-y-2">
+            <div className="mt-4 space-y-2">
               <Label className="text-muted-foreground text-xs tracking-wider uppercase">
                 Context
               </Label>
@@ -176,10 +177,10 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
               )}
             </div>
           )}
+        </div>
 
-          {/* Divider */}
-          <hr className="border-border" />
-
+        {/* Form - anchored to bottom */}
+        <div className="border-t border-border px-6 py-4 space-y-4">
           {/* Status & Priority */}
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
@@ -228,7 +229,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Add a note about this feedback..."
-              rows={4}
+              rows={3}
             />
           </div>
 
