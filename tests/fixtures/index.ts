@@ -17,6 +17,12 @@ export const testUsers = {
     firstName: 'Client',
     lastName: 'Viewer',
   },
+  developer: {
+    email: 'developer@test.com',
+    password: 'TestPassword123!',
+    firstName: 'Developer',
+    lastName: 'User',
+  },
 }
 
 export const testOrganization = {

@@ -46,6 +46,7 @@ export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
             variant="ghost"
             className="relative h-10 w-10 rounded-full"
             aria-label="Open user menu"
+            data-testid="user-menu-trigger"
           >
             <Avatar>
               <AvatarFallback>{initials}</AvatarFallback>

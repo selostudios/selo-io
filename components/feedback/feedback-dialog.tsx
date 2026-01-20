@@ -48,7 +48,11 @@ export function FeedbackDialog() {
     const file = e.target.files?.[0]
     if (file) {
       if (!file.type.startsWith('image/')) {
-        toast({ title: 'Invalid file', description: 'Please select an image file', variant: 'destructive' })
+        toast({
+          title: 'Invalid file',
+          description: 'Please select an image file',
+          variant: 'destructive',
+        })
         return
       }
       setScreenshot(file)
@@ -125,7 +129,7 @@ export function FeedbackDialog() {
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={category} onValueChange={(v) => setCategory(v as FeedbackCategory)}>
-              <SelectTrigger id="category">
+              <SelectTrigger id="category" data-testid="category-select">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -159,7 +163,7 @@ export function FeedbackDialog() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1 h-6 w-6"
+                  className="absolute top-1 right-1 h-6 w-6"
                   onClick={removeScreenshot}
                 >
                   <X className="h-4 w-4" />
