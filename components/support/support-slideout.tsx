@@ -137,7 +137,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           {feedback.screenshot_url && (
             <div className="mt-3">
               <hr className="border-border mb-2" />
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-2 text-xs mt-2">
                 <ImageIcon className="h-3 w-3 text-muted-foreground" />
                 <a
                   href={feedback.screenshot_url}
