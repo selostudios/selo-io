@@ -15,7 +15,7 @@ export default async function SupportPage({
     .select(
       `
       *,
-      submitter:users!submitted_by(id, first_name, last_name),
+      submitter:users!submitted_by(id, first_name, last_name, email),
       organization:organizations(id, name)
     `
     )

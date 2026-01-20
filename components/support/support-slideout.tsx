@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { formatDistanceToNow } from 'date-fns'
+import { Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -90,26 +91,29 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
   const submitterName = feedback.submitter
     ? `${feedback.submitter.first_name ?? ''} ${feedback.submitter.last_name ?? ''}`.trim() ||
-      feedback.submitter.email ||
       'Unknown'
     : 'Unknown'
+
+  const submitterEmail = feedback.submitter?.email
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{feedback.title}</SheetTitle>
-          <SheetDescription>
-            <Badge className={STATUS_COLORS[feedback.status]}>
-              {CATEGORY_LABELS[feedback.category]}
-            </Badge>
-            <span className="text-muted-foreground ml-2">
-              {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
-            </span>
+        <SheetHeader className="px-6 pt-6">
+          <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
+          <SheetDescription asChild>
+            <div className="flex items-center gap-2">
+              <Badge className={STATUS_COLORS[feedback.status]}>
+                {CATEGORY_LABELS[feedback.category]}
+              </Badge>
+              <span className="text-muted-foreground">
+                {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
+              </span>
+            </div>
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-6 px-6 pb-6">
           {/* Description */}
           <div className="space-y-2">
             <Label className="text-muted-foreground text-xs tracking-wider uppercase">
@@ -123,9 +127,21 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
             <Label className="text-muted-foreground text-xs tracking-wider uppercase">
               Submitted By
             </Label>
-            <p className="text-sm">{submitterName}</p>
+            {submitterEmail ? (
+              <a
+                href={`mailto:${submitterEmail}`}
+                className="block text-sm font-medium text-blue-600 hover:underline"
+              >
+                {submitterName}
+              </a>
+            ) : (
+              <p className="text-sm">{submitterName}</p>
+            )}
             {feedback.organization && (
-              <p className="text-muted-foreground text-sm">{feedback.organization.name}</p>
+              <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                <Building2 className="h-3.5 w-3.5" />
+                {feedback.organization.name}
+              </p>
             )}
           </div>
 
