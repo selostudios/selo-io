@@ -15,6 +15,7 @@
 ### Task 1: Create Performance Audit Database Tables
 
 **Files:**
+
 - Create: `supabase/migrations/20260119100001_create_performance_audits.sql`
 
 **Step 1: Write the migration file**
@@ -160,6 +161,7 @@ git commit -m "feat(db): add performance audit tables and RLS policies"
 ### Task 2: Create TypeScript Types
 
 **Files:**
+
 - Create: `lib/performance/types.ts`
 
 **Step 1: Write the types file**
@@ -267,6 +269,7 @@ git commit -m "feat(types): add performance audit TypeScript types"
 ### Task 3: Create PageSpeed Insights API Client
 
 **Files:**
+
 - Create: `lib/performance/api.ts`
 
 **Step 1: Write the API client**
@@ -309,7 +312,7 @@ export async function fetchPageSpeedInsights({
 
   const response = await fetch(fullUrl, {
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   })
 
@@ -366,6 +369,7 @@ export function extractMetrics(result: PageSpeedResult) {
 **Step 2: Add environment variable to .env.local.example**
 
 Add to `.env.local.example`:
+
 ```
 PAGESPEED_API_KEY=your_pagespeed_api_key_here
 ```
@@ -382,6 +386,7 @@ git commit -m "feat(api): add PageSpeed Insights API client"
 ### Task 4: Create Performance Audit Runner
 
 **Files:**
+
 - Create: `lib/performance/runner.ts`
 
 **Step 1: Write the runner**
@@ -391,10 +396,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPageSpeedInsights, extractMetrics } from './api'
 import type { DeviceType, PerformanceAuditStatus } from './types'
 
-export async function runPerformanceAudit(
-  auditId: string,
-  urls: string[]
-): Promise<void> {
+export async function runPerformanceAudit(auditId: string, urls: string[]): Promise<void> {
   const supabase = createServiceClient()
 
   // Update status to running
@@ -474,6 +476,7 @@ git commit -m "feat(runner): add performance audit runner"
 ### Task 5: Create Start Performance Audit Endpoint
 
 **Files:**
+
 - Create: `app/api/performance/start/route.ts`
 
 **Step 1: Write the route**
@@ -559,6 +562,7 @@ git commit -m "feat(api): add POST /api/performance/start endpoint"
 ### Task 6: Create Get Performance Audit Endpoint
 
 **Files:**
+
 - Create: `app/api/performance/[id]/route.ts`
 
 **Step 1: Write the route**
@@ -567,10 +571,7 @@ git commit -m "feat(api): add POST /api/performance/start endpoint"
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
@@ -620,6 +621,7 @@ git commit -m "feat(api): add GET /api/performance/[id] endpoint"
 ### Task 7: Create Monitored Pages Endpoints
 
 **Files:**
+
 - Create: `app/api/performance/pages/route.ts`
 
 **Step 1: Write the route**
@@ -734,10 +736,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Page ID is required' }, { status: 400 })
   }
 
-  const { error } = await supabase
-    .from('monitored_pages')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('monitored_pages').delete().eq('id', id)
 
   if (error) {
     console.error('[Monitored Pages] Delete error:', error)
@@ -762,6 +761,7 @@ git commit -m "feat(api): add monitored pages CRUD endpoints"
 ### Task 8: Create Performance Score Card Component
 
 **Files:**
+
 - Create: `components/performance/score-gauge.tsx`
 
 **Step 1: Write the component**
@@ -859,6 +859,7 @@ git commit -m "feat(ui): add ScoreGauge component for performance scores"
 ### Task 9: Create Core Web Vitals Component
 
 **Files:**
+
 - Create: `components/performance/core-web-vitals.tsx`
 
 **Step 1: Write the component**
@@ -959,6 +960,7 @@ git commit -m "feat(ui): add CoreWebVitals component"
 ### Task 10: Create Performance Results Component
 
 **Files:**
+
 - Create: `components/performance/performance-results.tsx`
 
 **Step 1: Write the component**
@@ -1086,6 +1088,7 @@ git commit -m "feat(ui): add PerformanceResults component"
 ### Task 11: Create Performance Audit Page
 
 **Files:**
+
 - Create: `app/audit/performance/page.tsx`
 - Create: `app/audit/performance/actions.ts`
 
@@ -1188,6 +1191,7 @@ git commit -m "feat(pages): add performance audit page and actions"
 ### Task 12: Create Performance Dashboard Component
 
 **Files:**
+
 - Create: `components/performance/performance-dashboard.tsx`
 
 **Step 1: Write the component**
@@ -1425,6 +1429,7 @@ git commit -m "feat(ui): add PerformanceDashboard component"
 ### Task 13: Create Performance Audit Results Page
 
 **Files:**
+
 - Create: `app/audit/performance/[id]/page.tsx`
 - Create: `app/audit/performance/[id]/actions.ts`
 
@@ -1549,6 +1554,7 @@ git commit -m "feat(pages): add performance audit results page"
 ### Task 14: Add Navigation Tab to Audit Layout
 
 **Files:**
+
 - Modify: `app/audit/layout.tsx`
 
 **Step 1: Read current layout**
@@ -1610,6 +1616,7 @@ git commit -m "feat(nav): add Performance tab to audit layout"
 ### Task 15: Create Cron Job Endpoint
 
 **Files:**
+
 - Create: `app/api/cron/weekly-audits/route.ts`
 
 **Step 1: Write the cron endpoint**
@@ -1737,6 +1744,7 @@ Create or update `vercel.json`:
 **Step 3: Add CRON_SECRET to environment variables**
 
 Add to `.env.local.example`:
+
 ```
 CRON_SECRET=your_cron_secret_here
 ```
@@ -1753,6 +1761,7 @@ git commit -m "feat(cron): add weekly audit cron job"
 ### Task 16: Create Monitored Sites Management UI
 
 **Files:**
+
 - Create: `app/settings/monitoring/page.tsx`
 - Create: `components/settings/monitored-sites.tsx`
 
@@ -1952,7 +1961,9 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -1976,7 +1987,9 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -1985,10 +1998,7 @@ export async function PATCH(request: Request) {
   const body = await request.json()
   const { id, ...updates } = body
 
-  const { error } = await supabase
-    .from('monitored_sites')
-    .update(updates)
-    .eq('id', id)
+  const { error } = await supabase.from('monitored_sites').update(updates).eq('id', id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -2012,6 +2022,7 @@ git commit -m "feat(settings): add monitored sites management UI"
 ### Task 17: Add Performance Audit Launch Button to Site Audit Report
 
 **Files:**
+
 - Modify: `components/audit/check-list.tsx`
 
 **Step 1: Add speedometer icon button to page rows**

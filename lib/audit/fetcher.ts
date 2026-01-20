@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio'
 export interface FetchResult {
   html: string
   statusCode: number
+  lastModified: string | null
   error?: string
 }
 
@@ -17,15 +18,29 @@ export async function fetchPage(url: string): Promise<FetchResult> {
     })
 
     const html = await response.text()
+    const lastModifiedHeader = response.headers.get('last-modified')
+    let lastModified: string | null = null
+    if (lastModifiedHeader) {
+      try {
+        const date = new Date(lastModifiedHeader)
+        if (!isNaN(date.getTime())) {
+          lastModified = date.toISOString()
+        }
+      } catch {
+        // Invalid date format, ignore
+      }
+    }
 
     return {
       html,
       statusCode: response.status,
+      lastModified,
     }
   } catch (error) {
     return {
       html: '',
       statusCode: 0,
+      lastModified: null,
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }

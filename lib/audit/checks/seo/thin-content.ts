@@ -6,6 +6,9 @@ export const thinContent: AuditCheckDefinition = {
   type: 'seo',
   priority: 'optional',
   description: 'Pages should have at least 300 words of content',
+  displayName: 'Thin Content',
+  displayNamePassed: 'Content Length',
+  learnMoreUrl: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -20,12 +23,17 @@ export const thinContent: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Only ${wordCount} words (recommended: 300+)`,
+          message: `Page has only ${wordCount} words. Search engines prefer pages with 300+ words of meaningful content. Consider adding more descriptive text, FAQs, or explanations.`,
           wordCount,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: `${wordCount} words`,
+      },
+    }
   },
 }

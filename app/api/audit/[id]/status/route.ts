@@ -34,6 +34,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     seo_score: audit.seo_score,
     ai_readiness_score: audit.ai_readiness_score,
     technical_score: audit.technical_score,
+    error_message: audit.error_message,
+    started_at: audit.started_at,
     checks: checks ?? [],
   })
 }

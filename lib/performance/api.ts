@@ -1,4 +1,10 @@
-import type { PageSpeedResult, CWVRating, DeviceType } from './types'
+import type {
+  PageSpeedResult,
+  CWVRating,
+  DeviceType,
+  Opportunity,
+  Diagnostic,
+} from './types'
 
 const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
@@ -76,4 +82,56 @@ export function extractMetrics(result: PageSpeedResult) {
       : null,
     cls_rating: mapCategoryToRating(fieldData?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.category),
   }
+}
+
+export function extractOpportunities(result: PageSpeedResult): Opportunity[] {
+  const audits = result.lighthouseResult.audits
+
+  return Object.values(audits)
+    .filter((audit): audit is Record<string, unknown> => {
+      if (typeof audit !== 'object' || audit === null) return false
+      const auditObj = audit as Record<string, unknown>
+      const score = auditObj['score'] as number | null
+      const numericValue = auditObj['numericValue'] as number | undefined
+      return score !== null && score < 1 && typeof numericValue === 'number' && numericValue > 0
+    })
+    .sort((a, b) => (b['numericValue'] as number) - (a['numericValue'] as number))
+    .map((audit) => ({
+      id: audit['id'] as string,
+      title: audit['title'] as string,
+      description: audit['description'] as string,
+      score: audit['score'] as number,
+      numericValue: audit['numericValue'] as number,
+      displayValue: (audit['displayValue'] as string) ?? '',
+      details: audit['details'] as Opportunity['details'],
+    }))
+}
+
+const DIAGNOSTIC_IDS = [
+  'dom-size',
+  'total-byte-weight',
+  'mainthread-work-breakdown',
+  'bootup-time',
+  'network-requests',
+  'largest-contentful-paint-element',
+  'layout-shift-elements',
+  'long-tasks',
+]
+
+export function extractDiagnostics(result: PageSpeedResult): Diagnostic[] {
+  const audits = result.lighthouseResult.audits
+
+  return DIAGNOSTIC_IDS.map((id) => audits[id])
+    .filter((audit): audit is Record<string, unknown> => {
+      if (typeof audit !== 'object' || audit === null) return false
+      const auditObj = audit as Record<string, unknown>
+      return typeof auditObj['displayValue'] === 'string' && (auditObj['displayValue'] as string).length > 0
+    })
+    .map((audit) => ({
+      id: audit['id'] as string,
+      title: audit['title'] as string,
+      description: audit['description'] as string,
+      displayValue: audit['displayValue'] as string,
+      details: audit['details'] as Diagnostic['details'],
+    }))
 }

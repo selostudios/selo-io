@@ -21,6 +21,7 @@ Add a Performance Audit feature that leverages the Google PageSpeed Insights API
 ### Page Selection
 
 Users can select pages to audit via:
+
 - **Manual URL entry**: Type or paste URLs directly
 - **Pick from crawled pages**: Select from pages discovered in previous Site Audits
 
@@ -29,6 +30,7 @@ Default behavior: Homepage is always included, users add additional key pages.
 ### Results Display
 
 **Per-page metrics:**
+
 - Core Web Vitals with pass/fail indicators:
   - LCP (Largest Contentful Paint) - target < 2.5s
   - INP (Interaction to Next Paint) - target < 200ms
@@ -99,6 +101,7 @@ CREATE TABLE monitored_pages (
 ### API Integration
 
 **PageSpeed Insights API:**
+
 - Endpoint: `https://www.googleapis.com/pagespeedonline/v5/runPagespeed`
 - Parameters:
   - `url`: Page URL to analyze
@@ -107,6 +110,7 @@ CREATE TABLE monitored_pages (
   - `key`: API key (stored in environment)
 
 **Rate limits:**
+
 - Free tier: 25,000 queries/day
 - Consider queuing for bulk audits
 
@@ -148,19 +152,25 @@ POST /api/performance/monitor   # Add page to monitoring
 ## UI Components
 
 ### Performance Score Card
+
 Circular gauge showing 0-100 score with color coding:
+
 - 90-100: Green (good)
 - 50-89: Orange (needs improvement)
 - 0-49: Red (poor)
 
 ### Core Web Vitals Display
+
 Three-column layout showing:
+
 - Metric name and value
 - Visual indicator (green/yellow/red)
 - Target threshold
 
 ### Trend Chart
+
 Line chart showing:
+
 - X-axis: Date
 - Y-axis: Score/metric value
 - Separate lines for mobile vs desktop
@@ -175,6 +185,7 @@ A cron job runs weekly to automatically audit all monitored sites.
 **Trigger**: Weekly (e.g., Sunday at 2am UTC)
 
 **Process**:
+
 1. Query all organizations with active monitored sites
 2. For each organization:
    - Run Site Audit on the primary site URL
@@ -185,12 +196,15 @@ A cron job runs weekly to automatically audit all monitored sites.
 **Implementation options**:
 
 1. **Vercel Cron**: Use `vercel.json` cron configuration
+
    ```json
    {
-     "crons": [{
-       "path": "/api/cron/weekly-audits",
-       "schedule": "0 2 * * 0"
-     }]
+     "crons": [
+       {
+         "path": "/api/cron/weekly-audits",
+         "schedule": "0 2 * * 0"
+       }
+     ]
    }
    ```
 
@@ -213,6 +227,7 @@ POST /api/cron/weekly-audits
 ### Job Queue
 
 For handling multiple audits without hitting Vercel timeout:
+
 - Use Vercel's background functions or
 - Queue jobs in database and process via separate endpoint
 - Each audit runs independently
@@ -236,22 +251,26 @@ CREATE TABLE monitored_sites (
 ## Implementation Phases
 
 ### Phase 1: Core Functionality
+
 1. Database migrations
 2. PageSpeed Insights API integration
 3. Basic audit creation and results display
 4. Mobile/desktop toggle
 
 ### Phase 2: Integration
+
 1. Launch from Site Audit report
 2. Page selector (manual + from crawled)
 3. Monitored pages list
 
 ### Phase 3: History & Trends
+
 1. Audit history list
 2. Trend charts
 3. Comparison views
 
 ### Phase 4: Automated Weekly Audits
+
 1. Monitored sites table and UI
 2. Cron job endpoint
 3. Job queue for bulk processing

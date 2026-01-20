@@ -2,13 +2,27 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Gauge, Loader2, Plus, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Clock, Gauge, Loader2, Plus, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
-import { formatDate } from '@/lib/utils'
+import { formatDuration, calculateDuration } from '@/lib/utils'
+
+function formatAuditDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function isInProgress(status: PerformanceAudit['status']): boolean {
+  return status === 'pending' || status === 'running'
+}
 
 interface PerformanceDashboardProps {
   audits: PerformanceAudit[]
@@ -207,32 +221,55 @@ export function PerformanceDashboard({
               description="Run your first performance audit above."
             />
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y">
               {audits.map((audit) => (
-                <a
+                <div
                   key={audit.id}
-                  href={`/audit/performance/${audit.id}`}
-                  className="hover:bg-muted/50 flex items-center justify-between rounded-md border px-4 py-3 transition-colors"
+                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                 >
-                  <div>
-                    <span className="text-sm font-medium">
-                      {audit.completed_at
-                        ? formatDate(audit.completed_at, false)
-                        : formatDate(audit.created_at, false)}
+                  <div className="flex items-center gap-6">
+                    <span className="text-muted-foreground w-28 text-sm">
+                      {formatAuditDate(audit.created_at)}
                     </span>
+                    {isInProgress(audit.status) ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                        <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
+                          In Progress
+                        </span>
+                      </div>
+                    ) : audit.status === 'failed' ? (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                        Failed
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        {audit.total_urls} {audit.total_urls === 1 ? 'page' : 'pages'}
+                      </span>
+                    )}
                   </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${
-                      audit.status === 'completed'
-                        ? 'bg-green-100 text-green-700'
-                        : audit.status === 'failed'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                    }`}
-                  >
-                    {audit.status}
-                  </span>
-                </a>
+                  <div className="flex items-center gap-4">
+                    {audit.status === 'completed' && (
+                      <>
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                          Completed
+                        </span>
+                        {(() => {
+                          const duration = calculateDuration(audit.started_at, audit.completed_at)
+                          return duration ? (
+                            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <Clock className="size-3" />
+                              {formatDuration(duration)}
+                            </span>
+                          ) : null
+                        })()}
+                      </>
+                    )}
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/audit/performance/${audit.id}`}>View</Link>
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}

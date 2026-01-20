@@ -6,6 +6,10 @@ export const headingHierarchy: AuditCheckDefinition = {
   type: 'seo',
   priority: 'recommended',
   description: 'Heading levels should not be skipped',
+  displayName: 'Skipped Heading Levels',
+  displayNamePassed: 'Heading Hierarchy',
+  learnMoreUrl:
+    'https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements#usage_notes',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -22,7 +26,7 @@ export const headingHierarchy: AuditCheckDefinition = {
 
     for (const level of headings) {
       if (previousLevel > 0 && level > previousLevel + 1) {
-        skippedLevels.push(`H${previousLevel} to H${level}`)
+        skippedLevels.push(`H${previousLevel} → H${level}`)
       }
       previousLevel = level
     }
@@ -31,12 +35,17 @@ export const headingHierarchy: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Heading levels skipped: ${skippedLevels.join(', ')}`,
+          message: `Headings should follow a logical order (H1 → H2 → H3). Skipped: ${skippedLevels.join(', ')}. This helps screen readers and search engines understand content structure.`,
           skippedLevels,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: 'Headings follow correct hierarchy',
+      },
+    }
   },
 }

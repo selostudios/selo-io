@@ -6,6 +6,9 @@ export const missingCanonical: AuditCheckDefinition = {
   type: 'seo',
   priority: 'recommended',
   description: 'Pages should have a canonical URL tag',
+  displayName: 'Missing Canonical URL',
+  displayNamePassed: 'Canonical URL',
+  learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/canonicalization',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -15,11 +18,16 @@ export const missingCanonical: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: 'No canonical URL tag found',
+          message: `Add <link rel="canonical" href="${context.url}"> to the <head>. This tells search engines which URL is the "official" version when duplicate content exists.`,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: canonical,
+      },
+    }
   },
 }

@@ -6,6 +6,10 @@ export const metaDescriptionLength: AuditCheckDefinition = {
   type: 'seo',
   priority: 'recommended',
   description: 'Meta description should be between 150-160 characters',
+  displayName: 'Meta Description Length',
+  displayNamePassed: 'Meta Description Length',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/fundamentals/seo-starter-guide#use-the-description-meta-tag',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -17,11 +21,11 @@ export const metaDescriptionLength: AuditCheckDefinition = {
 
     const length = metaDescription.trim().length
 
-    if (length < 150) {
+    if (length < 120) {
       return {
         status: 'warning',
         details: {
-          message: `Meta description is ${length} characters (recommended: 150-160)`,
+          message: `Meta description is only ${length} characters. Aim for 150-160 characters to maximize space in search results without truncation.`,
           length,
         },
       }
@@ -31,12 +35,17 @@ export const metaDescriptionLength: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Meta description is ${length} characters (recommended: 150-160)`,
+          message: `Meta description is ${length} characters and may be truncated. Aim for 150-160 characters for optimal display in search results.`,
           length,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: `${length} characters (optimal)`,
+      },
+    }
   },
 }

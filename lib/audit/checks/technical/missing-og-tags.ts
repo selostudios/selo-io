@@ -6,6 +6,9 @@ export const missingOgTags: AuditCheckDefinition = {
   type: 'technical',
   priority: 'optional',
   description: 'Pages missing Open Graph meta tags for social sharing',
+  displayName: 'Missing Open Graph Tags',
+  displayNamePassed: 'Open Graph Tags',
+  learnMoreUrl: 'https://ogp.me/',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -22,12 +25,15 @@ export const missingOgTags: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Missing Open Graph tags: ${missing.join(', ')}`,
+          message: `Add ${missing.join(', ')} meta tags for better social media previews when your pages are shared on Facebook, LinkedIn, and other platforms.`,
           missing,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: { message: 'og:title, og:description, og:image all present' },
+    }
   },
 }

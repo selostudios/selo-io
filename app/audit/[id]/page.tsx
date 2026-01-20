@@ -17,8 +17,8 @@ export default async function AuditReportPage({ params }: AuditReportPageProps) 
 
   const { audit, checks, pages } = data
 
-  // Show progress view for in-progress or failed audits
-  if (audit.status === 'pending' || audit.status === 'crawling' || audit.status === 'failed') {
+  // Show progress view for in-progress audits
+  if (audit.status === 'pending' || audit.status === 'crawling' || audit.status === 'checking') {
     return <LiveProgress auditId={audit.id} initialStatus={audit.status} />
   }
 

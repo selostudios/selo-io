@@ -6,6 +6,10 @@ export const missingViewport: AuditCheckDefinition = {
   type: 'technical',
   priority: 'recommended',
   description: 'Pages without viewport meta tag for mobile-friendliness',
+  displayName: 'Missing Viewport Meta Tag',
+  displayNamePassed: 'Viewport Meta Tag',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing#viewport',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -15,11 +19,15 @@ export const missingViewport: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: 'No viewport meta tag found (may not be mobile-friendly)',
+          message:
+            'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to the <head> for proper mobile display. Without this, your site may not render correctly on mobile devices.',
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: { message: viewport },
+    }
   },
 }

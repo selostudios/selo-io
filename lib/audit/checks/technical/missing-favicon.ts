@@ -6,6 +6,10 @@ export const missingFavicon: AuditCheckDefinition = {
   type: 'technical',
   priority: 'optional',
   description: 'Pages without a favicon link',
+  displayName: 'Missing Favicon',
+  displayNamePassed: 'Favicon',
+  learnMoreUrl: 'https://developers.google.com/search/docs/appearance/favicon-in-search',
+  isSiteWide: true,
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -15,11 +19,15 @@ export const missingFavicon: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: 'No favicon link found',
+          message:
+            'Add a favicon with <link rel="icon" href="/favicon.ico">. Favicons appear in browser tabs, bookmarks, and Google search results.',
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: { message: favicon },
+    }
   },
 }

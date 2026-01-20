@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { EmptyState } from '@/components/ui/empty-state'
 import { CheckItem } from './check-item'
 import type { SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
-import { CheckCircle, ChevronDown, ChevronsUpDown, ExternalLink, FileText, Gauge, Globe } from 'lucide-react'
+import { CheckCircle, ChevronDown, ChevronsUpDown, ExternalLink, FileText, Gauge, Globe, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CheckListProps {
@@ -150,8 +150,8 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
 
   return (
     <Collapsible defaultOpen className="group/list">
-      <CollapsibleTrigger className="bg-background flex w-full cursor-pointer items-center justify-between rounded-md px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="bg-background flex w-full items-center justify-between rounded-md px-4 py-3">
+        <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
           <ChevronDown
             className={cn(
               'text-muted-foreground size-5 transition-transform duration-200',
@@ -159,7 +159,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
             )}
           />
           <span className="text-lg font-semibold">{title}</span>
-        </div>
+        </CollapsibleTrigger>
         <div className="flex items-center gap-2 text-sm">
           {failedCount > 0 && (
             <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700 tabular-nums">
@@ -191,7 +191,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
             </Tooltip>
           )}
         </div>
-      </CollapsibleTrigger>
+      </div>
       <CollapsibleContent className="mt-2 space-y-3 pl-4">
         {/* Site-wide issues section */}
         {uniqueSiteWideChecks.length > 0 && (

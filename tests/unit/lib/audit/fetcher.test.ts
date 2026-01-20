@@ -12,12 +12,31 @@ describe('fetchPage', () => {
       ok: true,
       status: 200,
       text: () => Promise.resolve('<html><head><title>Test</title></head><body></body></html>'),
+      headers: {
+        get: (name: string) => (name === 'last-modified' ? 'Wed, 15 Jan 2025 12:00:00 GMT' : null),
+      },
     })
 
     const result = await fetchPage('https://example.com')
 
     expect(result.html).toContain('<title>Test</title>')
     expect(result.statusCode).toBe(200)
+    expect(result.lastModified).toBe('2025-01-15T12:00:00.000Z')
+  })
+
+  it('should return null lastModified when header is missing', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve('<html></html>'),
+      headers: {
+        get: () => null,
+      },
+    })
+
+    const result = await fetchPage('https://example.com')
+
+    expect(result.lastModified).toBeNull()
   })
 
   it('should handle fetch errors gracefully', async () => {
@@ -27,6 +46,7 @@ describe('fetchPage', () => {
 
     expect(result.html).toBe('')
     expect(result.statusCode).toBe(0)
+    expect(result.lastModified).toBeNull()
     expect(result.error).toBe('Network error')
   })
 })

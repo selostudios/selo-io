@@ -1,5 +1,15 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Info } from 'lucide-react'
+import {
+  Label,
+  PolarGrid,
+  PolarRadiusAxis,
+  RadialBar,
+  RadialBarChart,
+} from 'recharts'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ScoreCardsProps {
   overall: number | null
@@ -8,37 +18,116 @@ interface ScoreCardsProps {
   technical: number | null
 }
 
+interface ScoreCardProps {
+  label: string
+  score: number | null
+  description?: string
+}
+
 function getScoreColor(score: number | null): string {
-  if (score === null) return 'text-muted-foreground'
-  if (score >= 70) return 'text-green-600'
-  if (score >= 40) return 'text-yellow-600'
-  return 'text-red-600'
+  if (score === null) return 'hsl(var(--muted-foreground))'
+  if (score >= 70) return 'hsl(142, 76%, 36%)' // green-600
+  if (score >= 40) return 'hsl(45, 92%, 39%)' // yellow-700 (matches warning pill)
+  return 'hsl(0, 84%, 60%)' // red-600
 }
 
-function getScoreBgColor(score: number | null): string {
-  if (score === null) return 'bg-muted/50'
-  if (score >= 70) return 'bg-green-50'
-  if (score >= 40) return 'bg-yellow-50'
-  return 'bg-red-50'
+function getScoreTextClass(score: number | null): string {
+  if (score === null) return 'fill-muted-foreground'
+  if (score >= 70) return 'fill-green-600'
+  if (score >= 40) return 'fill-yellow-700'
+  return 'fill-red-600'
 }
 
-function ScoreCard({ label, score }: { label: string; score: number | null }) {
+export function ScoreCard({ label, score, description }: ScoreCardProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const displayScore = score ?? 0
+  // Calculate end angle: start at top (90°), go clockwise
+  const endAngle = 90 - (displayScore / 100) * 360
+
+  const chartData = [{ name: label, value: displayScore, fill: getScoreColor(score) }]
+
   return (
-    <Card className={cn('transition-colors', getScoreBgColor(score))}>
-      <CardContent className="flex flex-col items-center justify-center py-6">
-        <p className="text-muted-foreground mb-1 text-sm font-medium">{label}</p>
-        <p className={cn('text-4xl font-bold tabular-nums', getScoreColor(score))}>
-          {score !== null ? score : '-'}
-        </p>
-        <p className="text-muted-foreground text-sm">/100</p>
-      </CardContent>
-    </Card>
+    <div className="flex flex-1 flex-col items-center rounded-lg border bg-gray-100 py-4">
+      <div className="flex h-[100px] w-[100px] items-center justify-center">
+        {mounted ? (
+          <RadialBarChart
+            width={100}
+            height={100}
+            data={chartData}
+            startAngle={90}
+            endAngle={endAngle}
+            innerRadius={35}
+            outerRadius={48}
+            cx="50%"
+            cy="50%"
+          >
+            <PolarGrid
+              gridType="circle"
+              radialLines={false}
+              stroke="none"
+              className="first:fill-muted last:fill-gray-100"
+              polarRadius={[38, 32]}
+            />
+            <RadialBar
+              dataKey="value"
+              background={{ fill: 'hsl(var(--muted))' }}
+              cornerRadius={5}
+            />
+            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && 'cx' in viewBox) {
+                    return (
+                      <text x={viewBox.cx} y={58} textAnchor="middle">
+                        <tspan
+                          x={viewBox.cx}
+                          y={58}
+                          className={`text-xl font-bold ${getScoreTextClass(score)}`}
+                        >
+                          {score !== null ? score : '-'}
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </PolarRadiusAxis>
+          </RadialBarChart>
+        ) : (
+          <div className="text-muted-foreground text-xl font-bold">
+            {score !== null ? score : '-'}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
+        <p className="text-muted-foreground text-sm font-medium">{label}</p>
+        {description && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="text-muted-foreground opacity-60 transition-opacity hover:opacity-100">
+                <Info className="size-3.5" />
+                <span className="sr-only">What is {label}?</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="font-medium">{label}</p>
+              <p className="mt-1 text-xs opacity-90">{description}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </div>
   )
 }
 
 export function ScoreCards({ overall, seo, ai, technical }: ScoreCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className="flex gap-4">
       <ScoreCard label="Overall" score={overall} />
       <ScoreCard label="SEO" score={seo} />
       <ScoreCard label="AI Readiness" score={ai} />

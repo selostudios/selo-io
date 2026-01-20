@@ -5,12 +5,16 @@ import type { DeviceType, PerformanceAuditStatus } from './types'
 export async function runPerformanceAudit(auditId: string, urls: string[]): Promise<void> {
   const supabase = createServiceClient()
 
-  // Update status to running
+  const totalUrls = urls.length
+
+  // Update status to running with total count
   await supabase
     .from('performance_audits')
     .update({
       status: 'running' as PerformanceAuditStatus,
       started_at: new Date().toISOString(),
+      total_urls: totalUrls,
+      completed_count: 0,
     })
     .eq('id', auditId)
 
@@ -19,11 +23,21 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
     let successCount = 0
     let failureCount = 0
     let lastError: string | null = null
+    let completedUrls = 0
 
     for (const url of urls) {
       for (const device of devices) {
         try {
           console.log(`[Performance] Auditing ${url} (${device})`)
+
+          // Update current progress
+          await supabase
+            .from('performance_audits')
+            .update({
+              current_url: url,
+              current_device: device,
+            })
+            .eq('id', auditId)
 
           const result = await fetchPageSpeedInsights({ url, device })
           const metrics = extractMetrics(result)
@@ -66,6 +80,13 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
           // Continue with other URLs even if one fails
         }
       }
+
+      // Increment completed count after both devices for this URL are done
+      completedUrls++
+      await supabase
+        .from('performance_audits')
+        .update({ completed_count: completedUrls })
+        .eq('id', auditId)
     }
 
     // Determine final status based on success/failure counts
@@ -77,6 +98,8 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
           status: 'failed' as PerformanceAuditStatus,
           error_message: lastError || 'All page audits failed',
           completed_at: new Date().toISOString(),
+          current_url: null,
+          current_device: null,
         })
         .eq('id', auditId)
     } else {
@@ -86,6 +109,8 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
         .update({
           status: 'completed' as PerformanceAuditStatus,
           completed_at: new Date().toISOString(),
+          current_url: null,
+          current_device: null,
         })
         .eq('id', auditId)
     }

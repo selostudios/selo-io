@@ -1,4 +1,4 @@
-export type AuditStatus = 'pending' | 'crawling' | 'completed' | 'failed'
+export type AuditStatus = 'pending' | 'crawling' | 'checking' | 'completed' | 'failed' | 'stopped'
 
 export type CheckType = 'seo' | 'ai_readiness' | 'technical'
 
@@ -16,7 +16,11 @@ export interface SiteAudit {
   ai_readiness_score: number | null
   technical_score: number | null
   pages_crawled: number
+  failed_count: number
+  warning_count: number
+  passed_count: number
   executive_summary: string | null
+  error_message: string | null
   archived_at: string | null
   started_at: string | null
   completed_at: string | null
@@ -29,7 +33,12 @@ export interface SiteAuditPage {
   url: string
   title: string | null
   status_code: number | null
+  last_modified: string | null
   crawled_at: string
+  /** True if this is a downloadable resource (PDF, DOC, etc.) rather than an HTML page */
+  is_resource?: boolean
+  /** Type of resource: pdf, document, spreadsheet, presentation, archive, image, other */
+  resource_type?: string | null
 }
 
 export interface SiteAuditCheck {
@@ -42,6 +51,11 @@ export interface SiteAuditCheck {
   status: CheckStatus
   details: Record<string, unknown> | null
   created_at: string
+  // Display metadata (stored from check definition)
+  display_name?: string
+  display_name_passed?: string
+  learn_more_url?: string
+  is_site_wide?: boolean
 }
 
 export interface AuditCheckDefinition {
@@ -49,6 +63,14 @@ export interface AuditCheckDefinition {
   type: CheckType
   priority: CheckPriority
   description: string
+  /** Human-readable name shown when check fails (e.g., "Missing Meta Description") */
+  displayName: string
+  /** Human-readable name shown when check passes (e.g., "Meta Description") */
+  displayNamePassed?: string
+  /** URL to external guide explaining this check */
+  learnMoreUrl?: string
+  /** If true, this check applies site-wide (e.g., robots.txt, llms.txt) */
+  isSiteWide?: boolean
   run: (context: CheckContext) => Promise<CheckResult>
 }
 
@@ -73,4 +95,15 @@ export interface AuditProgress {
   seo_score: number | null
   ai_readiness_score: number | null
   technical_score: number | null
+  error_message: string | null
+  started_at: string | null
+}
+
+export interface DismissedCheck {
+  id: string
+  organization_id: string
+  check_name: string
+  url: string
+  dismissed_by: string | null
+  created_at: string
 }

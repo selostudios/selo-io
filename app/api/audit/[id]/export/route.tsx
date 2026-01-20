@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
 import { AuditPDF } from '@/lib/audit/pdf'
+import type { DismissedCheck, SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -48,9 +49,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
   }
 
+  // Fetch pages for URL lookup
+  const { data: pages } = await supabase.from('site_audit_pages').select('*').eq('audit_id', id)
+
+  // Fetch dismissed checks for this organization
+  const { data: dismissedChecks } = await supabase
+    .from('dismissed_checks')
+    .select('*')
+    .eq('organization_id', audit.organization_id)
+
+  // Filter out dismissed checks
+  const pageMap = new Map<string, SiteAuditPage>((pages || []).map((p: SiteAuditPage) => [p.id, p]))
+  const dismissedList: DismissedCheck[] = dismissedChecks || []
+
+  const visibleChecks = (checks || []).filter((check: SiteAuditCheck) => {
+    const pageUrl = check.page_id ? pageMap.get(check.page_id)?.url : audit.url
+    return !dismissedList.some((d) => d.check_name === check.check_name && d.url === pageUrl)
+  })
+
   try {
-    // Generate PDF
-    const pdfBuffer = await renderToBuffer(<AuditPDF audit={audit} checks={checks || []} />)
+    // Generate PDF with only non-dismissed checks
+    const pdfBuffer = await renderToBuffer(<AuditPDF audit={audit} checks={visibleChecks} />)
 
     // Generate filename from URL
     const sanitizedUrl = audit.url

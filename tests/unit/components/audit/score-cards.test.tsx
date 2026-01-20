@@ -80,7 +80,9 @@ describe('ScoreCards', () => {
   })
 
   it('applies muted style for null scores', () => {
-    const { container } = render(<ScoreCards overall={null} seo={null} ai={null} technical={null} />)
+    const { container } = render(
+      <ScoreCards overall={null} seo={null} ai={null} technical={null} />
+    )
 
     // Null scores should have muted text color
     expect(container.querySelector('.text-muted-foreground')).toBeInTheDocument()

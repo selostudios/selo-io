@@ -5,6 +5,10 @@ export const missingLlmsTxt: AuditCheckDefinition = {
   type: 'ai_readiness',
   priority: 'critical',
   description: 'Check if /llms.txt exists for AI crawlers',
+  displayName: 'Missing llms.txt File',
+  displayNamePassed: 'llms.txt File',
+  learnMoreUrl: 'https://llmstxt.org/',
+  isSiteWide: true,
 
   async run(context: CheckContext): Promise<CheckResult> {
     // This is a site-wide check - only meaningful on homepage
@@ -17,14 +21,26 @@ export const missingLlmsTxt: AuditCheckDefinition = {
       const llmsTxtUrl = `${baseUrl.origin}/llms.txt`
       const response = await fetch(llmsTxtUrl, { method: 'HEAD' })
       if (response.ok) {
-        return { status: 'passed' }
+        return {
+          status: 'passed',
+          details: { message: 'Found at /llms.txt' },
+        }
       }
       return {
         status: 'failed',
-        details: { message: 'No llms.txt file found at /llms.txt' },
+        details: {
+          message:
+            'Create a /llms.txt file to help AI assistants understand your site. This file describes your content in a format optimized for language models.',
+        },
       }
     } catch {
-      return { status: 'failed', details: { message: 'Could not check for llms.txt' } }
+      return {
+        status: 'failed',
+        details: {
+          message:
+            'Create a /llms.txt file to help AI assistants understand your site. This file describes your content in a format optimized for language models.',
+        },
+      }
     }
   },
 }

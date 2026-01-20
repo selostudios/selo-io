@@ -13,6 +13,11 @@ export interface PerformanceAudit {
   started_at: string | null
   completed_at: string | null
   created_at: string
+  // Progress tracking
+  current_url: string | null
+  current_device: DeviceType | null
+  total_urls: number
+  completed_count: number
 }
 
 export interface PerformanceAuditResult {
@@ -82,5 +87,32 @@ export interface PageSpeedResult {
         category: string
       }
     }
+  }
+}
+
+export interface Opportunity {
+  id: string
+  title: string
+  description: string
+  score: number
+  numericValue: number
+  displayValue: string
+  details?: {
+    items?: Array<{
+      url?: string
+      totalBytes?: number
+      wastedBytes?: number
+      wastedMs?: number
+    }>
+  }
+}
+
+export interface Diagnostic {
+  id: string
+  title: string
+  description: string
+  displayValue: string
+  details?: {
+    items?: Array<Record<string, unknown>>
   }
 }

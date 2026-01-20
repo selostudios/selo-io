@@ -20,7 +20,7 @@ export function useAuditPolling(auditId: string, enabled: boolean) {
         setIsLoading(false)
 
         // Continue polling if not complete/failed
-        if (data.status === 'pending' || data.status === 'crawling') {
+        if (data.status === 'pending' || data.status === 'crawling' || data.status === 'checking') {
           timeoutId = setTimeout(poll, 2000) // 2 seconds
         }
       } catch {

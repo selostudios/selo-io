@@ -6,6 +6,9 @@ export const missingTitle: AuditCheckDefinition = {
   type: 'seo',
   priority: 'critical',
   description: 'Pages must have a title tag',
+  displayName: 'Missing Page Title',
+  displayNamePassed: 'Page Title',
+  learnMoreUrl: 'https://developers.google.com/search/docs/appearance/title-link',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -15,11 +18,17 @@ export const missingTitle: AuditCheckDefinition = {
       return {
         status: 'failed',
         details: {
-          message: 'No title tag found',
+          message:
+            'Add a <title> tag to the <head> section. This appears as the clickable headline in search results.',
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: `"${title.slice(0, 50)}${title.length > 50 ? '...' : ''}"`,
+      },
+    }
   },
 }

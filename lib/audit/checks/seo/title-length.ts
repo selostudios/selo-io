@@ -6,6 +6,9 @@ export const titleLength: AuditCheckDefinition = {
   type: 'seo',
   priority: 'recommended',
   description: 'Title should be 60 characters or less',
+  displayName: 'Title Too Long',
+  displayNamePassed: 'Title Length',
+  learnMoreUrl: 'https://developers.google.com/search/docs/appearance/title-link#page-titles',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
@@ -19,12 +22,17 @@ export const titleLength: AuditCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Title is ${title.length} characters (recommended: 60 max)`,
+          message: `Title is ${title.length} characters. Google typically displays 50-60 characters. Consider shortening to prevent truncation in search results.`,
           length: title.length,
         },
       }
     }
 
-    return { status: 'passed' }
+    return {
+      status: 'passed',
+      details: {
+        message: `${title.length} characters (good)`,
+      },
+    }
   },
 }

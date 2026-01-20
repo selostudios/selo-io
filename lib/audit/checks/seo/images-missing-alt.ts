@@ -6,24 +6,39 @@ export const imagesMissingAlt: AuditCheckDefinition = {
   type: 'seo',
   priority: 'recommended',
   description: 'All images should have alt attributes',
+  displayName: 'Images Missing Alt Text',
+  displayNamePassed: 'Image Alt Text',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/appearance/google-images#use-descriptive-alt-text',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
-    const imagesWithoutAlt = $('img').filter((_, el) => {
-      const alt = $(el).attr('alt')
-      return alt === undefined
-    }).length
+    const imagesWithoutAlt: string[] = []
 
-    if (imagesWithoutAlt > 0) {
+    $('img').each((_, el) => {
+      const alt = $(el).attr('alt')
+      if (alt === undefined) {
+        const src = $(el).attr('src') || 'unknown'
+        imagesWithoutAlt.push(src)
+      }
+    })
+
+    if (imagesWithoutAlt.length > 0) {
       return {
         status: 'failed',
         details: {
-          message: `${imagesWithoutAlt} image${imagesWithoutAlt === 1 ? '' : 's'} missing alt text`,
-          count: imagesWithoutAlt,
+          message: `${imagesWithoutAlt.length} image${imagesWithoutAlt.length === 1 ? '' : 's'} missing alt attribute. Add alt="description" to each <img> for accessibility and SEO.`,
+          count: imagesWithoutAlt.length,
         },
       }
     }
 
-    return { status: 'passed' }
+    const totalImages = $('img').length
+    return {
+      status: 'passed',
+      details: {
+        message: totalImages > 0 ? `All ${totalImages} images have alt text` : 'No images found',
+      },
+    }
   },
 }
