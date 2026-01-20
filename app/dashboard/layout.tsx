@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
+import { FeedbackProvider } from '@/components/feedback/feedback-provider'
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
+import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -26,12 +29,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <Sidebar />
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
+    <FeedbackProvider>
+      <div className="flex min-h-screen bg-neutral-50">
+        <Sidebar />
+        <div className="flex flex-1 flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+        </div>
       </div>
-    </div>
+      <FeedbackDialog />
+      <FeedbackTrigger />
+    </FeedbackProvider>
   )
 }
