@@ -149,70 +149,18 @@ async function notifyDevelopers(
   category: FeedbackCategory,
   submitterEmail: string
 ): Promise<void> {
-  const supabase = await createClient()
-
-  // Get all developers
-  const { data: developers, error: devError } = await supabase
-    .from('users')
-    .select('email')
-    .eq('role', 'developer')
-
-  if (devError || !developers || developers.length === 0) {
-    console.error('[Notify Developers Error]', {
-      type: 'no_developers_found',
-      error: devError,
-      timestamp: new Date().toISOString(),
-    })
-    return
-  }
-
-  const supportUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/support?issue=${feedbackId}`
-
-  try {
-    const { sendEmail, FROM_EMAIL } = await import('@/lib/email/client')
-    const FeedbackSubmittedEmail = (await import('@/emails/feedback-submitted-email')).default
-
-    // Send email to each developer
-    for (const developer of developers) {
-      if (!developer.email) continue
-
-      try {
-        const result = await sendEmail({
-          from: FROM_EMAIL,
-          to: developer.email,
-          subject: `[Feedback] ${title}`,
-          react: FeedbackSubmittedEmail({
-            feedbackId,
-            title,
-            description,
-            category,
-            submitterEmail,
-            supportUrl,
-          }),
-        })
-
-        if (result.error) {
-          console.error('[Notify Developers Error]', {
-            type: 'email_send_error',
-            developerEmail: developer.email,
-            error: result.error,
-            timestamp: new Date().toISOString(),
-          })
-        }
-      } catch (emailErr) {
-        console.error('[Notify Developers Error]', {
-          type: 'email_send_exception',
-          developerEmail: developer.email,
-          error: emailErr,
-          timestamp: new Date().toISOString(),
-        })
-      }
-    }
-  } catch (err) {
-    console.error('[Notify Developers Error]', {
-      type: 'email_import_error',
-      error: err,
-      timestamp: new Date().toISOString(),
-    })
-  }
+  // Note: Email notifications to developers are disabled because
+  // the email column is in auth.users, not public.users.
+  // To re-enable, either:
+  // 1. Add an email column to public.users synced from auth.users
+  // 2. Create a database function to fetch developer emails
+  console.log('[Notify Developers]', {
+    type: 'notification_skipped',
+    reason: 'Developer email notifications not yet implemented',
+    feedbackId,
+    title,
+    category,
+    submitterEmail,
+    timestamp: new Date().toISOString(),
+  })
 }
