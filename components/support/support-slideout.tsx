@@ -129,7 +129,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
 
         <hr className="mt-3 mx-6 border-border" />
 
-        <div className="mt-4 space-y-6 px-6 pb-6">
+        <div className="space-y-6 px-6 pb-6">
           {/* Description */}
           <p className="text-sm whitespace-pre-wrap">{feedback.description}</p>
 
