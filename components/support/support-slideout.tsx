@@ -127,7 +127,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           </SheetDescription>
         </SheetHeader>
 
-        <div className="px-6 pt-3">
+        <div className="px-6 pt-1">
           <hr className="border-border" />
         </div>
 
