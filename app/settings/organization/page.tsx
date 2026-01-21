@@ -27,7 +27,7 @@ export default async function OrganizationSettingsPage() {
   const isAdmin = userRecord.role === 'admin'
 
   if (!isAdmin) {
-    redirect('/dashboard/settings/team')
+    redirect('/settings/team')
   }
 
   // Get organization details with industry relationship
