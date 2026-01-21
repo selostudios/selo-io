@@ -83,7 +83,26 @@ export function PerformanceDashboard({
     }
   }
 
-  const canAddPage = isValidUrl(newUrl)
+  const normalizeUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url.trim())
+      // Normalize: lowercase host, remove trailing slash from path
+      return `${parsed.protocol}//${parsed.host.toLowerCase()}${parsed.pathname.replace(/\/$/, '') || '/'}`
+    } catch {
+      return url.trim().toLowerCase()
+    }
+  }
+
+  const isDuplicateUrl = (url: string): boolean => {
+    const normalized = normalizeUrl(url)
+    const normalizedWebsiteUrl = normalizeUrl(websiteUrl)
+    // Check if it matches the homepage
+    if (normalized === normalizedWebsiteUrl) return true
+    // Check if it's already in monitored pages
+    return monitoredPages.some((p) => normalizeUrl(p.url) === normalized)
+  }
+
+  const canAddPage = isValidUrl(newUrl) && !isDuplicateUrl(newUrl)
 
   const handleAddPage = async () => {
     setError(null)
@@ -164,21 +183,28 @@ export function PerformanceDashboard({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Add new page */}
-          <div className="flex gap-2">
-            <label htmlFor="new-page-url" className="sr-only">
-              Page URL to monitor
-            </label>
-            <Input
-              id="new-page-url"
-              placeholder="https://example.com/page"
-              value={newUrl}
-              onChange={(e) => setNewUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && canAddPage && handleAddPage()}
-            />
-            <Button onClick={handleAddPage} variant="outline" disabled={!canAddPage}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <label htmlFor="new-page-url" className="sr-only">
+                Page URL to monitor
+              </label>
+              <Input
+                id="new-page-url"
+                placeholder="https://example.com/page"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && canAddPage && handleAddPage()}
+              />
+              <Button onClick={handleAddPage} variant="outline" disabled={!canAddPage}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add
+              </Button>
+            </div>
+            {isValidUrl(newUrl) && isDuplicateUrl(newUrl) && (
+              <p className="text-muted-foreground text-sm">
+                This page is already being monitored.
+              </p>
+            )}
           </div>
 
           {/* Homepage (always included) */}

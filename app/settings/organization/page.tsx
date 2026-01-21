@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
+import { canManageOrg } from '@/lib/permissions'
 
 export default async function OrganizationSettingsPage() {
   const supabase = await createClient()
@@ -24,10 +25,8 @@ export default async function OrganizationSettingsPage() {
     redirect('/onboarding')
   }
 
-  const isAdmin = userRecord.role === 'admin'
-
-  if (!isAdmin) {
-    redirect('/dashboard/settings/team')
+  if (!canManageOrg(userRecord.role)) {
+    redirect('/settings/team')
   }
 
   // Get organization details with industry relationship
