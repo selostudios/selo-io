@@ -152,6 +152,7 @@ describe('Feedback Database Operations', () => {
       const { data } = await testDb
         .from('feedback')
         .select('title')
+        .eq('submitted_by', testUser.id)
         .order('created_at', { ascending: false })
 
       expect(data?.[0].title).toBe('Third')
@@ -175,7 +176,11 @@ describe('Feedback Database Operations', () => {
         },
       ])
 
-      const { data } = await testDb.from('feedback').select('title').eq('status', 'in_progress')
+      const { data } = await testDb
+        .from('feedback')
+        .select('title')
+        .eq('submitted_by', testUser.id)
+        .eq('status', 'in_progress')
 
       expect(data).toHaveLength(1)
       expect(data?.[0].title).toBe('In Progress')
