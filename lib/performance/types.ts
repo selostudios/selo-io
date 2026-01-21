@@ -1,4 +1,4 @@
-export type PerformanceAuditStatus = 'pending' | 'running' | 'completed' | 'failed'
+export type PerformanceAuditStatus = 'pending' | 'running' | 'completed' | 'failed' | 'stopped'
 
 export type CWVRating = 'good' | 'needs_improvement' | 'poor'
 

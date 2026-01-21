@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, XCircle, Clock, Globe, CheckCircle2 } from 'lucide-react'
+import { Loader2, XCircle, Clock, Globe, CheckCircle2, StopCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
 import { formatDuration } from '@/lib/utils'
 import type { PerformanceAuditStatus, DeviceType } from '@/lib/performance/types'
 
@@ -30,8 +31,25 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   const [progress, setProgress] = useState<ProgressData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [elapsedMs, setElapsedMs] = useState(0)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const shouldPoll = initialStatus === 'pending' || initialStatus === 'running'
+
+  const handleCancel = async () => {
+    setIsCancelling(true)
+    try {
+      const response = await fetch(`/api/performance/${auditId}/stop`, {
+        method: 'POST',
+      })
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('[Performance] Failed to cancel audit:', error)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   // Poll for progress
   useEffect(() => {
@@ -79,11 +97,8 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
     const prevStatus = prevStatusRef.current
     prevStatusRef.current = progress.status
 
-    if (
-      (progress.status === 'completed' || progress.status === 'failed') &&
-      prevStatus !== 'completed' &&
-      prevStatus !== 'failed'
-    ) {
+    const terminalStatuses: PerformanceAuditStatus[] = ['completed', 'failed', 'stopped']
+    if (terminalStatuses.includes(progress.status) && !terminalStatuses.includes(prevStatus)) {
       router.refresh()
     }
   }, [progress, router])
@@ -121,6 +136,23 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
               <p className="mt-1 text-sm">{progress.error_message}</p>
             </div>
           )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Show stopped state
+  if (progress?.status === 'stopped') {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center py-12">
+          <div className="mb-4 rounded-full bg-amber-100 p-4">
+            <StopCircle className="size-8 text-amber-600" />
+          </div>
+          <h2 className="mb-2 text-center text-xl font-semibold text-balance">Audit Cancelled</h2>
+          <p className="text-muted-foreground text-center text-sm text-pretty">
+            The performance audit was cancelled. No results were saved.
+          </p>
         </CardContent>
       </Card>
     )
@@ -208,6 +240,28 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
         <p className="text-muted-foreground text-center text-xs">
           This page will automatically update when the audit is complete.
         </p>
+
+        {/* Cancel button */}
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isCancelling}
+            className="text-muted-foreground"
+          >
+            {isCancelling ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Cancelling...
+              </>
+            ) : (
+              <>
+                <StopCircle className="mr-2 size-4" />
+                Cancel Audit
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
