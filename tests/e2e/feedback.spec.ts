@@ -47,8 +47,7 @@ test.describe('Feedback Submission', () => {
     )
 
     // Category should default to 'bug', but let's change it
-    await page.click('[data-testid="category-select"]')
-    await page.click('text=Feature Request')
+    await page.selectOption('[data-testid="category-select"]', 'feature_request')
 
     // Submit
     await page.click('button[type="submit"]:has-text("Submit")')
@@ -63,13 +62,17 @@ test.describe('Feedback Submission', () => {
     await page.keyboard.press('Meta+Shift+f')
     await expect(page.getByRole('dialog')).toBeVisible()
 
-    // Submit button should be present
+    // Submit button should be disabled when form is empty
     const submitButton = page.locator('button[type="submit"]:has-text("Submit")')
+    await expect(submitButton).toBeDisabled()
 
-    // Try to submit with empty title (click submit)
-    await submitButton.click()
+    // Fill only title (description still empty)
+    await page.fill('input[name="title"]', 'Test Title')
 
-    // Should not close (form validation should prevent submission)
+    // Button should still be disabled without description
+    await expect(submitButton).toBeDisabled()
+
+    // Dialog should still be visible
     await expect(page.getByRole('dialog')).toBeVisible()
   })
 })
