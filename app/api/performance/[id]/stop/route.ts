@@ -45,7 +45,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   // Use service client to bypass RLS for cleanup
-  const serviceClient = createServiceClient()
+  let serviceClient
+  try {
+    serviceClient = createServiceClient()
+  } catch (err) {
+    console.error('[Performance Stop Error]', {
+      type: 'service_client_failed',
+      error: err instanceof Error ? err.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
+    return NextResponse.json(
+      { error: 'Service configuration error' },
+      { status: 500 }
+    )
+  }
 
   // Delete any partial results
   const { error: deleteError } = await serviceClient
@@ -78,9 +91,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       type: 'update_failed',
       auditId: id,
       error: updateError.message,
+      code: updateError.code,
+      details: updateError.details,
       timestamp: new Date().toISOString(),
     })
-    return NextResponse.json({ error: 'Failed to stop audit' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to stop audit', details: updateError.message, code: updateError.code },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ success: true, message: 'Audit cancelled' })
