@@ -46,8 +46,9 @@ test.describe('Feedback Submission', () => {
       'This is a detailed description of the bug I found for E2E testing purposes.'
     )
 
-    // Category should default to 'bug', but let's change it
-    await page.selectOption('[data-testid="category-select"]', 'feature_request')
+    // Category should default to 'bug', but let's change it (Radix UI Select)
+    await page.click('[data-testid="category-select"]')
+    await page.getByRole('option', { name: 'Feature Request' }).click()
 
     // Submit
     await page.click('button[type="submit"]:has-text("Submit")')
