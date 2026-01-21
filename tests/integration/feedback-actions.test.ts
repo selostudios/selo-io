@@ -4,7 +4,6 @@ import {
   createTestUser,
   createTestOrganization,
   linkUserToOrganization,
-  cleanupTestData,
 } from '../helpers/db'
 
 describe('Feedback Database Operations', () => {
@@ -12,22 +11,34 @@ describe('Feedback Database Operations', () => {
   let testOrg: { id: string }
 
   beforeAll(async () => {
-    await cleanupTestData()
+    // Use unique emails to avoid conflicts with parallel tests
+    const testId = `actions-${Date.now()}`
 
-    testUser = await createTestUser('feedback-test@test.com', 'password123', {
+    testUser = await createTestUser(`feedback-${testId}@test.com`, 'password123', {
       first_name: 'Test',
       last_name: 'User',
     })
-    testOrg = await createTestOrganization('Feedback Test Org')
+    testOrg = await createTestOrganization(`Feedback Test Org ${testId}`)
     await linkUserToOrganization(testUser.id, testOrg.id, 'team_member', 'Test', 'User')
   })
 
   afterAll(async () => {
-    await cleanupTestData()
+    // Clean up only data created by this test
+    if (testUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', testUser.id)
+      await testDb.from('users').delete().eq('id', testUser.id)
+      await testDb.auth.admin.deleteUser(testUser.id).catch(() => {})
+    }
+    if (testOrg?.id) {
+      await testDb.from('organizations').delete().eq('id', testOrg.id)
+    }
   })
 
   beforeEach(async () => {
-    await testDb.from('feedback').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Only clean up feedback for test user to avoid conflicts with parallel tests
+    if (testUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', testUser.id)
+    }
   })
 
   describe('Feedback creation', () => {

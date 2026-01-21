@@ -6,7 +6,6 @@ import {
   linkUserToOrganization,
   linkUserAsDeveloper,
   createTestFeedback,
-  cleanupTestData,
 } from '../helpers/db'
 
 describe('Feedback RLS Policies', () => {
@@ -15,18 +14,19 @@ describe('Feedback RLS Policies', () => {
   let testOrg: { id: string }
 
   beforeAll(async () => {
-    await cleanupTestData()
+    // Use unique emails to avoid conflicts with parallel tests
+    const testId = `rls-${Date.now()}`
 
     // Create regular user
-    regularUser = await createTestUser('regular@test.com', 'password123', {
+    regularUser = await createTestUser(`regular-${testId}@test.com`, 'password123', {
       first_name: 'Regular',
       last_name: 'User',
     })
-    testOrg = await createTestOrganization('Test Org')
+    testOrg = await createTestOrganization(`Test Org ${testId}`)
     await linkUserToOrganization(regularUser.id, testOrg.id, 'team_member', 'Regular', 'User')
 
     // Create developer user
-    developerUser = await createTestUser('developer@test.com', 'password123', {
+    developerUser = await createTestUser(`developer-${testId}@test.com`, 'password123', {
       first_name: 'Developer',
       last_name: 'User',
     })
@@ -34,11 +34,30 @@ describe('Feedback RLS Policies', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestData()
+    // Clean up only data created by this test
+    if (regularUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', regularUser.id)
+      await testDb.from('users').delete().eq('id', regularUser.id)
+      await testDb.auth.admin.deleteUser(regularUser.id).catch(() => {})
+    }
+    if (developerUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', developerUser.id)
+      await testDb.from('users').delete().eq('id', developerUser.id)
+      await testDb.auth.admin.deleteUser(developerUser.id).catch(() => {})
+    }
+    if (testOrg?.id) {
+      await testDb.from('organizations').delete().eq('id', testOrg.id)
+    }
   })
 
   beforeEach(async () => {
-    await testDb.from('feedback').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Only clean up feedback for test users to avoid conflicts with parallel tests
+    if (regularUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', regularUser.id)
+    }
+    if (developerUser?.id) {
+      await testDb.from('feedback').delete().eq('submitted_by', developerUser.id)
+    }
   })
 
   describe('Insert policies', () => {
