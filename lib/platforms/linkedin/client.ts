@@ -5,7 +5,7 @@ import type { OAuthProvider } from '@/lib/oauth/base'
 
 // Use REST API (not v2) for full analytics access
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/rest'
-const LINKEDIN_VERSION = '202412' // December 2024 version (latest stable)
+const LINKEDIN_VERSION = '202501' // January 2025 version
 
 export class LinkedInClient {
   private accessToken: string
