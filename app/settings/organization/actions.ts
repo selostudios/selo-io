@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { canManageOrg } from '@/lib/permissions'
 
 export async function updateOrganization(
   formData: FormData
@@ -66,7 +67,7 @@ export async function updateOrganization(
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can update organization settings' }
   }
 
@@ -166,7 +167,7 @@ export async function uploadLogo(
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can upload logos' }
   }
 
@@ -237,7 +238,7 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can remove logos' }
   }
 

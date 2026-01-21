@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { canManageTeam } from '@/lib/permissions'
 
 export async function sendInvite(formData: FormData) {
   const email = formData.get('email') as string
@@ -49,7 +50,7 @@ export async function sendInvite(formData: FormData) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can send invites' }
   }
 
@@ -176,7 +177,7 @@ export async function resendInvite(inviteId: string) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can resend invites' }
   }
 
@@ -271,7 +272,7 @@ export async function deleteInvite(inviteId: string) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageTeam(userRecord.role)) {
     console.error('[Delete Invite Error]', {
       type: 'unauthorized',
       userId: user.id,

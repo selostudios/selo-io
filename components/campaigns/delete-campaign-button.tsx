@@ -3,12 +3,12 @@
 import { Button } from '@/components/ui/button'
 
 interface DeleteCampaignButtonProps {
-  isAdmin: boolean
+  canDelete: boolean
   onDelete: () => void
 }
 
-export function DeleteCampaignButton({ isAdmin, onDelete }: DeleteCampaignButtonProps) {
-  if (!isAdmin) {
+export function DeleteCampaignButton({ canDelete, onDelete }: DeleteCampaignButtonProps) {
+  if (!canDelete) {
     return null
   }
 

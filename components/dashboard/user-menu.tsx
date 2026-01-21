@@ -20,14 +20,16 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ProfileForm } from '@/components/settings/profile-form'
 import { useFeedback } from '@/components/feedback/feedback-provider'
+import { showSuccess } from '@/components/ui/sonner'
 
 interface UserMenuProps {
   userEmail: string
   firstName: string
   lastName: string
+  role: string
 }
 
-export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
+export function UserMenu({ userEmail, firstName, lastName, role }: UserMenuProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [currentFirstName, setCurrentFirstName] = useState(firstName)
   const [currentLastName, setCurrentLastName] = useState(lastName)
@@ -78,9 +80,14 @@ export function UserMenu({ userEmail, firstName, lastName }: UserMenuProps) {
             email={userEmail}
             firstName={currentFirstName}
             lastName={currentLastName}
+            role={role}
             onUpdate={(newFirstName, newLastName) => {
               setCurrentFirstName(newFirstName)
               setCurrentLastName(newLastName)
+            }}
+            onSuccess={() => {
+              setProfileOpen(false)
+              showSuccess('Profile updated successfully!')
             }}
           />
         </DialogContent>

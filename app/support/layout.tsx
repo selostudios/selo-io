@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { canManageFeedback } from '@/lib/permissions'
 
 export default async function SupportLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -19,7 +20,7 @@ export default async function SupportLayout({ children }: { children: React.Reac
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'developer') {
+  if (!userRecord || !canManageFeedback(userRecord.role)) {
     redirect('/dashboard')
   }
 

@@ -11,17 +11,27 @@ interface ProfileFormProps {
   email: string
   firstName: string
   lastName: string
+  role?: string
   onUpdate?: (firstName: string, lastName: string) => void
+  onSuccess?: () => void
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  developer: 'Developer',
+  team_member: 'Team Member',
+  client_viewer: 'Client Viewer',
 }
 
 export function ProfileForm({
   email,
   firstName: initialFirstName,
   lastName: initialLastName,
+  role,
   onUpdate,
+  onSuccess,
 }: ProfileFormProps) {
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [firstName, setFirstName] = useState(initialFirstName)
   const [lastName, setLastName] = useState(initialLastName)
@@ -36,7 +46,6 @@ export function ProfileForm({
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
-    setSuccess(null)
 
     const result = await updateProfile(formData)
 
@@ -44,9 +53,9 @@ export function ProfileForm({
       setError(result.error)
       setIsLoading(false)
     } else if (result?.success) {
-      setSuccess('Profile updated successfully!')
       setIsLoading(false)
       onUpdate?.(firstName.trim(), lastName.trim())
+      onSuccess?.()
       router.refresh()
     }
   }
@@ -95,18 +104,22 @@ export function ProfileForm({
         />
         <p className="text-muted-foreground text-xs">Email cannot be changed</p>
       </div>
+      {role && (
+        <div className="space-y-2">
+          <Label htmlFor="role">Role</Label>
+          <Input
+            id="role"
+            name="role"
+            type="text"
+            value={ROLE_LABELS[role] || role}
+            disabled
+            className="cursor-not-allowed bg-neutral-50"
+          />
+        </div>
+      )}
       {error && (
         <div role="alert" aria-live="polite" className="rounded bg-red-50 p-3 text-sm text-red-600">
           {error}
-        </div>
-      )}
-      {success && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="rounded bg-green-50 p-3 text-sm text-green-600"
-        >
-          {success}
         </div>
       )}
       <div className="flex justify-end">

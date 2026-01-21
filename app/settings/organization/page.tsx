@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
+import { canManageOrg } from '@/lib/permissions'
 
 export default async function OrganizationSettingsPage() {
   const supabase = await createClient()
@@ -24,9 +25,7 @@ export default async function OrganizationSettingsPage() {
     redirect('/onboarding')
   }
 
-  const canManageOrg = userRecord.role === 'admin' || userRecord.role === 'developer'
-
-  if (!canManageOrg) {
+  if (!canManageOrg(userRecord.role)) {
     redirect('/settings/team')
   }
 

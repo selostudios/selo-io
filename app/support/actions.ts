@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { FeedbackStatus, FeedbackPriority } from '@/lib/types/feedback'
+import { canManageFeedback } from '@/lib/permissions'
 
 interface UpdateFeedbackStatusParams {
   feedbackId: string
@@ -34,7 +35,7 @@ export async function updateFeedbackStatus({
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'developer') {
+  if (!userRecord || !canManageFeedback(userRecord.role)) {
     return { error: 'Only developers can update feedback' }
   }
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
 import { formatDate, displayName } from '@/lib/utils'
+import { canManageTeam } from '@/lib/permissions'
 
 function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean)
@@ -38,7 +39,7 @@ export default async function TeamSettingsPage() {
     redirect('/onboarding')
   }
 
-  const isAdmin = userRecord.role === 'admin'
+  const isAdmin = canManageTeam(userRecord.role)
 
   // Get organization name
   const { data: org } = await supabase
