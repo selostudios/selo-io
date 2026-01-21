@@ -277,13 +277,11 @@ export function PerformanceDashboard({
                       <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
                         Failed
                       </span>
-                    ) : audit.status === 'stopped' ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
-                        Stopped
-                      </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">
-                        {audit.total_urls} {audit.total_urls === 1 ? 'page' : 'pages'}
+                        {audit.total_urls
+                          ? `${audit.total_urls} ${audit.total_urls === 1 ? 'page' : 'pages'}`
+                          : '-'}
                       </span>
                     )}
                   </div>
@@ -292,6 +290,22 @@ export function PerformanceDashboard({
                       <>
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
                           Completed
+                        </span>
+                        {(() => {
+                          const duration = calculateDuration(audit.started_at, audit.completed_at)
+                          return duration ? (
+                            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <Clock className="size-3" />
+                              {formatDuration(duration)}
+                            </span>
+                          ) : null
+                        })()}
+                      </>
+                    )}
+                    {audit.status === 'stopped' && (
+                      <>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                          Stopped
                         </span>
                         {(() => {
                           const duration = calculateDuration(audit.started_at, audit.completed_at)
