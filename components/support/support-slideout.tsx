@@ -106,17 +106,17 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <Badge className={`w-fit mb-1 ${CATEGORY_COLORS[feedback.category]}`} style={{ marginLeft: '-2px' }}>
+          <Badge
+            className={`mb-1 w-fit ${CATEGORY_COLORS[feedback.category]}`}
+            style={{ marginLeft: '-2px' }}
+          >
             {CATEGORY_LABELS[feedback.category]}
           </Badge>
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">
               {submitterEmail ? (
-                <a
-                  href={`mailto:${submitterEmail}`}
-                  className="text-blue-600 hover:underline"
-                >
+                <a href={`mailto:${submitterEmail}`} className="text-blue-600 hover:underline">
                   {submitterDisplay}
                 </a>
               ) : (
@@ -127,23 +127,22 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           </SheetDescription>
         </SheetHeader>
 
-
         {/* Content area - scrollable and grows */}
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4">
           {/* Description */}
-          <p className="text-sm whitespace-pre-wrap mb-4">{feedback.description}</p>
+          <p className="mb-4 text-sm whitespace-pre-wrap">{feedback.description}</p>
 
           {/* Screenshot Attachment */}
           {feedback.screenshot_url && (
             <div className="mt-3">
               <hr className="border-border mb-2" />
-              <div className="flex items-center gap-2 text-xs mt-2">
-                <ImageIcon className="h-3 w-3 text-muted-foreground" />
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <ImageIcon className="text-muted-foreground h-3 w-3" />
                 <a
                   href={feedback.screenshot_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  className="text-blue-600 transition-colors hover:text-blue-800 hover:underline"
                 >
                   {(() => {
                     const url = feedback.screenshot_url
@@ -177,7 +176,7 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
         </div>
 
         {/* Form - anchored to bottom */}
-        <div className="border-t border-border px-6 py-4 space-y-4">
+        <div className="border-border space-y-4 border-t px-6 py-4">
           {/* Status & Priority */}
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">

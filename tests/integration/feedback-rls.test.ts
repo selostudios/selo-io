@@ -63,10 +63,7 @@ describe('Feedback RLS Policies', () => {
         category: 'bug',
       })
 
-      const { data } = await testDb
-        .from('feedback')
-        .select('*')
-        .eq('submitted_by', regularUser.id)
+      const { data } = await testDb.from('feedback').select('*').eq('submitted_by', regularUser.id)
 
       expect(data).toHaveLength(1)
       expect(data?.[0].title).toBe('My feedback')

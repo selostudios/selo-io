@@ -51,7 +51,9 @@ export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
           >
             <TableCell className="font-medium">{item.title}</TableCell>
             <TableCell>
-              <Badge className={CATEGORY_COLORS[item.category]}>{CATEGORY_LABELS[item.category]}</Badge>
+              <Badge className={CATEGORY_COLORS[item.category]}>
+                {CATEGORY_LABELS[item.category]}
+              </Badge>
             </TableCell>
             <TableCell>
               <Badge className={STATUS_COLORS[item.status]}>{STATUS_LABELS[item.status]}</Badge>

@@ -148,14 +148,23 @@ describe('Feedback Database Operations', () => {
 
     it('filters by status', async () => {
       await testDb.from('feedback').insert([
-        { title: 'New One', description: 'Test', category: 'bug', submitted_by: testUser.id, status: 'new' },
-        { title: 'In Progress', description: 'Test', category: 'bug', submitted_by: testUser.id, status: 'in_progress' },
+        {
+          title: 'New One',
+          description: 'Test',
+          category: 'bug',
+          submitted_by: testUser.id,
+          status: 'new',
+        },
+        {
+          title: 'In Progress',
+          description: 'Test',
+          category: 'bug',
+          submitted_by: testUser.id,
+          status: 'in_progress',
+        },
       ])
 
-      const { data } = await testDb
-        .from('feedback')
-        .select('title')
-        .eq('status', 'in_progress')
+      const { data } = await testDb.from('feedback').select('title').eq('status', 'in_progress')
 
       expect(data).toHaveLength(1)
       expect(data?.[0].title).toBe('In Progress')

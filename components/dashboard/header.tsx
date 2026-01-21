@@ -15,7 +15,9 @@ export async function Header() {
 
   const { data: userRecord, error } = await supabase
     .from('users')
-    .select('organization:organizations(name, logo_url, primary_color), first_name, last_name, role')
+    .select(
+      'organization:organizations(name, logo_url, primary_color), first_name, last_name, role'
+    )
     .eq('id', user.id)
     .single()
 

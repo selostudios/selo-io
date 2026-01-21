@@ -201,9 +201,7 @@ export function PerformanceDashboard({
               </Button>
             </div>
             {isValidUrl(newUrl) && isDuplicateUrl(newUrl) && (
-              <p className="text-muted-foreground text-sm">
-                This page is already being monitored.
-              </p>
+              <p className="text-muted-foreground text-sm">This page is already being monitored.</p>
             )}
           </div>
 

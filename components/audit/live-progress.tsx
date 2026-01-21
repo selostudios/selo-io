@@ -196,12 +196,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
           </div>
 
           {/* Stop button - always show for in-progress audits */}
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleStop}
-            disabled={isStopping}
-          >
+          <Button variant="outline" className="w-full" onClick={handleStop} disabled={isStopping}>
             {isStopping ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />

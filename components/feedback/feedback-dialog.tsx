@@ -129,7 +129,7 @@ export function FeedbackDialog() {
               onChange={(e) => setTitle(e.target.value)}
             />
             {title.length > 0 && !isTitleValid && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 Title must be at least {TITLE_MIN_LENGTH} characters
               </p>
             )}
@@ -148,7 +148,7 @@ export function FeedbackDialog() {
               onChange={(e) => setDescription(e.target.value)}
             />
             {description.length > 0 && !isDescriptionValid && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 Description must be at least {DESCRIPTION_MIN_LENGTH} characters
               </p>
             )}
