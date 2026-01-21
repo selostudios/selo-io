@@ -26,6 +26,8 @@ describe('OrganizationForm', () => {
     secondaryColor: '#F5F5F0',
     accentColor: '#666666',
     industries: mockIndustries,
+    websiteUrl: '',
+    existingAuditCount: 0,
   }
 
   beforeEach(() => {

@@ -53,3 +53,34 @@ export function formatDate(dateString: string, includeTime = true): string {
 
   return `${dayOfWeek}, ${ordinalSuffix(day)} ${month}, ${year} at ${hours}:${minutes}${ampm}`
 }
+
+/**
+ * Formats a duration in milliseconds to a human-readable string.
+ * e.g., 142000 -> "2:22s"
+ */
+export function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+
+  if (minutes === 0) {
+    return `${seconds}s`
+  }
+
+  const paddedSeconds = seconds.toString().padStart(2, '0')
+  return `${minutes}:${paddedSeconds}s`
+}
+
+/**
+ * Calculates duration between two ISO date strings.
+ * Returns null if either date is missing.
+ */
+export function calculateDuration(
+  startedAt: string | null,
+  completedAt: string | null
+): number | null {
+  if (!startedAt || !completedAt) return null
+  const start = new Date(startedAt).getTime()
+  const end = new Date(completedAt).getTime()
+  return end - start
+}

@@ -28,10 +28,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
+  // Get organization's website URL for sidebar
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('website_url')
+    .eq('id', userRecord.organization_id)
+    .single()
+
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <Sidebar />
+        <Sidebar websiteUrl={org?.website_url ?? null} />
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">{children}</main>

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { MetricCard } from '@/components/dashboard/metric-card'
+import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
 const TOTAL_PLATFORMS = 4
 
@@ -25,6 +26,13 @@ export default async function DashboardPage() {
   if (userError || !userRecord || !userRecord.organization_id) {
     redirect('/onboarding')
   }
+
+  // Get organization's website URL
+  const { data: orgData } = await supabase
+    .from('organizations')
+    .select('website_url')
+    .eq('id', userRecord.organization_id)
+    .single()
 
   // Get campaign count with error handling
   const { count: campaignCount, error: campaignError } = await supabase
@@ -85,6 +93,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8 p-8">
+      <WebsiteUrlToast websiteUrl={orgData?.website_url || null} />
       <div>
         <h1 className="text-3xl font-bold">
           Welcome to{' '}

@@ -29,24 +29,25 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     redirect('/onboarding')
   }
 
+  // Get organization's website URL for sidebar
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('website_url')
+    .eq('id', userRecord.organization_id)
+    .single()
+
   return (
-    <FeedbackProvider>
-      <div className="flex min-h-screen bg-neutral-50">
-        <Sidebar />
-        <div className="flex flex-1 flex-col">
-          <Header />
-          <main className="flex-1">
-            <div className="space-y-6 p-8">
-              <div>
-                <h1 className="text-3xl font-bold">Settings</h1>
-                <p className="text-muted-foreground mt-2">
-                  Manage your account and organization preferences
-                </p>
-              </div>
-
-              <SettingsTabs />
-
-              {children}
+    <div className="flex min-h-screen bg-neutral-50">
+      <Sidebar websiteUrl={org?.website_url ?? null} />
+      <div className="flex flex-1 flex-col">
+        <Header />
+        <main className="flex-1">
+          <div className="space-y-6 p-8">
+            <div>
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your account and organization preferences
+              </p>
             </div>
           </main>
         </div>
