@@ -24,9 +24,9 @@ export default async function OrganizationSettingsPage() {
     redirect('/onboarding')
   }
 
-  const isAdmin = userRecord.role === 'admin'
+  const canManageOrg = userRecord.role === 'admin' || userRecord.role === 'developer'
 
-  if (!isAdmin) {
+  if (!canManageOrg) {
     redirect('/settings/team')
   }
 
