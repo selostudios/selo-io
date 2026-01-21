@@ -152,6 +152,8 @@ export class LinkedInClient {
         `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}`
       )
 
+      console.log('[LinkedIn] Follower lifetime response:', JSON.stringify(lifetimeData, null, 2))
+
       // Calculate total followers from lifetime stats
       let totalFollowers = 0
 
@@ -174,7 +176,11 @@ export class LinkedInClient {
             totalFollowers += organic + paid
           }
           console.log('[LinkedIn] Total followers from seniority breakdown:', totalFollowers)
+        } else {
+          console.log('[LinkedIn] No followerCountsBySeniority found in response')
         }
+      } else {
+        console.log('[LinkedIn] No elements in follower lifetime response')
       }
 
       // If dates provided, get time-bound gains
@@ -183,6 +189,8 @@ export class LinkedInClient {
 
       if (startDate && endDate) {
         const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
+        console.log('[LinkedIn] Fetching follower gains for time range:', { start: startDate.toISOString(), end: endDate.toISOString() })
+
         const timeData = await this.fetch<{
           elements: Array<{
             followerGains?: { organicFollowerGain: number; paidFollowerGain: number }
@@ -191,10 +199,13 @@ export class LinkedInClient {
           `/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
         )
 
+        console.log('[LinkedIn] Follower time-bound response:', JSON.stringify(timeData, null, 2))
+
         for (const el of timeData.elements || []) {
           organicGain += Number(el.followerGains?.organicFollowerGain) || 0
           paidGain += Number(el.followerGains?.paidFollowerGain) || 0
         }
+        console.log('[LinkedIn] Follower gains calculated:', { organicGain, paidGain })
       }
 
       return { totalFollowers, organicGain, paidGain }
@@ -212,11 +223,13 @@ export class LinkedInClient {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
 
+    console.log('[LinkedIn] Fetching page stats for:', { orgUrn, start: startDate.toISOString(), end: endDate.toISOString() })
+
     try {
       const data = await this.fetch<{
         elements: Array<{
           totalPageStatistics?: {
-            views?: { allPageViews?: number }
+            views?: { allPageViews?: unknown }
           }
         }>
       }>(
@@ -228,8 +241,10 @@ export class LinkedInClient {
       let pageViews = 0
       let uniqueVisitors = 0
       for (const el of data.elements || []) {
+        console.log('[LinkedIn] Processing page element:', JSON.stringify(el, null, 2))
         // allPageViews is an object with pageViews and uniquePageViews inside
         const views = el.totalPageStatistics?.views?.allPageViews
+        console.log('[LinkedIn] allPageViews value:', views, 'type:', typeof views)
         if (typeof views === 'object' && views !== null) {
           const viewsObj = views as { pageViews?: number; uniquePageViews?: number }
           pageViews += Number(viewsObj.pageViews) || 0
@@ -239,6 +254,7 @@ export class LinkedInClient {
         }
       }
 
+      console.log('[LinkedIn] Page stats calculated:', { pageViews, uniqueVisitors })
       return { pageViews, uniqueVisitors }
     } catch (error) {
       console.error('[LinkedIn] Page stats error:', error)
@@ -260,6 +276,8 @@ export class LinkedInClient {
   }> {
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const timeRange = `(start:${startDate.getTime()},end:${endDate.getTime()})`
+
+    console.log('[LinkedIn] Fetching share stats for:', { orgUrn, start: startDate.toISOString(), end: endDate.toISOString() })
 
     try {
       const data = await this.fetch<{
@@ -287,6 +305,7 @@ export class LinkedInClient {
       let shares = 0
 
       for (const el of data.elements || []) {
+        console.log('[LinkedIn] Processing share element:', JSON.stringify(el, null, 2))
         const stats = el.totalShareStatistics || {}
         impressions += Number(stats.impressionCount) || 0
         clicks += Number(stats.clickCount) || 0
@@ -294,6 +313,8 @@ export class LinkedInClient {
         comments += Number(stats.commentCount) || 0
         shares += Number(stats.shareCount) || 0
       }
+
+      console.log('[LinkedIn] Share stats calculated:', { impressions, clicks, likes, comments, shares })
 
       return {
         impressions,
