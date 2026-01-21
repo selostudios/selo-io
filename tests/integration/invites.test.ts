@@ -4,7 +4,6 @@ import {
   createTestUser,
   createTestOrganization,
   linkUserToOrganization,
-  cleanupTestData,
 } from '../helpers/db'
 
 /**
@@ -19,26 +18,40 @@ import {
 describe('Invites - Database Integration', () => {
   let adminUser: { id: string }
   let testOrg: { id: string }
+  let testId: string
 
   beforeAll(async () => {
-    await cleanupTestData()
+    // Use unique identifiers to avoid conflicts with parallel tests
+    testId = `invites-${Date.now()}`
 
     // Create admin user and organization
-    adminUser = await createTestUser('admin@test.com', 'password123', {
+    adminUser = await createTestUser(`admin-${testId}@test.com`, 'password123', {
       first_name: 'Admin',
       last_name: 'User',
     })
-    testOrg = await createTestOrganization('Test Org')
+    testOrg = await createTestOrganization(`Test Org ${testId}`)
     await linkUserToOrganization(adminUser.id, testOrg.id, 'admin', 'Admin', 'User')
   })
 
   afterAll(async () => {
-    await cleanupTestData()
+    // Clean up only data created by this test
+    if (testOrg?.id) {
+      await testDb.from('invites').delete().eq('organization_id', testOrg.id)
+    }
+    if (adminUser?.id) {
+      await testDb.from('users').delete().eq('id', adminUser.id)
+      await testDb.auth.admin.deleteUser(adminUser.id).catch(() => {})
+    }
+    if (testOrg?.id) {
+      await testDb.from('organizations').delete().eq('id', testOrg.id)
+    }
   })
 
   beforeEach(async () => {
-    // Clean up invites before each test
-    await testDb.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Clean up only invites for this test's organization
+    if (testOrg?.id) {
+      await testDb.from('invites').delete().eq('organization_id', testOrg.id)
+    }
   })
 
   describe('Unique email constraint', () => {

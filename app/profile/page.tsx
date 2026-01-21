@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { ProfileForm } from '@/components/settings/profile-form'
+import { ProfilePageForm } from './profile-page-form'
 
 export default async function ProfileSettingsPage() {
   const supabase = await createClient()
@@ -13,19 +13,20 @@ export default async function ProfileSettingsPage() {
     redirect('/login')
   }
 
-  // Get user's name
+  // Get user's name and role
   const { data: userRecord } = await supabase
     .from('users')
-    .select('first_name, last_name')
+    .select('first_name, last_name, role')
     .eq('id', user.id)
     .single()
 
   return (
     <div className="space-y-6">
-      <ProfileForm
+      <ProfilePageForm
         email={user.email || ''}
         firstName={userRecord?.first_name || ''}
         lastName={userRecord?.last_name || ''}
+        role={userRecord?.role || 'team_member'}
       />
     </div>
   )

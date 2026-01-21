@@ -62,8 +62,54 @@ export async function linkUserToOrganization(
   return data
 }
 
+export async function createTestFeedback(
+  submittedBy: string,
+  data: {
+    title: string
+    description: string
+    category: 'bug' | 'feature_request' | 'performance' | 'usability' | 'other'
+    organizationId?: string
+    status?: 'new' | 'under_review' | 'in_progress' | 'resolved' | 'closed'
+    priority?: 'critical' | 'high' | 'medium' | 'low'
+  }
+) {
+  const { data: feedback, error } = await testDb
+    .from('feedback')
+    .insert({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      submitted_by: submittedBy,
+      organization_id: data.organizationId || null,
+      status: data.status || 'new',
+      priority: data.priority || null,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return feedback
+}
+
+export async function linkUserAsDeveloper(userId: string, firstName?: string, lastName?: string) {
+  const { data, error } = await testDb
+    .from('users')
+    .upsert({
+      id: userId,
+      role: 'developer',
+      first_name: firstName,
+      last_name: lastName,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export async function cleanupTestData() {
   // Clean up in reverse order of dependencies
+  await testDb.from('feedback').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000')

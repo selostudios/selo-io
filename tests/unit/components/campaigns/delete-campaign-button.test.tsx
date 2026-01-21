@@ -5,15 +5,15 @@ import { DeleteCampaignButton } from '@/components/campaigns/delete-campaign-but
 describe('DeleteCampaignButton', () => {
   const mockOnDelete = vi.fn()
 
-  it('renders delete button when user is admin', () => {
-    render(<DeleteCampaignButton isAdmin={true} onDelete={mockOnDelete} />)
+  it('renders delete button when user can delete campaigns', () => {
+    render(<DeleteCampaignButton canDelete={true} onDelete={mockOnDelete} />)
 
     const deleteButton = screen.getByRole('button', { name: /delete campaign/i })
     expect(deleteButton).toBeInTheDocument()
   })
 
-  it('does not render delete button when user is not admin', () => {
-    render(<DeleteCampaignButton isAdmin={false} onDelete={mockOnDelete} />)
+  it('does not render delete button when user cannot delete campaigns', () => {
+    render(<DeleteCampaignButton canDelete={false} onDelete={mockOnDelete} />)
 
     const deleteButton = screen.queryByRole('button', { name: /delete campaign/i })
     expect(deleteButton).not.toBeInTheDocument()

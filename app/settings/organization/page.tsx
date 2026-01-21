@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
+import { canManageOrg } from '@/lib/permissions'
 
 export default async function OrganizationSettingsPage() {
   const supabase = await createClient()
@@ -24,22 +25,29 @@ export default async function OrganizationSettingsPage() {
     redirect('/onboarding')
   }
 
-  const isAdmin = userRecord.role === 'admin'
-
-  if (!isAdmin) {
-    redirect('/dashboard/settings/team')
+  if (!canManageOrg(userRecord.role)) {
+    redirect('/settings/team')
   }
 
   // Get organization details with industry relationship
   const { data: org } = await supabase
     .from('organizations')
-    .select('id, name, industry, logo_url, primary_color, secondary_color, accent_color')
+    .select(
+      'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url'
+    )
     .eq('id', userRecord.organization_id)
     .single()
 
   if (!org) {
     redirect('/dashboard')
   }
+
+  // Count existing non-archived audits for this organization
+  const { count: auditCount } = await supabase
+    .from('site_audits')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', userRecord.organization_id)
+    .is('archived_at', null)
 
   // Fetch industries
   const { data: industries } = await supabase
@@ -65,6 +73,8 @@ export default async function OrganizationSettingsPage() {
         secondaryColor={org.secondary_color}
         accentColor={org.accent_color}
         industries={industries || []}
+        websiteUrl={org.website_url || ''}
+        existingAuditCount={auditCount || 0}
       />
     </div>
   )

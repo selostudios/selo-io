@@ -15,7 +15,9 @@ export async function Header() {
 
   const { data: userRecord, error } = await supabase
     .from('users')
-    .select('organization:organizations(name, logo_url, primary_color), first_name, last_name')
+    .select(
+      'organization:organizations(name, logo_url, primary_color), first_name, last_name, role'
+    )
     .eq('id', user.id)
     .single()
 
@@ -34,6 +36,7 @@ export async function Header() {
   const userEmail = user?.email || ''
   const firstName = userRecord?.first_name || userEmail.split('@')[0]
   const lastName = userRecord?.last_name || ''
+  const role = userRecord?.role || 'team_member'
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
@@ -41,7 +44,7 @@ export async function Header() {
         <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
         <h2 className="text-lg font-semibold">{orgName}</h2>
       </div>
-      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} />
+      <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />
     </header>
   )
 }

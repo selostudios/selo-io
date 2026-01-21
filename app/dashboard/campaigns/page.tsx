@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dialog'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
+import { canManageCampaigns } from '@/lib/permissions'
 
 export default async function CampaignsPage() {
   const supabase = await createClient()
@@ -21,7 +22,7 @@ export default async function CampaignsPage() {
     .eq('organization_id', userRecord!.organization_id)
     .order('created_at', { ascending: false })
 
-  const canCreateCampaign = ['admin', 'team_member'].includes(userRecord!.role)
+  const canCreateCampaign = canManageCampaigns(userRecord!.role)
 
   return (
     <div className="space-y-8 p-8">

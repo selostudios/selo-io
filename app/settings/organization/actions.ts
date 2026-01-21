@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { canManageOrg } from '@/lib/permissions'
 
 export async function updateOrganization(
   formData: FormData
@@ -12,6 +13,7 @@ export async function updateOrganization(
   const primaryColor = formData.get('primaryColor') as string
   const secondaryColor = formData.get('secondaryColor') as string
   const accentColor = formData.get('accentColor') as string
+  const websiteUrl = formData.get('websiteUrl') as string | null
 
   if (!name || name.trim().length === 0) {
     return { error: 'Organization name is required' }
@@ -33,6 +35,21 @@ export async function updateOrganization(
     return { error: 'Accent color must be a valid hex color' }
   }
 
+  // Validate website URL format if provided
+  if (websiteUrl && websiteUrl.trim()) {
+    try {
+      const parsed = new URL(websiteUrl.trim())
+      if (parsed.protocol !== 'https:') {
+        return { error: 'Website URL must start with https://' }
+      }
+      if (!parsed.hostname.includes('.')) {
+        return { error: 'Please enter a valid domain (e.g., example.com)' }
+      }
+    } catch {
+      return { error: 'Website URL must be a valid URL (e.g., https://example.com)' }
+    }
+  }
+
   const supabase = await createClient()
 
   const {
@@ -50,8 +67,36 @@ export async function updateOrganization(
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can update organization settings' }
+  }
+
+  // Get current organization to check if website_url is changing
+  const { data: currentOrg } = await supabase
+    .from('organizations')
+    .select('website_url')
+    .eq('id', userRecord.organization_id)
+    .single()
+
+  const newWebsiteUrl = websiteUrl?.trim() || null
+  const currentWebsiteUrl = currentOrg?.website_url || null
+
+  // If website URL is changing and there was an existing URL, archive existing audits
+  if (newWebsiteUrl !== currentWebsiteUrl && currentWebsiteUrl) {
+    const { error: archiveError } = await supabase
+      .from('site_audits')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('organization_id', userRecord.organization_id)
+      .is('archived_at', null)
+
+    if (archiveError) {
+      console.error('[Organization Error]', {
+        type: 'archive_audits',
+        error: archiveError,
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to archive existing audits' }
+    }
   }
 
   // Update organization
@@ -64,6 +109,7 @@ export async function updateOrganization(
       primary_color: primaryColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
+      website_url: newWebsiteUrl,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userRecord.organization_id)
@@ -79,6 +125,7 @@ export async function updateOrganization(
 
   revalidatePath('/settings/organization')
   revalidatePath('/dashboard')
+  revalidatePath('/audit')
 
   return { success: true }
 }
@@ -120,7 +167,7 @@ export async function uploadLogo(
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can upload logos' }
   }
 
@@ -191,7 +238,7 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can remove logos' }
   }
 

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { encryptCredentials } from '@/lib/utils/crypto'
+import { canManageIntegrations } from '@/lib/permissions'
 
 export async function connectPlatform(formData: FormData) {
   const platform_type = formData.get('platform_type') as string
@@ -44,7 +45,7 @@ export async function connectPlatform(formData: FormData) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageIntegrations(userRecord.role)) {
     return { error: 'Only admins can connect platforms' }
   }
 
@@ -115,7 +116,7 @@ export async function disconnectPlatform(connectionId: string) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || userRecord.role !== 'admin') {
+  if (!userRecord || !canManageIntegrations(userRecord.role)) {
     console.error('[Disconnect Platform Error]', {
       type: 'unauthorized',
       userId: user.id,

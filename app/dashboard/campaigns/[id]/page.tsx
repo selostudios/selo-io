@@ -7,6 +7,7 @@ import { DeleteCampaignButton } from '@/components/campaigns/delete-campaign-but
 import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { EditableDescription } from '@/components/campaigns/editable-description'
 import { EditableUtmSection } from '@/components/campaigns/editable-utm-section'
+import { canManageCampaigns } from '@/lib/permissions'
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -29,7 +30,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     .eq('id', user?.id)
     .single()
 
-  const isAdmin = userRecord?.role === 'admin'
+  const canDelete = canManageCampaigns(userRecord?.role)
 
   async function handleDelete() {
     'use server'
@@ -67,7 +68,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             {displayName(campaign.status)}
           </Badge>
         </div>
-        <DeleteCampaignButton isAdmin={isAdmin} onDelete={handleDelete} />
+        <DeleteCampaignButton canDelete={canDelete} onDelete={handleDelete} />
       </div>
 
       <Card>

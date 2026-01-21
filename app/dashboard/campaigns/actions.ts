@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { generateUTMParameters } from '@/lib/utils/utm'
 import { revalidatePath } from 'next/cache'
+import { canManageCampaigns } from '@/lib/permissions'
 
 const VALID_CAMPAIGN_TYPES = [
   'thought_leadership',
@@ -62,7 +63,7 @@ export async function createCampaign(formData: FormData) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     console.error('[Create Campaign Error]', {
       type: 'unauthorized',
       userId: user.id,
@@ -148,7 +149,7 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     console.error('[Update Campaign Error]', {
       type: 'unauthorized',
       userId: user.id,
@@ -202,7 +203,7 @@ export async function updateCampaignDescription(campaignId: string, description:
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     return { error: "You don't have permission to update campaigns" }
   }
 
@@ -241,7 +242,7 @@ export async function updateUtmMedium(campaignId: string, medium: string) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     return { error: "You don't have permission to update campaigns" }
   }
 
@@ -284,7 +285,7 @@ export async function updateUtmParameters(
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     return { error: "You don't have permission to update campaigns" }
   }
 
@@ -326,7 +327,7 @@ export async function deleteCampaign(campaignId: string) {
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !['admin', 'team_member'].includes(userRecord.role)) {
+  if (!userRecord || !canManageCampaigns(userRecord.role)) {
     console.error('[Delete Campaign Error]', {
       type: 'unauthorized',
       userId: user.id,

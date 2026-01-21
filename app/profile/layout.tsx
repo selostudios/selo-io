@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
+import { FeedbackProvider } from '@/components/feedback/feedback-provider'
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
+import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 
 export default async function ProfileLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -25,22 +28,33 @@ export default async function ProfileLayout({ children }: { children: React.Reac
     redirect('/onboarding')
   }
 
-  return (
-    <div className="flex min-h-screen bg-neutral-50">
-      <Sidebar />
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <main className="flex-1">
-          <div className="space-y-6 p-8">
-            <div>
-              <h1 className="text-3xl font-bold">Profile</h1>
-              <p className="text-muted-foreground mt-2">Manage your personal information</p>
-            </div>
+  // Get organization's website URL for sidebar
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('website_url')
+    .eq('id', userRecord.organization_id)
+    .single()
 
-            {children}
-          </div>
-        </main>
+  return (
+    <FeedbackProvider>
+      <div className="flex min-h-screen bg-neutral-50">
+        <Sidebar websiteUrl={org?.website_url ?? null} />
+        <div className="flex flex-1 flex-col">
+          <Header />
+          <main className="flex-1">
+            <div className="space-y-6 p-8">
+              <div>
+                <h1 className="text-3xl font-bold">Profile</h1>
+                <p className="text-muted-foreground mt-2">Manage your personal information</p>
+              </div>
+
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+      <FeedbackDialog />
+      <FeedbackTrigger />
+    </FeedbackProvider>
   )
 }

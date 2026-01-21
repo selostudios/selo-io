@@ -8,6 +8,7 @@ const settingsTabs = [
   { name: 'Organization', href: '/settings/organization' },
   { name: 'Team', href: '/settings/team' },
   { name: 'Integrations', href: '/settings/integrations' },
+  { name: 'Monitoring', href: '/settings/monitoring' },
 ]
 
 export function SettingsTabs() {
