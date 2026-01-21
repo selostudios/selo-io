@@ -54,10 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       error: err instanceof Error ? err.message : 'Unknown error',
       timestamp: new Date().toISOString(),
     })
-    return NextResponse.json(
-      { error: 'Service configuration error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Service configuration error' }, { status: 500 })
   }
 
   // Delete any partial results

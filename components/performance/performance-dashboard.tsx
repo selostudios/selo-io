@@ -141,6 +141,17 @@ export function PerformanceDashboard({
     }
   }
 
+  const handleDeleteAudit = async (auditId: string) => {
+    try {
+      const response = await fetch(`/api/performance/${auditId}`, { method: 'DELETE' })
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (err) {
+      console.error('[Performance Dashboard] Failed to delete audit:', err)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Run Audit Card */}
@@ -266,6 +277,10 @@ export function PerformanceDashboard({
                       <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
                         Failed
                       </span>
+                    ) : audit.status === 'stopped' ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                        Stopped
+                      </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">
                         {audit.total_urls} {audit.total_urls === 1 ? 'page' : 'pages'}
@@ -291,6 +306,15 @@ export function PerformanceDashboard({
                     )}
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/audit/performance/${audit.id}`}>View</Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteAudit(audit.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete audit"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
