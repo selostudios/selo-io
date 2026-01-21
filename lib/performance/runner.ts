@@ -1,6 +1,16 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPageSpeedInsights, extractMetrics } from './api'
 import type { DeviceType, PerformanceAuditStatus } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+async function checkIfStopped(supabase: SupabaseClient, auditId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('performance_audits')
+    .select('status')
+    .eq('id', auditId)
+    .single()
+  return data?.status === 'stopped'
+}
 
 export async function runPerformanceAudit(auditId: string, urls: string[]): Promise<void> {
   const supabase = createServiceClient()
@@ -26,6 +36,12 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
     let completedUrls = 0
 
     for (const url of urls) {
+      // Check if audit was stopped before processing this URL
+      if (await checkIfStopped(supabase, auditId)) {
+        console.log(`[Performance] Audit ${auditId} was stopped, exiting`)
+        return
+      }
+
       for (const device of devices) {
         try {
           console.log(`[Performance] Auditing ${url} (${device})`)

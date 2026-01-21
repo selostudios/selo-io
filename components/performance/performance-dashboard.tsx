@@ -141,6 +141,17 @@ export function PerformanceDashboard({
     }
   }
 
+  const handleDeleteAudit = async (auditId: string) => {
+    try {
+      const response = await fetch(`/api/performance/${auditId}`, { method: 'DELETE' })
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (err) {
+      console.error('[Performance Dashboard] Failed to delete audit:', err)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Run Audit Card */}
@@ -268,7 +279,9 @@ export function PerformanceDashboard({
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">
-                        {audit.total_urls} {audit.total_urls === 1 ? 'page' : 'pages'}
+                        {audit.total_urls
+                          ? `${audit.total_urls} ${audit.total_urls === 1 ? 'page' : 'pages'}`
+                          : '-'}
                       </span>
                     )}
                   </div>
@@ -289,8 +302,33 @@ export function PerformanceDashboard({
                         })()}
                       </>
                     )}
+                    {audit.status === 'stopped' && (
+                      <>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                          Stopped
+                        </span>
+                        {(() => {
+                          const duration = calculateDuration(audit.started_at, audit.completed_at)
+                          return duration ? (
+                            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <Clock className="size-3" />
+                              {formatDuration(duration)}
+                            </span>
+                          ) : null
+                        })()}
+                      </>
+                    )}
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/audit/performance/${audit.id}`}>View</Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteAudit(audit.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete audit"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
