@@ -17,25 +17,27 @@ describe('MetricCard', () => {
   })
 
   it('should show positive change in green with up arrow', () => {
-    render(<MetricCard label="Followers" value={220} change={746.2} />)
+    const { container } = render(<MetricCard label="Followers" value={220} change={746.2} />)
 
     const changeElement = screen.getByText(/746.2%/)
     expect(changeElement).toHaveClass('text-green-600')
-    expect(screen.getByText('▲')).toBeInTheDocument()
+    // Check for TrendingUp icon (SVG with lucide-trending-up class)
+    expect(container.querySelector('.lucide-trending-up')).toBeInTheDocument()
   })
 
   it('should show negative change in red with down arrow', () => {
-    render(<MetricCard label="Reactions" value={53} change={-35.4} />)
+    const { container } = render(<MetricCard label="Reactions" value={53} change={-35.4} />)
 
     const changeElement = screen.getByText(/35.4%/)
     expect(changeElement).toHaveClass('text-red-600')
-    expect(screen.getByText('▼')).toBeInTheDocument()
+    // Check for TrendingDown icon (SVG with lucide-trending-down class)
+    expect(container.querySelector('.lucide-trending-down')).toBeInTheDocument()
   })
 
   it('should not show change when null', () => {
-    render(<MetricCard label="Followers" value={220} change={null} />)
+    const { container } = render(<MetricCard label="Followers" value={220} change={null} />)
 
-    expect(screen.queryByText('▲')).not.toBeInTheDocument()
-    expect(screen.queryByText('▼')).not.toBeInTheDocument()
+    expect(container.querySelector('.lucide-trending-up')).not.toBeInTheDocument()
+    expect(container.querySelector('.lucide-trending-down')).not.toBeInTheDocument()
   })
 })
