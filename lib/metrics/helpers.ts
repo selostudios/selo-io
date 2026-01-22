@@ -39,19 +39,25 @@ export function calculateChange(current: number, previous: number): number | nul
 
 /**
  * Sum metric values from DB records for a specific metric type within a date range.
+ * Returns both the sum and whether any records were found.
  */
 export function sumMetricInRange(
   metrics: MetricRecord[],
   metricType: string,
   startDate: Date,
   endDate: Date
-): number {
+): { sum: number; hasData: boolean } {
   const startStr = formatDateString(startDate)
   const endStr = formatDateString(endDate)
 
-  return metrics
-    .filter((m) => m.metric_type === metricType && m.date >= startStr && m.date <= endStr)
-    .reduce((sum, m) => sum + m.value, 0)
+  const filtered = metrics.filter(
+    (m) => m.metric_type === metricType && m.date >= startStr && m.date <= endStr
+  )
+
+  return {
+    sum: filtered.reduce((sum, m) => sum + m.value, 0),
+    hasData: filtered.length > 0,
+  }
 }
 
 /**
@@ -73,6 +79,7 @@ export function getLatestMetricValue(
 
 /**
  * Calculate trend (percentage change) from DB metrics for a specific metric type.
+ * Returns null for change if there's no data in the previous period (can't compute meaningful trend).
  */
 export function calculateTrendFromDb(
   metrics: MetricRecord[],
@@ -84,15 +91,27 @@ export function calculateTrendFromDb(
 
   let current: number
   let previous: number
+  let hasPreviousData: boolean
 
   if (isCumulative) {
     // For cumulative metrics, use latest value
     current = getLatestMetricValue(metrics, metricType, currentEnd)
     previous = getLatestMetricValue(metrics, metricType, previousEnd)
+    // For cumulative, check if we have any data in the previous period range
+    const previousCheck = sumMetricInRange(metrics, metricType, previousStart, previousEnd)
+    hasPreviousData = previousCheck.hasData || previous > 0
   } else {
     // For period metrics, sum values in range
-    current = sumMetricInRange(metrics, metricType, currentStart, currentEnd)
-    previous = sumMetricInRange(metrics, metricType, previousStart, previousEnd)
+    const currentResult = sumMetricInRange(metrics, metricType, currentStart, currentEnd)
+    const previousResult = sumMetricInRange(metrics, metricType, previousStart, previousEnd)
+    current = currentResult.sum
+    previous = previousResult.sum
+    hasPreviousData = previousResult.hasData
+  }
+
+  // If we have no data in the previous period, we can't compute a meaningful trend
+  if (!hasPreviousData) {
+    return { current, change: null }
   }
 
   return {
