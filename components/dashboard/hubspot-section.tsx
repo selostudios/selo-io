@@ -45,15 +45,12 @@ function formatMetricsForClipboard(metrics: HubSpotMetricsWithChanges, period: P
   const lines = [
     `🟠 HubSpot Metrics (${periodLabel})`,
     '',
-    '**CRM**',
     `• Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
     `• Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
     `• New Deals: ${metrics.crm.newDeals.toLocaleString()}`,
     `• Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
     `• Deals Won: ${metrics.crm.dealsWon.toLocaleString()}`,
     `• Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}`,
-    '',
-    '**Forms**',
     `• Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}`,
   ]
   return lines.join('\n')
@@ -170,62 +167,52 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
           </div>
         ) : metrics ? (
           <div className="space-y-6">
-            {/* CRM Metrics */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">CRM</h4>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-                <MetricCard
-                  label="Total Contacts"
-                  value={metrics.crm.totalContacts}
-                  change={null}
-                  period={period}
-                />
-                <MetricCard
-                  label="Total Deals"
-                  value={metrics.crm.totalDeals}
-                  change={null}
-                  period={period}
-                />
-                <MetricCard
-                  label="New Deals"
-                  value={metrics.crm.newDeals}
-                  change={metrics.crm.newDealsChange}
-                  period={period}
-                />
-                <MetricCard
-                  label="Pipeline Value"
-                  value={metrics.crm.totalPipelineValue}
-                  prefix="$"
-                  change={null}
-                  period={period}
-                />
-                <MetricCard
-                  label="Deals Won"
-                  value={metrics.crm.dealsWon}
-                  change={metrics.crm.dealsWonChange}
-                  period={period}
-                />
-                <MetricCard
-                  label="Deals Lost"
-                  value={metrics.crm.dealsLost}
-                  change={metrics.crm.dealsLostChange}
-                  period={period}
-                />
-              </div>
-            </div>
-
-            {/* Forms */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Forms</h4>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-                <MetricCard
-                  label="Form Submissions"
-                  value={metrics.marketing.formSubmissions}
-                  change={metrics.marketing.formSubmissionsChange}
-                  tooltip="Discovery inquiries from potential customers."
-                  period={period}
-                />
-              </div>
+            {/* All Metrics - 4 on top, 3 on bottom */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <MetricCard
+                label="Total Contacts"
+                value={metrics.crm.totalContacts}
+                change={null}
+                period={period}
+              />
+              <MetricCard
+                label="Total Deals"
+                value={metrics.crm.totalDeals}
+                change={null}
+                period={period}
+              />
+              <MetricCard
+                label="New Deals"
+                value={metrics.crm.newDeals}
+                change={metrics.crm.newDealsChange}
+                period={period}
+              />
+              <MetricCard
+                label="Pipeline Value"
+                value={metrics.crm.totalPipelineValue}
+                prefix="$"
+                change={null}
+                period={period}
+              />
+              <MetricCard
+                label="Deals Won"
+                value={metrics.crm.dealsWon}
+                change={metrics.crm.dealsWonChange}
+                period={period}
+              />
+              <MetricCard
+                label="Deals Lost"
+                value={metrics.crm.dealsLost}
+                change={metrics.crm.dealsLostChange}
+                period={period}
+              />
+              <MetricCard
+                label="Form Submissions"
+                value={metrics.marketing.formSubmissions}
+                change={metrics.marketing.formSubmissionsChange}
+                tooltip="Discovery inquiries from potential customers."
+                period={period}
+              />
             </div>
 
             {/* Charts */}
