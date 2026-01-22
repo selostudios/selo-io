@@ -107,7 +107,7 @@ export function IntegrationsPanel({
         </div>
         <div className="flex items-center gap-2">
           <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-[130px] bg-background">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
