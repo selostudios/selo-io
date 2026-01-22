@@ -11,15 +11,33 @@ import { MetricCard } from './metric-card'
 import { HubSpotIcon } from '@/components/icons/platform-icons'
 import { getHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
 import { cn } from '@/lib/utils'
-import type { HubSpotMetrics } from '@/lib/platforms/hubspot/types'
 import type { Period } from './integrations-panel'
+
+// Extended metrics type with change values from the actions
+interface HubSpotMetricsWithChanges {
+  crm: {
+    totalContacts: number
+    totalDeals: number
+    newDeals: number
+    totalPipelineValue: number
+    dealsWon: number
+    dealsLost: number
+    newDealsChange: number | null
+    dealsWonChange: number | null
+    dealsLostChange: number | null
+  }
+  marketing: {
+    formSubmissions: number
+    formSubmissionsChange: number | null
+  }
+}
 
 interface HubSpotSectionProps {
   isConnected: boolean
   period: Period
 }
 
-function formatMetricsForClipboard(metrics: HubSpotMetrics, period: Period): string {
+function formatMetricsForClipboard(metrics: HubSpotMetricsWithChanges, period: Period): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
   const lines = [
@@ -40,7 +58,7 @@ function formatMetricsForClipboard(metrics: HubSpotMetrics, period: Period): str
 }
 
 export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
-  const [metrics, setMetrics] = useState<HubSpotMetrics | null>(null)
+  const [metrics, setMetrics] = useState<HubSpotMetricsWithChanges | null>(null)
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
 
@@ -133,15 +151,27 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
                   change={null}
                 />
                 <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
-                <MetricCard label="New Deals" value={metrics.crm.newDeals} change={null} />
+                <MetricCard
+                  label="New Deals"
+                  value={metrics.crm.newDeals}
+                  change={metrics.crm.newDealsChange}
+                />
                 <MetricCard
                   label="Pipeline Value"
                   value={metrics.crm.totalPipelineValue}
                   prefix="$"
                   change={null}
                 />
-                <MetricCard label="Deals Won" value={metrics.crm.dealsWon} change={null} />
-                <MetricCard label="Deals Lost" value={metrics.crm.dealsLost} change={null} />
+                <MetricCard
+                  label="Deals Won"
+                  value={metrics.crm.dealsWon}
+                  change={metrics.crm.dealsWonChange}
+                />
+                <MetricCard
+                  label="Deals Lost"
+                  value={metrics.crm.dealsLost}
+                  change={metrics.crm.dealsLostChange}
+                />
               </div>
             </div>
 
@@ -152,7 +182,7 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
                 <MetricCard
                   label="Form Submissions"
                   value={metrics.marketing.formSubmissions}
-                  change={null}
+                  change={metrics.marketing.formSubmissionsChange}
                   tooltip="Discovery inquiries from potential customers."
                 />
               </div>

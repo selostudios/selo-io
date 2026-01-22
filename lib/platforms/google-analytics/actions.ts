@@ -107,6 +107,13 @@ export async function syncGoogleAnalyticsMetrics() {
   }
 }
 
+function calculateChange(current: number, previous: number): number | null {
+  if (previous === 0) {
+    return current > 0 ? 100 : null
+  }
+  return ((current - previous) / previous) * 100
+}
+
 export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter') {
   const supabase = await createClient()
 
@@ -139,21 +146,59 @@ export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter'
   }
 
   try {
-    const endDate = new Date()
-    const startDate = new Date()
+    // Calculate date ranges for current and previous periods
     const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
-    startDate.setDate(startDate.getDate() - daysBack)
+
+    // Current period
+    const currentEnd = new Date()
+    const currentStart = new Date()
+    currentStart.setDate(currentStart.getDate() - daysBack)
+
+    // Previous period (same length, immediately before current)
+    const previousEnd = new Date(currentStart)
+    previousEnd.setDate(previousEnd.getDate() - 1)
+    const previousStart = new Date(previousEnd)
+    previousStart.setDate(previousStart.getDate() - daysBack + 1)
 
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
-    const metrics = await adapter.fetchMetrics(startDate, endDate)
+
+    const [currentMetrics, previousMetrics] = await Promise.all([
+      adapter.fetchMetrics(currentStart, currentEnd),
+      adapter.fetchMetrics(previousStart, previousEnd),
+    ])
 
     return {
       metrics: {
-        activeUsers: metrics.activeUsers,
-        newUsers: metrics.newUsers,
-        sessions: metrics.sessions,
-        trafficAcquisition: metrics.trafficAcquisition,
+        activeUsers: currentMetrics.activeUsers,
+        activeUsersChange: calculateChange(currentMetrics.activeUsers, previousMetrics.activeUsers),
+        newUsers: currentMetrics.newUsers,
+        newUsersChange: calculateChange(currentMetrics.newUsers, previousMetrics.newUsers),
+        sessions: currentMetrics.sessions,
+        sessionsChange: calculateChange(currentMetrics.sessions, previousMetrics.sessions),
+        trafficAcquisition: currentMetrics.trafficAcquisition,
+        trafficAcquisitionChanges: {
+          direct: calculateChange(
+            currentMetrics.trafficAcquisition.direct,
+            previousMetrics.trafficAcquisition.direct
+          ),
+          organicSearch: calculateChange(
+            currentMetrics.trafficAcquisition.organicSearch,
+            previousMetrics.trafficAcquisition.organicSearch
+          ),
+          email: calculateChange(
+            currentMetrics.trafficAcquisition.email,
+            previousMetrics.trafficAcquisition.email
+          ),
+          organicSocial: calculateChange(
+            currentMetrics.trafficAcquisition.organicSocial,
+            previousMetrics.trafficAcquisition.organicSocial
+          ),
+          referral: calculateChange(
+            currentMetrics.trafficAcquisition.referral,
+            previousMetrics.trafficAcquisition.referral
+          ),
+        },
       },
     }
   } catch (error) {

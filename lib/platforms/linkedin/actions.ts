@@ -106,6 +106,13 @@ export async function syncLinkedInMetrics() {
   }
 }
 
+function calculateChange(current: number, previous: number): number | null {
+  if (previous === 0) {
+    return current > 0 ? 100 : null
+  }
+  return ((current - previous) / previous) * 100
+}
+
 export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   const supabase = await createClient()
 
@@ -139,24 +146,56 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   }
 
   try {
-    // Calculate date range based on period
-    const endDate = new Date()
-    const startDate = new Date()
+    // Calculate date ranges for current and previous periods
     const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
-    startDate.setDate(startDate.getDate() - daysBack)
 
-    // Fetch fresh metrics from LinkedIn for the selected period
+    // Current period
+    const currentEnd = new Date()
+    const currentStart = new Date()
+    currentStart.setDate(currentStart.getDate() - daysBack)
+
+    // Previous period (same length, immediately before current)
+    const previousEnd = new Date(currentStart)
+    previousEnd.setDate(previousEnd.getDate() - 1)
+    const previousStart = new Date(previousEnd)
+    previousStart.setDate(previousStart.getDate() - daysBack + 1)
+
+    // Fetch metrics for both periods
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new LinkedInAdapter(credentials, connection.id)
-    const metrics = await adapter.fetchMetrics(startDate, endDate)
 
-    // All metrics are now period-specific based on the selected date range
+    const [currentMetrics, previousMetrics] = await Promise.all([
+      adapter.fetchMetrics(currentStart, currentEnd),
+      adapter.fetchMetrics(previousStart, previousEnd),
+    ])
+
+    // Calculate change percentages
     const result = [
-      { label: 'New Followers', value: metrics.followerGrowth, change: null },
-      { label: 'Impressions', value: metrics.impressions, change: null },
-      { label: 'Reactions', value: metrics.reactions, change: null },
-      { label: 'Page Views', value: metrics.pageViews, change: null },
-      { label: 'Unique Visitors', value: metrics.uniqueVisitors, change: null },
+      {
+        label: 'New Followers',
+        value: currentMetrics.followerGrowth,
+        change: calculateChange(currentMetrics.followerGrowth, previousMetrics.followerGrowth),
+      },
+      {
+        label: 'Impressions',
+        value: currentMetrics.impressions,
+        change: calculateChange(currentMetrics.impressions, previousMetrics.impressions),
+      },
+      {
+        label: 'Reactions',
+        value: currentMetrics.reactions,
+        change: calculateChange(currentMetrics.reactions, previousMetrics.reactions),
+      },
+      {
+        label: 'Page Views',
+        value: currentMetrics.pageViews,
+        change: calculateChange(currentMetrics.pageViews, previousMetrics.pageViews),
+      },
+      {
+        label: 'Unique Visitors',
+        value: currentMetrics.uniqueVisitors,
+        change: calculateChange(currentMetrics.uniqueVisitors, previousMetrics.uniqueVisitors),
+      },
     ]
 
     return { metrics: result }

@@ -146,7 +146,11 @@ export class HubSpotClient {
     return response.json()
   }
 
-  async getCRMMetrics(days: number = 30): Promise<HubSpotCRMMetrics> {
+  async getCRMMetrics(
+    startDate?: Date,
+    endDate?: Date,
+    days: number = 30
+  ): Promise<HubSpotCRMMetrics> {
     const emptyMetrics: HubSpotCRMMetrics = {
       totalContacts: 0,
       totalDeals: 0,
@@ -158,9 +162,18 @@ export class HubSpotClient {
 
     try {
       // Calculate date range for "new deals" filter
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
-      const startDateMs = startDate.getTime()
+      let filterStartDate: Date
+      let filterEndDate: Date | undefined
+
+      if (startDate && endDate) {
+        filterStartDate = startDate
+        filterEndDate = endDate
+      } else {
+        filterStartDate = new Date()
+        filterStartDate.setDate(filterStartDate.getDate() - days)
+      }
+      const startDateMs = filterStartDate.getTime()
+      const endDateMs = filterEndDate?.getTime()
 
       // Use search API to get total counts (list API doesn't return totals)
       const [contactsResponse, dealsResponse, newDealsResponse] = await Promise.all([
@@ -191,6 +204,15 @@ export class HubSpotClient {
                   operator: 'GTE',
                   value: startDateMs.toString(),
                 },
+                ...(endDateMs
+                  ? [
+                      {
+                        propertyName: 'createdate',
+                        operator: 'LTE' as const,
+                        value: endDateMs.toString(),
+                      },
+                    ]
+                  : []),
               ],
             },
           ],
@@ -311,9 +333,9 @@ export class HubSpotClient {
     }
   }
 
-  async getMetrics(days: number = 30): Promise<HubSpotMetrics> {
+  async getMetrics(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotMetrics> {
     const [crm, marketing] = await Promise.all([
-      this.getCRMMetrics(days),
+      this.getCRMMetrics(startDate, endDate, days),
       this.getMarketingMetrics(),
     ])
 

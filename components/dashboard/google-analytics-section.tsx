@@ -16,9 +16,19 @@ import type { Period } from './integrations-panel'
 
 interface GAMetrics {
   activeUsers: number
+  activeUsersChange: number | null
   newUsers: number
+  newUsersChange: number | null
   sessions: number
+  sessionsChange: number | null
   trafficAcquisition: TrafficAcquisition
+  trafficAcquisitionChanges: {
+    direct: number | null
+    organicSearch: number | null
+    email: number | null
+    organicSocial: number | null
+    referral: number | null
+  }
 }
 
 interface GoogleAnalyticsSectionProps {
@@ -133,9 +143,17 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
           <div className="space-y-6">
             {/* Main metrics */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-              <MetricCard label="Active Users" value={metrics.activeUsers} change={null} />
-              <MetricCard label="New Users" value={metrics.newUsers} change={null} />
-              <MetricCard label="Sessions" value={metrics.sessions} change={null} />
+              <MetricCard
+                label="Active Users"
+                value={metrics.activeUsers}
+                change={metrics.activeUsersChange}
+              />
+              <MetricCard
+                label="New Users"
+                value={metrics.newUsers}
+                change={metrics.newUsersChange}
+              />
+              <MetricCard label="Sessions" value={metrics.sessions} change={metrics.sessionsChange} />
             </div>
 
             {/* Traffic Acquisition */}
@@ -145,23 +163,27 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
                 <MetricCard
                   label="Direct"
                   value={metrics.trafficAcquisition.direct}
-                  change={null}
+                  change={metrics.trafficAcquisitionChanges.direct}
                 />
                 <MetricCard
                   label="Organic Search"
                   value={metrics.trafficAcquisition.organicSearch}
-                  change={null}
+                  change={metrics.trafficAcquisitionChanges.organicSearch}
                 />
-                <MetricCard label="Email" value={metrics.trafficAcquisition.email} change={null} />
+                <MetricCard
+                  label="Email"
+                  value={metrics.trafficAcquisition.email}
+                  change={metrics.trafficAcquisitionChanges.email}
+                />
                 <MetricCard
                   label="Organic Social"
                   value={metrics.trafficAcquisition.organicSocial}
-                  change={null}
+                  change={metrics.trafficAcquisitionChanges.organicSocial}
                 />
                 <MetricCard
                   label="Referral"
                   value={metrics.trafficAcquisition.referral}
-                  change={null}
+                  change={metrics.trafficAcquisitionChanges.referral}
                 />
               </div>
             </div>

@@ -18,8 +18,8 @@ export class HubSpotAdapter {
     this.client = new HubSpotClient(credentials, connectionId)
   }
 
-  async fetchMetrics(days: number = 30): Promise<HubSpotMetrics> {
-    return this.client.getMetrics(days)
+  async fetchMetrics(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotMetrics> {
+    return this.client.getMetrics(startDate, endDate, days)
   }
 
   normalizeToDbRecords(

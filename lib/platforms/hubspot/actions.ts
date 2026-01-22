@@ -106,6 +106,13 @@ function getPeriodDays(period: Period): number {
   }
 }
 
+function calculateChange(current: number, previous: number): number | null {
+  if (previous === 0) {
+    return current > 0 ? 100 : null
+  }
+  return ((current - previous) / previous) * 100
+}
+
 export async function getHubSpotMetrics(period: Period = '30d') {
   const supabase = await createClient()
 
@@ -141,7 +148,42 @@ export async function getHubSpotMetrics(period: Period = '30d') {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
     const days = getPeriodDays(period)
-    const metrics = await adapter.fetchMetrics(days)
+
+    // Calculate date ranges for current and previous periods
+    const currentEnd = new Date()
+    const currentStart = new Date()
+    currentStart.setDate(currentStart.getDate() - days)
+
+    const previousEnd = new Date(currentStart)
+    previousEnd.setDate(previousEnd.getDate() - 1)
+    const previousStart = new Date(previousEnd)
+    previousStart.setDate(previousStart.getDate() - days + 1)
+
+    // Fetch metrics for both periods
+    const [currentMetrics, previousMetrics] = await Promise.all([
+      adapter.fetchMetrics(currentStart, currentEnd),
+      adapter.fetchMetrics(previousStart, previousEnd),
+    ])
+
+    // Add change calculations to metrics
+    const metrics = {
+      crm: {
+        ...currentMetrics.crm,
+        newDealsChange: calculateChange(currentMetrics.crm.newDeals, previousMetrics.crm.newDeals),
+        dealsWonChange: calculateChange(currentMetrics.crm.dealsWon, previousMetrics.crm.dealsWon),
+        dealsLostChange: calculateChange(
+          currentMetrics.crm.dealsLost,
+          previousMetrics.crm.dealsLost
+        ),
+      },
+      marketing: {
+        ...currentMetrics.marketing,
+        formSubmissionsChange: calculateChange(
+          currentMetrics.marketing.formSubmissions,
+          previousMetrics.marketing.formSubmissions
+        ),
+      },
+    }
 
     return { metrics }
   } catch (error) {
