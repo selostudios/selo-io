@@ -24,6 +24,10 @@ npm run test:e2e         # Playwright E2E tests
 npm run test:watch       # Vitest watch mode
 npm run test:coverage    # Generate coverage report
 
+# Run a single test file
+npx vitest tests/unit/path/to/file.test.ts
+npx vitest tests/unit/path/to/file.test.ts -t "test name"
+
 # Local Supabase (required for integration/E2E tests)
 supabase start           # Start local Supabase (Docker required)
 supabase db reset        # Run migrations
@@ -46,6 +50,7 @@ npm run reset-password   # CLI: Reset user password
 - **Shadcn UI** (New York style) + Tailwind CSS 4 + Radix UI
 - **React Email** for templates, **Mailpit** for local email testing, **Resend** for production/staging
 - **Vitest** + **Playwright** for testing
+- **Recharts** for metric visualizations
 
 ### Multi-Tenant Data Model
 
@@ -55,42 +60,100 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 
 **Server Components by Default**: Pages are RSC. Use `'use client'` only when needed for interactivity.
 
-**Server Actions**: Mutations use `'use server'` in `actions.ts` files colocated with pages. Call `revalidatePath()` after mutations.
-
-**Platform Integration**: Adapter pattern normalizes external platform data. See `lib/platforms/linkedin/` for reference implementation.
+**Server Actions**: Mutations use `'use server'` in `actions.ts` files colocated with features. Call `revalidatePath()` after mutations.
 
 **Supabase Clients**:
-
 - `lib/supabase/server.ts` - Server-side (RSC, server actions)
 - `lib/supabase/client.ts` - Browser-side
+
+### Platform Integration Architecture
+
+Each platform (LinkedIn, HubSpot, Google Analytics) follows the **Adapter Pattern** in `lib/platforms/{platform}/`:
+
+```
+Platform API → Client (fetch + token refresh) → Adapter (normalize) → Database
+```
+
+- `types.ts` - Credential and metrics interfaces
+- `client.ts` - API client with automatic OAuth token refresh
+- `adapter.ts` - Normalizes platform data to `campaign_metrics` schema
+- `actions.ts` - Server actions for sync operations
+
+**Two sync pathways**:
+1. **Service-level** (`syncMetricsFor{Platform}Connection`): Cron jobs with service client (bypasses RLS)
+2. **User-triggered** (`sync{Platform}Metrics`): Dashboard refresh with user auth
+
+### Metrics Caching System
+
+Located in `lib/metrics/`:
+
+- **1-hour cache**: `getMetricsFromDb()` checks `platform_connections.last_sync_at`
+- **Trend calculation**: `calculateTrendFromDb()` compares current vs previous period
+- **Time series**: `buildTimeSeriesArray()` formats data for inline charts
+- Returns `null` for trends when insufficient historical data exists
+
+**Data flow**:
+```
+Dashboard Page (RSC) → IntegrationsPanel (period state)
+                    → Platform Sections call getMetrics(period)
+                    → Check cache freshness → Return DB data or fetch fresh
+                    → MetricCard renders value + trend + inline chart
+```
+
+### Cron Jobs
+
+Located in `app/api/cron/`:
+- `daily-metrics-sync/` - Syncs all platform connections daily (secured by CRON_SECRET)
+- Requires `CRON_SECRET` environment variable in Vercel
 
 ### Directory Structure
 
 ```
 app/                    # Next.js App Router pages
+  api/cron/             # Scheduled job endpoints
   auth/                 # OAuth callback, sign-out
-  login/, onboarding/   # Auth flows
-  dashboard/            # Main app (campaigns list/detail)
+  dashboard/            # Main app (campaigns, metrics)
   settings/             # Team, organization, integrations
-  accept-invite/[id]/   # Team invite acceptance
-components/             # React components (ui/, dashboard/, etc.)
-lib/                    # Utilities, clients, platform integrations
+components/
+  dashboard/            # MetricCard, platform sections, IntegrationsPanel
+  ui/                   # Shadcn components
+lib/
+  platforms/            # LinkedIn, HubSpot, GA integrations
+  metrics/              # Caching, trend calculations, time series
+  oauth/providers/      # OAuth provider implementations
+  supabase/             # Database clients
 emails/                 # React Email templates
-tests/                  # Unit, integration, E2E tests
+tests/
+  unit/                 # Vitest + Testing Library
+  integration/          # Server actions, RLS with real Supabase
+  e2e/                  # Playwright user journeys
   helpers/              # Test utilities (db.ts, mocks.ts, seed.ts)
-docs/plans/             # Implementation plans and design docs
 ```
 
 ### Testing Strategy
 
-- **Unit (60%)**: `tests/unit/` - Components, utilities with Vitest + Testing Library
-- **Integration (30%)**: `tests/integration/` - Server actions, RLS policies with real Supabase
-- **E2E (10%)**: `tests/e2e/` - Critical user journeys with Playwright
+- **Unit (60%)**: Components, utilities with Vitest + Testing Library
+- **Integration (30%)**: Server actions, RLS policies with local Supabase
+- **E2E (10%)**: Critical user journeys with Playwright
 
 Integration and E2E tests require local Supabase running via Docker.
+
+### Before Pushing
+
+Always run lint and tests before pushing to remote:
+
+```bash
+npm run lint && npm run test:unit && npm run build
+```
 
 ### Error Logging Convention
 
 ```typescript
 console.error('[Context Error]', { type: 'error_type', timestamp: new Date().toISOString() })
 ```
+
+### LinkedIn OAuth Notes
+
+- App must be approved for "Marketing Developer Platform" product
+- Multiple organization selection not yet supported (auto-selects first)
+- Production rate limiting recommended before deployment
