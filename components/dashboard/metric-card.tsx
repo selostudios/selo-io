@@ -1,15 +1,17 @@
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Info } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface MetricCardProps {
   label: string
   value: number | string
   change: number | null
   prefix?: string
+  tooltip?: string
 }
 
-export function MetricCard({ label, value, change, prefix }: MetricCardProps) {
+export function MetricCard({ label, value, change, prefix, tooltip }: MetricCardProps) {
   const formattedValue =
     typeof value === 'number' ? `${prefix || ''}${value.toLocaleString()}` : value
 
@@ -18,7 +20,17 @@ export function MetricCard({ label, value, change, prefix }: MetricCardProps) {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardDescription>{label}</CardDescription>
+        <CardDescription className="flex items-center gap-1">
+          {label}
+          {tooltip && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="text-muted-foreground size-3.5" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[200px]">{tooltip}</TooltipContent>
+            </Tooltip>
+          )}
+        </CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
           {formattedValue}
         </CardTitle>

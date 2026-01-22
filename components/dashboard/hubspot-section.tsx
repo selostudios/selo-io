@@ -89,6 +89,7 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
                 label="Form Submissions"
                 value={metrics.marketing.formSubmissions}
                 change={null}
+                tooltip="Discovery inquiries from potential customers."
               />
             </div>
           </div>
