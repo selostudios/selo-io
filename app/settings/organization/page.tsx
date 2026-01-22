@@ -33,7 +33,7 @@ export default async function OrganizationSettingsPage() {
   const { data: org } = await supabase
     .from('organizations')
     .select(
-      'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url'
+      'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url, description, city, country, social_links'
     )
     .eq('id', userRecord.organization_id)
     .single()
@@ -75,6 +75,10 @@ export default async function OrganizationSettingsPage() {
         industries={industries || []}
         websiteUrl={org.website_url || ''}
         existingAuditCount={auditCount || 0}
+        description={org.description || ''}
+        city={org.city || ''}
+        country={org.country || ''}
+        socialLinks={org.social_links || []}
       />
     </div>
   )
