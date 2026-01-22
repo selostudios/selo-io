@@ -123,7 +123,7 @@ function extractColors(colors: BrandfetchResponse['colors']): BrandData['colors'
 export function normalizeBrandData(response: BrandfetchResponse): BrandData {
   return {
     name: response.name,
-    description: response.description,
+    description: response.description || response.longDescription,
     logo: selectBestLogo(response.logos),
     colors: extractColors(response.colors),
     socialLinks: (response.links || []).map((link) => ({
