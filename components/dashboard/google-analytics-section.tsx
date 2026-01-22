@@ -44,7 +44,7 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Google Analytics</CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 Connect Google Analytics to view website traffic metrics.
               </CardDescription>
             </div>

@@ -42,7 +42,7 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>LinkedIn</CardTitle>
-              <CardDescription>Connect LinkedIn to view engagement metrics.</CardDescription>
+              <CardDescription className="mt-1">Connect LinkedIn to view engagement metrics.</CardDescription>
             </div>
             <Button asChild size="sm">
               <Link href="/settings/integrations">Connect</Link>

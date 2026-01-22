@@ -37,7 +37,7 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>HubSpot</CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 Connect HubSpot to view CRM metrics and form submissions.
               </CardDescription>
             </div>
