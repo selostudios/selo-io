@@ -39,6 +39,12 @@ interface GoogleAnalyticsSectionProps {
 
 const GA_COLOR = '#E37400'
 
+function formatChange(change: number | null): string {
+  if (change === null) return ''
+  const sign = change >= 0 ? '+' : ''
+  return ` (${sign}${change.toFixed(1)}%)`
+}
+
 function formatMetricsForClipboard(metrics: GAMetrics, period: Period): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
@@ -46,16 +52,16 @@ function formatMetricsForClipboard(metrics: GAMetrics, period: Period): string {
     `📈 Google Analytics (${periodLabel})`,
     '',
     '**Overview**',
-    `• Active Users: ${metrics.activeUsers.toLocaleString()}`,
-    `• New Users: ${metrics.newUsers.toLocaleString()}`,
-    `• Sessions: ${metrics.sessions.toLocaleString()}`,
+    `• Active Users: ${metrics.activeUsers.toLocaleString()}${formatChange(metrics.activeUsersChange)}`,
+    `• New Users: ${metrics.newUsers.toLocaleString()}${formatChange(metrics.newUsersChange)}`,
+    `• Sessions: ${metrics.sessions.toLocaleString()}${formatChange(metrics.sessionsChange)}`,
     '',
     '**Traffic Acquisition**',
-    `• Direct: ${metrics.trafficAcquisition.direct.toLocaleString()}`,
-    `• Organic Search: ${metrics.trafficAcquisition.organicSearch.toLocaleString()}`,
-    `• Email: ${metrics.trafficAcquisition.email.toLocaleString()}`,
-    `• Organic Social: ${metrics.trafficAcquisition.organicSocial.toLocaleString()}`,
-    `• Referral: ${metrics.trafficAcquisition.referral.toLocaleString()}`,
+    `• Direct: ${metrics.trafficAcquisition.direct.toLocaleString()}${formatChange(metrics.trafficAcquisitionChanges.direct)}`,
+    `• Organic Search: ${metrics.trafficAcquisition.organicSearch.toLocaleString()}${formatChange(metrics.trafficAcquisitionChanges.organicSearch)}`,
+    `• Email: ${metrics.trafficAcquisition.email.toLocaleString()}${formatChange(metrics.trafficAcquisitionChanges.email)}`,
+    `• Organic Social: ${metrics.trafficAcquisition.organicSocial.toLocaleString()}${formatChange(metrics.trafficAcquisitionChanges.organicSocial)}`,
+    `• Referral: ${metrics.trafficAcquisition.referral.toLocaleString()}${formatChange(metrics.trafficAcquisitionChanges.referral)}`,
   ]
   return lines.join('\n')
 }

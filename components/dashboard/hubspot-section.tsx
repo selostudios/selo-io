@@ -40,6 +40,12 @@ interface HubSpotSectionProps {
 
 const HUBSPOT_COLOR = '#FF7A59'
 
+function formatChange(change: number | null): string {
+  if (change === null) return ''
+  const sign = change >= 0 ? '+' : ''
+  return ` (${sign}${change.toFixed(1)}%)`
+}
+
 function formatMetricsForClipboard(metrics: HubSpotMetricsWithChanges, period: Period): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
@@ -48,11 +54,11 @@ function formatMetricsForClipboard(metrics: HubSpotMetricsWithChanges, period: P
     '',
     `• Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
     `• Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
-    `• New Deals: ${metrics.crm.newDeals.toLocaleString()}`,
+    `• New Deals: ${metrics.crm.newDeals.toLocaleString()}${formatChange(metrics.crm.newDealsChange)}`,
     `• Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
-    `• Deals Won: ${metrics.crm.dealsWon.toLocaleString()}`,
-    `• Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}`,
-    `• Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}`,
+    `• Deals Won: ${metrics.crm.dealsWon.toLocaleString()}${formatChange(metrics.crm.dealsWonChange)}`,
+    `• Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}${formatChange(metrics.crm.dealsLostChange)}`,
+    `• Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}${formatChange(metrics.marketing.formSubmissionsChange)}`,
   ]
   return lines.join('\n')
 }

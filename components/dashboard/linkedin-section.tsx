@@ -27,11 +27,17 @@ interface LinkedInSectionProps {
 
 const LINKEDIN_COLOR = '#0A66C2'
 
+function formatChange(change: number | null): string {
+  if (change === null) return ''
+  const sign = change >= 0 ? '+' : ''
+  return ` (${sign}${change.toFixed(1)}%)`
+}
+
 function formatMetricsForClipboard(metrics: Metric[], period: Period): string {
   const periodLabel = period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
   const lines = [`📊 LinkedIn Metrics (${periodLabel})`, '']
   for (const metric of metrics) {
-    lines.push(`• ${metric.label}: ${metric.value.toLocaleString()}`)
+    lines.push(`• ${metric.label}: ${metric.value.toLocaleString()}${formatChange(metric.change)}`)
   }
   return lines.join('\n')
 }
