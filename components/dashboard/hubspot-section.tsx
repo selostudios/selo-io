@@ -178,28 +178,38 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
                   label="Total Contacts"
                   value={metrics.crm.totalContacts}
                   change={null}
+                  period={period}
                 />
-                <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
+                <MetricCard
+                  label="Total Deals"
+                  value={metrics.crm.totalDeals}
+                  change={null}
+                  period={period}
+                />
                 <MetricCard
                   label="New Deals"
                   value={metrics.crm.newDeals}
                   change={metrics.crm.newDealsChange}
+                  period={period}
                 />
                 <MetricCard
                   label="Pipeline Value"
                   value={metrics.crm.totalPipelineValue}
                   prefix="$"
                   change={null}
+                  period={period}
                 />
                 <MetricCard
                   label="Deals Won"
                   value={metrics.crm.dealsWon}
                   change={metrics.crm.dealsWonChange}
+                  period={period}
                 />
                 <MetricCard
                   label="Deals Lost"
                   value={metrics.crm.dealsLost}
                   change={metrics.crm.dealsLostChange}
+                  period={period}
                 />
               </div>
             </div>
@@ -213,6 +223,7 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
                   value={metrics.marketing.formSubmissions}
                   change={metrics.marketing.formSubmissionsChange}
                   tooltip="Discovery inquiries from potential customers."
+                  period={period}
                 />
               </div>
             </div>

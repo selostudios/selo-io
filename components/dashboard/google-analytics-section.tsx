@@ -176,13 +176,20 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
                 label="Active Users"
                 value={metrics.activeUsers}
                 change={metrics.activeUsersChange}
+                period={period}
               />
               <MetricCard
                 label="New Users"
                 value={metrics.newUsers}
                 change={metrics.newUsersChange}
+                period={period}
               />
-              <MetricCard label="Sessions" value={metrics.sessions} change={metrics.sessionsChange} />
+              <MetricCard
+                label="Sessions"
+                value={metrics.sessions}
+                change={metrics.sessionsChange}
+                period={period}
+              />
             </div>
 
             {/* Traffic Acquisition */}
@@ -193,26 +200,31 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
                   label="Direct"
                   value={metrics.trafficAcquisition.direct}
                   change={metrics.trafficAcquisitionChanges.direct}
+                  period={period}
                 />
                 <MetricCard
                   label="Organic Search"
                   value={metrics.trafficAcquisition.organicSearch}
                   change={metrics.trafficAcquisitionChanges.organicSearch}
+                  period={period}
                 />
                 <MetricCard
                   label="Email"
                   value={metrics.trafficAcquisition.email}
                   change={metrics.trafficAcquisitionChanges.email}
+                  period={period}
                 />
                 <MetricCard
                   label="Organic Social"
                   value={metrics.trafficAcquisition.organicSocial}
                   change={metrics.trafficAcquisitionChanges.organicSocial}
+                  period={period}
                 />
                 <MetricCard
                   label="Referral"
                   value={metrics.trafficAcquisition.referral}
                   change={metrics.trafficAcquisitionChanges.referral}
+                  period={period}
                 />
               </div>
             </div>

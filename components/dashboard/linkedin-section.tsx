@@ -151,6 +151,7 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
                   label={metric.label}
                   value={metric.value}
                   change={metric.change}
+                  period={period}
                 />
               ))}
             </div>
