@@ -108,7 +108,7 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
           </Tooltip>
         )}
       </div>
-      <CollapsibleContent className="mt-4 pl-4">
+      <CollapsibleContent className="mt-4">
         {isPending ? (
           <div className="flex h-[100px] items-center justify-center">
             <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
