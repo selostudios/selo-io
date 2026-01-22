@@ -63,7 +63,7 @@ export function MetricCard({ label, value, change, prefix, tooltip, period }: Me
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge variant="outline" className="text-muted-foreground cursor-help">
-                  <Minus className="mr-1 size-3" />
+                  <Minus className="size-3" />
                   <span className="sr-only">No trend data</span>
                 </Badge>
               </TooltipTrigger>
