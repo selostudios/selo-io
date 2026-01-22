@@ -303,6 +303,19 @@ export function OrganizationForm({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="A short description of your organization..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isLoading}
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="websiteUrl">Website URL</Label>
               <Input
                 id="websiteUrl"
@@ -319,19 +332,6 @@ export function OrganizationForm({
               ) : (
                 <p className="text-muted-foreground text-xs">Used for SEO & AI auditing</p>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="A short description of your organization..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={isLoading}
-                rows={2}
-              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -380,6 +380,10 @@ export function OrganizationForm({
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Brand Style</h3>
 
             <div className="space-y-2">
               <Label>Organization Logo</Label>
@@ -389,10 +393,10 @@ export function OrganizationForm({
                 primaryColor={primaryColor}
               />
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Brand Colors</h3>
+            <div className="space-y-2">
+              <Label className="text-sm">Brand Colors</Label>
+            </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="primaryColor">Primary Color</Label>
