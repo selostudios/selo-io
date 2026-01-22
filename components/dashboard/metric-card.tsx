@@ -78,21 +78,18 @@ export function MetricCard({
   return (
     <Card className="@container/card">
       <CardHeader className="pb-2">
-        <CardDescription className="flex items-center gap-1">
-          {label}
-          {tooltip && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="text-muted-foreground size-3.5" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[200px]">{tooltip}</TooltipContent>
-            </Tooltip>
-          )}
-        </CardDescription>
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {formattedValue}
-          </CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardDescription className="flex items-center gap-1">
+            {label}
+            {tooltip && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="text-muted-foreground size-3.5" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[200px]">{tooltip}</TooltipContent>
+              </Tooltip>
+            )}
+          </CardDescription>
           {change !== null ? (
             <Badge variant="outline" className={isPositive ? 'text-green-600' : 'text-red-600'}>
               {isPositive ? (
@@ -117,6 +114,9 @@ export function MetricCard({
             </Tooltip>
           )}
         </div>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {formattedValue}
+        </CardTitle>
       </CardHeader>
       {hasChart && (
         <CardContent className="pt-0 pb-2">
