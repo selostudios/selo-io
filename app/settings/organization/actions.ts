@@ -14,6 +14,19 @@ export async function updateOrganization(
   const secondaryColor = formData.get('secondaryColor') as string
   const accentColor = formData.get('accentColor') as string
   const websiteUrl = formData.get('websiteUrl') as string | null
+  const description = formData.get('description') as string | null
+  const city = formData.get('city') as string | null
+  const country = formData.get('country') as string | null
+  const socialLinksJson = formData.get('socialLinks') as string | null
+
+  let socialLinks: Array<{ platform: string; url: string }> = []
+  if (socialLinksJson) {
+    try {
+      socialLinks = JSON.parse(socialLinksJson)
+    } catch {
+      // Invalid JSON, use empty array
+    }
+  }
 
   if (!name || name.trim().length === 0) {
     return { error: 'Organization name is required' }
@@ -110,6 +123,10 @@ export async function updateOrganization(
       secondary_color: secondaryColor,
       accent_color: accentColor,
       website_url: newWebsiteUrl,
+      description: description?.trim() || null,
+      city: city?.trim() || null,
+      country: country?.trim() || null,
+      social_links: socialLinks,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userRecord.organization_id)
