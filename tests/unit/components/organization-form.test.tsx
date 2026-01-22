@@ -28,6 +28,10 @@ describe('OrganizationForm', () => {
     industries: mockIndustries,
     websiteUrl: '',
     existingAuditCount: 0,
+    description: '',
+    city: '',
+    country: '',
+    socialLinks: [],
   }
 
   beforeEach(() => {
