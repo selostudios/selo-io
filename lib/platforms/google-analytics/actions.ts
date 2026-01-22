@@ -63,16 +63,10 @@ export async function syncMetricsForGoogleAnalyticsConnection(
   const metrics = await adapter.fetchMetrics(startDate, endDate)
   const records = adapter.normalizeToDbRecords(metrics, organizationId, endDate)
 
-  const today = new Date().toISOString().split('T')[0]
-
-  await supabase
+  // Upsert to avoid duplicate entries
+  const { error: insertError } = await supabase
     .from('campaign_metrics')
-    .delete()
-    .eq('organization_id', organizationId)
-    .eq('platform_type', 'google_analytics')
-    .eq('date', today)
-
-  const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+    .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
   if (insertError) {
     throw new Error(`Failed to save Google Analytics metrics: ${insertError.message}`)
@@ -126,16 +120,10 @@ export async function syncGoogleAnalyticsMetrics() {
     const metrics = await adapter.fetchMetrics(startDate, endDate)
     const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, endDate)
 
-    const today = new Date().toISOString().split('T')[0]
-
-    await supabase
+    // Upsert to avoid duplicate entries
+    const { error: insertError } = await supabase
       .from('campaign_metrics')
-      .delete()
-      .eq('organization_id', userRecord.organization_id)
-      .eq('platform_type', 'google_analytics')
-      .eq('date', today)
-
-    const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
     if (insertError) {
       console.error('[GA Sync Error]', insertError)
@@ -272,18 +260,13 @@ export async function getGoogleAnalyticsMetrics(period: Period) {
       adapter.fetchMetrics(previousStart, previousEnd),
     ])
 
-    // 4. Store to DB (today's snapshot)
+    // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
     const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
     const today = new Date().toISOString().split('T')[0]
 
     await supabase
       .from('campaign_metrics')
-      .delete()
-      .eq('organization_id', userRecord.organization_id)
-      .eq('platform_type', 'google_analytics')
-      .eq('date', today)
-
-    await supabase.from('campaign_metrics').insert(records)
+      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
     // Update last_sync_at
     await supabase

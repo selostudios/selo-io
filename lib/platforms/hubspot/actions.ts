@@ -49,16 +49,10 @@ export async function syncMetricsForHubSpotConnection(
   const metrics = await adapter.fetchMetrics()
   const records = adapter.normalizeToDbRecords(metrics, organizationId, new Date())
 
-  const today = new Date().toISOString().split('T')[0]
-
-  await supabase
+  // Upsert to avoid duplicate entries
+  const { error: insertError } = await supabase
     .from('campaign_metrics')
-    .delete()
-    .eq('organization_id', organizationId)
-    .eq('platform_type', 'hubspot')
-    .eq('date', today)
-
-  const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+    .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
   if (insertError) {
     throw new Error(`Failed to save HubSpot metrics: ${insertError.message}`)
@@ -108,16 +102,10 @@ export async function syncHubSpotMetrics() {
     const metrics = await adapter.fetchMetrics()
     const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, new Date())
 
-    const today = new Date().toISOString().split('T')[0]
-
-    await supabase
+    // Upsert to avoid duplicate entries
+    const { error: insertError } = await supabase
       .from('campaign_metrics')
-      .delete()
-      .eq('organization_id', userRecord.organization_id)
-      .eq('platform_type', 'hubspot')
-      .eq('date', today)
-
-    const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
     if (insertError) {
       console.error('[HubSpot Sync Error]', insertError)
@@ -252,18 +240,13 @@ export async function getHubSpotMetrics(period: Period = '30d') {
       adapter.fetchMetrics(previousStart, previousEnd),
     ])
 
-    // 4. Store to DB (today's snapshot)
+    // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
     const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
     const today = new Date().toISOString().split('T')[0]
 
     await supabase
       .from('campaign_metrics')
-      .delete()
-      .eq('organization_id', userRecord.organization_id)
-      .eq('platform_type', 'hubspot')
-      .eq('date', today)
-
-    await supabase.from('campaign_metrics').insert(records)
+      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
     // Update last_sync_at
     await supabase
