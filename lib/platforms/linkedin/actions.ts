@@ -97,8 +97,17 @@ export async function syncLinkedInMetrics() {
   } catch (error) {
     console.error('[LinkedIn Sync Error]', error)
     if (error instanceof Error) {
-      if (error.message.includes('401')) {
-        return { error: 'LinkedIn token expired. Please reconnect.' }
+      if (error.message.includes('permissions missing') || error.message.includes('access denied')) {
+        return {
+          error: 'LinkedIn permissions missing. Please disconnect and reconnect your LinkedIn account in Settings → Integrations.',
+          needsReconnect: true,
+        }
+      }
+      if (error.message.includes('token expired') || error.message.includes('401')) {
+        return {
+          error: 'LinkedIn token expired. Please reconnect your account.',
+          needsReconnect: true,
+        }
       }
       return { error: error.message }
     }
@@ -163,6 +172,19 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   } catch (error) {
     console.error('[LinkedIn Metrics Error]', error)
     if (error instanceof Error) {
+      // Check for permission errors and provide actionable message
+      if (error.message.includes('permissions missing') || error.message.includes('access denied')) {
+        return {
+          error: 'LinkedIn permissions missing. Please disconnect and reconnect your LinkedIn account in Settings → Integrations.',
+          needsReconnect: true,
+        }
+      }
+      if (error.message.includes('token expired') || error.message.includes('401')) {
+        return {
+          error: 'LinkedIn token expired. Please reconnect your account.',
+          needsReconnect: true,
+        }
+      }
       return { error: error.message }
     }
     return { error: 'Failed to fetch LinkedIn metrics' }

@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
-import { MetricCard } from '@/components/dashboard/metric-card'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
 const TOTAL_PLATFORMS = 4
@@ -33,33 +31,6 @@ export default async function DashboardPage() {
     .select('website_url')
     .eq('id', userRecord.organization_id)
     .single()
-
-  // Get campaign count with error handling
-  const { count: campaignCount, error: campaignError } = await supabase
-    .from('campaigns')
-    .select('*', { count: 'exact', head: true })
-    .eq('organization_id', userRecord.organization_id)
-
-  if (campaignError) {
-    console.error('[Dashboard Error]', {
-      type: 'campaign_count',
-      timestamp: new Date().toISOString(),
-    })
-  }
-
-  // Get active campaigns with error handling
-  const { count: activeCount, error: activeError } = await supabase
-    .from('campaigns')
-    .select('*', { count: 'exact', head: true })
-    .eq('organization_id', userRecord.organization_id)
-    .eq('status', 'active')
-
-  if (activeError) {
-    console.error('[Dashboard Error]', {
-      type: 'active_count',
-      timestamp: new Date().toISOString(),
-    })
-  }
 
   // Get LinkedIn connection status
   const { data: linkedInConnection } = await supabase
@@ -103,18 +74,6 @@ export default async function DashboardPage() {
           Track your marketing performance across all platforms
         </p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Campaigns</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-8">
-            <MetricCard label="Active" value={activeCount || 0} change={null} />
-            <MetricCard label="Total" value={campaignCount || 0} change={null} />
-          </div>
-        </CardContent>
-      </Card>
 
       <IntegrationsPanel
         linkedIn={{

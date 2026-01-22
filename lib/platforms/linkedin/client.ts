@@ -117,7 +117,7 @@ export class LinkedInClient {
       case 401:
         return 'LinkedIn token expired or invalid. Please reconnect your account.'
       case 403:
-        return 'LinkedIn access denied. Your app may need additional permissions.'
+        return 'LinkedIn permissions missing. Please disconnect and reconnect your LinkedIn account in Settings → Integrations to grant the required permissions.'
       case 404:
         return 'LinkedIn organization not found. Please check your organization ID.'
       case 429:
