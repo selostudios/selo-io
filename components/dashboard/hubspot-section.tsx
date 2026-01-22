@@ -107,8 +107,8 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
   }
 
   return (
-    <Collapsible defaultOpen className="group/section rounded-lg border py-4">
-      <div className="bg-background flex items-center justify-between rounded-md px-4 py-3">
+    <Collapsible defaultOpen className="group/section rounded-lg border p-4">
+      <div className="flex items-center justify-between py-2">
         <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
           <ChevronDown
             className={cn(
