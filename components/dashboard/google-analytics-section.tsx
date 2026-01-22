@@ -1,18 +1,20 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Loader2, ChevronDown, Copy, Check } from 'lucide-react'
+import { Loader2, ChevronDown, Copy, Check, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { MetricCard } from './metric-card'
+import { MetricTrendChart } from './metric-trend-chart'
 import { GoogleAnalyticsIcon } from '@/components/icons/platform-icons'
 import { getGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import { cn } from '@/lib/utils'
 import type { TrafficAcquisition } from '@/lib/platforms/google-analytics/types'
 import type { Period } from './integrations-panel'
+import type { MetricTimeSeries } from '@/lib/metrics/types'
 
 interface GAMetrics {
   activeUsers: number
@@ -59,15 +61,20 @@ function formatMetricsForClipboard(metrics: GAMetrics, period: Period): string {
 
 export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsSectionProps) {
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
+  const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
+  const [showCharts, setShowCharts] = useState(false)
 
   useEffect(() => {
     if (isConnected) {
       startTransition(async () => {
         const result = await getGoogleAnalyticsMetrics(period)
-        if (result.metrics) {
+        if ('metrics' in result && result.metrics) {
           setMetrics(result.metrics)
+        }
+        if ('timeSeries' in result && result.timeSeries) {
+          setTimeSeries(result.timeSeries)
         }
       })
     }
@@ -120,18 +127,40 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
           <span className="text-lg font-semibold">Google Analytics</span>
         </CollapsibleTrigger>
         {metrics && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleCopy}
-                className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
-                aria-label="Copy metrics to clipboard"
-              >
-                {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
-          </Tooltip>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowCharts(!showCharts)
+                  }}
+                  className={cn(
+                    'cursor-pointer rounded p-1.5 transition-colors',
+                    showCharts
+                      ? 'text-foreground bg-muted'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                  aria-label={showCharts ? 'Hide charts' : 'Show charts'}
+                >
+                  <BarChart3 className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{showCharts ? 'Hide charts' : 'Show charts'}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleCopy}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
+                  aria-label="Copy metrics to clipboard"
+                >
+                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
+            </Tooltip>
+          </div>
         )}
       </div>
       <CollapsibleContent className="mt-4">
@@ -187,6 +216,25 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
                 />
               </div>
             </div>
+
+            {/* Charts */}
+            {showCharts && timeSeries.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Trends</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {timeSeries.map((series) => (
+                    <div key={series.metricType} className="rounded-lg border p-4">
+                      <p className="mb-2 text-sm font-medium">{series.label}</p>
+                      <MetricTrendChart
+                        data={series.data}
+                        label={series.label}
+                        color="#E37400"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>

@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/weekly-audits",
       "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/daily-metrics-sync",
+      "schedule": "0 3 * * *"
     }
   ]
 }

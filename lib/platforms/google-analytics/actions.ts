@@ -4,7 +4,17 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { GoogleAnalyticsAdapter } from './adapter'
 import { decryptCredentials } from '@/lib/utils/crypto'
-import type { GoogleAnalyticsCredentials } from './types'
+import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
+import {
+  calculateTrendFromDb,
+  buildTimeSeriesArray,
+  getDateRanges,
+  calculateChange,
+} from '@/lib/metrics/helpers'
+import { GA_METRICS } from '@/lib/metrics/types'
+import type { GoogleAnalyticsCredentials, TrafficAcquisition } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Period, MetricTimeSeries } from '@/lib/metrics/types'
 
 interface StoredCredentials {
   encrypted?: string
@@ -31,6 +41,47 @@ function getCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
     property_id: stored.property_id || stored.organization_id || '',
     property_name: stored.property_name || stored.organization_name || '',
   }
+}
+
+/**
+ * Service-level sync function for use by cron jobs (no user auth required).
+ * Fetches metrics from Google Analytics API and stores them in the database.
+ */
+export async function syncMetricsForGoogleAnalyticsConnection(
+  connectionId: string,
+  organizationId: string,
+  storedCredentials: StoredCredentials,
+  supabase: SupabaseClient
+): Promise<void> {
+  const credentials = getCredentials(storedCredentials)
+  const adapter = new GoogleAnalyticsAdapter(credentials, connectionId)
+
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 90)
+
+  const metrics = await adapter.fetchMetrics(startDate, endDate)
+  const records = adapter.normalizeToDbRecords(metrics, organizationId, endDate)
+
+  const today = new Date().toISOString().split('T')[0]
+
+  await supabase
+    .from('campaign_metrics')
+    .delete()
+    .eq('organization_id', organizationId)
+    .eq('platform_type', 'google_analytics')
+    .eq('date', today)
+
+  const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+
+  if (insertError) {
+    throw new Error(`Failed to save Google Analytics metrics: ${insertError.message}`)
+  }
+
+  await supabase
+    .from('platform_connections')
+    .update({ last_sync_at: new Date().toISOString() })
+    .eq('id', connectionId)
 }
 
 export async function syncGoogleAnalyticsMetrics() {
@@ -107,14 +158,70 @@ export async function syncGoogleAnalyticsMetrics() {
   }
 }
 
-function calculateChange(current: number, previous: number): number | null {
-  if (previous === 0) {
-    return current > 0 ? 100 : null
+interface GAMetricsResponse {
+  metrics: {
+    activeUsers: number
+    activeUsersChange: number | null
+    newUsers: number
+    newUsersChange: number | null
+    sessions: number
+    sessionsChange: number | null
+    trafficAcquisition: TrafficAcquisition
+    trafficAcquisitionChanges: {
+      direct: number | null
+      organicSearch: number | null
+      email: number | null
+      organicSocial: number | null
+      referral: number | null
+    }
   }
-  return ((current - previous) / previous) * 100
+  timeSeries: MetricTimeSeries[]
 }
 
-export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter') {
+/**
+ * Format DB metrics into the response shape expected by the UI.
+ */
+function formatGAMetricsFromDb(
+  cached: { metrics: Array<{ date: string; metric_type: string; value: number }> },
+  period: Period
+): GAMetricsResponse {
+  const activeUsers = calculateTrendFromDb(cached.metrics, 'ga_active_users', period)
+  const newUsers = calculateTrendFromDb(cached.metrics, 'ga_new_users', period)
+  const sessions = calculateTrendFromDb(cached.metrics, 'ga_sessions', period)
+  const trafficDirect = calculateTrendFromDb(cached.metrics, 'ga_traffic_direct', period)
+  const trafficOrganicSearch = calculateTrendFromDb(cached.metrics, 'ga_traffic_organic_search', period)
+  const trafficEmail = calculateTrendFromDb(cached.metrics, 'ga_traffic_email', period)
+  const trafficOrganicSocial = calculateTrendFromDb(cached.metrics, 'ga_traffic_organic_social', period)
+  const trafficReferral = calculateTrendFromDb(cached.metrics, 'ga_traffic_referral', period)
+
+  return {
+    metrics: {
+      activeUsers: activeUsers.current,
+      activeUsersChange: activeUsers.change,
+      newUsers: newUsers.current,
+      newUsersChange: newUsers.change,
+      sessions: sessions.current,
+      sessionsChange: sessions.change,
+      trafficAcquisition: {
+        direct: trafficDirect.current,
+        organicSearch: trafficOrganicSearch.current,
+        email: trafficEmail.current,
+        organicSocial: trafficOrganicSocial.current,
+        referral: trafficReferral.current,
+      },
+      trafficAcquisitionChanges: {
+        direct: trafficDirect.change,
+        organicSearch: trafficOrganicSearch.change,
+        email: trafficEmail.change,
+        organicSocial: trafficOrganicSocial.change,
+        referral: trafficReferral.change,
+      },
+    },
+    timeSeries: buildTimeSeriesArray(cached.metrics, GA_METRICS, period),
+  }
+}
+
+export async function getGoogleAnalyticsMetrics(period: Period) {
   const supabase = await createClient()
 
   const {
@@ -146,19 +253,16 @@ export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter'
   }
 
   try {
-    // Calculate date ranges for current and previous periods
-    const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
+    // 1. Try DB cache first
+    const cached = await getMetricsFromDb(supabase, userRecord.organization_id, 'google_analytics', period)
 
-    // Current period
-    const currentEnd = new Date()
-    const currentStart = new Date()
-    currentStart.setDate(currentStart.getDate() - daysBack)
+    // 2. If fresh (< 1 hour), use DB data
+    if (isCacheValid(cached)) {
+      return formatGAMetricsFromDb(cached, period)
+    }
 
-    // Previous period (same length, immediately before current)
-    const previousEnd = new Date(currentStart)
-    previousEnd.setDate(previousEnd.getDate() - 1)
-    const previousStart = new Date(previousEnd)
-    previousStart.setDate(previousStart.getDate() - daysBack + 1)
+    // 3. Otherwise, fetch fresh from API
+    const { currentStart, currentEnd, previousStart, previousEnd } = getDateRanges(period)
 
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
@@ -167,6 +271,32 @@ export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter'
       adapter.fetchMetrics(currentStart, currentEnd),
       adapter.fetchMetrics(previousStart, previousEnd),
     ])
+
+    // 4. Store to DB (today's snapshot)
+    const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+    const today = new Date().toISOString().split('T')[0]
+
+    await supabase
+      .from('campaign_metrics')
+      .delete()
+      .eq('organization_id', userRecord.organization_id)
+      .eq('platform_type', 'google_analytics')
+      .eq('date', today)
+
+    await supabase.from('campaign_metrics').insert(records)
+
+    // Update last_sync_at
+    await supabase
+      .from('platform_connections')
+      .update({ last_sync_at: new Date().toISOString() })
+      .eq('id', connection.id)
+
+    // 5. Return fresh data
+    const timeSeries = GA_METRICS.map((def) => ({
+      metricType: def.metricType,
+      label: def.label,
+      data: [{ date: today, value: records.find((r) => r.metric_type === def.metricType)?.value ?? 0 }],
+    }))
 
     return {
       metrics: {
@@ -200,6 +330,7 @@ export async function getGoogleAnalyticsMetrics(period: '7d' | '30d' | 'quarter'
           ),
         },
       },
+      timeSeries,
     }
   } catch (error) {
     console.error('[GA Metrics Error]', error)

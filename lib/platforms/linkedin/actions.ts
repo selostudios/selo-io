@@ -4,7 +4,17 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { LinkedInAdapter } from './adapter'
 import { decryptCredentials } from '@/lib/utils/crypto'
+import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
+import {
+  calculateTrendFromDb,
+  buildTimeSeriesArray,
+  getDateRanges,
+  calculateChange,
+} from '@/lib/metrics/helpers'
+import { LINKEDIN_METRICS } from '@/lib/metrics/types'
 import type { LinkedInCredentials } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Period, MetricTimeSeries } from '@/lib/metrics/types'
 
 interface StoredCredentials {
   encrypted?: string
@@ -20,6 +30,50 @@ function getCredentials(stored: StoredCredentials): LinkedInCredentials {
   }
   // Handle legacy unencrypted credentials
   return stored as LinkedInCredentials
+}
+
+/**
+ * Service-level sync function for use by cron jobs (no user auth required).
+ * Fetches metrics from LinkedIn API and stores them in the database.
+ */
+export async function syncMetricsForLinkedInConnection(
+  connectionId: string,
+  organizationId: string,
+  storedCredentials: StoredCredentials,
+  supabase: SupabaseClient
+): Promise<void> {
+  const credentials = getCredentials(storedCredentials)
+  const adapter = new LinkedInAdapter(credentials, connectionId)
+
+  // Fetch metrics for the last 90 days to cover all time ranges
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 90)
+
+  const metrics = await adapter.fetchMetrics(startDate, endDate)
+  const records = adapter.normalizeToDbRecords(metrics, organizationId, endDate)
+
+  // Store daily snapshots for time-series tracking
+  const today = new Date().toISOString().split('T')[0]
+
+  await supabase
+    .from('campaign_metrics')
+    .delete()
+    .eq('organization_id', organizationId)
+    .eq('platform_type', 'linkedin')
+    .eq('date', today)
+
+  const { error: insertError } = await supabase.from('campaign_metrics').insert(records)
+
+  if (insertError) {
+    throw new Error(`Failed to save LinkedIn metrics: ${insertError.message}`)
+  }
+
+  // Update last_sync_at
+  await supabase
+    .from('platform_connections')
+    .update({ last_sync_at: new Date().toISOString() })
+    .eq('id', connectionId)
 }
 
 export async function syncLinkedInMetrics() {
@@ -106,14 +160,35 @@ export async function syncLinkedInMetrics() {
   }
 }
 
-function calculateChange(current: number, previous: number): number | null {
-  if (previous === 0) {
-    return current > 0 ? 100 : null
+/**
+ * Format DB metrics into the response shape expected by the UI.
+ */
+function formatLinkedInMetricsFromDb(
+  cached: { metrics: Array<{ date: string; metric_type: string; value: number }> },
+  period: Period
+): {
+  metrics: Array<{ label: string; value: number; change: number | null }>
+  timeSeries: MetricTimeSeries[]
+} {
+  const followerGrowth = calculateTrendFromDb(cached.metrics, 'linkedin_follower_growth', period)
+  const impressions = calculateTrendFromDb(cached.metrics, 'linkedin_impressions', period)
+  const reactions = calculateTrendFromDb(cached.metrics, 'linkedin_reactions', period)
+  const pageViews = calculateTrendFromDb(cached.metrics, 'linkedin_page_views', period)
+  const uniqueVisitors = calculateTrendFromDb(cached.metrics, 'linkedin_unique_visitors', period)
+
+  return {
+    metrics: [
+      { label: 'New Followers', value: followerGrowth.current, change: followerGrowth.change },
+      { label: 'Impressions', value: impressions.current, change: impressions.change },
+      { label: 'Reactions', value: reactions.current, change: reactions.change },
+      { label: 'Page Views', value: pageViews.current, change: pageViews.change },
+      { label: 'Unique Visitors', value: uniqueVisitors.current, change: uniqueVisitors.change },
+    ],
+    timeSeries: buildTimeSeriesArray(cached.metrics, LINKEDIN_METRICS, period),
   }
-  return ((current - previous) / previous) * 100
 }
 
-export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
+export async function getLinkedInMetrics(period: Period) {
   const supabase = await createClient()
 
   const {
@@ -146,21 +221,17 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
   }
 
   try {
-    // Calculate date ranges for current and previous periods
-    const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
+    // 1. Try DB cache first
+    const cached = await getMetricsFromDb(supabase, userRecord.organization_id, 'linkedin', period)
 
-    // Current period
-    const currentEnd = new Date()
-    const currentStart = new Date()
-    currentStart.setDate(currentStart.getDate() - daysBack)
+    // 2. If fresh (< 1 hour), use DB data
+    if (isCacheValid(cached)) {
+      return formatLinkedInMetricsFromDb(cached, period)
+    }
 
-    // Previous period (same length, immediately before current)
-    const previousEnd = new Date(currentStart)
-    previousEnd.setDate(previousEnd.getDate() - 1)
-    const previousStart = new Date(previousEnd)
-    previousStart.setDate(previousStart.getDate() - daysBack + 1)
+    // 3. Otherwise, fetch fresh from API
+    const { currentStart, currentEnd, previousStart, previousEnd } = getDateRanges(period)
 
-    // Fetch metrics for both periods
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new LinkedInAdapter(credentials, connection.id)
 
@@ -169,8 +240,27 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
       adapter.fetchMetrics(previousStart, previousEnd),
     ])
 
-    // Calculate change percentages
-    const result = [
+    // 4. Store to DB (today's snapshot)
+    const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+    const today = new Date().toISOString().split('T')[0]
+
+    await supabase
+      .from('campaign_metrics')
+      .delete()
+      .eq('organization_id', userRecord.organization_id)
+      .eq('platform_type', 'linkedin')
+      .eq('date', today)
+
+    await supabase.from('campaign_metrics').insert(records)
+
+    // Update last_sync_at
+    await supabase
+      .from('platform_connections')
+      .update({ last_sync_at: new Date().toISOString() })
+      .eq('id', connection.id)
+
+    // 5. Return fresh data
+    const metrics = [
       {
         label: 'New Followers',
         value: currentMetrics.followerGrowth,
@@ -198,7 +288,14 @@ export async function getLinkedInMetrics(period: '7d' | '30d' | 'quarter') {
       },
     ]
 
-    return { metrics: result }
+    // For fresh API data, we only have today's snapshot, so time series is limited
+    const timeSeries = LINKEDIN_METRICS.map((def) => ({
+      metricType: def.metricType,
+      label: def.label,
+      data: [{ date: today, value: records.find((r) => r.metric_type === def.metricType)?.value ?? 0 }],
+    }))
+
+    return { metrics, timeSeries }
   } catch (error) {
     console.error('[LinkedIn Metrics Error]', error)
     if (error instanceof Error) {
