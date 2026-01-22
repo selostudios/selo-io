@@ -5,6 +5,7 @@ import { updateOrganization } from '@/app/settings/organization/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { LogoUpload } from '@/components/settings/logo-upload'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -24,8 +25,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from 'next/navigation'
 import { showSuccess, showError } from '@/components/ui/sonner'
+import { Wand2, Loader2 } from 'lucide-react'
+import { BrandFetchModal, type BrandSelections } from '@/components/settings/brand-fetch-modal'
+import { fetchBrandData, uploadBrandLogo } from '@/lib/brandfetch/actions'
+import { SocialIcon } from '@/components/icons/social-icons'
+import type { BrandData } from '@/lib/brandfetch/types'
 
 interface Industry {
   id: string
@@ -43,6 +50,10 @@ interface OrganizationFormProps {
   industries: Industry[]
   websiteUrl: string
   existingAuditCount: number
+  description: string
+  city: string
+  country: string
+  socialLinks: Array<{ platform: string; url: string }>
 }
 
 export function OrganizationForm({
@@ -55,6 +66,10 @@ export function OrganizationForm({
   industries,
   websiteUrl: initialWebsiteUrl,
   existingAuditCount,
+  description: initialDescription,
+  city: initialCity,
+  country: initialCountry,
+  socialLinks: initialSocialLinks,
 }: OrganizationFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(initialName)
@@ -67,6 +82,18 @@ export function OrganizationForm({
   const [showUrlChangeDialog, setShowUrlChangeDialog] = useState(false)
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
   const router = useRouter()
+
+  // New brand fields state
+  const [description, setDescription] = useState(initialDescription)
+  const [city, setCity] = useState(initialCity)
+  const [country, setCountry] = useState(initialCountry)
+  const [socialLinks, setSocialLinks] = useState(initialSocialLinks)
+  const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
+
+  // Brandfetch state
+  const [isFetchingBrand, setIsFetchingBrand] = useState(false)
+  const [brandData, setBrandData] = useState<BrandData | null>(null)
+  const [showBrandModal, setShowBrandModal] = useState(false)
 
   // Validate website URL format
   function validateWebsiteUrl(url: string): string | null {
@@ -91,6 +118,67 @@ export function OrganizationForm({
     setWebsiteUrlError(validateWebsiteUrl(value))
   }
 
+  // Brandfetch handlers
+  async function handleFetchBrand() {
+    if (!websiteUrl) return
+
+    setIsFetchingBrand(true)
+    const result = await fetchBrandData(websiteUrl)
+    setIsFetchingBrand(false)
+
+    if (result.error) {
+      showError(result.error)
+      return
+    }
+
+    if (result.data) {
+      setBrandData(result.data)
+      setShowBrandModal(true)
+    }
+  }
+
+  async function handleApplyBrandData(selections: BrandSelections) {
+    if (!brandData) return
+
+    setIsLoading(true)
+
+    // Apply logo if selected
+    if (selections.logo && brandData.logo) {
+      const result = await uploadBrandLogo(brandData.logo.url, brandData.logo.format)
+      if (result.logoUrl) {
+        setLogoUrl(result.logoUrl)
+      } else if (result.error) {
+        showError(result.error)
+      }
+    }
+
+    // Apply colors if selected
+    if (selections.colors) {
+      if (brandData.colors.primary) setPrimaryColor(brandData.colors.primary)
+      if (brandData.colors.secondary) setSecondaryColor(brandData.colors.secondary)
+      if (brandData.colors.accent) setAccentColor(brandData.colors.accent)
+    }
+
+    // Apply description if selected
+    if (selections.description && brandData.description) {
+      setDescription(brandData.description)
+    }
+
+    // Apply social links if selected
+    if (selections.socialLinks) {
+      setSocialLinks(brandData.socialLinks)
+    }
+
+    // Apply location if selected
+    if (selections.location) {
+      if (brandData.location.city) setCity(brandData.location.city)
+      if (brandData.location.country) setCountry(brandData.location.country)
+    }
+
+    setIsLoading(false)
+    showSuccess('Brand assets applied! Click Save to confirm changes.')
+  }
+
   // Check if save button should be disabled
   // Note: Logo changes are handled separately by LogoUpload component
   const hasChanges =
@@ -99,7 +187,12 @@ export function OrganizationForm({
     primaryColor !== initialPrimaryColor ||
     secondaryColor !== initialSecondaryColor ||
     accentColor !== initialAccentColor ||
-    websiteUrl !== initialWebsiteUrl
+    websiteUrl !== initialWebsiteUrl ||
+    description !== initialDescription ||
+    city !== initialCity ||
+    country !== initialCountry ||
+    JSON.stringify(socialLinks) !== JSON.stringify(initialSocialLinks) ||
+    logoUrl !== initialLogoUrl
 
   const isSaveDisabled = !name.trim() || !hasChanges || isLoading || !!websiteUrlError
 
@@ -146,11 +239,33 @@ export function OrganizationForm({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Organization Information</CardTitle>
-        <CardDescription>
-          Update your organization&apos;s branding and basic information
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Organization Information</CardTitle>
+          <CardDescription>
+            Update your organization&apos;s branding and basic information
+          </CardDescription>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleFetchBrand}
+              disabled={!websiteUrl || isFetchingBrand || isLoading}
+            >
+              {isFetchingBrand ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {websiteUrl ? 'Fetch brand assets' : 'Add a website URL first'}
+          </TooltipContent>
+        </Tooltip>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-6">
@@ -207,9 +322,69 @@ export function OrganizationForm({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="A short description of your organization..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isLoading}
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  type="text"
+                  placeholder="San Francisco"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  name="country"
+                  type="text"
+                  placeholder="United States"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {socialLinks.length > 0 && (
+              <div className="space-y-2">
+                <Label>Social Links</Label>
+                <div className="flex flex-wrap gap-2">
+                  {socialLinks.map((link) => (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-muted hover:bg-muted/80 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors"
+                    >
+                      <SocialIcon platform={link.platform} className="h-4 w-4" />
+                      <span className="capitalize">{link.platform}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
               <Label>Organization Logo</Label>
               <LogoUpload
-                currentLogoUrl={initialLogoUrl || null}
+                currentLogoUrl={logoUrl || null}
                 organizationName={name}
                 primaryColor={primaryColor}
               />
@@ -293,6 +468,12 @@ export function OrganizationForm({
             </div>
           </div>
 
+          <input type="hidden" name="description" value={description} />
+          <input type="hidden" name="city" value={city} />
+          <input type="hidden" name="country" value={country} />
+          <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
+          <input type="hidden" name="logoUrl" value={logoUrl} />
+
           <div className="flex justify-end">
             <Button type="submit" disabled={isSaveDisabled}>
               {isLoading ? 'Saving…' : 'Save Changes'}
@@ -300,6 +481,15 @@ export function OrganizationForm({
           </div>
         </form>
       </CardContent>
+
+      {brandData && (
+        <BrandFetchModal
+          open={showBrandModal}
+          onOpenChange={setShowBrandModal}
+          brandData={brandData}
+          onApply={handleApplyBrandData}
+        />
+      )}
 
       <AlertDialog open={showUrlChangeDialog} onOpenChange={setShowUrlChangeDialog}>
         <AlertDialogContent>
