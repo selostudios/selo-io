@@ -130,7 +130,7 @@ export function IntegrationsPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="space-y-6">
         <LinkedInSection
           key={`linkedin-${refreshKey}`}
           isConnected={linkedIn.isConnected}
@@ -141,9 +141,6 @@ export function IntegrationsPanel({
           isConnected={googleAnalytics.isConnected}
           period={period}
         />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <HubSpotSection
           key={`hubspot-${refreshKey}`}
           isConnected={hubspot.isConnected}

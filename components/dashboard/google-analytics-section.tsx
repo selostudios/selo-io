@@ -58,55 +58,48 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Google Analytics</CardTitle>
-      </CardHeader>
-      <CardContent className="min-h-[200px]">
-        {isPending ? (
-          <div className="flex h-[180px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Google Analytics</h3>
+      {isPending ? (
+        <div className="flex h-[100px] items-center justify-center">
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+        </div>
+      ) : metrics ? (
+        <div className="space-y-6">
+          {/* Main metrics */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            <MetricCard label="Active Users" value={metrics.activeUsers} change={null} />
+            <MetricCard label="New Users" value={metrics.newUsers} change={null} />
+            <MetricCard label="Sessions" value={metrics.sessions} change={null} />
           </div>
-        ) : metrics ? (
-          <div className="space-y-6">
-            {/* Main metrics */}
-            <div className="grid grid-cols-3 gap-4">
-              <MetricCard label="Active Users" value={metrics.activeUsers} change={null} />
-              <MetricCard label="New Users" value={metrics.newUsers} change={null} />
-              <MetricCard label="Sessions" value={metrics.sessions} change={null} />
-            </div>
 
-            {/* Traffic Acquisition */}
-            <div>
-              <h4 className="mb-4 text-sm font-medium">Traffic Acquisition</h4>
-              <div className="flex flex-row justify-between">
-                <div className="flex-1">
-                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.direct}</p>
-                  <p className="text-muted-foreground text-xs">Direct</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSearch}</p>
-                  <p className="text-muted-foreground text-xs">Organic Search</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.email}</p>
-                  <p className="text-muted-foreground text-xs">Email</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.organicSocial}</p>
-                  <p className="text-muted-foreground text-xs">Organic Social</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold">{metrics.trafficAcquisition.referral}</p>
-                  <p className="text-muted-foreground text-xs">Referral</p>
-                </div>
-              </div>
+          {/* Traffic Acquisition */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Traffic Acquisition</h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              <MetricCard label="Direct" value={metrics.trafficAcquisition.direct} change={null} />
+              <MetricCard
+                label="Organic Search"
+                value={metrics.trafficAcquisition.organicSearch}
+                change={null}
+              />
+              <MetricCard label="Email" value={metrics.trafficAcquisition.email} change={null} />
+              <MetricCard
+                label="Organic Social"
+                value={metrics.trafficAcquisition.organicSocial}
+                change={null}
+              />
+              <MetricCard
+                label="Referral"
+                value={metrics.trafficAcquisition.referral}
+                change={null}
+              />
             </div>
           </div>
-        ) : (
-          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+      )}
+    </div>
   )
 }

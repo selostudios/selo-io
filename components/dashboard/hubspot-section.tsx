@@ -51,50 +51,40 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>HubSpot</CardTitle>
-      </CardHeader>
-      <CardContent className="min-h-[280px]">
-        {isPending ? (
-          <div className="flex h-[260px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-          </div>
-        ) : metrics ? (
-          <div className="space-y-6">
-            {/* CRM Metrics */}
-            <div>
-              <h4 className="mb-4 text-sm font-medium">CRM</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <MetricCard
-                  label="Total Contacts"
-                  value={metrics.crm.totalContacts}
-                  change={null}
-                />
-                <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
-                <MetricCard label="New Deals" value={metrics.crm.newDeals} change={null} />
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div className="flex flex-col">
-                  <span className="text-2xl font-bold">
-                    ${metrics.crm.totalPipelineValue.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground text-sm">Pipeline Value</span>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-600">{metrics.crm.dealsWon}</p>
-                  <p className="text-muted-foreground text-xs">Deals Won</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-red-600">{metrics.crm.dealsLost}</p>
-                  <p className="text-muted-foreground text-xs">Deals Lost</p>
-                </div>
-              </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">HubSpot</h3>
+      {isPending ? (
+        <div className="flex h-[100px] items-center justify-center">
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+        </div>
+      ) : metrics ? (
+        <div className="space-y-6">
+          {/* CRM Metrics */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">CRM</h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+              <MetricCard
+                label="Total Contacts"
+                value={metrics.crm.totalContacts}
+                change={null}
+              />
+              <MetricCard label="Total Deals" value={metrics.crm.totalDeals} change={null} />
+              <MetricCard label="New Deals" value={metrics.crm.newDeals} change={null} />
+              <MetricCard
+                label="Pipeline Value"
+                value={metrics.crm.totalPipelineValue}
+                prefix="$"
+                change={null}
+              />
+              <MetricCard label="Deals Won" value={metrics.crm.dealsWon} change={null} />
+              <MetricCard label="Deals Lost" value={metrics.crm.dealsLost} change={null} />
             </div>
+          </div>
 
-            {/* Forms */}
-            <div>
-              <h4 className="mb-4 text-sm font-medium">Forms</h4>
+          {/* Forms */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Forms</h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
               <MetricCard
                 label="Form Submissions"
                 value={metrics.marketing.formSubmissions}
@@ -102,10 +92,10 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
               />
             </div>
           </div>
-        ) : (
-          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+      )}
+    </div>
   )
 }

@@ -54,30 +54,26 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>LinkedIn</CardTitle>
-      </CardHeader>
-      <CardContent className="min-h-[80px]">
-        {isPending ? (
-          <div className="flex h-[60px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
-          </div>
-        ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
-            {metrics.map((metric) => (
-              <MetricCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-                change={metric.change}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">LinkedIn</h3>
+      {isPending ? (
+        <div className="flex h-[100px] items-center justify-center">
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
+        </div>
+      ) : metrics.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {metrics.map((metric) => (
+            <MetricCard
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              change={metric.change}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+      )}
+    </div>
   )
 }
