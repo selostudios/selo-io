@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Loader2, ChevronDown, Copy, Check, BarChart3 } from 'lucide-react'
+import { Loader2, ChevronDown, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { MetricCard } from './metric-card'
-import { MetricTrendChart } from './metric-trend-chart'
 import { GoogleAnalyticsIcon } from '@/components/icons/platform-icons'
 import { getGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import { cn } from '@/lib/utils'
@@ -38,6 +37,8 @@ interface GoogleAnalyticsSectionProps {
   period: Period
 }
 
+const GA_COLOR = '#E37400'
+
 function formatMetricsForClipboard(metrics: GAMetrics, period: Period): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
@@ -64,7 +65,6 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
-  const [showCharts, setShowCharts] = useState(false)
 
   useEffect(() => {
     if (isConnected) {
@@ -88,6 +88,12 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+  }
+
+  // Helper to find time series data for a metric by label
+  const getTimeSeriesForMetric = (label: string) => {
+    const series = timeSeries.find((s) => s.label === label)
+    return series?.data
   }
 
   if (!isConnected) {
@@ -127,40 +133,18 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
           <span className="text-lg font-semibold">Google Analytics</span>
         </CollapsibleTrigger>
         {metrics && (
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowCharts(!showCharts)
-                  }}
-                  className={cn(
-                    'cursor-pointer rounded p-1.5 transition-colors',
-                    showCharts
-                      ? 'text-foreground bg-muted'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                  aria-label={showCharts ? 'Hide charts' : 'Show charts'}
-                >
-                  <BarChart3 className="size-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{showCharts ? 'Hide charts' : 'Show charts'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleCopy}
-                  className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
-                  aria-label="Copy metrics to clipboard"
-                >
-                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
-            </Tooltip>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
+                aria-label="Copy metrics to clipboard"
+              >
+                {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
+          </Tooltip>
         )}
       </div>
       <CollapsibleContent className="mt-4">
@@ -171,24 +155,30 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
         ) : metrics ? (
           <div className="space-y-6">
             {/* Main metrics */}
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               <MetricCard
                 label="Active Users"
                 value={metrics.activeUsers}
                 change={metrics.activeUsersChange}
                 period={period}
+                timeSeries={getTimeSeriesForMetric('Active Users')}
+                color={GA_COLOR}
               />
               <MetricCard
                 label="New Users"
                 value={metrics.newUsers}
                 change={metrics.newUsersChange}
                 period={period}
+                timeSeries={getTimeSeriesForMetric('New Users')}
+                color={GA_COLOR}
               />
               <MetricCard
                 label="Sessions"
                 value={metrics.sessions}
                 change={metrics.sessionsChange}
                 period={period}
+                timeSeries={getTimeSeriesForMetric('Sessions')}
+                color={GA_COLOR}
               />
             </div>
 
@@ -201,52 +191,43 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
                   value={metrics.trafficAcquisition.direct}
                   change={metrics.trafficAcquisitionChanges.direct}
                   period={period}
+                  timeSeries={getTimeSeriesForMetric('Direct')}
+                  color={GA_COLOR}
                 />
                 <MetricCard
                   label="Organic Search"
                   value={metrics.trafficAcquisition.organicSearch}
                   change={metrics.trafficAcquisitionChanges.organicSearch}
                   period={period}
+                  timeSeries={getTimeSeriesForMetric('Organic Search')}
+                  color={GA_COLOR}
                 />
                 <MetricCard
                   label="Email"
                   value={metrics.trafficAcquisition.email}
                   change={metrics.trafficAcquisitionChanges.email}
                   period={period}
+                  timeSeries={getTimeSeriesForMetric('Email')}
+                  color={GA_COLOR}
                 />
                 <MetricCard
                   label="Organic Social"
                   value={metrics.trafficAcquisition.organicSocial}
                   change={metrics.trafficAcquisitionChanges.organicSocial}
                   period={period}
+                  timeSeries={getTimeSeriesForMetric('Organic Social')}
+                  color={GA_COLOR}
                 />
                 <MetricCard
                   label="Referral"
                   value={metrics.trafficAcquisition.referral}
                   change={metrics.trafficAcquisitionChanges.referral}
                   period={period}
+                  timeSeries={getTimeSeriesForMetric('Referral')}
+                  color={GA_COLOR}
                 />
               </div>
             </div>
-
-            {/* Charts */}
-            {showCharts && timeSeries.length > 0 && (
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Trends</h4>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {timeSeries.map((series) => (
-                    <div key={series.metricType} className="rounded-lg border p-4">
-                      <p className="mb-2 text-sm font-medium">{series.label}</p>
-                      <MetricTrendChart
-                        data={series.data}
-                        label={series.label}
-                        color="#E37400"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
