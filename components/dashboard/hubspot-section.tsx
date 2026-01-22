@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MetricCard } from './metric-card'
 import { getHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
@@ -35,17 +35,17 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>HubSpot</CardTitle>
+            <div>
+              <CardTitle>HubSpot</CardTitle>
+              <CardDescription>
+                Connect HubSpot to view CRM metrics and form submissions.
+              </CardDescription>
+            </div>
             <Button asChild size="sm">
               <Link href="/settings/integrations">Connect</Link>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Connect HubSpot to view CRM metrics and form submissions.
-          </p>
-        </CardContent>
       </Card>
     )
   }

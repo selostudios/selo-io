@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MetricCard } from './metric-card'
 import { getLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
@@ -40,15 +40,15 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>LinkedIn</CardTitle>
+            <div>
+              <CardTitle>LinkedIn</CardTitle>
+              <CardDescription>Connect LinkedIn to view engagement metrics.</CardDescription>
+            </div>
             <Button asChild size="sm">
               <Link href="/settings/integrations">Connect</Link>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Connect LinkedIn to view engagement metrics.</p>
-        </CardContent>
       </Card>
     )
   }

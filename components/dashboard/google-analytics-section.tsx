@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MetricCard } from './metric-card'
 import { getGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
@@ -42,17 +42,17 @@ export function GoogleAnalyticsSection({ isConnected, period }: GoogleAnalyticsS
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Google Analytics</CardTitle>
+            <div>
+              <CardTitle>Google Analytics</CardTitle>
+              <CardDescription>
+                Connect Google Analytics to view website traffic metrics.
+              </CardDescription>
+            </div>
             <Button asChild size="sm">
               <Link href="/settings/integrations">Connect</Link>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Connect Google Analytics to view website traffic metrics.
-          </p>
-        </CardContent>
       </Card>
     )
   }
