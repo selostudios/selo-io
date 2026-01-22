@@ -238,38 +238,38 @@ export function OrganizationForm({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Organization Information</CardTitle>
-          <CardDescription>
-            Update your organization&apos;s branding and basic information
-          </CardDescription>
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleFetchBrand}
-              disabled={!websiteUrl || isFetchingBrand || isLoading}
-            >
-              {isFetchingBrand ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {websiteUrl ? 'Fetch brand assets' : 'Add a website URL first'}
-          </TooltipContent>
-        </Tooltip>
-      </CardHeader>
-      <CardContent>
-        <form action={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+    <>
+      <form action={handleSubmit} className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Organization Information</CardTitle>
+            <CardDescription>
+              Update your organization&apos;s branding and basic information
+            </CardDescription>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleFetchBrand}
+                disabled={!websiteUrl || isFetchingBrand || isLoading}
+              >
+                {isFetchingBrand ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {websiteUrl ? 'Fetch brand assets' : 'Add a website URL first'}
+            </TooltipContent>
+          </Tooltip>
+        </CardHeader>
+        <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Organization Name</Label>
@@ -380,23 +380,26 @@ export function OrganizationForm({
                 </div>
               </div>
             )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Brand Style</CardTitle>
+          <CardDescription>Customize your organization&apos;s visual identity</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label>Organization Logo</Label>
+            <LogoUpload
+              currentLogoUrl={logoUrl || null}
+              organizationName={name}
+              primaryColor={primaryColor}
+            />
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Brand Style</h3>
-
-            <div className="space-y-2">
-              <Label>Organization Logo</Label>
-              <LogoUpload
-                currentLogoUrl={logoUrl || null}
-                organizationName={name}
-                primaryColor={primaryColor}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm">Brand Colors</Label>
-            </div>
+            <Label className="text-sm font-medium">Brand Colors</Label>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="primaryColor">Primary Color</Label>
@@ -471,20 +474,21 @@ export function OrganizationForm({
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <input type="hidden" name="description" value={description} />
-          <input type="hidden" name="city" value={city} />
-          <input type="hidden" name="country" value={country} />
-          <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
-          <input type="hidden" name="logoUrl" value={logoUrl} />
+      <input type="hidden" name="description" value={description} />
+      <input type="hidden" name="city" value={city} />
+      <input type="hidden" name="country" value={country} />
+      <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
+      <input type="hidden" name="logoUrl" value={logoUrl} />
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSaveDisabled}>
-              {isLoading ? 'Saving…' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSaveDisabled}>
+          {isLoading ? 'Saving…' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
 
       {brandData && (
         <BrandFetchModal
@@ -523,6 +527,6 @@ export function OrganizationForm({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </>
   )
 }
