@@ -209,7 +209,7 @@ function formatGAMetricsFromDb(
   }
 }
 
-export async function getGoogleAnalyticsMetrics(period: Period) {
+export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: string) {
   const supabase = await createClient()
 
   const {
@@ -229,12 +229,19 @@ export async function getGoogleAnalyticsMetrics(period: Period) {
     return { error: 'User not found' }
   }
 
-  const { data: connection } = await supabase
+  // Build query to find connection
+  let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'google_analytics')
-    .single()
+
+  // If connectionId provided, filter to that specific connection
+  if (connectionId) {
+    connectionQuery = connectionQuery.eq('id', connectionId)
+  }
+
+  const { data: connection } = await connectionQuery.single()
 
   if (!connection) {
     return { error: 'Google Analytics not connected' }
