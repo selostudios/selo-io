@@ -60,7 +60,7 @@ export function Sidebar({ websiteUrl }: SidebarProps) {
   return (
     <div
       className={cn(
-        'flex h-screen flex-col border-r bg-white transition-all duration-300',
+        'sticky top-0 flex h-screen flex-col border-r bg-white transition-all duration-300',
         collapsed ? 'w-16' : 'w-72'
       )}
     >
@@ -156,8 +156,8 @@ export function Sidebar({ websiteUrl }: SidebarProps) {
         </nav>
       </div>
 
-      {/* Toggle button at bottom */}
-      <div className={cn('mt-auto border-t p-4', collapsed && 'px-2')}>
+      {/* Toggle button at bottom - sticky to viewport bottom */}
+      <div className={cn('sticky bottom-0 mt-auto border-t bg-white p-4', collapsed && 'px-2')}>
         <button
           onClick={toggleCollapsed}
           className={cn(
