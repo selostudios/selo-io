@@ -61,6 +61,12 @@ export function EditDisplayNameDialog({
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isPending && displayName.trim()) {
+                  e.preventDefault()
+                  handleSave()
+                }
+              }}
               placeholder="e.g., Company Page, Founder"
             />
           </div>
