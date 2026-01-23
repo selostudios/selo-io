@@ -20,12 +20,22 @@ interface Metric {
   change: number | null
 }
 
+type Connection = {
+  id: string
+  account_name: string | null
+  display_name: string | null
+}
+
 interface LinkedInSectionProps {
-  isConnected: boolean
+  connections: Connection[]
   period: Period
 }
 
 const LINKEDIN_COLOR = '#0A66C2'
+
+function getConnectionLabel(connection: Connection): string {
+  return connection.display_name || connection.account_name || 'Unknown Account'
+}
 
 function formatChange(change: number | null): string {
   if (change === null) return ''
@@ -33,50 +43,20 @@ function formatChange(change: number | null): string {
   return ` (${sign}${change.toFixed(1)}%)`
 }
 
-function formatMetricsForClipboard(metrics: Metric[], period: Period): string {
+function formatMetricsForClipboard(metrics: Metric[], period: Period, accountName?: string): string {
   const periodLabel = period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
-  const lines = [`📊 LinkedIn Metrics (${periodLabel})`, '']
+  const header = accountName
+    ? `📊 LinkedIn Metrics - ${accountName} (${periodLabel})`
+    : `📊 LinkedIn Metrics (${periodLabel})`
+  const lines = [header, '']
   for (const metric of metrics) {
     lines.push(`• ${metric.label}: ${metric.value.toLocaleString()}${formatChange(metric.change)}`)
   }
   return lines.join('\n')
 }
 
-export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
-  const [metrics, setMetrics] = useState<Metric[]>([])
-  const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
-  const [isPending, startTransition] = useTransition()
-  const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    if (isConnected) {
-      startTransition(async () => {
-        const result = await getLinkedInMetrics(period)
-        if ('metrics' in result && result.metrics) {
-          setMetrics(result.metrics)
-        }
-        if ('timeSeries' in result && result.timeSeries) {
-          setTimeSeries(result.timeSeries)
-        }
-      })
-    }
-  }, [isConnected, period])
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const text = formatMetricsForClipboard(metrics, period)
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  // Helper to find time series data for a metric by label
-  const getTimeSeriesForMetric = (label: string) => {
-    const series = timeSeries.find((s) => s.label === label)
-    return series?.data
-  }
-
-  if (!isConnected) {
+export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
+  if (connections.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -99,6 +79,30 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
     )
   }
 
+  // Single connection: render without account header
+  if (connections.length === 1) {
+    return (
+      <Collapsible defaultOpen className="group/section rounded-lg border p-4">
+        <div className="flex items-center justify-between py-2">
+          <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
+            <ChevronDown
+              className={cn(
+                'text-muted-foreground size-5 transition-transform duration-200',
+                'group-data-[state=closed]/section:-rotate-90'
+              )}
+            />
+            <LinkedInIcon className="size-5 text-[#0A66C2]" />
+            <span className="text-lg font-semibold">LinkedIn</span>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="mt-4">
+          <ConnectionMetrics connection={connections[0]} period={period} showCopyButton />
+        </CollapsibleContent>
+      </Collapsible>
+    )
+  }
+
+  // Multiple connections: render sub-sections with headers
   return (
     <Collapsible defaultOpen className="group/section rounded-lg border p-4">
       <div className="flex items-center justify-between py-2">
@@ -111,8 +115,76 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
           />
           <LinkedInIcon className="size-5 text-[#0A66C2]" />
           <span className="text-lg font-semibold">LinkedIn</span>
+          <span className="text-muted-foreground text-sm">({connections.length} accounts)</span>
         </CollapsibleTrigger>
-        {metrics.length > 0 && (
+      </div>
+      <CollapsibleContent className="mt-4 space-y-6">
+        {connections.map((connection) => (
+          <div key={connection.id} className="space-y-3">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              {getConnectionLabel(connection)}
+            </h4>
+            <ConnectionMetrics connection={connection} period={period} />
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+interface ConnectionMetricsProps {
+  connection: Connection
+  period: Period
+  showCopyButton?: boolean
+}
+
+function ConnectionMetrics({ connection, period, showCopyButton }: ConnectionMetricsProps) {
+  const [metrics, setMetrics] = useState<Metric[]>([])
+  const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
+  const [isPending, startTransition] = useTransition()
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await getLinkedInMetrics(period, connection.id)
+      if ('metrics' in result && result.metrics) {
+        setMetrics(result.metrics)
+      }
+      if ('timeSeries' in result && result.timeSeries) {
+        setTimeSeries(result.timeSeries)
+      }
+    })
+  }, [connection.id, period])
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const text = formatMetricsForClipboard(metrics, period, getConnectionLabel(connection))
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const getTimeSeriesForMetric = (label: string) => {
+    const series = timeSeries.find((s) => s.label === label)
+    return series?.data
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex h-[100px] items-center justify-center">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
+      </div>
+    )
+  }
+
+  if (metrics.length === 0) {
+    return <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {showCopyButton && (
+        <div className="flex justify-end">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -125,31 +197,21 @@ export function LinkedInSection({ isConnected, period }: LinkedInSectionProps) {
             </TooltipTrigger>
             <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
           </Tooltip>
-        )}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            change={metric.change}
+            period={period}
+            timeSeries={getTimeSeriesForMetric(metric.label)}
+            color={LINKEDIN_COLOR}
+          />
+        ))}
       </div>
-      <CollapsibleContent className="mt-4">
-        {isPending ? (
-          <div className="flex h-[100px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
-          </div>
-        ) : metrics.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {metrics.map((metric) => (
-              <MetricCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-                change={metric.change}
-                period={period}
-                timeSeries={getTimeSeriesForMetric(metric.label)}
-                color={LINKEDIN_COLOR}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+    </div>
   )
 }

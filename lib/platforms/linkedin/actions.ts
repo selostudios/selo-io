@@ -173,7 +173,7 @@ function formatLinkedInMetricsFromDb(
   }
 }
 
-export async function getLinkedInMetrics(period: Period) {
+export async function getLinkedInMetrics(period: Period, connectionId?: string) {
   const supabase = await createClient()
 
   const {
@@ -193,13 +193,18 @@ export async function getLinkedInMetrics(period: Period) {
     return { error: 'User not found' }
   }
 
-  // Get LinkedIn connection
-  const { data: connection } = await supabase
+  // Get LinkedIn connection - by ID if provided, otherwise first one for org
+  let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'linkedin')
-    .single()
+
+  if (connectionId) {
+    connectionQuery = connectionQuery.eq('id', connectionId)
+  }
+
+  const { data: connection } = await connectionQuery.single()
 
   if (!connection) {
     return { error: 'LinkedIn not connected' }
