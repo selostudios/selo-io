@@ -22,6 +22,20 @@ export class HubSpotAdapter {
     return this.client.getMetrics(startDate, endDate, days)
   }
 
+  /**
+   * Fetch only CRM metrics (for date-specific period comparisons)
+   */
+  async fetchCRMMetrics(startDate?: Date, endDate?: Date, days: number = 30) {
+    return this.client.getCRMMetricsOnly(startDate, endDate, days)
+  }
+
+  /**
+   * Fetch only marketing metrics (not date-dependent, call once per request)
+   */
+  async fetchMarketingMetrics() {
+    return this.client.getMarketingMetricsOnly()
+  }
+
   normalizeToDbRecords(
     metrics: HubSpotMetrics,
     organizationId: string,

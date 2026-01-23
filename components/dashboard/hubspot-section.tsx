@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useCallback } from 'react'
 import { Loader2, ChevronDown, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -246,9 +246,9 @@ export function HubSpotSection({ connections, period }: HubSpotSectionProps) {
   }
 
   // Callback to collect metrics from ConnectionMetrics for single connection copy
-  const onMetricsLoaded = (connectionId: string, metrics: HubSpotMetricsWithChanges) => {
+  const onMetricsLoaded = useCallback((connectionId: string, metrics: HubSpotMetricsWithChanges) => {
     setAllMetrics((prev) => new Map(prev).set(connectionId, metrics))
-  }
+  }, [])
 
   if (connections.length === 0) {
     return (

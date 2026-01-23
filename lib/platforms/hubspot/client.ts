@@ -365,4 +365,18 @@ export class HubSpotClient {
 
     return { crm, marketing }
   }
+
+  /**
+   * Fetch only CRM metrics (for date-specific period comparisons)
+   */
+  async getCRMMetricsOnly(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotCRMMetrics> {
+    return this.getCRMMetrics(startDate, endDate, days)
+  }
+
+  /**
+   * Fetch only marketing metrics (not date-dependent, call once per request)
+   */
+  async getMarketingMetricsOnly(): Promise<HubSpotMarketingMetrics> {
+    return this.getMarketingMetrics()
+  }
 }

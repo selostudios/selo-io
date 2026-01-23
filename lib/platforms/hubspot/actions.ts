@@ -241,10 +241,16 @@ export async function getHubSpotMetrics(period: Period = '30d', connectionId?: s
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
 
-    const [currentMetrics, previousMetrics] = await Promise.all([
-      adapter.fetchMetrics(currentStart, currentEnd),
-      adapter.fetchMetrics(previousStart, previousEnd),
+    // Fetch CRM metrics for both periods (date-dependent) but marketing metrics only once (totals)
+    const [currentCRM, previousCRM, marketing] = await Promise.all([
+      adapter.fetchCRMMetrics(currentStart, currentEnd),
+      adapter.fetchCRMMetrics(previousStart, previousEnd),
+      adapter.fetchMarketingMetrics(),
     ])
+
+    // Combine into full metrics objects
+    const currentMetrics = { crm: currentCRM, marketing }
+    const previousMetrics = { crm: previousCRM, marketing }
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
     const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
