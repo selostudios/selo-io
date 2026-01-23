@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
-const TOTAL_PLATFORMS = 4
-
 export default async function DashboardPage() {
   const supabase = await createClient()
 
@@ -32,35 +30,17 @@ export default async function DashboardPage() {
     .eq('id', userRecord.organization_id)
     .single()
 
-  // Get LinkedIn connection status
-  const { data: linkedInConnection } = await supabase
+  // Get all platform connections for this organization
+  const { data: connections } = await supabase
     .from('platform_connections')
-    .select('id, last_sync_at')
+    .select('id, platform_type, account_name, display_name, status, last_sync_at')
     .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'linkedin')
-    .single()
+    .order('created_at', { ascending: true })
 
-  // Get Google Analytics connection status
-  const { data: gaConnection } = await supabase
-    .from('platform_connections')
-    .select('id, last_sync_at')
-    .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'google_analytics')
-    .single()
-
-  // Get HubSpot connection status
-  const { data: hubspotConnection } = await supabase
-    .from('platform_connections')
-    .select('id, last_sync_at')
-    .eq('organization_id', userRecord.organization_id)
-    .eq('platform_type', 'hubspot')
-    .single()
-
-  // Get platform connection count
-  const { count: connectionCount } = await supabase
-    .from('platform_connections')
-    .select('*', { count: 'exact', head: true })
-    .eq('organization_id', userRecord.organization_id)
+  // Group connections by platform type
+  const linkedInConnections = (connections || []).filter((c) => c.platform_type === 'linkedin')
+  const googleAnalyticsConnections = (connections || []).filter((c) => c.platform_type === 'google_analytics')
+  const hubspotConnections = (connections || []).filter((c) => c.platform_type === 'hubspot')
 
   return (
     <div className="space-y-8 p-8">
@@ -76,20 +56,9 @@ export default async function DashboardPage() {
       </div>
 
       <IntegrationsPanel
-        linkedIn={{
-          isConnected: !!linkedInConnection,
-          lastSyncAt: linkedInConnection?.last_sync_at || null,
-        }}
-        googleAnalytics={{
-          isConnected: !!gaConnection,
-          lastSyncAt: gaConnection?.last_sync_at || null,
-        }}
-        hubspot={{
-          isConnected: !!hubspotConnection,
-          lastSyncAt: hubspotConnection?.last_sync_at || null,
-        }}
-        connectionCount={connectionCount || 0}
-        totalPlatforms={TOTAL_PLATFORMS}
+        linkedInConnections={linkedInConnections}
+        googleAnalyticsConnections={googleAnalyticsConnections}
+        hubspotConnections={hubspotConnections}
       />
     </div>
   )

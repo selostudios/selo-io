@@ -21,45 +21,56 @@ import { showSuccess, showError } from '@/components/ui/sonner'
 
 export type Period = '7d' | '30d' | 'quarter'
 
-interface IntegrationsPanelProps {
-  linkedIn: { isConnected: boolean; lastSyncAt: string | null }
-  googleAnalytics: { isConnected: boolean; lastSyncAt: string | null }
-  hubspot: { isConnected: boolean; lastSyncAt: string | null }
-  connectionCount: number
-  totalPlatforms: number
+type Connection = {
+  id: string
+  platform_type: string
+  account_name: string | null
+  display_name: string | null
+  status: string
+  last_sync_at: string | null
 }
 
-function getMostRecentSync(...syncTimes: (string | null)[]): string | null {
-  const validTimes = syncTimes.filter((t): t is string => t !== null)
-  if (validTimes.length === 0) return null
-  return validTimes.reduce((latest, current) =>
+interface IntegrationsPanelProps {
+  linkedInConnections: Connection[]
+  googleAnalyticsConnections: Connection[]
+  hubspotConnections: Connection[]
+}
+
+function getMostRecentSync(connections: Connection[]): string | null {
+  const allSyncTimes = connections
+    .map((c) => c.last_sync_at)
+    .filter((t): t is string => t !== null)
+  if (allSyncTimes.length === 0) return null
+  return allSyncTimes.reduce((latest, current) =>
     new Date(current) > new Date(latest) ? current : latest
   )
 }
 
 export function IntegrationsPanel({
-  linkedIn,
-  googleAnalytics,
-  hubspot,
-  connectionCount,
-  totalPlatforms,
+  linkedInConnections,
+  googleAnalyticsConnections,
+  hubspotConnections,
 }: IntegrationsPanelProps) {
   const [period, setPeriod] = useState<Period>('7d')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(() =>
-    getMostRecentSync(linkedIn.lastSyncAt, googleAnalytics.lastSyncAt, hubspot.lastSyncAt)
-  )
+
+  const allConnections = [...linkedInConnections, ...googleAnalyticsConnections, ...hubspotConnections]
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(() => getMostRecentSync(allConnections))
+
+  // Count unique platform types that have at least one connection
+  const connectedPlatforms = new Set(allConnections.map((c) => c.platform_type)).size
+  const totalPlatforms = 3
 
   async function handleRefreshAll() {
     setIsRefreshing(true)
 
     const results = await Promise.allSettled([
-      linkedIn.isConnected ? syncLinkedInMetrics() : Promise.resolve({ skipped: true }),
-      googleAnalytics.isConnected
+      linkedInConnections.length > 0 ? syncLinkedInMetrics() : Promise.resolve({ skipped: true }),
+      googleAnalyticsConnections.length > 0
         ? syncGoogleAnalyticsMetrics()
         : Promise.resolve({ skipped: true }),
-      hubspot.isConnected ? syncHubSpotMetrics() : Promise.resolve({ skipped: true }),
+      hubspotConnections.length > 0 ? syncHubSpotMetrics() : Promise.resolve({ skipped: true }),
     ])
 
     const errors: string[] = []
@@ -98,7 +109,7 @@ export function IntegrationsPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">Integrations</h2>
             <span className="text-muted-foreground text-base font-semibold">
-              {connectionCount}/{totalPlatforms}
+              {connectedPlatforms}/{totalPlatforms}
             </span>
           </div>
           <p className="text-muted-foreground text-xs">
@@ -133,17 +144,17 @@ export function IntegrationsPanel({
       <div className="space-y-6">
         <LinkedInSection
           key={`linkedin-${refreshKey}`}
-          isConnected={linkedIn.isConnected}
+          connections={linkedInConnections}
           period={period}
         />
         <GoogleAnalyticsSection
           key={`ga-${refreshKey}`}
-          isConnected={googleAnalytics.isConnected}
+          connections={googleAnalyticsConnections}
           period={period}
         />
         <HubSpotSection
           key={`hubspot-${refreshKey}`}
-          isConnected={hubspot.isConnected}
+          connections={hubspotConnections}
           period={period}
         />
       </div>
