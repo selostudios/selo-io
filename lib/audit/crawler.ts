@@ -63,7 +63,7 @@ export async function crawlSite(
     if (visited.has(url)) continue
     visited.add(url)
 
-    const { html, statusCode, lastModified, error } = await fetchPage(url)
+    const { html, statusCode, lastModified, finalUrl, error } = await fetchPage(url)
 
     if (error) {
       errors.push(`Failed to fetch ${url}: ${error}`)
@@ -106,7 +106,7 @@ export async function crawlSite(
 
     // Extract and queue new links (only from HTML pages, not resources)
     if (statusCode === 200 && !isResource) {
-      const links = extractLinks(html, url)
+      const links = extractLinks(html, url, finalUrl)
       for (const link of links) {
         if (!visited.has(link) && !queue.includes(link)) {
           queue.push(link)

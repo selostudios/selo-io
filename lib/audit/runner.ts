@@ -51,7 +51,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     let pagesCrawledCount = 0
 
     // Crawl the site with stop signal support (no page limit)
-    const { pages, stopped: crawlStopped } = await crawlSite(url, auditId, {
+    const { pages, errors: crawlErrors, stopped: crawlStopped } = await crawlSite(url, auditId, {
       onPageCrawled: async (page) => {
         // Save page to database
         const { error: pageInsertError } = await supabase.from('site_audit_pages').insert(page)
@@ -71,13 +71,27 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
 
     wasStopped = crawlStopped
 
-    // If we have no pages, nothing to check
+    // If we have no pages, fail the audit with an error message
     if (pages.length === 0) {
-      const finalStatus: AuditStatus = wasStopped ? 'stopped' : 'completed'
+      const finalStatus: AuditStatus = wasStopped ? 'stopped' : 'failed'
+      const errorMessage = wasStopped
+        ? 'Audit was stopped before any pages were crawled'
+        : crawlErrors.length > 0
+          ? `Could not crawl the website: ${crawlErrors[0]}`
+          : 'Could not crawl the website. The site may be unreachable or blocking our crawler.'
+
+      console.error('[Audit Runner] No pages crawled', {
+        auditId,
+        url,
+        errors: crawlErrors,
+        timestamp: new Date().toISOString(),
+      })
+
       await supabase
         .from('site_audits')
         .update({
           status: finalStatus,
+          error_message: errorMessage,
           completed_at: new Date().toISOString(),
         })
         .eq('id', auditId)
