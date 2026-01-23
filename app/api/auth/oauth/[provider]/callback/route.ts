@@ -153,12 +153,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       return redirect('/login')
     }
 
-    // Check if already connected
+    // Check if this specific account is already connected
     const { data: existing } = await supabase
       .from('platform_connections')
       .select('id')
       .eq('organization_id', userRecord.organization_id)
       .eq('platform_type', platform)
+      .eq('account_name', selectedAccount.name)
       .single()
 
     if (existing) {
@@ -176,6 +177,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
     const { error: insertError } = await supabase.from('platform_connections').insert({
       organization_id: userRecord.organization_id,
       platform_type: platform,
+      account_name: selectedAccount.name,
       credentials: {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
