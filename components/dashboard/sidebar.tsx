@@ -60,11 +60,11 @@ export function Sidebar({ websiteUrl }: SidebarProps) {
   return (
     <div
       className={cn(
-        'flex min-h-screen flex-col border-r bg-white transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64'
+        'flex h-screen flex-col border-r bg-white transition-all duration-300',
+        collapsed ? 'w-16' : 'w-72'
       )}
     >
-      <div className={cn('p-4', collapsed ? 'px-2' : 'p-6')}>
+      <div className={cn('flex-1 p-4', collapsed ? 'px-2' : 'p-6')}>
         <div className={cn('mb-8', collapsed && 'flex justify-center')}>
           <Link href="/dashboard">
             {collapsed ? (
