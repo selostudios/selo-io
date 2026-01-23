@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2,
@@ -10,6 +10,8 @@ import {
   StopCircle,
   Clock,
   FileText,
+  Bell,
+  BellOff,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,6 +19,8 @@ import { Badge } from '@/components/ui/badge'
 import { useAuditPolling } from '@/hooks/use-audit-polling'
 import { formatDuration } from '@/lib/utils'
 import type { AuditStatus, CheckStatus, CheckType } from '@/lib/audit/types'
+
+type NotificationPermission = 'default' | 'granted' | 'denied'
 
 interface LiveProgressProps {
   auditId: string
@@ -40,10 +44,52 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const prevStatusRef = useRef<AuditStatus>(initialStatus)
   const [isStopping, setIsStopping] = useState(false)
   const [elapsedMs, setElapsedMs] = useState(0)
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>('default')
   const shouldPoll =
     initialStatus === 'pending' || initialStatus === 'crawling' || initialStatus === 'checking'
 
   const { progress, isLoading } = useAuditPolling(auditId, shouldPoll)
+
+  const [supportsNotifications, setSupportsNotifications] = useState(false)
+
+  // Check notification support and permission on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating client-only state on mount
+      setSupportsNotifications(true)
+      setNotificationPermission(Notification.permission as NotificationPermission)
+    }
+  }, [])
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+
+    try {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission as NotificationPermission)
+    } catch {
+      console.error('[Notification Error] Failed to request permission')
+    }
+  }, [])
+
+  const showNotification = useCallback(
+    (title: string, body: string) => {
+      if (notificationPermission !== 'granted') return
+      if (typeof window === 'undefined' || !('Notification' in window)) return
+
+      try {
+        new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          tag: `audit-${auditId}`, // Prevents duplicate notifications
+        })
+      } catch {
+        console.error('[Notification Error] Failed to show notification')
+      }
+    },
+    [auditId, notificationPermission]
+  )
 
   // Update elapsed time every second
   useEffect(() => {
@@ -61,22 +107,27 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
     return () => clearInterval(interval)
   }, [progress?.started_at])
 
-  // Auto-refresh when audit completes or stops
+  // Auto-refresh when audit completes or stops, and show notification
   useEffect(() => {
     if (!progress) return
 
     const prevStatus = prevStatusRef.current
     prevStatusRef.current = progress.status
 
-    // If status changed to completed or stopped, refresh the page to show full report
+    // If status changed to completed or stopped, show notification and refresh
     if (
       (progress.status === 'completed' || progress.status === 'stopped') &&
       prevStatus !== 'completed' &&
       prevStatus !== 'stopped'
     ) {
+      const pageCount = progress.pages_crawled ?? 0
+      showNotification(
+        'Audit Complete',
+        `Your site audit is ready. ${pageCount} page${pageCount !== 1 ? 's' : ''} analyzed.`
+      )
       router.refresh()
     }
-  }, [progress, router])
+  }, [progress, router, showNotification])
 
   const handleStop = async () => {
     setIsStopping(true)
@@ -234,6 +285,33 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Notification toggle */}
+          {supportsNotifications && (
+            <div className="flex items-center justify-center gap-2">
+              {notificationPermission === 'granted' ? (
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <Bell className="size-3" />
+                  You&apos;ll be notified when the audit is complete
+                </p>
+              ) : notificationPermission === 'denied' ? (
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <BellOff className="size-3" />
+                  Notifications are blocked
+                </p>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground h-auto py-1 text-xs"
+                  onClick={requestNotificationPermission}
+                >
+                  <Bell className="mr-1.5 size-3" />
+                  Enable notifications
+                </Button>
+              )}
             </div>
           )}
 
