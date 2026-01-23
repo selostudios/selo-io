@@ -50,8 +50,8 @@ export async function crawlSite(
   let stopped = false
 
   while (queue.length > 0 && (maxPages === undefined || pages.length < maxPages)) {
-    // Check for stop signal every 5 pages
-    if (shouldStop && pages.length > 0 && pages.length % 5 === 0) {
+    // Check for stop signal every page (responsive to user stop requests)
+    if (shouldStop && pages.length > 0) {
       if (await shouldStop()) {
         stopped = true
         break

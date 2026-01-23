@@ -174,8 +174,8 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     for (let i = 0; i < htmlPages.length; i++) {
       const page = htmlPages[i]
 
-      // Check for stop signal every 5 pages during checking phase
-      if (!wasStopped && i > 0 && i % 5 === 0) {
+      // Check for stop signal every page during checking phase
+      if (!wasStopped && i > 0) {
         if (await checkIfStopped(supabase, auditId)) {
           wasStopped = true
           // Continue checking remaining pages we've already crawled
