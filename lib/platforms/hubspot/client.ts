@@ -10,6 +10,15 @@ import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
+const MAX_RETRIES = 3
+const INITIAL_RETRY_DELAY_MS = 1000
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 export class HubSpotClient {
   private accessToken: string
@@ -82,7 +91,7 @@ export class HubSpotClient {
     }
   }
 
-  private async fetch<T>(endpoint: string, silent = false): Promise<T> {
+  private async fetch<T>(endpoint: string, silent = false, retryCount = 0): Promise<T> {
     await this.ensureFreshToken()
 
     const url = `${HUBSPOT_API_BASE}${endpoint}`
@@ -99,11 +108,24 @@ export class HubSpotClient {
 
     if (!response.ok) {
       const errorBody = await response.text()
-      console.error('[HubSpot Client] API error:', {
-        status: response.status,
-        url,
-        errorBody,
-      })
+
+      // Retry on rate limit (429) with exponential backoff
+      if (response.status === 429 && retryCount < MAX_RETRIES) {
+        const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
+        if (!silent) {
+          console.log(`[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        }
+        await sleep(delayMs)
+        return this.fetch<T>(endpoint, silent, retryCount + 1)
+      }
+
+      if (!silent) {
+        console.error('[HubSpot Client] API error:', {
+          status: response.status,
+          url,
+          errorBody,
+        })
+      }
       throw new Error(this.formatError(response.status, errorBody))
     }
 
@@ -128,7 +150,7 @@ export class HubSpotClient {
     }
   }
 
-  private async postSearch<T>(endpoint: string, body: object): Promise<T> {
+  private async postSearch<T>(endpoint: string, body: object, retryCount = 0): Promise<T> {
     await this.ensureFreshToken()
 
     const url = `${HUBSPOT_API_BASE}${endpoint}`
@@ -144,6 +166,15 @@ export class HubSpotClient {
 
     if (!response.ok) {
       const errorBody = await response.text()
+
+      // Retry on rate limit (429) with exponential backoff
+      if (response.status === 429 && retryCount < MAX_RETRIES) {
+        const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
+        console.log(`[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        await sleep(delayMs)
+        return this.postSearch<T>(endpoint, body, retryCount + 1)
+      }
+
       throw new Error(this.formatError(response.status, errorBody))
     }
 
@@ -180,26 +211,33 @@ export class HubSpotClient {
       const endDateMs = filterEndDate?.getTime()
 
       // Use search API to get total counts (list API doesn't return totals)
-      const [contactsResponse, dealsResponse, newDealsResponse] = await Promise.all([
-        this.postSearch<{ total: number }>('/crm/v3/objects/contacts/search', {
+      // Make calls sequentially to avoid rate limits
+      const contactsResponse = await this.postSearch<{ total: number }>(
+        '/crm/v3/objects/contacts/search',
+        {
           filterGroups: [],
           limit: 1,
-        }),
-        this.postSearch<{
-          total: number
-          results: Array<{
-            properties: {
-              amount?: string
-              dealstage?: string
-            }
-          }>
-        }>('/crm/v3/objects/deals/search', {
-          filterGroups: [],
-          properties: ['amount', 'dealstage'],
-          limit: 100,
-        }),
-        // Get deals created in the selected period
-        this.postSearch<{ total: number }>('/crm/v3/objects/deals/search', {
+        }
+      )
+
+      const dealsResponse = await this.postSearch<{
+        total: number
+        results: Array<{
+          properties: {
+            amount?: string
+            dealstage?: string
+          }
+        }>
+      }>('/crm/v3/objects/deals/search', {
+        filterGroups: [],
+        properties: ['amount', 'dealstage'],
+        limit: 100,
+      })
+
+      // Get deals created in the selected period
+      const newDealsResponse = await this.postSearch<{ total: number }>(
+        '/crm/v3/objects/deals/search',
+        {
           filterGroups: [
             {
               filters: [
@@ -221,8 +259,8 @@ export class HubSpotClient {
             },
           ],
           limit: 1,
-        }),
-      ])
+        }
+      )
 
       let totalPipelineValue = 0
       let dealsWon = 0
