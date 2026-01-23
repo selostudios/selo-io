@@ -80,9 +80,10 @@ interface ConnectionMetricsProps {
   connection: Connection
   period: Period
   showHeader: boolean
+  onMetricsLoaded?: (metrics: GAMetrics) => void
 }
 
-function ConnectionMetrics({ connection, period, showHeader }: ConnectionMetricsProps) {
+function ConnectionMetrics({ connection, period, showHeader, onMetricsLoaded }: ConnectionMetricsProps) {
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
@@ -93,12 +94,13 @@ function ConnectionMetrics({ connection, period, showHeader }: ConnectionMetrics
       const result = await getGoogleAnalyticsMetrics(period, connection.id)
       if ('metrics' in result && result.metrics) {
         setMetrics(result.metrics)
+        onMetricsLoaded?.(result.metrics)
       }
       if ('timeSeries' in result && result.timeSeries) {
         setTimeSeries(result.timeSeries)
       }
     })
-  }, [period, connection.id])
+  }, [period, connection.id, onMetricsLoaded])
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -228,6 +230,19 @@ function ConnectionMetrics({ connection, period, showHeader }: ConnectionMetrics
 }
 
 export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsSectionProps) {
+  const [singleMetrics, setSingleMetrics] = useState<GAMetrics | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopySingle = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (singleMetrics) {
+      const text = formatMetricsForClipboard(singleMetrics, period)
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   // Not connected state
   if (connections.length === 0) {
     return (
@@ -252,7 +267,7 @@ export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsS
     )
   }
 
-  // Single connection: no account header needed
+  // Single connection: no account header needed, but show copy button in main header
   if (connections.length === 1) {
     return (
       <Collapsible defaultOpen className="group/section rounded-lg border p-4">
@@ -267,9 +282,28 @@ export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsS
             <GoogleAnalyticsIcon className="size-5 text-[#E37400]" />
             <span className="text-lg font-semibold">Google Analytics</span>
           </CollapsibleTrigger>
+          {singleMetrics && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleCopySingle}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
+                  aria-label="Copy metrics to clipboard"
+                >
+                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <CollapsibleContent className="mt-4">
-          <ConnectionMetrics connection={connections[0]} period={period} showHeader={false} />
+          <ConnectionMetrics
+            connection={connections[0]}
+            period={period}
+            showHeader={false}
+            onMetricsLoaded={setSingleMetrics}
+          />
         </CollapsibleContent>
       </Collapsible>
     )

@@ -56,6 +56,19 @@ function formatMetricsForClipboard(metrics: Metric[], period: Period, accountNam
 }
 
 export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
+  const [singleMetrics, setSingleMetrics] = useState<Metric[]>([])
+  const [copied, setCopied] = useState(false)
+
+  const handleCopySingle = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (singleMetrics.length > 0) {
+      const text = formatMetricsForClipboard(singleMetrics, period)
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   if (connections.length === 0) {
     return (
       <Card>
@@ -79,7 +92,7 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
     )
   }
 
-  // Single connection: render without account header
+  // Single connection: render without account header, copy button in main header
   if (connections.length === 1) {
     return (
       <Collapsible defaultOpen className="group/section rounded-lg border p-4">
@@ -94,9 +107,27 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
             <LinkedInIcon className="size-5 text-[#0A66C2]" />
             <span className="text-lg font-semibold">LinkedIn</span>
           </CollapsibleTrigger>
+          {singleMetrics.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleCopySingle}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
+                  aria-label="Copy metrics to clipboard"
+                >
+                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <CollapsibleContent className="mt-4">
-          <ConnectionMetrics connection={connections[0]} period={period} showCopyButton />
+          <ConnectionMetrics
+            connection={connections[0]}
+            period={period}
+            onMetricsLoaded={setSingleMetrics}
+          />
         </CollapsibleContent>
       </Collapsible>
     )
@@ -135,34 +166,26 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
 interface ConnectionMetricsProps {
   connection: Connection
   period: Period
-  showCopyButton?: boolean
+  onMetricsLoaded?: (metrics: Metric[]) => void
 }
 
-function ConnectionMetrics({ connection, period, showCopyButton }: ConnectionMetricsProps) {
+function ConnectionMetrics({ connection, period, onMetricsLoaded }: ConnectionMetricsProps) {
   const [metrics, setMetrics] = useState<Metric[]>([])
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     startTransition(async () => {
       const result = await getLinkedInMetrics(period, connection.id)
       if ('metrics' in result && result.metrics) {
         setMetrics(result.metrics)
+        onMetricsLoaded?.(result.metrics)
       }
       if ('timeSeries' in result && result.timeSeries) {
         setTimeSeries(result.timeSeries)
       }
     })
-  }, [connection.id, period])
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const text = formatMetricsForClipboard(metrics, period, getConnectionLabel(connection))
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  }, [connection.id, period, onMetricsLoaded])
 
   const getTimeSeriesForMetric = (label: string) => {
     const series = timeSeries.find((s) => s.label === label)
@@ -182,36 +205,18 @@ function ConnectionMetrics({ connection, period, showCopyButton }: ConnectionMet
   }
 
   return (
-    <div className="space-y-3">
-      {showCopyButton && (
-        <div className="flex justify-end">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleCopy}
-                className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
-                aria-label="Copy metrics to clipboard"
-              >
-                {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
-          </Tooltip>
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-        {metrics.map((metric) => (
-          <MetricCard
-            key={metric.label}
-            label={metric.label}
-            value={metric.value}
-            change={metric.change}
-            period={period}
-            timeSeries={getTimeSeriesForMetric(metric.label)}
-            color={LINKEDIN_COLOR}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+      {metrics.map((metric) => (
+        <MetricCard
+          key={metric.label}
+          label={metric.label}
+          value={metric.value}
+          change={metric.change}
+          period={period}
+          timeSeries={getTimeSeriesForMetric(metric.label)}
+          color={LINKEDIN_COLOR}
+        />
+      ))}
     </div>
   )
 }
