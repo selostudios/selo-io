@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
-import { disconnectPlatform } from '@/app/settings/integrations/actions'
 import { displayName } from '@/lib/utils'
 import { EditDisplayNameDialog } from './edit-display-name-dialog'
 import { DisconnectConfirmDialog } from './disconnect-confirm-dialog'

@@ -31,13 +31,16 @@ export default async function IntegrationsPage() {
 
   const platforms = ['linkedin', 'hubspot', 'google_analytics'] as const
 
+  // Normalize connections to always be an array
+  const allConnections = connections || []
+
   // Group connections by platform type
   const connectionsByPlatform = platforms.reduce(
     (acc, platform) => {
-      acc[platform] = (connections || []).filter((c) => c.platform_type === platform)
+      acc[platform] = allConnections.filter((c) => c.platform_type === platform)
       return acc
     },
-    {} as Record<string, typeof connections>
+    {} as Record<string, typeof allConnections>
   )
 
   return (
