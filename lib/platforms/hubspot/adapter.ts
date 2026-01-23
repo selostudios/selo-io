@@ -18,8 +18,18 @@ export class HubSpotAdapter {
     this.client = new HubSpotClient(credentials, connectionId)
   }
 
-  async fetchMetrics(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotMetrics> {
-    return this.client.getMetrics(startDate, endDate, days)
+  /**
+   * Fetch all metrics.
+   * @param includeFormSubmissions - If true, fetches form submission counts (expensive).
+   *                                  Use true for cron syncs, false for dashboard loads.
+   */
+  async fetchMetrics(
+    startDate?: Date,
+    endDate?: Date,
+    days: number = 30,
+    includeFormSubmissions = false
+  ): Promise<HubSpotMetrics> {
+    return this.client.getMetrics(startDate, endDate, days, includeFormSubmissions)
   }
 
   /**
@@ -31,9 +41,10 @@ export class HubSpotAdapter {
 
   /**
    * Fetch only marketing metrics (not date-dependent, call once per request)
+   * @param includeFormSubmissions - If true, fetches form submission counts (expensive).
    */
-  async fetchMarketingMetrics() {
-    return this.client.getMarketingMetricsOnly()
+  async fetchMarketingMetrics(includeFormSubmissions = false) {
+    return this.client.getMarketingMetricsOnly(includeFormSubmissions)
   }
 
   normalizeToDbRecords(

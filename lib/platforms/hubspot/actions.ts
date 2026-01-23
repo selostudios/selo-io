@@ -46,7 +46,8 @@ export async function syncMetricsForHubSpotConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new HubSpotAdapter(credentials, connectionId)
 
-  const metrics = await adapter.fetchMetrics()
+  // Include form submissions in cron sync (expensive but runs once daily)
+  const metrics = await adapter.fetchMetrics(undefined, undefined, 30, true)
   const records = adapter.normalizeToDbRecords(metrics, organizationId, new Date())
 
   // Upsert to avoid duplicate entries
@@ -99,7 +100,8 @@ export async function syncHubSpotMetrics() {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
 
-    const metrics = await adapter.fetchMetrics()
+    // Include form submissions on manual refresh (user explicitly requested fresh data)
+    const metrics = await adapter.fetchMetrics(undefined, undefined, 30, true)
     const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, new Date())
 
     // Upsert to avoid duplicate entries
@@ -241,19 +243,34 @@ export async function getHubSpotMetrics(period: Period = '30d', connectionId?: s
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
 
-    // Fetch CRM metrics for both periods (date-dependent) but marketing metrics only once (totals)
-    const [currentCRM, previousCRM, marketing] = await Promise.all([
+    // Fetch CRM metrics for both periods (date-dependent)
+    // Skip form submissions - use cached value from DB (updated by cron/manual refresh)
+    const [currentCRM, previousCRM] = await Promise.all([
       adapter.fetchCRMMetrics(currentStart, currentEnd),
       adapter.fetchCRMMetrics(previousStart, previousEnd),
-      adapter.fetchMarketingMetrics(),
     ])
 
-    // Combine into full metrics objects
+    // Get cached form submissions value (don't overwrite with 0)
+    const cachedFormSubmissions = cached.metrics.find(
+      (m) => m.metric_type === 'hubspot_form_submissions'
+    )?.value ?? 0
+
+    // Combine into full metrics objects, preserving cached form submissions
+    const marketing = {
+      emailsSent: 0,
+      emailsOpened: 0,
+      emailsClicked: 0,
+      openRate: 0,
+      clickRate: 0,
+      formSubmissions: cachedFormSubmissions
+    }
     const currentMetrics = { crm: currentCRM, marketing }
     const previousMetrics = { crm: previousCRM, marketing }
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
+    // Only store CRM metrics, preserve existing marketing metrics
     const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+      .filter(r => !r.metric_type.includes('form_submissions')) // Don't overwrite form submissions
 
     await supabase
       .from('campaign_metrics')

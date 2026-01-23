@@ -259,7 +259,12 @@ export class HubSpotClient {
     }
   }
 
-  async getMarketingMetrics(): Promise<HubSpotMarketingMetrics> {
+  /**
+   * Get marketing metrics.
+   * @param includeFormSubmissions - If true, fetches form submission counts (expensive - 1 API call per form).
+   *                                  Set to false for dashboard loads, true for cron syncs.
+   */
+  async getMarketingMetrics(includeFormSubmissions = false): Promise<HubSpotMarketingMetrics> {
     // Return cached result if available (marketing metrics don't change between period fetches)
     if (this.marketingMetricsCache) {
       return this.marketingMetricsCache
@@ -299,37 +304,42 @@ export class HubSpotClient {
           emailsOpened += email.stats?.counters?.open || 0
           emailsClicked += email.stats?.counters?.click || 0
         }
-      } catch (emailError) {
-        console.log('[HubSpot Client] Marketing emails not available:', emailError)
+      } catch {
+        // Marketing Hub may not be available - this is expected for many accounts
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[HubSpot Client] Marketing emails not available')
+        }
       }
 
-      // Get form submissions count - batched to avoid rate limits
+      // Get form submissions count - only when explicitly requested (expensive operation)
       let formSubmissions = 0
-      try {
-        const formsResponse = await this.fetch<Array<{ guid: string }>>('/forms/v2/forms')
-        const forms = formsResponse || []
+      if (includeFormSubmissions) {
+        try {
+          const formsResponse = await this.fetch<Array<{ guid: string }>>('/forms/v2/forms')
+          const forms = formsResponse || []
 
-        if (forms.length > 0) {
-          // Process forms in batches of 5 to avoid rate limits
-          const BATCH_SIZE = 5
-          const batches: Array<{ guid: string }>[] = []
-          for (let i = 0; i < forms.length; i += BATCH_SIZE) {
-            batches.push(forms.slice(i, i + BATCH_SIZE))
-          }
+          if (forms.length > 0) {
+            // Process forms in batches of 5 to avoid rate limits
+            const BATCH_SIZE = 5
+            const batches: Array<{ guid: string }>[] = []
+            for (let i = 0; i < forms.length; i += BATCH_SIZE) {
+              batches.push(forms.slice(i, i + BATCH_SIZE))
+            }
 
-          for (const batch of batches) {
-            const submissionPromises = batch.map((form) =>
-              this.fetch<{ totalCount: number }>(
-                `/form-integrations/v1/submissions/forms/${form.guid}?limit=1`,
-                true // silent - don't log each form request
-              ).catch(() => ({ totalCount: 0 }))
-            )
-            const results = await Promise.all(submissionPromises)
-            formSubmissions += results.reduce((sum, r) => sum + (r.totalCount || 0), 0)
+            for (const batch of batches) {
+              const submissionPromises = batch.map((form) =>
+                this.fetch<{ totalCount: number }>(
+                  `/form-integrations/v1/submissions/forms/${form.guid}?limit=1`,
+                  true // silent - don't log each form request
+                ).catch(() => ({ totalCount: 0 }))
+              )
+              const results = await Promise.all(submissionPromises)
+              formSubmissions += results.reduce((sum, r) => sum + (r.totalCount || 0), 0)
+            }
           }
+        } catch (formsError) {
+          console.log('[HubSpot Client] Forms not available:', formsError)
         }
-      } catch (formsError) {
-        console.log('[HubSpot Client] Forms not available:', formsError)
       }
 
       const openRate = emailsSent > 0 ? (emailsOpened / emailsSent) * 100 : 0
@@ -357,10 +367,20 @@ export class HubSpotClient {
     }
   }
 
-  async getMetrics(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotMetrics> {
+  /**
+   * Get all metrics.
+   * @param includeFormSubmissions - If true, fetches form submission counts (expensive).
+   *                                  Use true for cron syncs, false for dashboard loads.
+   */
+  async getMetrics(
+    startDate?: Date,
+    endDate?: Date,
+    days: number = 30,
+    includeFormSubmissions = false
+  ): Promise<HubSpotMetrics> {
     const [crm, marketing] = await Promise.all([
       this.getCRMMetrics(startDate, endDate, days),
-      this.getMarketingMetrics(),
+      this.getMarketingMetrics(includeFormSubmissions),
     ])
 
     return { crm, marketing }
@@ -375,8 +395,9 @@ export class HubSpotClient {
 
   /**
    * Fetch only marketing metrics (not date-dependent, call once per request)
+   * @param includeFormSubmissions - If true, fetches form submission counts (expensive).
    */
-  async getMarketingMetricsOnly(): Promise<HubSpotMarketingMetrics> {
-    return this.getMarketingMetrics()
+  async getMarketingMetricsOnly(includeFormSubmissions = false): Promise<HubSpotMarketingMetrics> {
+    return this.getMarketingMetrics(includeFormSubmissions)
   }
 }
