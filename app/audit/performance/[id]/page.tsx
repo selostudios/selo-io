@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import { getPerformanceAuditData } from './actions'
 import { PerformanceResults } from '@/components/performance/performance-results'
 import { PerformanceLiveProgress } from '@/components/performance/performance-live-progress'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 
 interface Props {
@@ -30,6 +31,14 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
           <ArrowLeft className="h-4 w-4" />
           Back to Performance Audits
         </Link>
+        {audit.status === 'completed' && (
+          <Button variant="outline" asChild>
+            <a href={`/api/performance/${id}/export`} download>
+              <Download className="mr-2 h-4 w-4" />
+              Export PDF
+            </a>
+          </Button>
+        )}
       </div>
 
       {/* Show live progress for pending/running audits */}

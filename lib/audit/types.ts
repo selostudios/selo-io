@@ -56,6 +56,9 @@ export interface SiteAuditCheck {
   display_name_passed?: string
   learn_more_url?: string
   is_site_wide?: boolean
+  // Additional metadata for PDF rendering
+  description?: string
+  fix_guidance?: string
 }
 
 export interface AuditCheckDefinition {
@@ -71,6 +74,8 @@ export interface AuditCheckDefinition {
   learnMoreUrl?: string
   /** If true, this check applies site-wide (e.g., robots.txt, llms.txt) */
   isSiteWide?: boolean
+  /** Actionable fix guidance for failed checks */
+  fixGuidance?: string
   run: (context: CheckContext) => Promise<CheckResult>
 }
 

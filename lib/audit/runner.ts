@@ -151,6 +151,8 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
           display_name_passed: check.displayNamePassed,
           learn_more_url: check.learnMoreUrl,
           is_site_wide: true,
+          description: check.description,
+          fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
         }
 
         allCheckResults.push(checkResult)
@@ -215,6 +217,8 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
             display_name_passed: check.displayNamePassed,
             learn_more_url: check.learnMoreUrl,
             is_site_wide: false,
+            description: check.description,
+            fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
           }
 
           allCheckResults.push(checkResult)

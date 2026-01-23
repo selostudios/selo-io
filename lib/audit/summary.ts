@@ -2,17 +2,8 @@ import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import type { SiteAuditCheck } from './types'
 
-function formatCheckForSummary(check: SiteAuditCheck): string {
-  const name = check.display_name || check.check_name.replace(/_/g, ' ')
-  const message = check.details?.message || ''
-  return `- ${name}: ${message}`
-}
-
-function getScoreInterpretation(score: number): string {
-  if (score >= 85) return 'Excellent'
-  if (score >= 70) return 'Good'
-  if (score >= 50) return 'Needs Work'
-  return 'Poor'
+function formatCheckName(check: SiteAuditCheck): string {
+  return check.display_name || check.check_name.replace(/_/g, ' ')
 }
 
 export async function generateExecutiveSummary(
@@ -27,70 +18,86 @@ export async function generateExecutiveSummary(
   checks: SiteAuditCheck[]
 ): Promise<string> {
   const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
-  const recommendedFails = checks.filter(
-    (c) => c.priority === 'recommended' && c.status === 'failed'
-  )
+  const warnings = checks.filter((c) => c.status === 'warning' || (c.priority === 'recommended' && c.status === 'failed'))
+  const passed = checks.filter((c) => c.status === 'passed')
+
+  const criticalList =
+    criticalFails.length > 0
+      ? criticalFails.slice(0, 5).map((c) => `- ${formatCheckName(c)}`).join('\n')
+      : '- None'
+
+  const warningList =
+    warnings.length > 0
+      ? warnings.slice(0, 5).map((c) => `- ${formatCheckName(c)}`).join('\n')
+      : '- None'
+
+  const prompt = `Analyze this website audit and write a brief executive summary for the site owner.
+
+Site: ${url}
+Score: ${scores.overall_score}/100
+Pages analyzed: ${pagesCrawled}
+
+Critical issues (${criticalFails.length}):
+${criticalList}
+
+Warnings (${warnings.length}):
+${warningList}
+
+Passed (${passed.length} checks)
+
+Write 2-3 short paragraphs that:
+- Assess overall site health in plain language
+- Explain the business impact of the top 2-3 issues (e.g., "missing meta descriptions means search engines can't properly display your pages")
+- Identify one quick win they could address today
+
+Tone: Direct, helpful, professional. Write for someone who isn't technical but makes business decisions.
+
+Maximum 120 words.`
+
+  const { text } = await generateText({
+    model: anthropic('claude-opus-4-5-20250514'),
+    prompt,
+    maxOutputTokens: 300,
+  })
+
+  return text.trim()
+}
+
+/**
+ * Generate a fallback summary when AI is unavailable.
+ */
+export function generateFallbackSummary(
+  url: string,
+  pagesCrawled: number,
+  scores: { overall_score: number },
+  checks: SiteAuditCheck[]
+): string {
+  const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
   const warnings = checks.filter((c) => c.status === 'warning')
   const passed = checks.filter((c) => c.status === 'passed')
 
-  const prompt = `You are writing an executive summary for a website SEO and AI-readiness audit report.
+  const healthStatus =
+    scores.overall_score >= 80
+      ? 'is in good health'
+      : scores.overall_score >= 60
+        ? 'needs some attention'
+        : 'requires immediate attention'
 
-## Site Information
-- URL: ${url}
-- Pages Analyzed: ${pagesCrawled}
-- Overall Score: ${scores.overall_score}/100 (${getScoreInterpretation(scores.overall_score)})
+  const domain = url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
-## Category Scores
-- SEO Score: ${scores.seo_score}/100 (${getScoreInterpretation(scores.seo_score)})
-- AI-Readiness Score: ${scores.ai_readiness_score}/100 (${getScoreInterpretation(scores.ai_readiness_score)})
-- Technical Score: ${scores.technical_score}/100 (${getScoreInterpretation(scores.technical_score)})
+  let summary = `Your website ${domain} ${healthStatus} with an overall score of ${scores.overall_score}/100. `
+  summary += `We analyzed ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} and found `
+  summary += `${criticalFails.length} critical issue${criticalFails.length !== 1 ? 's' : ''}, `
+  summary += `${warnings.length} warning${warnings.length !== 1 ? 's' : ''}, `
+  summary += `and ${passed.length} check${passed.length !== 1 ? 's' : ''} passed.`
 
-## Critical Issues (${criticalFails.length} found)
-${criticalFails.length > 0 ? criticalFails.slice(0, 5).map(formatCheckForSummary).join('\n') : 'None'}
+  if (criticalFails.length > 0) {
+    summary += ` We recommend addressing the critical issues first to improve your site's performance and visibility.`
+  } else if (warnings.length > 0) {
+    summary += ` Consider addressing the recommended improvements to further optimize your site.`
+  } else {
+    summary += ` Your site is performing well across all our checks.`
+  }
 
-## Recommended Fixes (${recommendedFails.length} found)
-${recommendedFails.length > 0 ? recommendedFails.slice(0, 5).map(formatCheckForSummary).join('\n') : 'None'}
-
-## Warnings (${warnings.length} found)
-${warnings.length > 0 ? warnings.slice(0, 3).map(formatCheckForSummary).join('\n') : 'None'}
-
-## Passed Checks
-- SEO: ${passed.filter((c) => c.check_type === 'seo').length} passed
-- AI-Readiness: ${passed.filter((c) => c.check_type === 'ai_readiness').length} passed
-- Technical: ${passed.filter((c) => c.check_type === 'technical').length} passed
-
----
-
-Write a 3-4 paragraph executive summary following these guidelines:
-
-**Paragraph 1 - Overall Assessment:**
-- Interpret the score (Poor: <50, Needs Work: 50-70, Good: 70-85, Excellent: 85+)
-- Mention pages analyzed
-- Highlight the site's primary strengths based on passed checks
-
-**Paragraph 2 - Priority Issues:**
-- Focus on the top 3 critical issues
-- Explain WHY each issue matters (business impact, not just technical problem)
-- Be specific about what's wrong
-
-**Paragraph 3 - Quick Wins:**
-- Identify 2-3 easy fixes from the recommended/warning list
-- Estimate the effort (e.g., "10-15 minutes per page")
-- Focus on low-effort, high-impact changes
-
-**Paragraph 4 - Next Steps:**
-- Recommend the order of fixes
-- Be encouraging about potential improvement
-- Mention positive findings to balance the report
-
-**Tone:** Professional but accessible. Avoid jargon. Focus on actions, not just problems.
-**Length:** 200-300 words total.
-**Format:** Plain text only, no markdown.`
-
-  const { text } = await generateText({
-    model: anthropic('claude-sonnet-4-20250514'),
-    prompt,
-  })
-
-  return text
+  return summary
 }

@@ -1,304 +1,105 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+import { Document, Page, Text, View } from '@react-pdf/renderer'
 import type { SiteAudit, SiteAuditCheck } from './types'
-import * as path from 'path'
-import * as fs from 'fs'
-
-// Get the logo as a base64 data URI
-function getLogoDataUri(): string {
-  try {
-    const logoPath = path.join(process.cwd(), 'public', 'selo-logo.jpg.webp')
-    const logoBuffer = fs.readFileSync(logoPath)
-    return `data:image/webp;base64,${logoBuffer.toString('base64')}`
-  } catch {
-    return ''
-  }
-}
-
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'Helvetica',
-    backgroundColor: '#ffffff',
-  },
-  coverPage: {
-    padding: 40,
-    fontFamily: 'Helvetica',
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 40,
-  },
-  coverContent: {
-    marginTop: 160,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#ffffff',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1a1a1a',
-    borderBottomWidth: 2,
-    borderBottomColor: '#1a1a1a',
-    paddingBottom: 8,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  summaryText: {
-    fontSize: 11,
-    lineHeight: 1.6,
-    color: '#333333',
-    marginBottom: 16,
-  },
-  scoreCardsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  scoreCard: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  scoreValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 4,
-  },
-  scoreLabel: {
-    fontSize: 9,
-    color: '#666666',
-    textTransform: 'uppercase',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 20,
-    marginBottom: 24,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee',
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-  },
-  statLabel: {
-    fontSize: 10,
-    color: '#666666',
-  },
-  checkTypeHeader: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 12,
-    marginTop: 16,
-    backgroundColor: '#f9f9f9',
-    padding: 8,
-    borderRadius: 4,
-  },
-  checkItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  checkStatus: {
-    width: 24,
-    fontSize: 12,
-  },
-  checkStatusPassed: {
-    color: '#22c55e',
-  },
-  checkStatusFailed: {
-    color: '#ef4444',
-  },
-  checkStatusWarning: {
-    color: '#f59e0b',
-  },
-  checkContent: {
-    flex: 1,
-  },
-  checkName: {
-    fontSize: 11,
-    color: '#1a1a1a',
-    marginBottom: 2,
-  },
-  checkPriority: {
-    fontSize: 9,
-    color: '#666666',
-    textTransform: 'uppercase',
-  },
-  priorityCritical: {
-    color: '#ef4444',
-  },
-  priorityRecommended: {
-    color: '#f59e0b',
-  },
-  priorityOptional: {
-    color: '#6b7280',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    textAlign: 'center',
-    color: '#999999',
-    fontSize: 9,
-    borderTopWidth: 1,
-    borderTopColor: '#eeeeee',
-    paddingTop: 10,
-  },
-  coverFooter: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    textAlign: 'center',
-    color: '#666666',
-    fontSize: 9,
-  },
-  nextStepsSection: {
-    marginTop: 40,
-  },
-  nextStepsText: {
-    fontSize: 12,
-    lineHeight: 1.6,
-    color: '#333333',
-    marginBottom: 24,
-  },
-  contactInfo: {
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    borderRadius: 6,
-    marginTop: 20,
-  },
-  contactTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 12,
-  },
-  contactItem: {
-    fontSize: 11,
-    color: '#333333',
-    marginBottom: 6,
-  },
-  noChecks: {
-    fontSize: 11,
-    color: '#666666',
-    fontStyle: 'italic',
-    padding: 10,
-  },
-})
+import { getLogoDataUri } from '@/lib/pdf/logo'
+import {
+  CoverPage,
+  SectionHeader,
+  IssueCard,
+  StatBar,
+  PageFooter,
+  ActionItem,
+  ContactBox,
+  PassedChecksSummary,
+  baseStyles,
+  colors,
+  getScoreColor,
+} from '@/lib/pdf/components'
 
 interface AuditPDFProps {
   audit: SiteAudit
   checks: SiteAuditCheck[]
 }
 
-function formatCheckName(name: string): string {
-  return name
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+function formatCheckName(check: SiteAuditCheck): string {
+  return check.display_name || check.check_name.replace(/_/g, ' ')
 }
 
-function getScoreColor(score: number | null): string {
-  if (score === null) return '#999999'
-  if (score >= 80) return '#22c55e'
-  if (score >= 60) return '#f59e0b'
-  return '#ef4444'
+function getCheckDescription(check: SiteAuditCheck): string {
+  return check.description || ''
 }
 
-function CheckStatusIcon({ status }: { status: string }) {
-  const style =
-    status === 'passed'
-      ? styles.checkStatusPassed
-      : status === 'warning'
-        ? styles.checkStatusWarning
-        : styles.checkStatusFailed
-
-  const symbol = status === 'passed' ? 'PASS' : status === 'warning' ? 'WARN' : 'FAIL'
-
-  return <Text style={[styles.checkStatus, style]}>{symbol}</Text>
+function getCheckFixGuidance(check: SiteAuditCheck): string {
+  // Use explicit fix_guidance, or fallback to details.message
+  if (check.fix_guidance) return check.fix_guidance
+  if (check.details?.message && typeof check.details.message === 'string') {
+    return check.details.message
+  }
+  return ''
 }
 
-function PriorityBadge({ priority }: { priority: string }) {
-  const priorityStyle =
-    priority === 'critical'
-      ? styles.priorityCritical
-      : priority === 'recommended'
-        ? styles.priorityRecommended
-        : styles.priorityOptional
-
-  return <Text style={[styles.checkPriority, priorityStyle]}>{priority}</Text>
-}
-
-function CheckListSection({ title, checks }: { title: string; checks: SiteAuditCheck[] }) {
-  const failedChecks = checks.filter((c) => c.status !== 'passed')
-  const passedChecks = checks.filter((c) => c.status === 'passed')
-
-  if (checks.length === 0) {
-    return null
+function groupChecksByType(
+  checks: SiteAuditCheck[]
+): Record<string, { failed: SiteAuditCheck[]; passed: SiteAuditCheck[] }> {
+  const groups: Record<string, { failed: SiteAuditCheck[]; passed: SiteAuditCheck[] }> = {
+    seo: { failed: [], passed: [] },
+    ai_readiness: { failed: [], passed: [] },
+    technical: { failed: [], passed: [] },
   }
 
+  for (const check of checks) {
+    const type = check.check_type
+    if (check.status === 'passed') {
+      groups[type].passed.push(check)
+    } else {
+      groups[type].failed.push(check)
+    }
+  }
+
+  return groups
+}
+
+function sortByPriority(checks: SiteAuditCheck[]): SiteAuditCheck[] {
+  const priorityOrder = { critical: 0, recommended: 1, optional: 2 }
+  return [...checks].sort(
+    (a, b) =>
+      priorityOrder[a.priority as keyof typeof priorityOrder] -
+      priorityOrder[b.priority as keyof typeof priorityOrder]
+  )
+}
+
+function IssuesSection({
+  title,
+  issues,
+  passedCount,
+}: {
+  title: string
+  issues: SiteAuditCheck[]
+  passedCount: number
+}) {
+  if (issues.length === 0 && passedCount === 0) return null
+
+  const sortedIssues = sortByPriority(issues)
+
   return (
-    <View style={styles.section}>
-      <Text style={styles.checkTypeHeader}>
-        {title} ({failedChecks.length} issues, {passedChecks.length} passed)
+    <View style={baseStyles.section}>
+      <Text style={baseStyles.sectionSubtitle}>
+        {title} ({issues.length} issue{issues.length !== 1 ? 's' : ''})
       </Text>
-      {failedChecks.map((check) => (
-        <View key={check.id} style={styles.checkItem}>
-          <CheckStatusIcon status={check.status} />
-          <View style={styles.checkContent}>
-            <Text style={styles.checkName}>{formatCheckName(check.check_name)}</Text>
-            <PriorityBadge priority={check.priority} />
-          </View>
-        </View>
+      {sortedIssues.map((check) => (
+        <IssueCard
+          key={check.id}
+          name={formatCheckName(check)}
+          priority={check.priority as 'critical' | 'recommended' | 'optional'}
+          description={getCheckDescription(check)}
+          fixGuidance={getCheckFixGuidance(check)}
+        />
       ))}
-      {passedChecks.map((check) => (
-        <View key={check.id} style={styles.checkItem}>
-          <CheckStatusIcon status={check.status} />
-          <View style={styles.checkContent}>
-            <Text style={styles.checkName}>{formatCheckName(check.check_name)}</Text>
-            <PriorityBadge priority={check.priority} />
-          </View>
-        </View>
-      ))}
+      {passedCount > 0 && <PassedChecksSummary count={passedCount} />}
     </View>
   )
 }
 
 export function AuditPDF({ audit, checks }: AuditPDFProps) {
-  const seoChecks = checks.filter((c) => c.check_type === 'seo')
-  const aiChecks = checks.filter((c) => c.check_type === 'ai_readiness')
-  const techChecks = checks.filter((c) => c.check_type === 'technical')
-
   const logoUri = getLogoDataUri()
   const displayUrl = audit.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
   const reportDate = new Date(audit.completed_at || audit.created_at).toLocaleDateString('en-US', {
@@ -307,125 +108,139 @@ export function AuditPDF({ audit, checks }: AuditPDFProps) {
     day: 'numeric',
   })
 
-  const criticalIssues = checks.filter(
+  // Calculate stats
+  const criticalFailed = checks.filter(
     (c) => c.priority === 'critical' && c.status === 'failed'
   ).length
-  const totalIssues = checks.filter((c) => c.status !== 'passed').length
-  const passedChecks = checks.filter((c) => c.status === 'passed').length
+  const totalFailed = checks.filter((c) => c.status !== 'passed').length
+  const totalPassed = checks.filter((c) => c.status === 'passed').length
+
+  // Group checks
+  const groupedChecks = groupChecksByType(checks)
+
+  // Get all failed checks for action plan, sorted by priority
+  const allFailedChecks = sortByPriority(checks.filter((c) => c.status !== 'passed'))
+
+  // Top actions - critical first, then highest priority recommended
+  const topActions = allFailedChecks.slice(0, 5)
 
   return (
     <Document>
-      {/* Cover Page */}
-      <Page size="A4" style={styles.coverPage}>
-        <View style={styles.coverContent}>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image doesn't support alt */}
-          {logoUri && <Image src={logoUri} style={styles.logo} />}
-          <Text style={styles.title}>Website Audit Report</Text>
-          <Text style={styles.subtitle}>{displayUrl}</Text>
-          <Text style={styles.subtitle}>{reportDate}</Text>
-        </View>
-        <Text style={styles.coverFooter}>Generated by Selo Studios</Text>
-      </Page>
+      {/* Page 1: Cover Page with Score */}
+      <CoverPage
+        logoUri={logoUri}
+        title="Website Audit Report"
+        subtitle={displayUrl}
+        date={reportDate}
+        score={audit.overall_score}
+      />
 
-      {/* Executive Summary & Scores */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.sectionTitle}>Executive Summary</Text>
+      {/* Page 2: Executive Summary + Findings */}
+      <Page size="A4" style={baseStyles.page}>
+        <SectionHeader title="Executive Summary" />
 
         {audit.executive_summary && (
-          <Text style={styles.summaryText}>{audit.executive_summary}</Text>
+          <Text style={baseStyles.bodyText}>{audit.executive_summary}</Text>
         )}
 
         {/* Score Cards */}
-        <View style={styles.scoreCardsRow}>
-          <View style={styles.scoreCard}>
-            <Text style={[styles.scoreValue, { color: getScoreColor(audit.overall_score) }]}>
+        <View style={baseStyles.scoreCardsRow}>
+          <View style={baseStyles.scoreCard}>
+            <Text style={[baseStyles.scoreValue, { color: getScoreColor(audit.overall_score) }]}>
               {audit.overall_score ?? '-'}
             </Text>
-            <Text style={styles.scoreLabel}>Overall Score</Text>
+            <Text style={baseStyles.scoreLabel}>Overall</Text>
           </View>
-          <View style={styles.scoreCard}>
-            <Text style={[styles.scoreValue, { color: getScoreColor(audit.seo_score) }]}>
+          <View style={baseStyles.scoreCard}>
+            <Text style={[baseStyles.scoreValue, { color: getScoreColor(audit.seo_score) }]}>
               {audit.seo_score ?? '-'}
             </Text>
-            <Text style={styles.scoreLabel}>SEO Score</Text>
+            <Text style={baseStyles.scoreLabel}>SEO</Text>
           </View>
-          <View style={styles.scoreCard}>
-            <Text style={[styles.scoreValue, { color: getScoreColor(audit.ai_readiness_score) }]}>
+          <View style={baseStyles.scoreCard}>
+            <Text
+              style={[baseStyles.scoreValue, { color: getScoreColor(audit.ai_readiness_score) }]}
+            >
               {audit.ai_readiness_score ?? '-'}
             </Text>
-            <Text style={styles.scoreLabel}>AI Readiness</Text>
+            <Text style={baseStyles.scoreLabel}>AI Ready</Text>
           </View>
-          <View style={styles.scoreCard}>
-            <Text style={[styles.scoreValue, { color: getScoreColor(audit.technical_score) }]}>
+          <View style={baseStyles.scoreCard}>
+            <Text style={[baseStyles.scoreValue, { color: getScoreColor(audit.technical_score) }]}>
               {audit.technical_score ?? '-'}
             </Text>
-            <Text style={styles.scoreLabel}>Technical</Text>
+            <Text style={baseStyles.scoreLabel}>Technical</Text>
           </View>
         </View>
 
-        {/* Key Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{audit.pages_crawled}</Text>
-            <Text style={styles.statLabel}>Pages Crawled</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: '#ef4444' }]}>{criticalIssues}</Text>
-            <Text style={styles.statLabel}>Critical Issues</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: '#f59e0b' }]}>{totalIssues}</Text>
-            <Text style={styles.statLabel}>Total Issues</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: '#22c55e' }]}>{passedChecks}</Text>
-            <Text style={styles.statLabel}>Checks Passed</Text>
-          </View>
-        </View>
+        {/* Stats Bar */}
+        <StatBar
+          stats={[
+            { value: audit.pages_crawled, label: 'Pages Crawled' },
+            { value: criticalFailed, label: 'Critical Issues', color: colors.error },
+            { value: totalFailed, label: 'Total Issues', color: colors.warning },
+            { value: totalPassed, label: 'Passed', color: colors.success },
+          ]}
+        />
 
-        <Text style={styles.footer}>{displayUrl} - Audit Report - Page 2</Text>
+        {/* Issues by Category */}
+        <IssuesSection
+          title="SEO Issues"
+          issues={groupedChecks.seo.failed}
+          passedCount={groupedChecks.seo.passed.length}
+        />
+        <IssuesSection
+          title="AI-Readiness Issues"
+          issues={groupedChecks.ai_readiness.failed}
+          passedCount={groupedChecks.ai_readiness.passed.length}
+        />
+        <IssuesSection
+          title="Technical Issues"
+          issues={groupedChecks.technical.failed}
+          passedCount={groupedChecks.technical.passed.length}
+        />
+
+        <PageFooter text={`${displayUrl} - Audit Report`} pageNumber={2} />
       </Page>
 
-      {/* Detailed Findings */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.sectionTitle}>Detailed Findings</Text>
+      {/* Page 3: Priority Action Plan */}
+      <Page size="A4" style={baseStyles.page}>
+        <SectionHeader title="Priority Actions" />
 
-        <CheckListSection title="SEO Issues" checks={seoChecks} />
-        <CheckListSection title="AI-Readiness Issues" checks={aiChecks} />
-        <CheckListSection title="Technical Issues" checks={techChecks} />
+        {topActions.length > 0 ? (
+          <>
+            <Text style={baseStyles.bodyText}>
+              Based on your audit results, here are the most important issues to address. Start with
+              critical items first for maximum impact.
+            </Text>
 
-        {checks.length === 0 && (
-          <Text style={styles.noChecks}>No checks have been performed yet.</Text>
+            <View style={baseStyles.actionList}>
+              {topActions.map((check, index) => (
+                <ActionItem
+                  key={check.id}
+                  number={index + 1}
+                  text={`${formatCheckName(check)}: ${getCheckFixGuidance(check) || getCheckDescription(check) || 'Review and fix this issue.'}`}
+                />
+              ))}
+            </View>
+
+            {allFailedChecks.length > 5 && (
+              <Text style={[baseStyles.smallText, { marginTop: 16 }]}>
+                + {allFailedChecks.length - 5} additional issue
+                {allFailedChecks.length - 5 !== 1 ? 's' : ''} to address
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text style={baseStyles.bodyText}>
+            Congratulations! Your website passed all our checks. Continue maintaining best practices
+            to keep your site performing well.
+          </Text>
         )}
 
-        <Text style={styles.footer}>{displayUrl} - Audit Report - Page 3</Text>
-      </Page>
+        <ContactBox title="Need Help Implementing These Changes?" />
 
-      {/* Next Steps */}
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.sectionTitle}>Next Steps</Text>
-
-        <View style={styles.nextStepsSection}>
-          <Text style={styles.nextStepsText}>
-            Thank you for using Selo Studios website audit service. Based on the findings in this
-            report, we recommend addressing the critical issues first, followed by recommended
-            improvements.
-          </Text>
-
-          <Text style={styles.nextStepsText}>
-            Our team can help you implement these changes and improve your website&apos;s SEO
-            performance, AI-readiness, and technical health. Contact us to discuss your audit
-            results and create a customized action plan.
-          </Text>
-
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactTitle}>Get in Touch</Text>
-            <Text style={styles.contactItem}>Email: hello@selostudios.com</Text>
-            <Text style={styles.contactItem}>Website: selostudios.com</Text>
-          </View>
-        </View>
-
-        <Text style={styles.footer}>{displayUrl} - Audit Report - Page 4</Text>
+        <PageFooter text={`${displayUrl} - Audit Report`} pageNumber={3} />
       </Page>
     </Document>
   )
