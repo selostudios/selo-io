@@ -189,7 +189,7 @@ function formatHubSpotMetricsFromDb(
   }
 }
 
-export async function getHubSpotMetrics(period: Period = '30d') {
+export async function getHubSpotMetrics(period: Period = '30d', connectionId?: string) {
   const supabase = await createClient()
 
   const {
@@ -209,12 +209,18 @@ export async function getHubSpotMetrics(period: Period = '30d') {
     return { error: 'User not found' }
   }
 
-  const { data: connection } = await supabase
+  // If connectionId is provided, query by id; otherwise query by organization and platform
+  let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
     .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'hubspot')
-    .single()
+
+  if (connectionId) {
+    connectionQuery = connectionQuery.eq('id', connectionId)
+  }
+
+  const { data: connection } = await connectionQuery.single()
 
   if (!connection) {
     return { error: 'HubSpot not connected' }

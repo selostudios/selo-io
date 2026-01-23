@@ -33,12 +33,25 @@ interface HubSpotMetricsWithChanges {
   }
 }
 
+type Connection = {
+  id: string
+  platform_type: string
+  account_name: string | null
+  display_name: string | null
+  status: string
+  last_sync_at: string | null
+}
+
 interface HubSpotSectionProps {
-  isConnected: boolean
+  connections: Connection[]
   period: Period
 }
 
 const HUBSPOT_COLOR = '#FF7A59'
+
+function getConnectionLabel(connection: Connection): string {
+  return connection.display_name || connection.account_name || 'HubSpot Account'
+}
 
 function formatChange(change: number | null): string {
   if (change === null) return ''
@@ -46,47 +59,59 @@ function formatChange(change: number | null): string {
   return ` (${sign}${change.toFixed(1)}%)`
 }
 
-function formatMetricsForClipboard(metrics: HubSpotMetricsWithChanges, period: Period): string {
+function formatMetricsForClipboard(
+  metrics: HubSpotMetricsWithChanges,
+  period: Period,
+  accountLabel?: string
+): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
+  const header = accountLabel
+    ? `HubSpot - ${accountLabel} (${periodLabel})`
+    : `HubSpot Metrics (${periodLabel})`
   const lines = [
-    `🟠 HubSpot Metrics (${periodLabel})`,
+    header,
     '',
-    `• Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
-    `• Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
-    `• New Deals: ${metrics.crm.newDeals.toLocaleString()}${formatChange(metrics.crm.newDealsChange)}`,
-    `• Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
-    `• Deals Won: ${metrics.crm.dealsWon.toLocaleString()}${formatChange(metrics.crm.dealsWonChange)}`,
-    `• Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}${formatChange(metrics.crm.dealsLostChange)}`,
-    `• Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}${formatChange(metrics.marketing.formSubmissionsChange)}`,
+    `* Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
+    `* Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
+    `* New Deals: ${metrics.crm.newDeals.toLocaleString()}${formatChange(metrics.crm.newDealsChange)}`,
+    `* Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
+    `* Deals Won: ${metrics.crm.dealsWon.toLocaleString()}${formatChange(metrics.crm.dealsWonChange)}`,
+    `* Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}${formatChange(metrics.crm.dealsLostChange)}`,
+    `* Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}${formatChange(metrics.marketing.formSubmissionsChange)}`,
   ]
   return lines.join('\n')
 }
 
-export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
+interface ConnectionMetricsProps {
+  connection: Connection
+  period: Period
+  showAccountHeader: boolean
+}
+
+function ConnectionMetrics({ connection, period, showAccountHeader }: ConnectionMetricsProps) {
   const [metrics, setMetrics] = useState<HubSpotMetricsWithChanges | null>(null)
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (isConnected) {
-      startTransition(async () => {
-        const result = await getHubSpotMetrics(period)
-        if ('metrics' in result && result.metrics) {
-          setMetrics(result.metrics)
-        }
-        if ('timeSeries' in result && result.timeSeries) {
-          setTimeSeries(result.timeSeries)
-        }
-      })
-    }
-  }, [isConnected, period])
+    startTransition(async () => {
+      const result = await getHubSpotMetrics(period, connection.id)
+      if ('metrics' in result && result.metrics) {
+        setMetrics(result.metrics)
+      }
+      if ('timeSeries' in result && result.timeSeries) {
+        setTimeSeries(result.timeSeries)
+      }
+    })
+  }, [connection.id, period])
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (metrics) {
-      const text = formatMetricsForClipboard(metrics, period)
+      const accountLabel = showAccountHeader ? getConnectionLabel(connection) : undefined
+      const text = formatMetricsForClipboard(metrics, period, accountLabel)
       await navigator.clipboard.writeText(text)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -99,7 +124,133 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
     return series?.data
   }
 
-  if (!isConnected) {
+  if (isPending) {
+    return (
+      <div className="flex h-[100px] items-center justify-center">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!metrics) {
+    return <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+  }
+
+  const metricsGrid = (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <MetricCard
+        label="Total Contacts"
+        value={metrics.crm.totalContacts}
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Contacts')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Total Deals"
+        value={metrics.crm.totalDeals}
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="New Deals"
+        value={metrics.crm.newDeals}
+        change={metrics.crm.newDealsChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('New Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Pipeline Value"
+        value={metrics.crm.totalPipelineValue}
+        prefix="$"
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Deals Won"
+        value={metrics.crm.dealsWon}
+        change={metrics.crm.dealsWonChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Deals Won')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Deals Lost"
+        value={metrics.crm.dealsLost}
+        change={metrics.crm.dealsLostChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Deals Lost')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Form Submissions"
+        value={metrics.marketing.formSubmissions}
+        change={metrics.marketing.formSubmissionsChange}
+        tooltip="Discovery inquiries from potential customers."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Form Submissions')}
+        color={HUBSPOT_COLOR}
+      />
+    </div>
+  )
+
+  if (showAccountHeader) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium">{getConnectionLabel(connection)}</h4>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
+                aria-label="Copy metrics to clipboard"
+              >
+                {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
+          </Tooltip>
+        </div>
+        {metricsGrid}
+      </div>
+    )
+  }
+
+  return metricsGrid
+}
+
+export function HubSpotSection({ connections, period }: HubSpotSectionProps) {
+  const [copied, setCopied] = useState(false)
+  const [allMetrics, setAllMetrics] = useState<Map<string, HubSpotMetricsWithChanges>>(new Map())
+
+  // For single connection, we need to track metrics for the copy button
+  const singleConnection = connections.length === 1 ? connections[0] : null
+
+  const handleCopySingle = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (singleConnection) {
+      const metrics = allMetrics.get(singleConnection.id)
+      if (metrics) {
+        const text = formatMetricsForClipboard(metrics, period)
+        await navigator.clipboard.writeText(text)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+    }
+  }
+
+  // Callback to collect metrics from ConnectionMetrics for single connection copy
+  const onMetricsLoaded = (connectionId: string, metrics: HubSpotMetricsWithChanges) => {
+    setAllMetrics((prev) => new Map(prev).set(connectionId, metrics))
+  }
+
+  if (connections.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -135,11 +286,11 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
           <HubSpotIcon className="size-5 text-[#FF7A59]" />
           <span className="text-lg font-semibold">HubSpot</span>
         </CollapsibleTrigger>
-        {metrics && (
+        {connections.length === 1 && allMetrics.has(connections[0].id) && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={handleCopy}
+                onClick={handleCopySingle}
                 className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
                 aria-label="Copy metrics to clipboard"
               >
@@ -151,75 +302,136 @@ export function HubSpotSection({ isConnected, period }: HubSpotSectionProps) {
         )}
       </div>
       <CollapsibleContent className="mt-4">
-        {isPending ? (
-          <div className="flex h-[100px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-          </div>
-        ) : metrics ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <MetricCard
-              label="Total Contacts"
-              value={metrics.crm.totalContacts}
-              change={null}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Total Contacts')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="Total Deals"
-              value={metrics.crm.totalDeals}
-              change={null}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Total Deals')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="New Deals"
-              value={metrics.crm.newDeals}
-              change={metrics.crm.newDealsChange}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('New Deals')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="Pipeline Value"
-              value={metrics.crm.totalPipelineValue}
-              prefix="$"
-              change={null}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Pipeline Value')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="Deals Won"
-              value={metrics.crm.dealsWon}
-              change={metrics.crm.dealsWonChange}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Deals Won')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="Deals Lost"
-              value={metrics.crm.dealsLost}
-              change={metrics.crm.dealsLostChange}
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Deals Lost')}
-              color={HUBSPOT_COLOR}
-            />
-            <MetricCard
-              label="Form Submissions"
-              value={metrics.marketing.formSubmissions}
-              change={metrics.marketing.formSubmissionsChange}
-              tooltip="Discovery inquiries from potential customers."
-              period={period}
-              timeSeries={getTimeSeriesForMetric('Form Submissions')}
-              color={HUBSPOT_COLOR}
-            />
-          </div>
+        {connections.length === 1 ? (
+          <SingleConnectionMetrics
+            connection={connections[0]}
+            period={period}
+            onMetricsLoaded={onMetricsLoaded}
+          />
         ) : (
-          <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+          <div className="space-y-6">
+            {connections.map((connection) => (
+              <ConnectionMetrics
+                key={connection.id}
+                connection={connection}
+                period={period}
+                showAccountHeader={true}
+              />
+            ))}
+          </div>
         )}
       </CollapsibleContent>
     </Collapsible>
+  )
+}
+
+// Separate component for single connection to enable metrics callback
+interface SingleConnectionMetricsProps {
+  connection: Connection
+  period: Period
+  onMetricsLoaded: (connectionId: string, metrics: HubSpotMetricsWithChanges) => void
+}
+
+function SingleConnectionMetrics({
+  connection,
+  period,
+  onMetricsLoaded,
+}: SingleConnectionMetricsProps) {
+  const [metrics, setMetrics] = useState<HubSpotMetricsWithChanges | null>(null)
+  const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await getHubSpotMetrics(period, connection.id)
+      if ('metrics' in result && result.metrics) {
+        setMetrics(result.metrics)
+        onMetricsLoaded(connection.id, result.metrics)
+      }
+      if ('timeSeries' in result && result.timeSeries) {
+        setTimeSeries(result.timeSeries)
+      }
+    })
+  }, [connection.id, period, onMetricsLoaded])
+
+  // Helper to find time series data for a metric by label
+  const getTimeSeriesForMetric = (label: string) => {
+    const series = timeSeries.find((s) => s.label === label)
+    return series?.data
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex h-[100px] items-center justify-center">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!metrics) {
+    return <p className="text-muted-foreground">No data yet. Click refresh to sync metrics.</p>
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <MetricCard
+        label="Total Contacts"
+        value={metrics.crm.totalContacts}
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Contacts')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Total Deals"
+        value={metrics.crm.totalDeals}
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="New Deals"
+        value={metrics.crm.newDeals}
+        change={metrics.crm.newDealsChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('New Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Pipeline Value"
+        value={metrics.crm.totalPipelineValue}
+        prefix="$"
+        change={null}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Deals Won"
+        value={metrics.crm.dealsWon}
+        change={metrics.crm.dealsWonChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Deals Won')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Deals Lost"
+        value={metrics.crm.dealsLost}
+        change={metrics.crm.dealsLostChange}
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Deals Lost')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Form Submissions"
+        value={metrics.marketing.formSubmissions}
+        change={metrics.marketing.formSubmissionsChange}
+        tooltip="Discovery inquiries from potential customers."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Form Submissions')}
+        color={HUBSPOT_COLOR}
+      />
+    </div>
   )
 }
