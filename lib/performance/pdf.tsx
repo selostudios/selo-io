@@ -1,11 +1,17 @@
 import { Document, Page, Text, View } from '@react-pdf/renderer'
-import type { PerformanceAudit, PerformanceAuditResult } from './types'
+import type {
+  PerformanceAudit,
+  PerformanceAuditResult,
+  Opportunity,
+  Diagnostic,
+  PageSpeedResult,
+} from './types'
+import { extractOpportunities, extractDiagnostics } from './api'
 import { getLogoDataUri } from '@/lib/pdf/logo'
 import {
   CoverPage,
   SectionHeader,
   PageFooter,
-  ActionItem,
   ContactBox,
   baseStyles,
   colors,
@@ -95,6 +101,45 @@ const perfStyles = StyleSheet.create({
     flex: 1,
     lineHeight: 1.5,
   },
+  opportunityCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#fef9c3',
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f59e0b',
+  },
+  diagnosticCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: '#6b7280',
+  },
+  opportunityTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  opportunityDescription: {
+    fontSize: 9,
+    color: colors.text,
+    lineHeight: 1.4,
+    marginBottom: 4,
+  },
+  opportunitySavings: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#a16207',
+  },
+  noDataText: {
+    fontSize: 10,
+    color: colors.textLight,
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
 })
 
 interface PerformancePDFProps {
@@ -170,38 +215,89 @@ function getPathname(url: string): string {
 }
 
 function CoreWebVitalsSection({ result }: { result: PerformanceAuditResult }) {
+  const hasLcp = result.lcp_ms !== null
+  const hasInp = result.inp_ms !== null
+  const hasCls = result.cls_score !== null
+  const hasAnyMetric = hasLcp || hasInp || hasCls
+
+  if (!hasAnyMetric) {
+    return null
+  }
+
   return (
     <View style={perfStyles.metricsRow}>
-      <View style={[perfStyles.metricCard, getRatingStyle(result.lcp_rating)]}>
-        <Text style={perfStyles.metricName}>LCP (Largest Contentful Paint)</Text>
-        <Text style={[perfStyles.metricValue, { color: getRatingColor(result.lcp_rating) }]}>
-          {formatLCP(result.lcp_ms)}
+      {hasLcp && (
+        <View style={[perfStyles.metricCard, getRatingStyle(result.lcp_rating)]}>
+          <Text style={perfStyles.metricName}>LCP (Largest Contentful Paint)</Text>
+          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.lcp_rating) }]}>
+            {formatLCP(result.lcp_ms)}
+          </Text>
+          <Text style={perfStyles.metricTarget}>Target: {'<'} 2.5s</Text>
+          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.lcp_rating) }]}>
+            {getRatingLabel(result.lcp_rating)}
+          </Text>
+        </View>
+      )}
+      {hasInp && (
+        <View style={[perfStyles.metricCard, getRatingStyle(result.inp_rating)]}>
+          <Text style={perfStyles.metricName}>INP (Interaction to Next Paint)</Text>
+          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.inp_rating) }]}>
+            {formatINP(result.inp_ms)}
+          </Text>
+          <Text style={perfStyles.metricTarget}>Target: {'<'} 200ms</Text>
+          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.inp_rating) }]}>
+            {getRatingLabel(result.inp_rating)}
+          </Text>
+        </View>
+      )}
+      {hasCls && (
+        <View style={[perfStyles.metricCard, getRatingStyle(result.cls_rating)]}>
+          <Text style={perfStyles.metricName}>CLS (Cumulative Layout Shift)</Text>
+          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.cls_rating) }]}>
+            {formatCLS(result.cls_score)}
+          </Text>
+          <Text style={perfStyles.metricTarget}>Target: {'<'} 0.1</Text>
+          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.cls_rating) }]}>
+            {getRatingLabel(result.cls_rating)}
+          </Text>
+        </View>
+      )}
+    </View>
+  )
+}
+
+function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
+  // Clean up description - remove markdown links and truncate
+  const cleanDescription = opportunity.description
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .substring(0, 200)
+
+  return (
+    <View style={perfStyles.opportunityCard}>
+      <Text style={perfStyles.opportunityTitle}>{opportunity.title}</Text>
+      <Text style={perfStyles.opportunityDescription}>{cleanDescription}</Text>
+      {opportunity.displayValue && (
+        <Text style={perfStyles.opportunitySavings}>Potential savings: {opportunity.displayValue}</Text>
+      )}
+    </View>
+  )
+}
+
+function DiagnosticCard({ diagnostic }: { diagnostic: Diagnostic }) {
+  // Clean up description - remove markdown links and truncate
+  const cleanDescription = diagnostic.description
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .substring(0, 200)
+
+  return (
+    <View style={perfStyles.diagnosticCard}>
+      <Text style={perfStyles.opportunityTitle}>{diagnostic.title}</Text>
+      <Text style={perfStyles.opportunityDescription}>{cleanDescription}</Text>
+      {diagnostic.displayValue && (
+        <Text style={[perfStyles.opportunitySavings, { color: colors.textLight }]}>
+          {diagnostic.displayValue}
         </Text>
-        <Text style={perfStyles.metricTarget}>Target: {'<'} 2.5s</Text>
-        <Text style={[perfStyles.metricRating, { color: getRatingColor(result.lcp_rating) }]}>
-          {getRatingLabel(result.lcp_rating)}
-        </Text>
-      </View>
-      <View style={[perfStyles.metricCard, getRatingStyle(result.inp_rating)]}>
-        <Text style={perfStyles.metricName}>INP (Interaction to Next Paint)</Text>
-        <Text style={[perfStyles.metricValue, { color: getRatingColor(result.inp_rating) }]}>
-          {formatINP(result.inp_ms)}
-        </Text>
-        <Text style={perfStyles.metricTarget}>Target: {'<'} 200ms</Text>
-        <Text style={[perfStyles.metricRating, { color: getRatingColor(result.inp_rating) }]}>
-          {getRatingLabel(result.inp_rating)}
-        </Text>
-      </View>
-      <View style={[perfStyles.metricCard, getRatingStyle(result.cls_rating)]}>
-        <Text style={perfStyles.metricName}>CLS (Cumulative Layout Shift)</Text>
-        <Text style={[perfStyles.metricValue, { color: getRatingColor(result.cls_rating) }]}>
-          {formatCLS(result.cls_score)}
-        </Text>
-        <Text style={perfStyles.metricTarget}>Target: {'<'} 0.1</Text>
-        <Text style={[perfStyles.metricRating, { color: getRatingColor(result.cls_rating) }]}>
-          {getRatingLabel(result.cls_rating)}
-        </Text>
-      </View>
+      )}
     </View>
   )
 }
@@ -409,33 +505,59 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         </Page>
       ))}
 
-      {/* Next Steps */}
+      {/* Opportunities & Diagnostics Pages - one per URL with issues */}
+      {urls.map((url, index) => {
+        const mobileResult = resultsByUrl[url].mobile
+        if (!mobileResult?.raw_response) return null
+
+        const opportunities = extractOpportunities(mobileResult.raw_response as unknown as PageSpeedResult)
+        const diagnostics = extractDiagnostics(mobileResult.raw_response as unknown as PageSpeedResult)
+
+        if (opportunities.length === 0 && diagnostics.length === 0) return null
+
+        return (
+          <Page key={`issues-${url}`} size="A4" style={baseStyles.page}>
+            <SectionHeader title="Developer Action Items" />
+            <Text style={perfStyles.pageTitle}>{getPathname(url)}</Text>
+
+            {opportunities.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={baseStyles.sectionSubtitle}>Optimization Opportunities</Text>
+                <Text style={perfStyles.noDataText}>
+                  Issues sorted by potential performance impact
+                </Text>
+                {opportunities.slice(0, 5).map((opp) => (
+                  <OpportunityCard key={opp.id} opportunity={opp} />
+                ))}
+              </View>
+            )}
+
+            {diagnostics.length > 0 && (
+              <View>
+                <Text style={baseStyles.sectionSubtitle}>Diagnostics</Text>
+                <Text style={perfStyles.noDataText}>
+                  Additional metrics and insights for debugging
+                </Text>
+                {diagnostics.slice(0, 4).map((diag) => (
+                  <DiagnosticCard key={diag.id} diagnostic={diag} />
+                ))}
+              </View>
+            )}
+
+            <PageFooter text="Performance Audit Report" pageNumber={urls.length + index + 3} />
+          </Page>
+        )
+      })}
+
+      {/* Contact Page */}
       <Page size="A4" style={baseStyles.page}>
-        <SectionHeader title="Priority Actions" />
+        <SectionHeader title="Next Steps" />
 
         <Text style={baseStyles.bodyText}>
-          Based on your performance audit results, here are recommended actions to improve your
-          website speed and user experience:
+          This report identifies specific performance issues that can be addressed by your development
+          team. Each opportunity includes the potential savings and technical details needed for
+          implementation.
         </Text>
-
-        <View style={baseStyles.actionList}>
-          <ActionItem
-            number={1}
-            text="Optimize images by using modern formats (WebP, AVIF) and implementing lazy loading."
-          />
-          <ActionItem
-            number={2}
-            text="Minimize JavaScript and CSS by removing unused code and deferring non-critical scripts."
-          />
-          <ActionItem
-            number={3}
-            text="Implement caching strategies for static assets to reduce server load and improve load times."
-          />
-          <ActionItem
-            number={4}
-            text="Consider using a CDN to serve content from locations closer to your users."
-          />
-        </View>
 
         <ContactBox title="Need Help Improving Performance?" />
 

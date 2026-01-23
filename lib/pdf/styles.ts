@@ -125,13 +125,13 @@ export const baseStyles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   scoreLabel: {
     fontSize: 9,
     color: colors.textLight,
     textTransform: 'uppercase',
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
 
   // Stats row
