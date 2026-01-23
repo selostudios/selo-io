@@ -143,3 +143,41 @@ export async function disconnectPlatform(connectionId: string) {
   revalidatePath('/settings/integrations')
   return { success: true }
 }
+
+export async function updateConnectionDisplayName(connectionId: string, displayName: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord || !canManageIntegrations(userRecord.role)) {
+    return { error: 'Only admins can update integrations' }
+  }
+
+  const { error } = await supabase
+    .from('platform_connections')
+    .update({ display_name: displayName.trim() || null })
+    .eq('id', connectionId)
+    .eq('organization_id', userRecord.organization_id)
+
+  if (error) {
+    console.error('[Update Display Name Error]', {
+      type: 'database_error',
+      timestamp: new Date().toISOString(),
+    })
+    return { error: 'Failed to update display name' }
+  }
+
+  revalidatePath('/settings/integrations')
+  return { success: true }
+}
