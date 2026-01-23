@@ -22,6 +22,7 @@ const perfStyles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
+    flexDirection: 'column',
     padding: 12,
     borderRadius: 6,
     borderWidth: 1,
@@ -45,20 +46,22 @@ const perfStyles = StyleSheet.create({
   metricName: {
     fontSize: 10,
     color: colors.textLight,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   metricValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   metricTarget: {
     fontSize: 8,
     color: colors.textLight,
+    marginBottom: 4,
   },
   metricRating: {
     fontSize: 8,
     fontWeight: 'bold',
+    marginTop: 2,
   },
   deviceLabel: {
     fontSize: 12,

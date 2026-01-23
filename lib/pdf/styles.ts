@@ -114,21 +114,24 @@ export const baseStyles = StyleSheet.create({
   },
   scoreCard: {
     flex: 1,
+    flexDirection: 'column',
     backgroundColor: colors.secondary,
     padding: spacing.md,
     borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   scoreValue: {
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   scoreLabel: {
     fontSize: 9,
     color: colors.textLight,
     textTransform: 'uppercase',
+    marginTop: spacing.xs,
   },
 
   // Stats row
