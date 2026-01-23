@@ -16,6 +16,8 @@ export class HubSpotClient {
   private credentials: HubSpotCredentials
   private connectionId: string | null
   private oauthProvider: OAuthProvider | null
+  // Cache marketing metrics since they don't change between period fetches
+  private marketingMetricsCache: HubSpotMarketingMetrics | null = null
 
   constructor(credentials: HubSpotCredentials, connectionId?: string) {
     this.credentials = credentials
@@ -80,11 +82,13 @@ export class HubSpotClient {
     }
   }
 
-  private async fetch<T>(endpoint: string): Promise<T> {
+  private async fetch<T>(endpoint: string, silent = false): Promise<T> {
     await this.ensureFreshToken()
 
     const url = `${HUBSPOT_API_BASE}${endpoint}`
-    console.log('[HubSpot Client] API request:', { url })
+    if (!silent && process.env.NODE_ENV === 'development') {
+      console.log('[HubSpot Client] API request:', { url })
+    }
 
     const response = await fetch(url, {
       headers: {
@@ -245,7 +249,9 @@ export class HubSpotClient {
         dealsLost,
       }
 
-      console.log('[HubSpot Client] CRM metrics:', metrics)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[HubSpot Client] CRM metrics:', metrics)
+      }
       return metrics
     } catch (error) {
       console.error('[HubSpot Client] CRM metrics error:', error)
@@ -254,6 +260,11 @@ export class HubSpotClient {
   }
 
   async getMarketingMetrics(): Promise<HubSpotMarketingMetrics> {
+    // Return cached result if available (marketing metrics don't change between period fetches)
+    if (this.marketingMetricsCache) {
+      return this.marketingMetricsCache
+    }
+
     const emptyMetrics: HubSpotMarketingMetrics = {
       emailsSent: 0,
       emailsOpened: 0,
@@ -292,22 +303,30 @@ export class HubSpotClient {
         console.log('[HubSpot Client] Marketing emails not available:', emailError)
       }
 
-      // Get form submissions count (parallelized for performance)
+      // Get form submissions count - batched to avoid rate limits
       let formSubmissions = 0
       try {
         const formsResponse = await this.fetch<Array<{ guid: string }>>('/forms/v2/forms')
         const forms = formsResponse || []
 
         if (forms.length > 0) {
-          // Fetch all form submissions in parallel
-          const submissionPromises = forms.map((form) =>
-            this.fetch<{ totalCount: number }>(
-              `/form-integrations/v1/submissions/forms/${form.guid}?limit=1`
-            ).catch(() => ({ totalCount: 0 }))
-          )
+          // Process forms in batches of 5 to avoid rate limits
+          const BATCH_SIZE = 5
+          const batches: Array<{ guid: string }>[] = []
+          for (let i = 0; i < forms.length; i += BATCH_SIZE) {
+            batches.push(forms.slice(i, i + BATCH_SIZE))
+          }
 
-          const results = await Promise.all(submissionPromises)
-          formSubmissions = results.reduce((sum, r) => sum + (r.totalCount || 0), 0)
+          for (const batch of batches) {
+            const submissionPromises = batch.map((form) =>
+              this.fetch<{ totalCount: number }>(
+                `/form-integrations/v1/submissions/forms/${form.guid}?limit=1`,
+                true // silent - don't log each form request
+              ).catch(() => ({ totalCount: 0 }))
+            )
+            const results = await Promise.all(submissionPromises)
+            formSubmissions += results.reduce((sum, r) => sum + (r.totalCount || 0), 0)
+          }
         }
       } catch (formsError) {
         console.log('[HubSpot Client] Forms not available:', formsError)
@@ -325,7 +344,12 @@ export class HubSpotClient {
         formSubmissions,
       }
 
-      console.log('[HubSpot Client] Marketing metrics:', metrics)
+      // Cache the result
+      this.marketingMetricsCache = metrics
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[HubSpot Client] Marketing metrics:', metrics)
+      }
       return metrics
     } catch (error) {
       console.error('[HubSpot Client] Marketing metrics error:', error)
