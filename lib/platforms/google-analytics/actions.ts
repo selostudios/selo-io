@@ -262,7 +262,6 @@ export async function getGoogleAnalyticsMetrics(period: Period) {
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
     const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
-    const today = new Date().toISOString().split('T')[0]
 
     await supabase
       .from('campaign_metrics')
@@ -274,12 +273,10 @@ export async function getGoogleAnalyticsMetrics(period: Period) {
       .update({ last_sync_at: new Date().toISOString() })
       .eq('id', connection.id)
 
-    // 5. Return fresh data
-    const timeSeries = GA_METRICS.map((def) => ({
-      metricType: def.metricType,
-      label: def.label,
-      data: [{ date: today, value: records.find((r) => r.metric_type === def.metricType)?.value ?? 0 }],
-    }))
+    // 5. Return fresh data with historical time series from DB
+    // Re-query DB for historical time series (now includes fresh data)
+    const updatedCache = await getMetricsFromDb(supabase, userRecord.organization_id, 'google_analytics', period)
+    const timeSeries = buildTimeSeriesArray(updatedCache.metrics, GA_METRICS, period)
 
     return {
       metrics: {
