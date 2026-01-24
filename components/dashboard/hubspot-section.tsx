@@ -155,7 +155,7 @@ function ConnectionMetrics({ connection, period, showAccountHeader }: Connection
         label="Deals Won"
         value={metrics.crm.dealsWon}
         change={metrics.crm.dealsWonChange}
-        tooltip="Deals marked as won/closed. These are opportunities that converted to customers."
+        tooltip="Deals closed as won during this period. Opportunities that converted to customers."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Won')}
         color={HUBSPOT_COLOR}
@@ -164,7 +164,7 @@ function ConnectionMetrics({ connection, period, showAccountHeader }: Connection
         label="Deals Lost"
         value={metrics.crm.dealsLost}
         change={metrics.crm.dealsLostChange}
-        tooltip="Deals marked as lost/closed. These are opportunities that didn't convert."
+        tooltip="Deals closed as lost during this period. Opportunities that didn't convert."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Lost')}
         color={HUBSPOT_COLOR}
@@ -402,7 +402,7 @@ function SingleConnectionMetrics({
         label="Deals Won"
         value={metrics.crm.dealsWon}
         change={metrics.crm.dealsWonChange}
-        tooltip="Deals marked as won/closed. These are opportunities that converted to customers."
+        tooltip="Deals closed as won during this period. Opportunities that converted to customers."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Won')}
         color={HUBSPOT_COLOR}
@@ -411,7 +411,7 @@ function SingleConnectionMetrics({
         label="Deals Lost"
         value={metrics.crm.dealsLost}
         change={metrics.crm.dealsLostChange}
-        tooltip="Deals marked as lost/closed. These are opportunities that didn't convert."
+        tooltip="Deals closed as lost during this period. Opportunities that didn't convert."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Lost')}
         color={HUBSPOT_COLOR}

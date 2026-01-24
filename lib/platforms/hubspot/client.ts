@@ -266,20 +266,77 @@ export class HubSpotClient {
         }
       )
 
-      let totalPipelineValue = 0
-      let dealsWon = 0
-      let dealsLost = 0
+      // Get deals WON in the selected period (closed with won stage)
+      const dealsWonResponse = await this.postSearch<{ total: number }>(
+        '/crm/v3/objects/deals/search',
+        {
+          filterGroups: [
+            {
+              filters: [
+                {
+                  propertyName: 'closedate',
+                  operator: 'GTE',
+                  value: startDateMs.toString(),
+                },
+                ...(endDateMs
+                  ? [
+                      {
+                        propertyName: 'closedate',
+                        operator: 'LTE' as const,
+                        value: endDateMs.toString(),
+                      },
+                    ]
+                  : []),
+                {
+                  propertyName: 'dealstage',
+                  operator: 'EQ',
+                  value: 'closedwon',
+                },
+              ],
+            },
+          ],
+          limit: 1,
+        }
+      )
 
+      // Get deals LOST in the selected period (closed with lost stage)
+      const dealsLostResponse = await this.postSearch<{ total: number }>(
+        '/crm/v3/objects/deals/search',
+        {
+          filterGroups: [
+            {
+              filters: [
+                {
+                  propertyName: 'closedate',
+                  operator: 'GTE',
+                  value: startDateMs.toString(),
+                },
+                ...(endDateMs
+                  ? [
+                      {
+                        propertyName: 'closedate',
+                        operator: 'LTE' as const,
+                        value: endDateMs.toString(),
+                      },
+                    ]
+                  : []),
+                {
+                  propertyName: 'dealstage',
+                  operator: 'EQ',
+                  value: 'closedlost',
+                },
+              ],
+            },
+          ],
+          limit: 1,
+        }
+      )
+
+      // Calculate total pipeline value from all deals
+      let totalPipelineValue = 0
       for (const deal of dealsResponse.results || []) {
         const amount = parseFloat(deal.properties.amount || '0') || 0
         totalPipelineValue += amount
-
-        const stage = deal.properties.dealstage?.toLowerCase() || ''
-        if (stage.includes('won') || stage === 'closedwon') {
-          dealsWon++
-        } else if (stage.includes('lost') || stage === 'closedlost') {
-          dealsLost++
-        }
       }
 
       const metrics: HubSpotCRMMetrics = {
@@ -287,8 +344,8 @@ export class HubSpotClient {
         totalDeals: dealsResponse.total || 0,
         newDeals: newDealsResponse.total || 0,
         totalPipelineValue,
-        dealsWon,
-        dealsLost,
+        dealsWon: dealsWonResponse.total || 0,
+        dealsLost: dealsLostResponse.total || 0,
       }
 
       if (process.env.NODE_ENV === 'development') {
