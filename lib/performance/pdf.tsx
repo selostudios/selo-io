@@ -133,45 +133,47 @@ const perfStyles = StyleSheet.create({
     color: colors.textLight,
     lineHeight: 1.4,
   },
-  // Opportunity/Diagnostic cards
-  opportunityCard: {
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: '#fef9c3',
-    borderRadius: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f59e0b',
+  // Opportunity/Diagnostic rows (table-like)
+  itemRow: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  diagnosticCard: {
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: '#6b7280',
+  itemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+    gap: 8,
   },
-  opportunityTitle: {
+  itemTitle: {
     fontSize: 10,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 3,
   },
-  opportunityDescription: {
+  itemDescription: {
     fontSize: 8,
-    color: colors.text,
-    lineHeight: 1.4,
-    marginBottom: 3,
+    color: colors.textLight,
+    lineHeight: 1.3,
   },
-  opportunitySavings: {
-    fontSize: 8,
+  savingsPill: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  savingsPillText: {
+    fontSize: 7,
     fontWeight: 'bold',
-    color: '#a16207',
+    color: '#92400e',
+  },
+  diagnosticValue: {
+    fontSize: 8,
+    color: colors.textLight,
   },
   noDataText: {
     fontSize: 9,
     color: colors.textLight,
-    fontStyle: 'italic',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   // Executive summary
   summaryScore: {
@@ -367,38 +369,42 @@ function UnderstandingScores() {
   )
 }
 
-function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
+function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
   // Clean up description - remove markdown links and truncate
   const cleanDescription = opportunity.description
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .substring(0, 200)
+    .substring(0, 150)
 
   return (
-    <View style={perfStyles.opportunityCard}>
-      <Text style={perfStyles.opportunityTitle}>{opportunity.title}</Text>
-      <Text style={perfStyles.opportunityDescription}>{cleanDescription}</Text>
-      {opportunity.displayValue && (
-        <Text style={perfStyles.opportunitySavings}>Potential savings: {opportunity.displayValue}</Text>
-      )}
+    <View style={perfStyles.itemRow}>
+      <View style={perfStyles.itemHeader}>
+        <Text style={perfStyles.itemTitle}>{opportunity.title}</Text>
+        {opportunity.displayValue && (
+          <View style={perfStyles.savingsPill}>
+            <Text style={perfStyles.savingsPillText}>{opportunity.displayValue}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={perfStyles.itemDescription}>{cleanDescription}</Text>
     </View>
   )
 }
 
-function DiagnosticCard({ diagnostic }: { diagnostic: Diagnostic }) {
+function DiagnosticRow({ diagnostic }: { diagnostic: Diagnostic }) {
   // Clean up description - remove markdown links and truncate
   const cleanDescription = diagnostic.description
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .substring(0, 200)
+    .substring(0, 150)
 
   return (
-    <View style={perfStyles.diagnosticCard}>
-      <Text style={perfStyles.opportunityTitle}>{diagnostic.title}</Text>
-      <Text style={perfStyles.opportunityDescription}>{cleanDescription}</Text>
-      {diagnostic.displayValue && (
-        <Text style={[perfStyles.opportunitySavings, { color: colors.textLight }]}>
-          {diagnostic.displayValue}
-        </Text>
-      )}
+    <View style={perfStyles.itemRow}>
+      <View style={perfStyles.itemHeader}>
+        <Text style={perfStyles.itemTitle}>{diagnostic.title}</Text>
+        {diagnostic.displayValue && (
+          <Text style={perfStyles.diagnosticValue}>{diagnostic.displayValue}</Text>
+        )}
+      </View>
+      <Text style={perfStyles.itemDescription}>{cleanDescription}</Text>
     </View>
   )
 }
@@ -519,7 +525,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
                   Sorted by potential performance impact
                 </Text>
                 {opportunities.slice(0, 6).map((opp) => (
-                  <OpportunityCard key={opp.id} opportunity={opp} />
+                  <OpportunityRow key={opp.id} opportunity={opp} />
                 ))}
               </View>
             )}
@@ -528,7 +534,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
               <View>
                 <Text style={baseStyles.sectionSubtitle}>Diagnostics</Text>
                 {diagnostics.slice(0, 4).map((diag) => (
-                  <DiagnosticCard key={diag.id} diagnostic={diag} />
+                  <DiagnosticRow key={diag.id} diagnostic={diag} />
                 ))}
               </View>
             )}
