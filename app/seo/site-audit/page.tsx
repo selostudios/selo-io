@@ -18,12 +18,12 @@ export default async function SiteAuditPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div className="flex items-center gap-3">
-        <FileSearch className="h-8 w-8 text-neutral-700" />
+      <div className="flex items-start gap-3">
+        <FileSearch className="h-8 w-8 text-neutral-700 mt-1" />
         <div>
           <h1 className="text-3xl font-bold">Site Audit</h1>
           <p className="text-muted-foreground">
-            Analyze your website for SEO and technical issues
+            Crawl and analyze websites for SEO issues, missing meta tags, broken links, and technical problems
           </p>
         </div>
       </div>
