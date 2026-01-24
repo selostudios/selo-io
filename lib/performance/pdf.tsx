@@ -206,9 +206,17 @@ function formatCLS(value: number | null): string {
   return value.toFixed(3)
 }
 
-function getPathname(url: string): string {
+function formatUrlDisplay(url: string): string {
   try {
-    return new URL(url).pathname || '/'
+    const parsed = new URL(url)
+    const domain = parsed.hostname.replace(/^www\./, '')
+    const pathname = parsed.pathname
+    // If home page, just show domain
+    if (pathname === '/' || pathname === '') {
+      return domain
+    }
+    // Otherwise show domain + path
+    return `${domain}${pathname}`
   } catch {
     return url
   }
@@ -361,7 +369,7 @@ function PageResultSection({
 }) {
   return (
     <View style={baseStyles.section}>
-      <Text style={perfStyles.pageTitle}>{getPathname(url)}</Text>
+      <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
 
       {mobileResult && (
         <>
@@ -518,7 +526,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         return (
           <Page key={`issues-${url}`} size="A4" style={baseStyles.page}>
             <SectionHeader title="Developer Action Items" />
-            <Text style={perfStyles.pageTitle}>{getPathname(url)}</Text>
+            <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
 
             {opportunities.length > 0 && (
               <View style={{ marginBottom: 16 }}>

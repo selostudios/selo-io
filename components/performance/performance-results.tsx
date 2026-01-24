@@ -11,9 +11,17 @@ import type { PerformanceAuditResult, DeviceType, PageSpeedResult } from '@/lib/
 import { extractOpportunities, extractDiagnostics } from '@/lib/performance/api'
 import { Smartphone, Monitor, ExternalLink, FileText } from 'lucide-react'
 
-function getPathname(url: string): string {
+function formatUrlDisplay(url: string): string {
   try {
-    return new URL(url).pathname || '/'
+    const parsed = new URL(url)
+    const domain = parsed.hostname.replace(/^www\./, '')
+    const pathname = parsed.pathname
+    // If home page, just show domain
+    if (pathname === '/' || pathname === '') {
+      return domain
+    }
+    // Otherwise show domain + path
+    return `${domain}${pathname}`
   } catch {
     return url
   }
@@ -109,7 +117,7 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
                   className="inline-flex items-center gap-1.5 text-base font-medium hover:underline"
                 >
                   <FileText className="text-muted-foreground size-4 shrink-0" />
-                  {getPathname(url)}
+                  {formatUrlDisplay(url)}
                   <ExternalLink className="text-muted-foreground size-3.5" />
                   <span className="sr-only"> (opens in new tab)</span>
                 </a>
