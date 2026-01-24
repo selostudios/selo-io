@@ -54,6 +54,12 @@ export const baseStyles = StyleSheet.create({
     backgroundColor: colors.primary,
     color: colors.white,
   },
+  coverPageLight: {
+    padding: spacing.xl,
+    fontFamily: fonts.base,
+    backgroundColor: colors.white,
+    color: colors.primary,
+  },
 
   // Cover page elements
   coverContent: {

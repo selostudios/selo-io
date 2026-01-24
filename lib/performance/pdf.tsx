@@ -21,124 +21,172 @@ import { StyleSheet } from '@react-pdf/renderer'
 
 // Performance-specific styles extending base styles
 const perfStyles = StyleSheet.create({
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 12,
+  // Page header with domain and meta info
+  pageHeader: {
+    marginBottom: 20,
+  },
+  pageTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  pageMeta: {
+    fontSize: 9,
+    color: colors.textLight,
+  },
+  // Table styles
+  table: {
     marginBottom: 16,
   },
-  metricCard: {
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.secondary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tableHeaderCell: {
     flex: 1,
-    flexDirection: 'column',
-    padding: 12,
-    borderRadius: 6,
+    padding: 8,
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: colors.textLight,
+    textTransform: 'uppercase',
+  },
+  tableHeaderCellFirst: {
+    flex: 1.2,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tableCell: {
+    flex: 1,
+    padding: 8,
+    fontSize: 10,
+  },
+  tableCellFirst: {
+    flex: 1.2,
+    fontWeight: 'bold',
+  },
+  tableCellValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  // Core Web Vitals in table
+  cwvRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 12,
+  },
+  cwvCard: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 4,
     borderWidth: 1,
   },
-  metricCardGood: {
+  cwvCardGood: {
     backgroundColor: '#dcfce7',
     borderColor: '#86efac',
   },
-  metricCardNeedsImprovement: {
+  cwvCardNeedsImprovement: {
     backgroundColor: '#fef9c3',
     borderColor: '#fde047',
   },
-  metricCardPoor: {
+  cwvCardPoor: {
     backgroundColor: '#fee2e2',
     borderColor: '#fca5a5',
   },
-  metricCardNoData: {
-    backgroundColor: '#f5f5f5',
-    borderColor: '#e5e5e5',
-  },
-  metricName: {
-    fontSize: 10,
-    color: colors.textLight,
-    marginBottom: 8,
-  },
-  metricValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  metricTarget: {
+  cwvLabel: {
     fontSize: 8,
     color: colors.textLight,
     marginBottom: 4,
   },
-  metricRating: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  deviceLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.textLight,
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  pageTitle: {
+  cwvValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: colors.primary,
-    backgroundColor: colors.secondary,
-    padding: 10,
-    borderRadius: 4,
   },
-  bulletItem: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    paddingLeft: 10,
-  },
-  bullet: {
-    fontSize: 10,
-    marginRight: 8,
+  cwvTarget: {
+    fontSize: 7,
     color: colors.textLight,
+    marginTop: 2,
   },
-  bulletText: {
-    fontSize: 10,
-    color: colors.text,
-    flex: 1,
-    lineHeight: 1.5,
+  // Understanding scores (footer section)
+  understandingSection: {
+    position: 'absolute',
+    bottom: 60,
+    left: 40,
+    right: 40,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
+  understandingTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: colors.textLight,
+    marginBottom: 6,
+  },
+  understandingText: {
+    fontSize: 8,
+    color: colors.textLight,
+    lineHeight: 1.4,
+  },
+  // Opportunity/Diagnostic cards
   opportunityCard: {
-    marginBottom: 12,
-    padding: 12,
+    marginBottom: 10,
+    padding: 10,
     backgroundColor: '#fef9c3',
     borderRadius: 4,
     borderLeftWidth: 3,
     borderLeftColor: '#f59e0b',
   },
   diagnosticCard: {
-    marginBottom: 12,
-    padding: 12,
+    marginBottom: 10,
+    padding: 10,
     backgroundColor: '#f5f5f5',
     borderRadius: 4,
     borderLeftWidth: 3,
     borderLeftColor: '#6b7280',
   },
   opportunityTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   opportunityDescription: {
-    fontSize: 9,
+    fontSize: 8,
     color: colors.text,
     lineHeight: 1.4,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   opportunitySavings: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: '#a16207',
   },
   noDataText: {
-    fontSize: 10,
+    fontSize: 9,
     color: colors.textLight,
     fontStyle: 'italic',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  // Executive summary
+  summaryScore: {
+    alignItems: 'center',
+    marginTop: 80,
+  },
+  summaryScoreValue: {
+    fontSize: 72,
+    fontWeight: 'bold',
+  },
+  summaryScoreLabel: {
+    fontSize: 14,
+    color: colors.textLight,
+    textTransform: 'uppercase',
+    marginTop: 8,
   },
 })
 
@@ -152,29 +200,16 @@ function getPerformanceScoreColor(score: number | null): string {
   return getScoreColor(score, { good: 90, fair: 50 })
 }
 
-function getRatingStyle(rating: string | null) {
+function getCwvStyle(rating: string | null) {
   switch (rating) {
     case 'good':
-      return perfStyles.metricCardGood
+      return perfStyles.cwvCardGood
     case 'needs_improvement':
-      return perfStyles.metricCardNeedsImprovement
+      return perfStyles.cwvCardNeedsImprovement
     case 'poor':
-      return perfStyles.metricCardPoor
+      return perfStyles.cwvCardPoor
     default:
-      return perfStyles.metricCardNoData
-  }
-}
-
-function getRatingLabel(rating: string | null): string {
-  switch (rating) {
-    case 'good':
-      return 'Good'
-    case 'needs_improvement':
-      return 'Needs Improvement'
-    case 'poor':
-      return 'Poor'
-    default:
-      return 'No Data'
+      return {}
   }
 }
 
@@ -222,54 +257,112 @@ function formatUrlDisplay(url: string): string {
   }
 }
 
-function CoreWebVitalsSection({ result }: { result: PerformanceAuditResult }) {
+function ScoresTable({
+  mobileResult,
+  desktopResult,
+}: {
+  mobileResult: PerformanceAuditResult | null
+  desktopResult: PerformanceAuditResult | null
+}) {
+  return (
+    <View style={perfStyles.table}>
+      {/* Header */}
+      <View style={perfStyles.tableHeader}>
+        <Text style={[perfStyles.tableHeaderCell, perfStyles.tableHeaderCellFirst]}>Device</Text>
+        <Text style={perfStyles.tableHeaderCell}>Performance</Text>
+        <Text style={perfStyles.tableHeaderCell}>Accessibility</Text>
+        <Text style={perfStyles.tableHeaderCell}>Best Practices</Text>
+        <Text style={perfStyles.tableHeaderCell}>SEO</Text>
+      </View>
+
+      {/* Mobile Row */}
+      {mobileResult && (
+        <View style={perfStyles.tableRow}>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellFirst]}>Mobile</Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.performance_score) }]}>
+            {mobileResult.performance_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.accessibility_score) }]}>
+            {mobileResult.accessibility_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.best_practices_score) }]}>
+            {mobileResult.best_practices_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.seo_score) }]}>
+            {mobileResult.seo_score ?? '—'}
+          </Text>
+        </View>
+      )}
+
+      {/* Desktop Row */}
+      {desktopResult && (
+        <View style={perfStyles.tableRow}>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellFirst]}>Desktop</Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.performance_score) }]}>
+            {desktopResult.performance_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.accessibility_score) }]}>
+            {desktopResult.accessibility_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.best_practices_score) }]}>
+            {desktopResult.best_practices_score ?? '—'}
+          </Text>
+          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.seo_score) }]}>
+            {desktopResult.seo_score ?? '—'}
+          </Text>
+        </View>
+      )}
+    </View>
+  )
+}
+
+function CoreWebVitalsRow({ result }: { result: PerformanceAuditResult }) {
   const hasLcp = result.lcp_ms !== null
   const hasInp = result.inp_ms !== null
   const hasCls = result.cls_score !== null
-  const hasAnyMetric = hasLcp || hasInp || hasCls
 
-  if (!hasAnyMetric) {
-    return null
-  }
+  if (!hasLcp && !hasInp && !hasCls) return null
 
   return (
-    <View style={perfStyles.metricsRow}>
+    <View style={perfStyles.cwvRow}>
       {hasLcp && (
-        <View style={[perfStyles.metricCard, getRatingStyle(result.lcp_rating)]}>
-          <Text style={perfStyles.metricName}>LCP (Largest Contentful Paint)</Text>
-          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.lcp_rating) }]}>
+        <View style={[perfStyles.cwvCard, getCwvStyle(result.lcp_rating)]}>
+          <Text style={perfStyles.cwvLabel}>LCP</Text>
+          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.lcp_rating) }]}>
             {formatLCP(result.lcp_ms)}
           </Text>
-          <Text style={perfStyles.metricTarget}>Target: {'<'} 2.5s</Text>
-          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.lcp_rating) }]}>
-            {getRatingLabel(result.lcp_rating)}
-          </Text>
+          <Text style={perfStyles.cwvTarget}>Target: {'<'} 2.5s</Text>
         </View>
       )}
       {hasInp && (
-        <View style={[perfStyles.metricCard, getRatingStyle(result.inp_rating)]}>
-          <Text style={perfStyles.metricName}>INP (Interaction to Next Paint)</Text>
-          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.inp_rating) }]}>
+        <View style={[perfStyles.cwvCard, getCwvStyle(result.inp_rating)]}>
+          <Text style={perfStyles.cwvLabel}>INP</Text>
+          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.inp_rating) }]}>
             {formatINP(result.inp_ms)}
           </Text>
-          <Text style={perfStyles.metricTarget}>Target: {'<'} 200ms</Text>
-          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.inp_rating) }]}>
-            {getRatingLabel(result.inp_rating)}
-          </Text>
+          <Text style={perfStyles.cwvTarget}>Target: {'<'} 200ms</Text>
         </View>
       )}
       {hasCls && (
-        <View style={[perfStyles.metricCard, getRatingStyle(result.cls_rating)]}>
-          <Text style={perfStyles.metricName}>CLS (Cumulative Layout Shift)</Text>
-          <Text style={[perfStyles.metricValue, { color: getRatingColor(result.cls_rating) }]}>
+        <View style={[perfStyles.cwvCard, getCwvStyle(result.cls_rating)]}>
+          <Text style={perfStyles.cwvLabel}>CLS</Text>
+          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.cls_rating) }]}>
             {formatCLS(result.cls_score)}
           </Text>
-          <Text style={perfStyles.metricTarget}>Target: {'<'} 0.1</Text>
-          <Text style={[perfStyles.metricRating, { color: getRatingColor(result.cls_rating) }]}>
-            {getRatingLabel(result.cls_rating)}
-          </Text>
+          <Text style={perfStyles.cwvTarget}>Target: {'<'} 0.1</Text>
         </View>
       )}
+    </View>
+  )
+}
+
+function UnderstandingScores() {
+  return (
+    <View style={perfStyles.understandingSection}>
+      <Text style={perfStyles.understandingTitle}>Understanding Your Scores</Text>
+      <Text style={perfStyles.understandingText}>
+        Performance (0-100): How fast your page loads. Aim for 90+. • LCP: Time until main content visible ({'<'}2.5s). • INP: Response time to interactions ({'<'}200ms). • CLS: Visual stability ({'<'}0.1).
+      </Text>
     </View>
   )
 }
@@ -310,85 +403,6 @@ function DiagnosticCard({ diagnostic }: { diagnostic: Diagnostic }) {
   )
 }
 
-function LighthouseScoresSection({ result }: { result: PerformanceAuditResult }) {
-  return (
-    <View style={baseStyles.scoreCardsRow}>
-      <View style={baseStyles.scoreCard}>
-        <Text
-          style={[
-            baseStyles.scoreValue,
-            { color: getPerformanceScoreColor(result.performance_score) },
-          ]}
-        >
-          {result.performance_score ?? '—'}
-        </Text>
-        <Text style={baseStyles.scoreLabel}>Performance</Text>
-      </View>
-      <View style={baseStyles.scoreCard}>
-        <Text
-          style={[
-            baseStyles.scoreValue,
-            { color: getPerformanceScoreColor(result.accessibility_score) },
-          ]}
-        >
-          {result.accessibility_score ?? '—'}
-        </Text>
-        <Text style={baseStyles.scoreLabel}>Accessibility</Text>
-      </View>
-      <View style={baseStyles.scoreCard}>
-        <Text
-          style={[
-            baseStyles.scoreValue,
-            { color: getPerformanceScoreColor(result.best_practices_score) },
-          ]}
-        >
-          {result.best_practices_score ?? '—'}
-        </Text>
-        <Text style={baseStyles.scoreLabel}>Best Practices</Text>
-      </View>
-      <View style={baseStyles.scoreCard}>
-        <Text
-          style={[baseStyles.scoreValue, { color: getPerformanceScoreColor(result.seo_score) }]}
-        >
-          {result.seo_score ?? '—'}
-        </Text>
-        <Text style={baseStyles.scoreLabel}>SEO</Text>
-      </View>
-    </View>
-  )
-}
-
-function PageResultSection({
-  url,
-  mobileResult,
-  desktopResult,
-}: {
-  url: string
-  mobileResult: PerformanceAuditResult | null
-  desktopResult: PerformanceAuditResult | null
-}) {
-  return (
-    <View style={baseStyles.section}>
-      <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
-
-      {mobileResult && (
-        <>
-          <Text style={perfStyles.deviceLabel}>Mobile</Text>
-          <LighthouseScoresSection result={mobileResult} />
-          <CoreWebVitalsSection result={mobileResult} />
-        </>
-      )}
-
-      {desktopResult && (
-        <>
-          <Text style={perfStyles.deviceLabel}>Desktop</Text>
-          <LighthouseScoresSection result={desktopResult} />
-          <CoreWebVitalsSection result={desktopResult} />
-        </>
-      )}
-    </View>
-  )
-}
 
 export function PerformancePDF({ audit, results }: PerformancePDFProps) {
   const logoUri = getLogoDataUri()
@@ -427,93 +441,60 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
   return (
     <Document>
-      {/* Page 1: Cover Page */}
+      {/* Page 1: Cover Page - White, clean */}
       <CoverPage
         logoUri={logoUri}
         title="Performance Audit Report"
-        subtitle={`${urls.length} pages analyzed`}
         date={reportDate}
-        score={avgPerformance}
+        variant="light"
       />
 
-      {/* Page 2: Summary Page */}
+      {/* Page 2: Executive Summary - Just the score */}
       <Page size="A4" style={baseStyles.page}>
         <SectionHeader title="Executive Summary" />
 
-        <View style={baseStyles.scoreCardsRow}>
-          <View style={baseStyles.scoreCard}>
-            <Text
-              style={[baseStyles.scoreValue, { color: getPerformanceScoreColor(avgPerformance) }]}
-            >
-              {avgPerformance ?? '—'}
-            </Text>
-            <Text style={baseStyles.scoreLabel}>Avg Performance</Text>
-          </View>
-          <View style={baseStyles.scoreCard}>
-            <Text style={baseStyles.scoreValue}>{urls.length}</Text>
-            <Text style={baseStyles.scoreLabel}>Pages Tested</Text>
-          </View>
-          <View style={baseStyles.scoreCard}>
-            <Text style={baseStyles.scoreValue}>{results.length}</Text>
-            <Text style={baseStyles.scoreLabel}>Total Tests</Text>
-          </View>
-        </View>
-
-        <View style={{ marginTop: 16 }}>
-          <Text style={baseStyles.sectionSubtitle}>Understanding Your Scores</Text>
-
-          <View style={perfStyles.bulletItem}>
-            <Text style={perfStyles.bullet}>•</Text>
-            <Text style={perfStyles.bulletText}>
-              <Text style={{ fontWeight: 'bold' }}>Performance (0-100):</Text> Measures how fast
-              your page loads and becomes interactive. Aim for 90+.
-            </Text>
-          </View>
-
-          <View style={perfStyles.bulletItem}>
-            <Text style={perfStyles.bullet}>•</Text>
-            <Text style={perfStyles.bulletText}>
-              <Text style={{ fontWeight: 'bold' }}>LCP (Largest Contentful Paint):</Text> Time until
-              the main content is visible. Should be under 2.5 seconds.
-            </Text>
-          </View>
-
-          <View style={perfStyles.bulletItem}>
-            <Text style={perfStyles.bullet}>•</Text>
-            <Text style={perfStyles.bulletText}>
-              <Text style={{ fontWeight: 'bold' }}>INP (Interaction to Next Paint):</Text> How
-              quickly the page responds to user interactions. Should be under 200ms.
-            </Text>
-          </View>
-
-          <View style={perfStyles.bulletItem}>
-            <Text style={perfStyles.bullet}>•</Text>
-            <Text style={perfStyles.bulletText}>
-              <Text style={{ fontWeight: 'bold' }}>CLS (Cumulative Layout Shift):</Text> Visual
-              stability - how much content shifts unexpectedly. Should be under 0.1.
-            </Text>
-          </View>
+        <View style={perfStyles.summaryScore}>
+          <Text style={[perfStyles.summaryScoreValue, { color: getPerformanceScoreColor(avgPerformance) }]}>
+            {avgPerformance ?? '—'}
+          </Text>
+          <Text style={perfStyles.summaryScoreLabel}>Average Performance Score</Text>
         </View>
 
         <PageFooter text="Performance Audit Report" pageNumber={2} />
       </Page>
 
-      {/* Results Pages */}
-      {urls.map((url, index) => (
-        <Page key={url} size="A4" style={baseStyles.page}>
-          <SectionHeader title="Page Results" />
+      {/* Page Results - One page per URL with table layout */}
+      {urls.map((url, index) => {
+        const mobileResult = resultsByUrl[url].mobile
+        const desktopResult = resultsByUrl[url].desktop
 
-          <PageResultSection
-            url={url}
-            mobileResult={resultsByUrl[url].mobile}
-            desktopResult={resultsByUrl[url].desktop}
-          />
+        return (
+          <Page key={url} size="A4" style={baseStyles.page}>
+            <SectionHeader title="Page Results" />
 
-          <PageFooter text="Performance Audit Report" pageNumber={index + 3} />
-        </Page>
-      ))}
+            {/* Page Header with domain and meta info */}
+            <View style={perfStyles.pageHeader}>
+              <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
+              <Text style={perfStyles.pageMeta}>
+                {urls.length} page{urls.length !== 1 ? 's' : ''} tested · {results.length} total tests
+              </Text>
+            </View>
 
-      {/* Opportunities & Diagnostics Pages - one per URL with issues */}
+            {/* Scores Table */}
+            <ScoresTable mobileResult={mobileResult} desktopResult={desktopResult} />
+
+            {/* Core Web Vitals - show mobile metrics if available */}
+            {mobileResult && <CoreWebVitalsRow result={mobileResult} />}
+
+            {/* Understanding Scores - smaller at bottom */}
+            <UnderstandingScores />
+
+            <PageFooter text="Performance Audit Report" pageNumber={index + 3} />
+          </Page>
+        )
+      })}
+
+      {/* Opportunities & Diagnostics Pages */}
       {urls.map((url, index) => {
         const mobileResult = resultsByUrl[url].mobile
         if (!mobileResult?.raw_response) return null
@@ -526,15 +507,18 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         return (
           <Page key={`issues-${url}`} size="A4" style={baseStyles.page}>
             <SectionHeader title="Developer Action Items" />
-            <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
+
+            <View style={perfStyles.pageHeader}>
+              <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
+            </View>
 
             {opportunities.length > 0 && (
-              <View style={{ marginBottom: 16 }}>
+              <View style={{ marginBottom: 12 }}>
                 <Text style={baseStyles.sectionSubtitle}>Optimization Opportunities</Text>
                 <Text style={perfStyles.noDataText}>
-                  Issues sorted by potential performance impact
+                  Sorted by potential performance impact
                 </Text>
-                {opportunities.slice(0, 5).map((opp) => (
+                {opportunities.slice(0, 6).map((opp) => (
                   <OpportunityCard key={opp.id} opportunity={opp} />
                 ))}
               </View>
@@ -543,9 +527,6 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             {diagnostics.length > 0 && (
               <View>
                 <Text style={baseStyles.sectionSubtitle}>Diagnostics</Text>
-                <Text style={perfStyles.noDataText}>
-                  Additional metrics and insights for debugging
-                </Text>
                 {diagnostics.slice(0, 4).map((diag) => (
                   <DiagnosticCard key={diag.id} diagnostic={diag} />
                 ))}
