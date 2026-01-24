@@ -103,10 +103,10 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: C
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
                       isActive
-                        ? 'bg-neutral-900 text-white'
-                        : 'text-neutral-600 hover:bg-neutral-100'
+                        ? 'font-semibold text-neutral-900'
+                        : 'font-medium text-neutral-600 hover:bg-neutral-100'
                     )}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
