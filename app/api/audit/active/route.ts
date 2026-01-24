@@ -30,7 +30,7 @@ export async function GET() {
   // Check for any active site audits (pending, crawling, or checking)
   const { data: activeAudit } = await supabase
     .from('site_audits')
-    .select('id, status, updated_at')
+    .select('id, status, updated_at, created_at')
     .eq('organization_id', userRecord.organization_id)
     .in('status', ['pending', 'crawling', 'checking'])
     .order('created_at', { ascending: false })
@@ -39,9 +39,11 @@ export async function GET() {
 
   if (activeAudit) {
     // Check if audit is stale (stuck for too long)
-    const updatedAt = new Date(activeAudit.updated_at).getTime()
+    // Use updated_at if available, otherwise fall back to created_at
+    const timestamp = activeAudit.updated_at || activeAudit.created_at
+    const updatedAt = new Date(timestamp).getTime()
     const now = Date.now()
-    const isStale = now - updatedAt > STALE_AUDIT_THRESHOLD_MS
+    const isStale = !isNaN(updatedAt) && (now - updatedAt > STALE_AUDIT_THRESHOLD_MS)
 
     if (isStale && (activeAudit.status === 'crawling' || activeAudit.status === 'checking')) {
       // Mark stale audit as failed using service client (bypasses RLS)
