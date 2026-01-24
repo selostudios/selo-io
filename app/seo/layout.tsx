@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { NavigationShell } from '@/components/navigation/navigation-shell'
-import { Header } from '@/components/dashboard/header'
+import { HeaderMinimal } from '@/components/dashboard/header-minimal'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
@@ -33,7 +33,7 @@ export default async function SeoLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen bg-neutral-50">
         <NavigationShell />
         <div className="flex flex-1 flex-col">
-          <Header />
+          <HeaderMinimal />
           <main className="flex-1">
             <div className="space-y-6 p-8">{children}</div>
           </main>
