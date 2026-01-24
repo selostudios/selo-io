@@ -202,13 +202,55 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const pagesCrawled = progress?.pages_crawled ?? 0
   const status = progress?.status ?? initialStatus
 
+  // Phase indicator helper
+  const phases = [
+    { key: 'pending', label: 'Starting' },
+    { key: 'crawling', label: 'Crawling' },
+    { key: 'checking', label: 'Analyzing' },
+  ]
+  const currentPhaseIndex = phases.findIndex((p) => p.key === status)
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <div className="mb-4 flex justify-center">
-            <Loader2 className="text-primary size-12 animate-spin" />
+          {/* Phase indicator */}
+          <div className="mb-6 flex items-center justify-center gap-2">
+            {phases.map((phase, index) => (
+              <div key={phase.key} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium ${
+                      index < currentPhaseIndex
+                        ? 'bg-green-100 text-green-700'
+                        : index === currentPhaseIndex
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {index < currentPhaseIndex ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : index === currentPhaseIndex ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      index + 1
+                    )}
+                  </div>
+                  <span className={`mt-1 text-xs ${index === currentPhaseIndex ? 'font-medium' : 'text-muted-foreground'}`}>
+                    {phase.label}
+                  </span>
+                </div>
+                {index < phases.length - 1 && (
+                  <div
+                    className={`mx-2 h-0.5 w-8 ${
+                      index < currentPhaseIndex ? 'bg-green-200' : 'bg-muted'
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
           </div>
+
           <CardTitle className="text-xl text-balance">
             {status === 'pending'
               ? 'Starting Audit...'
