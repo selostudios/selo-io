@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { LayoutDashboard, Search } from 'lucide-react'
+import Image from 'next/image'
+import { House, LineChart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -13,8 +14,8 @@ interface ParentSidebarProps {
 }
 
 const sections: Array<{ id: ParentSection; name: string; icon: React.ComponentType<{ className?: string }>; href: string }> = [
-  { id: 'home', name: 'Home', icon: LayoutDashboard, href: '/dashboard' },
-  { id: 'seo', name: 'SEO', icon: Search, href: '/seo/site-audit' },
+  { id: 'home', name: 'Home', icon: House, href: '/dashboard' },
+  { id: 'seo', name: 'SEO', icon: LineChart, href: '/seo/site-audit' },
 ]
 
 export function ParentSidebar({ activeSection, onSectionChange }: ParentSidebarProps) {
@@ -23,9 +24,14 @@ export function ParentSidebar({ activeSection, onSectionChange }: ParentSidebarP
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b">
         <Link href="/dashboard">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-900 text-white font-bold text-lg">
-            S
-          </div>
+          <Image
+            src="/selo-logo.jpg.webp"
+            alt="Selo"
+            width={40}
+            height={40}
+            priority
+            className="object-contain"
+          />
         </Link>
       </div>
 

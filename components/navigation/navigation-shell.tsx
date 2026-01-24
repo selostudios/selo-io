@@ -75,22 +75,24 @@ export function NavigationShell() {
       />
       {/* Expand button when child sidebar is collapsed */}
       {collapsed && (
-        <div className="flex h-screen w-12 flex-col items-center border-r bg-white py-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleToggleCollapse}
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
-                  'text-neutral-600 hover:bg-neutral-100'
-                )}
-                aria-label="Expand sidebar"
-              >
-                <PanelLeft className="h-5 w-5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Expand</TooltipContent>
-          </Tooltip>
+        <div className="flex h-screen w-12 flex-col items-center border-r bg-white">
+          <div className="flex h-16 items-center justify-center border-b w-full">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleToggleCollapse}
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md transition-colors',
+                    'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
+                  )}
+                  aria-label="Expand sidebar"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       )}
     </div>

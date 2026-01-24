@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Megaphone, Settings, FileSearch, Gauge, PanelLeftClose } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -64,28 +63,20 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: C
 
   return (
     <div className="flex h-screen w-60 flex-col border-r bg-white">
-      {/* Header with logo and section title */}
-      <div className="flex h-16 items-center gap-3 border-b px-4">
-        <Link href="/dashboard">
-          <Image
-            src="/selo-logo.jpg.webp"
-            alt="Selo Studios"
-            width={94}
-            height={38}
-            priority
-            className="cursor-pointer object-contain"
-            style={{ marginLeft: -10 }}
-          />
-        </Link>
-      </div>
-
-      {/* Section title */}
-      <div className="px-4 py-3">
+      {/* Header with section title and collapse button */}
+      <div className="flex h-16 items-center justify-between border-b px-4">
         <h2 className="text-sm font-semibold text-neutral-900">{sectionTitles[activeSection]}</h2>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+          aria-label="Collapse sidebar"
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-4 px-3">
+      <nav className="flex-1 space-y-4 px-3 pt-3">
         {navigation.map((group, groupIndex) => (
           <div key={groupIndex}>
             {group.header && (
@@ -127,18 +118,6 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: C
           </div>
         ))}
       </nav>
-
-      {/* Collapse button */}
-      <div className="border-t p-4">
-        <button
-          onClick={onToggleCollapse}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
-          aria-label="Collapse sidebar"
-        >
-          <PanelLeftClose className="h-5 w-5" />
-          <span>Collapse</span>
-        </button>
-      </div>
     </div>
   )
 }
