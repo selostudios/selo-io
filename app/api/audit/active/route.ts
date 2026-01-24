@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
-// Audits stuck in crawling/checking for more than 10 minutes are considered stale
-// (Vercel function timeout is 5 minutes, so 10 minutes gives ample buffer)
-const STALE_AUDIT_THRESHOLD_MS = 10 * 60 * 1000
+// Audits stuck in crawling/checking for more than 6 minutes are considered stale
+// (Vercel function timeout is 5 minutes on Pro, so 6 minutes catches timeouts quickly)
+const STALE_AUDIT_THRESHOLD_MS = 6 * 60 * 1000
 
 export async function GET() {
   const supabase = await createClient()
