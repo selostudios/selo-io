@@ -28,6 +28,7 @@ import { noRecentUpdates } from './ai/no-recent-updates'
 import { missingMarkdown } from './ai/missing-markdown'
 // Technical checks
 import { missingSsl } from './technical/missing-ssl'
+import { invalidSslCertificate } from './technical/invalid-ssl-certificate'
 import { missingViewport } from './technical/missing-viewport'
 import { missingOgTags } from './technical/missing-og-tags'
 import { missingFavicon } from './technical/missing-favicon'
@@ -67,6 +68,7 @@ export const allChecks: AuditCheckDefinition[] = [
   missingMarkdown,
   // Technical - Critical
   missingSsl,
+  invalidSslCertificate,
   // Technical - Recommended
   missingViewport,
   mixedContent,
