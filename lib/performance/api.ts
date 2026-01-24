@@ -169,6 +169,28 @@ const DIAGNOSTIC_IDS = [
   'long-tasks',
 ]
 
+/**
+ * Extract additional performance metrics from Lighthouse audits
+ * These are lab-based metrics (not field data)
+ */
+export function extractAdditionalMetrics(result: PageSpeedResult) {
+  const audits = result.lighthouseResult.audits
+
+  const fcpAudit = audits['first-contentful-paint'] as { numericValue?: number } | undefined
+  const speedIndexAudit = audits['speed-index'] as { numericValue?: number } | undefined
+  const ttiAudit = audits['interactive'] as { numericValue?: number } | undefined
+  const tbtAudit = audits['total-blocking-time'] as { numericValue?: number } | undefined
+  const totalByteWeightAudit = audits['total-byte-weight'] as { numericValue?: number } | undefined
+
+  return {
+    fcp_ms: fcpAudit?.numericValue ? Math.round(fcpAudit.numericValue) : null,
+    speed_index_ms: speedIndexAudit?.numericValue ? Math.round(speedIndexAudit.numericValue) : null,
+    tti_ms: ttiAudit?.numericValue ? Math.round(ttiAudit.numericValue) : null,
+    tbt_ms: tbtAudit?.numericValue ? Math.round(tbtAudit.numericValue) : null,
+    total_byte_weight: totalByteWeightAudit?.numericValue ? Math.round(totalByteWeightAudit.numericValue) : null,
+  }
+}
+
 export function extractDiagnostics(result: PageSpeedResult): Diagnostic[] {
   const audits = result.lighthouseResult.audits
 

@@ -1,414 +1,573 @@
-import { Document, Page, Text, View } from '@react-pdf/renderer'
+import { Document, Page, Text, View, Image } from '@react-pdf/renderer'
 import type {
   PerformanceAudit,
   PerformanceAuditResult,
-  Opportunity,
-  Diagnostic,
   PageSpeedResult,
 } from './types'
-import { extractOpportunities, extractDiagnostics } from './api'
+import { extractOpportunities, extractAdditionalMetrics } from './api'
 import { getLogoDataUri } from '@/lib/pdf/logo'
-import {
-  CoverPage,
-  SectionHeader,
-  PageFooter,
-  ContactBox,
-  baseStyles,
-  colors,
-  getScoreColor,
-} from '@/lib/pdf/components'
 import { StyleSheet } from '@react-pdf/renderer'
 
-// Performance-specific styles extending base styles
-const perfStyles = StyleSheet.create({
-  // Page header with domain and meta info
-  pageHeader: {
-    marginBottom: 20,
-  },
-  pageTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  pageMeta: {
-    fontSize: 9,
-    color: colors.textLight,
-  },
-  // Table styles
-  table: {
-    marginBottom: 16,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: colors.secondary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tableHeaderCell: {
-    flex: 1,
-    padding: 8,
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: colors.textLight,
-    textTransform: 'uppercase',
-  },
-  tableHeaderCellFirst: {
-    flex: 1.2,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tableCell: {
-    flex: 1,
-    padding: 8,
-    fontSize: 10,
-  },
-  tableCellFirst: {
-    flex: 1.2,
-    fontWeight: 'bold',
-  },
-  tableCellValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  // Core Web Vitals in table
-  cwvRow: {
-    flexDirection: 'row',
-    marginTop: 12,
-    gap: 12,
-  },
-  cwvCard: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 4,
-    borderWidth: 1,
-  },
-  cwvCardGood: {
-    backgroundColor: '#dcfce7',
-    borderColor: '#86efac',
-  },
-  cwvCardNeedsImprovement: {
-    backgroundColor: '#fef9c3',
-    borderColor: '#fde047',
-  },
-  cwvCardPoor: {
-    backgroundColor: '#fee2e2',
-    borderColor: '#fca5a5',
-  },
-  cwvLabel: {
-    fontSize: 8,
-    color: colors.textLight,
-    marginBottom: 4,
-  },
-  cwvValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  cwvTarget: {
-    fontSize: 7,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  // Understanding scores (footer section)
-  understandingSection: {
-    position: 'absolute',
-    bottom: 60,
-    left: 40,
-    right: 40,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  understandingTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: colors.textLight,
-    marginBottom: 6,
-  },
-  understandingText: {
-    fontSize: 8,
-    color: colors.textLight,
-    lineHeight: 1.4,
-  },
-  // Opportunity/Diagnostic rows (table-like)
-  itemRow: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-    gap: 8,
-  },
-  itemTitle: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  itemDescription: {
-    fontSize: 8,
-    color: colors.textLight,
-    lineHeight: 1.3,
-  },
-  savingsPill: {
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  savingsPillText: {
-    fontSize: 7,
-    fontWeight: 'bold',
-    color: '#92400e',
-  },
-  diagnosticValue: {
-    fontSize: 8,
-    color: colors.textLight,
-  },
-  noDataText: {
-    fontSize: 9,
-    color: colors.textLight,
-    marginBottom: 6,
-  },
-  // Executive summary
-  summaryScore: {
-    alignItems: 'center',
-    marginTop: 80,
-  },
-  summaryScoreValue: {
-    fontSize: 72,
-    fontWeight: 'bold',
-  },
-  summaryScoreLabel: {
-    fontSize: 14,
-    color: colors.textLight,
-    textTransform: 'uppercase',
-    marginTop: 8,
-  },
-})
+// ============================================================================
+// SELO STUDIOS - PERFORMANCE AUDIT REPORT
+// ============================================================================
 
-interface PerformancePDFProps {
-  audit: PerformanceAudit
-  results: PerformanceAuditResult[]
+// Brand Colors
+const colors = {
+  black: '#1a1a1a',
+  darkGray: '#333333',
+  mediumGray: '#666666',
+  lightGray: '#999999',
+  borderGray: '#e5e5e5',
+  backgroundGray: '#f8f8f8',
+  white: '#ffffff',
+  gold: '#d4a853',
+  goldLight: '#f5e6c8',
+  scoreGood: '#22c55e',
+  scoreOkay: '#d4a853',
+  scorePoor: '#ef4444',
 }
 
-// Performance uses 90/50 thresholds instead of 80/60
-function getPerformanceScoreColor(score: number | null): string {
-  return getScoreColor(score, { good: 90, fair: 50 })
+// Helper functions
+const getScoreColor = (score: number | null) => {
+  if (score === null) return colors.lightGray
+  if (score >= 90) return colors.scoreGood
+  if (score >= 50) return colors.scoreOkay
+  return colors.scorePoor
 }
 
-function getCwvStyle(rating: string | null) {
-  switch (rating) {
-    case 'good':
-      return perfStyles.cwvCardGood
-    case 'needs_improvement':
-      return perfStyles.cwvCardNeedsImprovement
-    case 'poor':
-      return perfStyles.cwvCardPoor
-    default:
-      return {}
-  }
+const getScoreLabel = (score: number | null) => {
+  if (score === null) return 'No Data'
+  if (score >= 90) return 'Excellent'
+  if (score >= 70) return 'Needs Improvement'
+  if (score >= 50) return 'Poor'
+  return 'Critical'
 }
 
-function getRatingColor(rating: string | null): string {
-  switch (rating) {
-    case 'good':
-      return '#15803d'
-    case 'needs_improvement':
-      return '#a16207'
-    case 'poor':
-      return '#dc2626'
-    default:
-      return colors.textLight
-  }
+const formatMs = (ms: number | null) => {
+  if (ms === null) return '—'
+  return `${(ms / 1000).toFixed(1)}s`
 }
 
-function formatLCP(value: number | null): string {
-  if (value === null) return '—'
-  return `${(value / 1000).toFixed(1)}s`
+const formatBytes = (bytes: number | null) => {
+  if (bytes === null) return '—'
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  return `${(bytes / 1024).toFixed(0)}KB`
 }
 
-function formatINP(value: number | null): string {
-  if (value === null) return '—'
-  return `${value}ms`
-}
-
-function formatCLS(value: number | null): string {
-  if (value === null) return '—'
-  return value.toFixed(3)
-}
-
-function formatUrlDisplay(url: string): string {
+const formatUrlDisplay = (url: string): string => {
   try {
     const parsed = new URL(url)
     const domain = parsed.hostname.replace(/^www\./, '')
     const pathname = parsed.pathname
-    // If home page, just show domain
-    if (pathname === '/' || pathname === '') {
-      return domain
-    }
-    // Otherwise show domain + path
+    if (pathname === '/' || pathname === '') return domain
     return `${domain}${pathname}`
   } catch {
     return url
   }
 }
 
-function ScoresTable({
-  mobileResult,
-  desktopResult,
-}: {
-  mobileResult: PerformanceAuditResult | null
-  desktopResult: PerformanceAuditResult | null
-}) {
-  return (
-    <View style={perfStyles.table}>
-      {/* Header */}
-      <View style={perfStyles.tableHeader}>
-        <Text style={[perfStyles.tableHeaderCell, perfStyles.tableHeaderCellFirst]}>Device</Text>
-        <Text style={perfStyles.tableHeaderCell}>Performance</Text>
-        <Text style={perfStyles.tableHeaderCell}>Accessibility</Text>
-        <Text style={perfStyles.tableHeaderCell}>Best Practices</Text>
-        <Text style={perfStyles.tableHeaderCell}>SEO</Text>
-      </View>
-
-      {/* Mobile Row */}
-      {mobileResult && (
-        <View style={perfStyles.tableRow}>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellFirst]}>Mobile</Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.performance_score) }]}>
-            {mobileResult.performance_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.accessibility_score) }]}>
-            {mobileResult.accessibility_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.best_practices_score) }]}>
-            {mobileResult.best_practices_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(mobileResult.seo_score) }]}>
-            {mobileResult.seo_score ?? '—'}
-          </Text>
-        </View>
-      )}
-
-      {/* Desktop Row */}
-      {desktopResult && (
-        <View style={perfStyles.tableRow}>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellFirst]}>Desktop</Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.performance_score) }]}>
-            {desktopResult.performance_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.accessibility_score) }]}>
-            {desktopResult.accessibility_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.best_practices_score) }]}>
-            {desktopResult.best_practices_score ?? '—'}
-          </Text>
-          <Text style={[perfStyles.tableCell, perfStyles.tableCellValue, { color: getPerformanceScoreColor(desktopResult.seo_score) }]}>
-            {desktopResult.seo_score ?? '—'}
-          </Text>
-        </View>
-      )}
-    </View>
-  )
+const getDomain = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
 }
 
-function CoreWebVitalsRow({ result }: { result: PerformanceAuditResult }) {
-  const hasLcp = result.lcp_ms !== null
-  const hasInp = result.inp_ms !== null
-  const hasCls = result.cls_score !== null
+// Styles
+const styles = StyleSheet.create({
+  // Page
+  page: {
+    backgroundColor: colors.white,
+    paddingHorizontal: 50,
+    paddingVertical: 40,
+    fontFamily: 'Helvetica',
+    fontSize: 10,
+    color: colors.darkGray,
+    lineHeight: 1.5,
+  },
 
-  if (!hasLcp && !hasInp && !hasCls) return null
+  // Cover Page
+  coverPage: {
+    backgroundColor: colors.white,
+    padding: 50,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+  },
+  logoContainer: {
+    marginBottom: 60,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+  },
+  coverTitle: {
+    fontSize: 36,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  coverClient: {
+    fontSize: 18,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.gold,
+    marginTop: 40,
+    textAlign: 'center',
+  },
+  coverDate: {
+    fontSize: 12,
+    color: colors.lightGray,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  coverFooter: {
+    position: 'absolute',
+    bottom: 50,
+    left: 50,
+    right: 50,
+    textAlign: 'center',
+  },
+  coverFooterText: {
+    fontSize: 9,
+    color: colors.lightGray,
+  },
 
-  return (
-    <View style={perfStyles.cwvRow}>
-      {hasLcp && (
-        <View style={[perfStyles.cwvCard, getCwvStyle(result.lcp_rating)]}>
-          <Text style={perfStyles.cwvLabel}>LCP</Text>
-          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.lcp_rating) }]}>
-            {formatLCP(result.lcp_ms)}
-          </Text>
-          <Text style={perfStyles.cwvTarget}>Target: {'<'} 2.5s</Text>
-        </View>
-      )}
-      {hasInp && (
-        <View style={[perfStyles.cwvCard, getCwvStyle(result.inp_rating)]}>
-          <Text style={perfStyles.cwvLabel}>INP</Text>
-          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.inp_rating) }]}>
-            {formatINP(result.inp_ms)}
-          </Text>
-          <Text style={perfStyles.cwvTarget}>Target: {'<'} 200ms</Text>
-        </View>
-      )}
-      {hasCls && (
-        <View style={[perfStyles.cwvCard, getCwvStyle(result.cls_rating)]}>
-          <Text style={perfStyles.cwvLabel}>CLS</Text>
-          <Text style={[perfStyles.cwvValue, { color: getRatingColor(result.cls_rating) }]}>
-            {formatCLS(result.cls_score)}
-          </Text>
-          <Text style={perfStyles.cwvTarget}>Target: {'<'} 0.1</Text>
-        </View>
-      )}
-    </View>
-  )
+  // Headers
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 30,
+    paddingBottom: 15,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.gold,
+  },
+  headerLogo: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 2,
+    color: colors.black,
+  },
+  headerPage: {
+    fontSize: 9,
+    color: colors.lightGray,
+  },
+
+  // Section Titles
+  sectionTitle: {
+    fontSize: 22,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 20,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.darkGray,
+    marginBottom: 12,
+    marginTop: 20,
+  },
+
+  // Executive Summary
+  executiveSummaryBox: {
+    backgroundColor: colors.backgroundGray,
+    padding: 25,
+    marginBottom: 25,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.gold,
+  },
+  summaryHeadline: {
+    fontSize: 16,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 12,
+  },
+  summaryText: {
+    fontSize: 11,
+    color: colors.darkGray,
+    lineHeight: 1.6,
+    marginBottom: 10,
+  },
+
+  // Score Display
+  scoreContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  bigScoreBox: {
+    alignItems: 'center',
+    padding: 30,
+    backgroundColor: colors.backgroundGray,
+    borderRadius: 8,
+  },
+  bigScoreNumber: {
+    fontSize: 72,
+    fontFamily: 'Helvetica-Bold',
+  },
+  bigScoreLabel: {
+    fontSize: 12,
+    color: colors.mediumGray,
+    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  scoreDescription: {
+    fontSize: 11,
+    color: colors.darkGray,
+    textAlign: 'center',
+    marginTop: 15,
+    maxWidth: 400,
+  },
+
+  // Key Findings
+  findingsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 15,
+    gap: 15,
+  },
+  findingCard: {
+    width: '47%',
+    backgroundColor: colors.backgroundGray,
+    padding: 15,
+    marginBottom: 10,
+  },
+  findingTitle: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 6,
+  },
+  findingValue: {
+    fontSize: 18,
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: 6,
+  },
+  findingDescription: {
+    fontSize: 9,
+    color: colors.mediumGray,
+    lineHeight: 1.4,
+  },
+
+  // Results Table
+  table: {
+    marginTop: 15,
+    marginBottom: 25,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.black,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+  },
+  tableHeaderCell: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.white,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderGray,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+  },
+  tableRowAlt: {
+    backgroundColor: colors.backgroundGray,
+  },
+  tableCell: {
+    fontSize: 10,
+    color: colors.darkGray,
+  },
+  tableCellBold: {
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+  },
+
+  // Explainer Box
+  explainerBox: {
+    backgroundColor: colors.goldLight,
+    padding: 20,
+    marginVertical: 20,
+    borderRadius: 4,
+  },
+  explainerTitle: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 10,
+  },
+  explainerText: {
+    fontSize: 10,
+    color: colors.darkGray,
+    lineHeight: 1.6,
+  },
+
+  // Glossary
+  glossaryItem: {
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderGray,
+  },
+  glossaryTerm: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 4,
+  },
+  glossaryDefinition: {
+    fontSize: 10,
+    color: colors.mediumGray,
+    lineHeight: 1.5,
+  },
+  glossaryAnalogy: {
+    fontSize: 10,
+    color: colors.gold,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+
+  // Action Items
+  actionItem: {
+    marginBottom: 20,
+    paddingLeft: 15,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.gold,
+  },
+  actionPriority: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.white,
+    backgroundColor: colors.scorePoor,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  actionPriorityMedium: {
+    backgroundColor: colors.gold,
+  },
+  actionTitle: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 6,
+  },
+  actionDescription: {
+    fontSize: 10,
+    color: colors.mediumGray,
+    lineHeight: 1.5,
+    marginBottom: 8,
+  },
+  actionImpact: {
+    fontSize: 9,
+    color: colors.darkGray,
+    backgroundColor: colors.backgroundGray,
+    padding: 10,
+  },
+  actionImpactLabel: {
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+  },
+
+  // Business Impact
+  impactBox: {
+    flexDirection: 'row',
+    marginVertical: 20,
+  },
+  impactStat: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: colors.backgroundGray,
+    marginHorizontal: 5,
+  },
+  impactNumber: {
+    fontSize: 28,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.gold,
+    marginBottom: 5,
+  },
+  impactLabel: {
+    fontSize: 9,
+    color: colors.mediumGray,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+
+  // CTA
+  ctaBox: {
+    backgroundColor: colors.black,
+    padding: 35,
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  ctaTitle: {
+    fontSize: 18,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.white,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  ctaText: {
+    fontSize: 11,
+    color: colors.lightGray,
+    textAlign: 'center',
+    marginBottom: 20,
+    maxWidth: 400,
+    lineHeight: 1.6,
+  },
+  ctaContact: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 30,
+  },
+  ctaContactItem: {
+    alignItems: 'center',
+  },
+  ctaContactLabel: {
+    fontSize: 8,
+    color: colors.lightGray,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  ctaContactValue: {
+    fontSize: 11,
+    color: colors.gold,
+    fontFamily: 'Helvetica-Bold',
+  },
+
+  // Footer
+  pageFooter: {
+    position: 'absolute',
+    bottom: 30,
+    left: 50,
+    right: 50,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderGray,
+    paddingTop: 15,
+  },
+  footerText: {
+    fontSize: 8,
+    color: colors.lightGray,
+  },
+
+  // Paragraph & List
+  paragraph: {
+    fontSize: 10,
+    color: colors.darkGray,
+    lineHeight: 1.6,
+    marginBottom: 12,
+  },
+  listItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    paddingLeft: 10,
+  },
+  listBullet: {
+    width: 15,
+    fontSize: 10,
+    color: colors.gold,
+  },
+  listText: {
+    flex: 1,
+    fontSize: 10,
+    color: colors.darkGray,
+    lineHeight: 1.5,
+  },
+
+  // Per-page results
+  pageResultCard: {
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderGray,
+  },
+  pageResultUrl: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.black,
+    marginBottom: 10,
+  },
+  pageResultScores: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  pageResultScore: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: colors.backgroundGray,
+  },
+  pageResultScoreValue: {
+    fontSize: 20,
+    fontFamily: 'Helvetica-Bold',
+  },
+  pageResultScoreLabel: {
+    fontSize: 7,
+    color: colors.mediumGray,
+    textTransform: 'uppercase',
+    marginTop: 4,
+  },
+})
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
+interface PageHeaderProps {
+  pageNumber: number
+  totalPages: number
 }
 
-function UnderstandingScores() {
+function PageHeader({ pageNumber, totalPages }: PageHeaderProps) {
   return (
-    <View style={perfStyles.understandingSection}>
-      <Text style={perfStyles.understandingTitle}>Understanding Your Scores</Text>
-      <Text style={perfStyles.understandingText}>
-        Performance (0-100): How fast your page loads. Aim for 90+. • LCP: Time until main content visible ({'<'}2.5s). • INP: Response time to interactions ({'<'}200ms). • CLS: Visual stability ({'<'}0.1).
+    <View style={styles.pageHeader}>
+      <Text style={styles.headerLogo}>SELO STUDIOS</Text>
+      <Text style={styles.headerPage}>
+        Performance Audit Report • Page {pageNumber} of {totalPages}
       </Text>
     </View>
   )
 }
 
-function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
-  // Clean up description - remove markdown links and truncate
-  const cleanDescription = opportunity.description
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .substring(0, 150)
+interface PageFooterProps {
+  clientDomain: string
+}
 
+function PageFooter({ clientDomain }: PageFooterProps) {
   return (
-    <View style={perfStyles.itemRow}>
-      <View style={perfStyles.itemHeader}>
-        <Text style={perfStyles.itemTitle}>{opportunity.title}</Text>
-        {opportunity.displayValue && (
-          <View style={perfStyles.savingsPill}>
-            <Text style={perfStyles.savingsPillText}>{opportunity.displayValue}</Text>
-          </View>
-        )}
-      </View>
-      <Text style={perfStyles.itemDescription}>{cleanDescription}</Text>
+    <View style={styles.pageFooter}>
+      <Text style={styles.footerText}>Confidential • Prepared for {clientDomain}</Text>
+      <Text style={styles.footerText}>selostudios.com</Text>
     </View>
   )
 }
 
-function DiagnosticRow({ diagnostic }: { diagnostic: Diagnostic }) {
-  // Clean up description - remove markdown links and truncate
-  const cleanDescription = diagnostic.description
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .substring(0, 150)
+// ============================================================================
+// MAIN DOCUMENT COMPONENT
+// ============================================================================
 
-  return (
-    <View style={perfStyles.itemRow}>
-      <View style={perfStyles.itemHeader}>
-        <Text style={perfStyles.itemTitle}>{diagnostic.title}</Text>
-        {diagnostic.displayValue && (
-          <Text style={perfStyles.diagnosticValue}>{diagnostic.displayValue}</Text>
-        )}
-      </View>
-      <Text style={perfStyles.itemDescription}>{cleanDescription}</Text>
-    </View>
-  )
+interface PerformancePDFProps {
+  audit: PerformanceAudit
+  results: PerformanceAuditResult[]
 }
-
 
 export function PerformancePDF({ audit, results }: PerformancePDFProps) {
   const logoUri = getLogoDataUri()
@@ -422,141 +581,544 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
       acc[result.url][result.device] = result
       return acc
     },
-    {} as Record<
-      string,
-      { mobile: PerformanceAuditResult | null; desktop: PerformanceAuditResult | null }
-    >
+    {} as Record<string, { mobile: PerformanceAuditResult | null; desktop: PerformanceAuditResult | null }>
   )
 
   const urls = Object.keys(resultsByUrl)
+  const firstUrl = urls[0] || ''
+  const clientDomain = getDomain(firstUrl)
+
   const reportDate = new Date(audit.completed_at || audit.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
 
-  // Calculate overall stats
+  // Calculate aggregate scores from mobile results (primary focus)
   const mobileResults = results.filter((r) => r.device === 'mobile')
-  const avgPerformance =
-    mobileResults.length > 0
-      ? Math.round(
-          mobileResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) /
-            mobileResults.length
-        )
-      : null
+  const desktopResults = results.filter((r) => r.device === 'desktop')
+
+  const avgMobileScores = {
+    performance: mobileResults.length > 0
+      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) / mobileResults.length)
+      : null,
+    accessibility: mobileResults.length > 0
+      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) / mobileResults.length)
+      : null,
+    bestPractices: mobileResults.length > 0
+      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) / mobileResults.length)
+      : null,
+    seo: mobileResults.length > 0
+      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / mobileResults.length)
+      : null,
+  }
+
+  const avgDesktopScores = {
+    performance: desktopResults.length > 0
+      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) / desktopResults.length)
+      : null,
+    accessibility: desktopResults.length > 0
+      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) / desktopResults.length)
+      : null,
+    bestPractices: desktopResults.length > 0
+      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) / desktopResults.length)
+      : null,
+    seo: desktopResults.length > 0
+      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / desktopResults.length)
+      : null,
+  }
+
+  const overallScore = avgMobileScores.performance
+
+  // Extract additional metrics from first mobile result's raw response
+  const firstMobileResult = mobileResults[0]
+  const additionalMetrics = firstMobileResult?.raw_response
+    ? extractAdditionalMetrics(firstMobileResult.raw_response as unknown as PageSpeedResult)
+    : { fcp_ms: null, speed_index_ms: null, tti_ms: null, tbt_ms: null, total_byte_weight: null }
+
+  const lcpMs = firstMobileResult?.lcp_ms || null
+
+  // Extract opportunities from first result
+  const opportunities = firstMobileResult?.raw_response
+    ? extractOpportunities(firstMobileResult.raw_response as unknown as PageSpeedResult)
+    : []
+
+  // Dynamic summary text based on scores
+  const getSummaryHeadline = () => {
+    if (overallScore === null) return 'Unable to analyze website performance.'
+    if (overallScore >= 90) return 'Your website is performing excellently!'
+    if (overallScore >= 70) return 'Your website has room for improvement.'
+    if (overallScore >= 50) return 'Your website performance needs attention.'
+    return 'Your website is losing visitors before they even see your content.'
+  }
+
+  const getSummaryText = () => {
+    if (overallScore === null) return ''
+    if (overallScore >= 90) {
+      return `Great news! ${clientDomain} loads quickly and provides an excellent user experience. Your site meets Google's Core Web Vitals thresholds, which positively impacts both user satisfaction and search rankings.`
+    }
+    if (overallScore >= 70) {
+      return `Our analysis found that ${clientDomain} has moderate performance. While functional, there are opportunities to improve load times and user experience that could boost engagement and conversions.`
+    }
+    const loadTime = lcpMs ? `${(lcpMs / 1000).toFixed(1)} seconds` : 'several seconds'
+    return `Our analysis found that ${clientDomain} takes over ${loadTime} to fully load on mobile devices. Research shows that 53% of mobile visitors leave a site that takes longer than 3 seconds to load.`
+  }
+
+  // Calculate total pages for pagination
+  const totalPages = 5 + (urls.length > 1 ? 1 : 0) // Cover + Summary + Business + Metrics + Actions + CTA + (Per-page if multiple)
 
   return (
     <Document>
-      {/* Page 1: Cover Page - White, clean */}
-      <CoverPage
-        logoUri={logoUri}
-        title="Performance Audit Report"
-        date={reportDate}
-        variant="light"
-      />
-
-      {/* Page 2: Executive Summary - Just the score */}
-      <Page size="A4" style={baseStyles.page}>
-        <SectionHeader title="Executive Summary" />
-
-        <View style={perfStyles.summaryScore}>
-          <Text style={[perfStyles.summaryScoreValue, { color: getPerformanceScoreColor(avgPerformance) }]}>
-            {avgPerformance ?? '—'}
-          </Text>
-          <Text style={perfStyles.summaryScoreLabel}>Average Performance Score</Text>
+      {/* ================================================================== */}
+      {/* COVER PAGE */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.coverPage}>
+        <View style={styles.logoContainer}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image doesn't support alt */}
+          {logoUri && <Image src={logoUri} style={styles.logo} />}
         </View>
 
-        <PageFooter text="Performance Audit Report" pageNumber={2} />
+        <Text style={styles.coverTitle}>Website Performance</Text>
+        <Text style={styles.coverTitle}>Audit Report</Text>
+
+        <Text style={styles.coverClient}>{clientDomain}</Text>
+        <Text style={styles.coverDate}>{reportDate}</Text>
+
+        <View style={styles.coverFooter}>
+          <Text style={styles.coverFooterText}>
+            {"This report analyzes your website's performance, accessibility, and search visibility using Google's PageSpeed Insights methodology."}
+          </Text>
+        </View>
       </Page>
 
-      {/* Page Results - One page per URL with table layout */}
-      {urls.map((url, index) => {
-        const mobileResult = resultsByUrl[url].mobile
-        const desktopResult = resultsByUrl[url].desktop
+      {/* ================================================================== */}
+      {/* EXECUTIVE SUMMARY */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader pageNumber={2} totalPages={totalPages} />
 
-        return (
-          <Page key={url} size="A4" style={baseStyles.page}>
-            <SectionHeader title="Page Results" />
+        <Text style={styles.sectionTitle}>Executive Summary</Text>
 
-            {/* Page Header with domain and meta info */}
-            <View style={perfStyles.pageHeader}>
-              <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
-              <Text style={perfStyles.pageMeta}>
-                {urls.length} page{urls.length !== 1 ? 's' : ''} tested · {results.length} total tests
-              </Text>
-            </View>
+        <View style={styles.executiveSummaryBox}>
+          <Text style={styles.summaryHeadline}>{getSummaryHeadline()}</Text>
+          <Text style={styles.summaryText}>{getSummaryText()}</Text>
+          {overallScore !== null && overallScore < 90 && (
+            <Text style={styles.summaryText}>
+              {"The good news? These issues are fixable. With targeted optimizations, we can significantly improve your site's speed, user experience, and search rankings."}
+            </Text>
+          )}
+        </View>
 
-            {/* Scores Table */}
-            <ScoresTable mobileResult={mobileResult} desktopResult={desktopResult} />
+        {/* Overall Score Display */}
+        <View style={styles.scoreContainer}>
+          <View style={styles.bigScoreBox}>
+            <Text style={[styles.bigScoreNumber, { color: getScoreColor(overallScore) }]}>
+              {overallScore ?? '—'}
+            </Text>
+            <Text style={styles.bigScoreLabel}>Overall Performance Score</Text>
+            <Text style={styles.scoreDescription}>
+              Scores range from 0-100. A score of 90+ is considered good.
+              {overallScore !== null && ` Your score of ${overallScore} indicates ${getScoreLabel(overallScore).toLowerCase()} performance.`}
+            </Text>
+          </View>
+        </View>
 
-            {/* Core Web Vitals - show mobile metrics if available */}
-            {mobileResult && <CoreWebVitalsRow result={mobileResult} />}
+        {/* Key Findings */}
+        <Text style={styles.sectionSubtitle}>Key Findings at a Glance</Text>
 
-            {/* Understanding Scores - smaller at bottom */}
-            <UnderstandingScores />
+        <View style={styles.findingsGrid}>
+          <View style={styles.findingCard}>
+            <Text style={styles.findingTitle}>Page Load Time (LCP)</Text>
+            <Text style={[styles.findingValue, { color: getScoreColor(lcpMs && lcpMs <= 2500 ? 90 : lcpMs && lcpMs <= 4000 ? 60 : 30) }]}>
+              {formatMs(lcpMs)}
+            </Text>
+            <Text style={styles.findingDescription}>
+              Main content appears in {formatMs(lcpMs)}. Target: under 2.5 seconds.
+            </Text>
+          </View>
 
-            <PageFooter text="Performance Audit Report" pageNumber={index + 3} />
-          </Page>
-        )
-      })}
+          <View style={styles.findingCard}>
+            <Text style={styles.findingTitle}>Page Size</Text>
+            <Text style={[styles.findingValue, { color: additionalMetrics.total_byte_weight && additionalMetrics.total_byte_weight > 3000000 ? colors.scorePoor : colors.scoreOkay }]}>
+              {formatBytes(additionalMetrics.total_byte_weight)}
+            </Text>
+            <Text style={styles.findingDescription}>
+              Total download size. Large pages slow loading, especially on mobile.
+            </Text>
+          </View>
 
-      {/* Opportunities & Diagnostics Pages */}
-      {urls.map((url, index) => {
-        const mobileResult = resultsByUrl[url].mobile
-        if (!mobileResult?.raw_response) return null
+          <View style={styles.findingCard}>
+            <Text style={styles.findingTitle}>Search Visibility (SEO)</Text>
+            <Text style={[styles.findingValue, { color: getScoreColor(avgMobileScores.seo) }]}>
+              {avgMobileScores.seo ?? '—'}/100
+            </Text>
+            <Text style={styles.findingDescription}>
+              How easily search engines can find and recommend your site.
+            </Text>
+          </View>
 
-        const opportunities = extractOpportunities(mobileResult.raw_response as unknown as PageSpeedResult)
-        const diagnostics = extractDiagnostics(mobileResult.raw_response as unknown as PageSpeedResult)
+          <View style={styles.findingCard}>
+            <Text style={styles.findingTitle}>Best Practices</Text>
+            <Text style={[styles.findingValue, { color: getScoreColor(avgMobileScores.bestPractices) }]}>
+              {avgMobileScores.bestPractices ?? '—'}/100
+            </Text>
+            <Text style={styles.findingDescription}>
+              Modern web development standards and security practices.
+            </Text>
+          </View>
+        </View>
 
-        if (opportunities.length === 0 && diagnostics.length === 0) return null
+        <PageFooter clientDomain={clientDomain} />
+      </Page>
 
-        return (
-          <Page key={`issues-${url}`} size="A4" style={baseStyles.page}>
-            <SectionHeader title="Developer Action Items" />
+      {/* ================================================================== */}
+      {/* BUSINESS IMPACT & DETAILED SCORES */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader pageNumber={3} totalPages={totalPages} />
 
-            <View style={perfStyles.pageHeader}>
-              <Text style={perfStyles.pageTitle}>{formatUrlDisplay(url)}</Text>
-            </View>
+        <Text style={styles.sectionTitle}>What This Means for Your Business</Text>
 
-            {opportunities.length > 0 && (
-              <View style={{ marginBottom: 12 }}>
-                <Text style={baseStyles.sectionSubtitle}>Optimization Opportunities</Text>
-                <Text style={perfStyles.noDataText}>
-                  Sorted by potential performance impact
-                </Text>
-                {opportunities.slice(0, 6).map((opp) => (
-                  <OpportunityRow key={opp.id} opportunity={opp} />
-                ))}
-              </View>
-            )}
-
-            {diagnostics.length > 0 && (
-              <View>
-                <Text style={baseStyles.sectionSubtitle}>Diagnostics</Text>
-                {diagnostics.slice(0, 4).map((diag) => (
-                  <DiagnosticRow key={diag.id} diagnostic={diag} />
-                ))}
-              </View>
-            )}
-
-            <PageFooter text="Performance Audit Report" pageNumber={urls.length + index + 3} />
-          </Page>
-        )
-      })}
-
-      {/* Contact Page */}
-      <Page size="A4" style={baseStyles.page}>
-        <SectionHeader title="Next Steps" />
-
-        <Text style={baseStyles.bodyText}>
-          This report identifies specific performance issues that can be addressed by your development
-          team. Each opportunity includes the potential savings and technical details needed for
-          implementation.
+        <Text style={styles.paragraph}>
+          {"Website performance isn't just a technical concern—it directly impacts your bottom line. Here's how your current scores translate to real business outcomes:"}
         </Text>
 
-        <ContactBox title="Need Help Improving Performance?" />
+        {/* Business Impact Stats */}
+        <View style={styles.impactBox}>
+          <View style={styles.impactStat}>
+            <Text style={styles.impactNumber}>53%</Text>
+            <Text style={styles.impactLabel}>of visitors leave if a page takes {'>'}3s to load</Text>
+          </View>
+          <View style={styles.impactStat}>
+            <Text style={styles.impactNumber}>1s</Text>
+            <Text style={styles.impactLabel}>delay = 7% drop in conversions</Text>
+          </View>
+          <View style={styles.impactStat}>
+            <Text style={styles.impactNumber}>+25%</Text>
+            <Text style={styles.impactLabel}>revenue for every 100ms improvement</Text>
+          </View>
+        </View>
 
-        <PageFooter text="Performance Audit Report" />
+        {lcpMs && lcpMs > 2500 && (
+          <View style={styles.explainerBox}>
+            <Text style={styles.explainerTitle}>The Bottom Line</Text>
+            <Text style={styles.explainerText}>
+              With a {formatMs(lcpMs)} load time, your site may be losing potential customers before
+              they even see what you offer. {avgMobileScores.seo && avgMobileScores.seo < 70 && 'Combined with low search visibility, this creates a double problem: fewer people find you, and many who do leave before engaging.'}
+            </Text>
+          </View>
+        )}
+
+        {/* Detailed Results Table */}
+        <Text style={styles.sectionSubtitle}>Detailed Score Breakdown</Text>
+
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>DEVICE</Text>
+            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>PERFORMANCE</Text>
+            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>ACCESSIBILITY</Text>
+            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>BEST PRACTICES</Text>
+            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>SEO</Text>
+          </View>
+
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableCellBold, { width: '20%' }]}>Mobile</Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.performance) }]}>
+              {avgMobileScores.performance ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.accessibility) }]}>
+              {avgMobileScores.accessibility ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.bestPractices) }]}>
+              {avgMobileScores.bestPractices ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.seo) }]}>
+              {avgMobileScores.seo ?? '—'}
+            </Text>
+          </View>
+
+          <View style={[styles.tableRow, styles.tableRowAlt]}>
+            <Text style={[styles.tableCell, styles.tableCellBold, { width: '20%' }]}>Desktop</Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.performance) }]}>
+              {avgDesktopScores.performance ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.accessibility) }]}>
+              {avgDesktopScores.accessibility ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.bestPractices) }]}>
+              {avgDesktopScores.bestPractices ?? '—'}
+            </Text>
+            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.seo) }]}>
+              {avgDesktopScores.seo ?? '—'}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.paragraph}>
+          <Text style={{ fontFamily: 'Helvetica-Bold' }}>Why Mobile Matters Most: </Text>
+          Over 60% of web traffic comes from mobile devices. Google uses mobile performance
+          as a primary ranking factor, meaning slow mobile speeds hurt both user experience AND
+          your search rankings.
+        </Text>
+
+        <PageFooter clientDomain={clientDomain} />
+      </Page>
+
+      {/* ================================================================== */}
+      {/* UNDERSTANDING THE METRICS */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader pageNumber={4} totalPages={totalPages} />
+
+        <Text style={styles.sectionTitle}>Understanding the Metrics</Text>
+
+        <Text style={styles.paragraph}>
+          {"Technical jargon can be confusing. Here's what each metric means for your visitors and your business:"}
+        </Text>
+
+        <View style={styles.glossaryItem}>
+          <Text style={styles.glossaryTerm}>
+            Largest Contentful Paint (LCP) — Your Result: {formatMs(lcpMs)}
+          </Text>
+          <Text style={styles.glossaryDefinition}>
+            Measures how long it takes for your main content to appear on screen.
+            This is the moment visitors can actually start reading or viewing your page.
+          </Text>
+          <Text style={styles.glossaryAnalogy}>
+            {"Like a store's front door: "}{formatMs(lcpMs)}{" is "}{lcpMs && lcpMs > 2500 ? 'too long—' : ''}{"making customers wait "}{lcpMs && lcpMs > 2500 ? 'while you slowly open the blinds' : 'just briefly'}{". Target: under 2.5s."}
+          </Text>
+        </View>
+
+        <View style={styles.glossaryItem}>
+          <Text style={styles.glossaryTerm}>
+            First Contentful Paint (FCP) — Your Result: {formatMs(additionalMetrics.fcp_ms)}
+          </Text>
+          <Text style={styles.glossaryDefinition}>
+            The time until visitors see anything at all—even just a loading indicator.
+            This is their first visual feedback that your site is working.
+          </Text>
+          <Text style={styles.glossaryAnalogy}>
+            {'Like acknowledging a customer when they walk in: a quick "be right with you" builds trust. Target: under 1.8s.'}
+          </Text>
+        </View>
+
+        <View style={styles.glossaryItem}>
+          <Text style={styles.glossaryTerm}>
+            Speed Index — Your Result: {formatMs(additionalMetrics.speed_index_ms)}
+          </Text>
+          <Text style={styles.glossaryDefinition}>
+            Measures how quickly the visible parts of your page are populated.
+            A lower score means content appears faster and more smoothly.
+          </Text>
+          <Text style={styles.glossaryAnalogy}>
+            Think of it as how fast a picture comes into focus. Target: under 3.4s.
+          </Text>
+        </View>
+
+        <View style={styles.glossaryItem}>
+          <Text style={styles.glossaryTerm}>
+            Time to Interactive (TTI) — Your Result: {formatMs(additionalMetrics.tti_ms)}
+          </Text>
+          <Text style={styles.glossaryDefinition}>
+            How long before visitors can actually click buttons, fill forms, or interact.
+            Before this point, the page may look ready but feels frozen.
+          </Text>
+          <Text style={styles.glossaryAnalogy}>
+            Like a store that looks open but the doors are still locked. Target: under 3.8s.
+          </Text>
+        </View>
+
+        <View style={styles.glossaryItem}>
+          <Text style={styles.glossaryTerm}>
+            SEO Score — Your Result: {avgMobileScores.seo ?? '—'}/100
+          </Text>
+          <Text style={styles.glossaryDefinition}>
+            Search Engine Optimization measures how easily Google can find, understand,
+            and recommend your site to people searching for what you offer.
+          </Text>
+          <Text style={styles.glossaryAnalogy}>
+            A low score is like having a great store on a hidden side street with no signage. Target: 90+.
+          </Text>
+        </View>
+
+        <PageFooter clientDomain={clientDomain} />
+      </Page>
+
+      {/* ================================================================== */}
+      {/* RECOMMENDED IMPROVEMENTS */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader pageNumber={5} totalPages={totalPages} />
+
+        <Text style={styles.sectionTitle}>Recommended Improvements</Text>
+
+        <Text style={styles.paragraph}>
+          Based on our analysis, here are the highest-impact improvements,
+          prioritized by potential benefit to your business:
+        </Text>
+
+        {opportunities.slice(0, 4).map((opp, index) => {
+          const isHighPriority = index < 2
+          const cleanDescription = opp.description.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').substring(0, 200)
+
+          return (
+            <View key={opp.id} style={styles.actionItem}>
+              <Text style={isHighPriority ? styles.actionPriority : [styles.actionPriority, styles.actionPriorityMedium]}>
+                {isHighPriority ? 'HIGH PRIORITY' : 'MEDIUM PRIORITY'}
+              </Text>
+              <Text style={styles.actionTitle}>
+                {opp.title} {opp.displayValue && `(${opp.displayValue})`}
+              </Text>
+              <Text style={styles.actionDescription}>{cleanDescription}</Text>
+              <View style={styles.actionImpact}>
+                <Text style={styles.actionImpact}>
+                  <Text style={styles.actionImpactLabel}>Potential savings: </Text>
+                  {opp.displayValue || 'Improved performance'}
+                </Text>
+              </View>
+            </View>
+          )
+        })}
+
+        {opportunities.length === 0 && (
+          <View style={styles.explainerBox}>
+            <Text style={styles.explainerTitle}>No Major Issues Found</Text>
+            <Text style={styles.explainerText}>
+              Your website is well-optimized! Continue monitoring performance to maintain these results.
+            </Text>
+          </View>
+        )}
+
+        <PageFooter clientDomain={clientDomain} />
+      </Page>
+
+      {/* ================================================================== */}
+      {/* PER-PAGE RESULTS (if multiple pages) */}
+      {/* ================================================================== */}
+      {urls.length > 1 && (
+        <Page size="A4" style={styles.page}>
+          <PageHeader pageNumber={6} totalPages={totalPages} />
+
+          <Text style={styles.sectionTitle}>Per-Page Results</Text>
+
+          <Text style={styles.paragraph}>
+            Detailed performance scores for each page analyzed:
+          </Text>
+
+          {urls.map((url) => {
+            const mobileResult = resultsByUrl[url].mobile
+            const desktopResult = resultsByUrl[url].desktop
+
+            return (
+              <View key={url} style={styles.pageResultCard}>
+                <Text style={styles.pageResultUrl}>{formatUrlDisplay(url)}</Text>
+                <View style={styles.pageResultScores}>
+                  <View style={styles.pageResultScore}>
+                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.performance_score || null) }]}>
+                      {mobileResult?.performance_score ?? '—'}
+                    </Text>
+                    <Text style={styles.pageResultScoreLabel}>Mobile Perf</Text>
+                  </View>
+                  <View style={styles.pageResultScore}>
+                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(desktopResult?.performance_score || null) }]}>
+                      {desktopResult?.performance_score ?? '—'}
+                    </Text>
+                    <Text style={styles.pageResultScoreLabel}>Desktop Perf</Text>
+                  </View>
+                  <View style={styles.pageResultScore}>
+                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.accessibility_score || null) }]}>
+                      {mobileResult?.accessibility_score ?? '—'}
+                    </Text>
+                    <Text style={styles.pageResultScoreLabel}>Accessibility</Text>
+                  </View>
+                  <View style={styles.pageResultScore}>
+                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.seo_score || null) }]}>
+                      {mobileResult?.seo_score ?? '—'}
+                    </Text>
+                    <Text style={styles.pageResultScoreLabel}>SEO</Text>
+                  </View>
+                </View>
+              </View>
+            )
+          })}
+
+          <PageFooter clientDomain={clientDomain} />
+        </Page>
+      )}
+
+      {/* ================================================================== */}
+      {/* NEXT STEPS / CTA */}
+      {/* ================================================================== */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader pageNumber={urls.length > 1 ? 7 : 6} totalPages={totalPages} />
+
+        <Text style={styles.sectionTitle}>Next Steps</Text>
+
+        <Text style={styles.paragraph}>
+          This report identifies specific, actionable improvements that can transform your website
+          into a fast, engaging experience that converts visitors into customers.
+        </Text>
+
+        <Text style={styles.sectionSubtitle}>What We Can Achieve Together</Text>
+
+        <View style={styles.listItem}>
+          <Text style={styles.listBullet}>→</Text>
+          <Text style={styles.listText}>
+            <Text style={{ fontFamily: 'Helvetica-Bold' }}>Faster Load Times: </Text>
+            Target under 2.5 seconds {lcpMs ? `(currently ${formatMs(lcpMs)})` : ''} to keep visitors engaged
+          </Text>
+        </View>
+
+        <View style={styles.listItem}>
+          <Text style={styles.listBullet}>→</Text>
+          <Text style={styles.listText}>
+            <Text style={{ fontFamily: 'Helvetica-Bold' }}>Better Search Rankings: </Text>
+            Improve SEO {avgMobileScores.seo ? `from ${avgMobileScores.seo}` : ''} to 90+ so customers can find you
+          </Text>
+        </View>
+
+        <View style={styles.listItem}>
+          <Text style={styles.listBullet}>→</Text>
+          <Text style={styles.listText}>
+            <Text style={{ fontFamily: 'Helvetica-Bold' }}>Improved User Experience: </Text>
+            Responsive, accessible design that works beautifully on all devices
+          </Text>
+        </View>
+
+        <View style={styles.listItem}>
+          <Text style={styles.listBullet}>→</Text>
+          <Text style={styles.listText}>
+            <Text style={{ fontFamily: 'Helvetica-Bold' }}>Higher Conversions: </Text>
+            Faster sites convert better—every second of improvement matters
+          </Text>
+        </View>
+
+        <View style={styles.explainerBox}>
+          <Text style={styles.explainerTitle}>Our Approach</Text>
+          <Text style={styles.explainerText}>
+            {"At Selo Studios, we don't just fix technical issues—we partner with you to understand your business goals and ensure your website actively supports them. We combine data-driven analysis with creative solutions to deliver results that matter to your bottom line."}
+          </Text>
+        </View>
+
+        {/* CTA Box */}
+        <View style={styles.ctaBox}>
+          <Text style={styles.ctaTitle}>Ready to Improve Your Website Performance?</Text>
+          <Text style={styles.ctaText}>
+            {"Let's discuss how we can implement these improvements and help your website become a powerful tool for your business growth."}
+          </Text>
+          <View style={styles.ctaContact}>
+            <View style={styles.ctaContactItem}>
+              <Text style={styles.ctaContactLabel}>Email</Text>
+              <Text style={styles.ctaContactValue}>hello@selostudios.com</Text>
+            </View>
+            <View style={styles.ctaContactItem}>
+              <Text style={styles.ctaContactLabel}>Website</Text>
+              <Text style={styles.ctaContactValue}>selostudios.com</Text>
+            </View>
+          </View>
+        </View>
+
+        <PageFooter clientDomain={clientDomain} />
       </Page>
     </Document>
   )
