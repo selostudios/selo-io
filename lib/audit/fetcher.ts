@@ -9,13 +9,24 @@ export interface FetchResult {
   lastModified: string | null
   finalUrl?: string
   error?: string
+  usedRelaxedSSL?: boolean
+}
+
+export interface FetchOptions {
+  forceRelaxedSSL?: boolean
 }
 
 /**
  * Fetch a page with SSL error recovery.
  * First tries normal fetch, then falls back to relaxed SSL if certificate errors occur.
+ * If forceRelaxedSSL is true, skips normal fetch and uses relaxed SSL directly.
  */
-export async function fetchPage(url: string): Promise<FetchResult> {
+export async function fetchPage(url: string, options?: FetchOptions): Promise<FetchResult> {
+  // If forceRelaxedSSL is set, skip normal fetch and go straight to relaxed mode
+  if (options?.forceRelaxedSSL) {
+    return fetchWithRelaxedSSL(url)
+  }
+
   // Try normal fetch first
   try {
     const response = await fetch(url, {
@@ -101,6 +112,7 @@ function fetchWithRelaxedSSL(url: string): Promise<FetchResult> {
           statusCode: res.statusCode || 0,
           lastModified,
           finalUrl: url,
+          usedRelaxedSSL: true,
         })
       })
     })

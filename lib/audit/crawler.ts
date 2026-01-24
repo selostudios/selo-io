@@ -49,6 +49,9 @@ export async function crawlSite(
   const errors: string[] = []
   let stopped = false
 
+  // SSL certs are domain-level, so switch to relaxed mode after first SSL error
+  let forceRelaxedSSL = false
+
   while (queue.length > 0 && (maxPages === undefined || pages.length < maxPages)) {
     // Check for stop signal every page (responsive to user stop requests)
     if (shouldStop && pages.length > 0) {
@@ -63,7 +66,13 @@ export async function crawlSite(
     if (visited.has(url)) continue
     visited.add(url)
 
-    const { html, statusCode, lastModified, finalUrl, error } = await fetchPage(url)
+    const { html, statusCode, lastModified, finalUrl, error, usedRelaxedSSL } = await fetchPage(url, { forceRelaxedSSL })
+
+    // SSL certs are at domain level - if one page needs relaxed SSL, all will
+    if (usedRelaxedSSL && !forceRelaxedSSL) {
+      console.log(`[Audit Crawler] SSL certificate issue detected, using relaxed SSL for remaining pages`)
+      forceRelaxedSSL = true
+    }
 
     if (error) {
       errors.push(`Failed to fetch ${url}: ${error}`)
