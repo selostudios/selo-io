@@ -1,8 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Clock, FileSearch, Loader2 } from 'lucide-react'
+import { Clock, FileSearch, Loader2, Trash2 } from 'lucide-react'
 import type { SiteAudit } from '@/lib/audit/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
 
@@ -24,6 +27,19 @@ function isInProgress(status: SiteAudit['status']): boolean {
 }
 
 export function AuditHistoryList({ audits }: AuditHistoryListProps) {
+  const router = useRouter()
+
+  const handleDeleteAudit = async (auditId: string) => {
+    try {
+      const response = await fetch(`/api/audit/${auditId}`, { method: 'DELETE' })
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (err) {
+      console.error('[Audit History] Failed to delete audit:', err)
+    }
+  }
+
   if (audits.length === 0) {
     return (
       <EmptyState
@@ -91,6 +107,15 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
             ) : null}
             <Button asChild variant="outline" size="sm">
               <Link href={`/seo/site-audit/${audit.id}`}>View</Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDeleteAudit(audit.id)}
+              className="text-muted-foreground hover:text-destructive"
+              aria-label="Delete audit"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
