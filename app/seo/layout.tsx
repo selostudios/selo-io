@@ -36,12 +36,6 @@ export default async function SeoLayout({ children }: { children: React.ReactNod
           <Header />
           <main className="flex-1">
             <div className="space-y-6 p-8">
-              <div>
-                <h1 className="text-3xl font-bold">SEO Tools</h1>
-                <p className="text-muted-foreground mt-2">
-                  Analyze your website for SEO issues and performance metrics
-                </p>
-              </div>
               {children}
             </div>
           </main>

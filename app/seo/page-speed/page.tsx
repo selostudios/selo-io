@@ -17,6 +17,17 @@ export default async function PageSpeedPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {/* Page Title */}
+      <div className="flex items-center gap-3">
+        <Gauge className="h-8 w-8 text-neutral-700" />
+        <div>
+          <h1 className="text-3xl font-bold">Page Speed</h1>
+          <p className="text-muted-foreground">
+            Analyze your website performance with PageSpeed Insights
+          </p>
+        </div>
+      </div>
+
       {/* Project Selector Header */}
       <div className="flex items-center justify-between">
         <ProjectSelector
