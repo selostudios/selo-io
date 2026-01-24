@@ -92,16 +92,16 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
           allPages, // Note: this is incomplete during crawling, but page-specific checks don't use it
         }
 
-        for (const check of pageSpecificChecks) {
-          // Skip dismissed checks
-          if (isDismissed(dismissedChecks, check.name, page.url)) {
-            continue
-          }
+        // Filter checks that aren't dismissed
+        const checksToRun = pageSpecificChecks.filter(
+          (check) => !isDismissed(dismissedChecks, check.name, page.url)
+        )
 
+        // Run all checks for this page in parallel for speed
+        const checkPromises = checksToRun.map(async (check) => {
           try {
             const result = await check.run(context)
-
-            const checkResult: SiteAuditCheck = {
+            return {
               id: crypto.randomUUID(),
               audit_id: auditId,
               page_id: page.id,
@@ -117,15 +117,25 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
               is_site_wide: false,
               description: check.description,
               fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
-            }
-
-            allCheckResults.push(checkResult)
-            const { error: insertError } = await supabase.from('site_audit_checks').insert(checkResult)
-            if (insertError) {
-              console.error(`[Audit] Failed to insert check ${check.name}:`, insertError)
-            }
+            } as SiteAuditCheck
           } catch (error) {
             console.error(`[Audit] Check ${check.name} failed:`, error)
+            return null
+          }
+        })
+
+        const pageCheckResults = (await Promise.all(checkPromises)).filter(
+          (r): r is SiteAuditCheck => r !== null
+        )
+
+        // Batch insert all checks for this page at once
+        if (pageCheckResults.length > 0) {
+          allCheckResults.push(...pageCheckResults)
+          const { error: insertError } = await supabase
+            .from('site_audit_checks')
+            .insert(pageCheckResults)
+          if (insertError) {
+            console.error(`[Audit] Failed to batch insert checks for ${page.url}:`, insertError)
           }
         }
       },
