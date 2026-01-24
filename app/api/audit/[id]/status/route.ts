@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+
+// Audits stuck in crawling/checking for more than 10 minutes are considered stale
+const STALE_AUDIT_THRESHOLD_MS = 10 * 60 * 1000
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -13,10 +16,41 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: audit } = await supabase.from('site_audits').select('*').eq('id', id).single()
+  let { data: audit } = await supabase.from('site_audits').select('*').eq('id', id).single()
 
   if (!audit) {
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
+  }
+
+  // Check if audit is stale (stuck for too long) and mark as failed
+  if (audit.status === 'crawling' || audit.status === 'checking') {
+    const timestamp = audit.updated_at || audit.created_at
+    const updatedAt = new Date(timestamp).getTime()
+    const now = Date.now()
+    const isStale = !isNaN(updatedAt) && (now - updatedAt > STALE_AUDIT_THRESHOLD_MS)
+
+    if (isStale) {
+      const serviceClient = createServiceClient()
+      const { data: updatedAudit } = await serviceClient
+        .from('site_audits')
+        .update({
+          status: 'failed',
+          error_message: 'Audit timed out - the server function was terminated before completion. Please try again.',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select('*')
+        .single()
+
+      if (updatedAudit) {
+        audit = updatedAudit
+      }
+
+      console.log('[Audit Status] Marked stale audit as failed', {
+        auditId: id,
+        timestamp: new Date().toISOString(),
+      })
+    }
   }
 
   // Get recent checks
