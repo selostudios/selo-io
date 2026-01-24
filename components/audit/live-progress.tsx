@@ -43,6 +43,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const router = useRouter()
   const prevStatusRef = useRef<AuditStatus>(initialStatus)
   const [isStopping, setIsStopping] = useState(false)
+  const [isResuming, setIsResuming] = useState(false)
   const [elapsedMs, setElapsedMs] = useState(0)
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>('default')
@@ -155,23 +156,6 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
     }
   }
 
-  // Show loading state while fetching initial data
-  if (isLoading && shouldPoll) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center py-12">
-            <Loader2 className="text-primary mb-4 size-12 animate-spin" />
-            <h2 className="mb-2 text-xl font-semibold">Loading Audit Status...</h2>
-            <p className="text-muted-foreground text-sm">Please wait</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const [isResuming, setIsResuming] = useState(false)
-
   const handleResume = async () => {
     setIsResuming(true)
     try {
@@ -190,6 +174,21 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
       console.error('[Audit Resume Error]', error)
       setIsResuming(false)
     }
+  }
+
+  // Show loading state while fetching initial data
+  if (isLoading && shouldPoll) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center py-12">
+            <Loader2 className="text-primary mb-4 size-12 animate-spin" />
+            <h2 className="mb-2 text-xl font-semibold">Loading Audit Status...</h2>
+            <p className="text-muted-foreground text-sm">Please wait</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Show failed state
