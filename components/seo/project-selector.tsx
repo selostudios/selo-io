@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ProjectDialog } from './project-dialog'
-import type { SeoProject } from '@/lib/seo/actions'
 
 // Minimal project type for display - allows both full SeoProject and simpler objects
 interface ProjectForDisplay {

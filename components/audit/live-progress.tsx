@@ -170,8 +170,32 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
     )
   }
 
+  const [isResuming, setIsResuming] = useState(false)
+
+  const handleResume = async () => {
+    setIsResuming(true)
+    try {
+      const response = await fetch(`/api/audit/${auditId}/resume`, {
+        method: 'POST',
+      })
+      if (response.ok) {
+        // Refresh the page to show the checking progress
+        router.refresh()
+      } else {
+        const data = await response.json()
+        console.error('[Audit Resume Error]', data.error)
+        setIsResuming(false)
+      }
+    } catch (error) {
+      console.error('[Audit Resume Error]', error)
+      setIsResuming(false)
+    }
+  }
+
   // Show failed state
   if (progress?.status === 'failed') {
+    const canResume = (progress.pages_crawled ?? 0) > 0
+
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -184,11 +208,40 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
               We encountered an error while auditing this website.
             </p>
             {progress.error_message && (
-              <div className="bg-muted/50 w-full rounded-lg p-3">
+              <div className="bg-muted/50 mb-4 w-full rounded-lg p-3">
                 <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                   Error Details
                 </p>
                 <p className="mt-1 text-sm">{progress.error_message}</p>
+              </div>
+            )}
+            {canResume && (
+              <div className="w-full space-y-3">
+                <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <p className="text-sm">
+                    <span className="font-medium">{progress.pages_crawled}</span>{' '}
+                    <span className="text-muted-foreground">
+                      page{progress.pages_crawled !== 1 ? 's were' : ' was'} crawled before the failure
+                    </span>
+                  </p>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={handleResume}
+                  disabled={isResuming}
+                >
+                  {isResuming ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Resuming...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 size-4" />
+                      Run Checks on {progress.pages_crawled} Page{progress.pages_crawled !== 1 ? 's' : ''}
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </CardContent>

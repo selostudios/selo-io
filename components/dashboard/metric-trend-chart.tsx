@@ -36,13 +36,18 @@ export function MetricTrendChart({
   } satisfies ChartConfig
 
   // Format date for display (e.g., "Jan 15")
-  const formattedData = data.map((point) => ({
-    ...point,
-    formattedDate: new Date(point.date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }),
-  }))
+  // Parse date as local time to avoid timezone shift
+  const formattedData = data.map((point) => {
+    const [year, month, day] = point.date.split('-').map(Number)
+    const localDate = new Date(year, month - 1, day)
+    return {
+      ...point,
+      formattedDate: localDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+    }
+  })
 
   return (
     <ChartContainer config={chartConfig} className="h-[120px] w-full">

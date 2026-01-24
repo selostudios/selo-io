@@ -1,6 +1,5 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 import * as tls from 'tls'
-import * as https from 'https'
 
 interface CertificateInfo {
   valid: boolean

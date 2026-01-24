@@ -63,13 +63,19 @@ export function MetricCard({
   } satisfies ChartConfig
 
   const formattedData = hasChart
-    ? timeSeries.map((point) => ({
-        ...point,
-        formattedDate: new Date(point.date).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
-      }))
+    ? timeSeries.map((point) => {
+        // Parse date as local time to avoid timezone shift
+        // "2026-01-23" → [2026, 1, 23] → new Date(2026, 0, 23) (local)
+        const [year, month, day] = point.date.split('-').map(Number)
+        const localDate = new Date(year, month - 1, day)
+        return {
+          ...point,
+          formattedDate: localDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          }),
+        }
+      })
     : []
 
   // Create a unique gradient ID based on label
