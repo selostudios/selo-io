@@ -75,7 +75,11 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            {audit.status === 'completed' || audit.status === 'stopped' ? (
+            {/* Show pills for completed, stopped, or failed audits that have check counts */}
+            {(audit.status === 'completed' ||
+              audit.status === 'stopped' ||
+              audit.status === 'failed') &&
+            (audit.failed_count > 0 || audit.warning_count > 0 || audit.passed_count > 0) ? (
               <>
                 <div className="flex items-center gap-2 text-xs">
                   {audit.failed_count > 0 && (

@@ -37,15 +37,11 @@ function sortChecks(checks: SiteAuditCheck[]): SiteAuditCheck[] {
   })
 }
 
-function formatPagePath(url: string, baseUrl: string): string {
+function formatPagePath(url: string): string {
   try {
     const pageUrl = new URL(url)
-    const base = new URL(baseUrl)
-    // If same origin, show just the pathname
-    if (pageUrl.origin === base.origin) {
-      return pageUrl.pathname || '/'
-    }
-    return url
+    // Show domain + pathname (without protocol)
+    return pageUrl.host + (pageUrl.pathname || '/')
   } catch {
     return url
   }
@@ -247,7 +243,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
         {sortedPageIds.map((pageId) => {
           const pageChecks = sortChecks(checksByPage.get(pageId) || [])
           const page = pageId ? pageMap.get(pageId) : null
-          const pagePath = page ? formatPagePath(page.url, baseUrl) : 'General'
+          const pagePath = page ? formatPagePath(page.url) : 'General'
           const pageFailedCount = pageChecks.filter((c) => c.status === 'failed').length
 
           const collapsibleId = pageId || 'general'
