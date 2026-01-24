@@ -72,12 +72,15 @@ function formatMetricsForClipboard(
   const lines = [
     header,
     '',
-    `* Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
-    `* Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
+    '-- Deals --',
     `* New Deals: ${metrics.crm.newDeals.toLocaleString()}${formatChange(metrics.crm.newDealsChange)}`,
-    `* Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
     `* Deals Won: ${metrics.crm.dealsWon.toLocaleString()}${formatChange(metrics.crm.dealsWonChange)}`,
     `* Deals Lost: ${metrics.crm.dealsLost.toLocaleString()}${formatChange(metrics.crm.dealsLostChange)}`,
+    `* Total Deals: ${metrics.crm.totalDeals.toLocaleString()}`,
+    '',
+    '-- Other --',
+    `* Total Contacts: ${metrics.crm.totalContacts.toLocaleString()}`,
+    `* Pipeline Value: $${metrics.crm.totalPipelineValue.toLocaleString()}`,
     `* Form Submissions: ${metrics.marketing.formSubmissions.toLocaleString()}${formatChange(metrics.marketing.formSubmissionsChange)}`,
   ]
   return lines.join('\n')
@@ -138,43 +141,21 @@ function ConnectionMetrics({ connection, period, showAccountHeader }: Connection
 
   const metricsGrid = (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <MetricCard
-        label="Total Contacts"
-        value={metrics.crm.totalContacts}
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Total Contacts')}
-        color={HUBSPOT_COLOR}
-      />
-      <MetricCard
-        label="Total Deals"
-        value={metrics.crm.totalDeals}
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Total Deals')}
-        color={HUBSPOT_COLOR}
-      />
+      {/* Top row: Deal metrics */}
       <MetricCard
         label="New Deals"
         value={metrics.crm.newDeals}
         change={metrics.crm.newDealsChange}
+        tooltip="Deals created during this period. These are new opportunities added to your pipeline."
         period={period}
         timeSeries={getTimeSeriesForMetric('New Deals')}
-        color={HUBSPOT_COLOR}
-      />
-      <MetricCard
-        label="Pipeline Value"
-        value={metrics.crm.totalPipelineValue}
-        prefix="$"
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
         color={HUBSPOT_COLOR}
       />
       <MetricCard
         label="Deals Won"
         value={metrics.crm.dealsWon}
         change={metrics.crm.dealsWonChange}
+        tooltip="Deals marked as won/closed. These are opportunities that converted to customers."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Won')}
         color={HUBSPOT_COLOR}
@@ -183,15 +164,45 @@ function ConnectionMetrics({ connection, period, showAccountHeader }: Connection
         label="Deals Lost"
         value={metrics.crm.dealsLost}
         change={metrics.crm.dealsLostChange}
+        tooltip="Deals marked as lost/closed. These are opportunities that didn't convert."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Lost')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Total Deals"
+        value={metrics.crm.totalDeals}
+        change={null}
+        tooltip="Total number of deals in your CRM across all stages and statuses."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      {/* Bottom row: Contacts, Pipeline, Forms */}
+      <MetricCard
+        label="Total Contacts"
+        value={metrics.crm.totalContacts}
+        change={null}
+        tooltip="Total number of contacts in your HubSpot CRM."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Contacts')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Pipeline Value"
+        value={metrics.crm.totalPipelineValue}
+        prefix="$"
+        change={null}
+        tooltip="Combined value of all deals currently in your pipeline."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
         color={HUBSPOT_COLOR}
       />
       <MetricCard
         label="Form Submissions"
         value={metrics.marketing.formSubmissions}
         change={metrics.marketing.formSubmissionsChange}
-        tooltip="Discovery inquiries from potential customers."
+        tooltip="Total form submissions across all HubSpot forms."
         period={period}
         timeSeries={getTimeSeriesForMetric('Form Submissions')}
         color={HUBSPOT_COLOR}
@@ -377,43 +388,21 @@ function SingleConnectionMetrics({
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <MetricCard
-        label="Total Contacts"
-        value={metrics.crm.totalContacts}
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Total Contacts')}
-        color={HUBSPOT_COLOR}
-      />
-      <MetricCard
-        label="Total Deals"
-        value={metrics.crm.totalDeals}
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Total Deals')}
-        color={HUBSPOT_COLOR}
-      />
+      {/* Top row: Deal metrics */}
       <MetricCard
         label="New Deals"
         value={metrics.crm.newDeals}
         change={metrics.crm.newDealsChange}
+        tooltip="Deals created during this period. These are new opportunities added to your pipeline."
         period={period}
         timeSeries={getTimeSeriesForMetric('New Deals')}
-        color={HUBSPOT_COLOR}
-      />
-      <MetricCard
-        label="Pipeline Value"
-        value={metrics.crm.totalPipelineValue}
-        prefix="$"
-        change={null}
-        period={period}
-        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
         color={HUBSPOT_COLOR}
       />
       <MetricCard
         label="Deals Won"
         value={metrics.crm.dealsWon}
         change={metrics.crm.dealsWonChange}
+        tooltip="Deals marked as won/closed. These are opportunities that converted to customers."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Won')}
         color={HUBSPOT_COLOR}
@@ -422,15 +411,45 @@ function SingleConnectionMetrics({
         label="Deals Lost"
         value={metrics.crm.dealsLost}
         change={metrics.crm.dealsLostChange}
+        tooltip="Deals marked as lost/closed. These are opportunities that didn't convert."
         period={period}
         timeSeries={getTimeSeriesForMetric('Deals Lost')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Total Deals"
+        value={metrics.crm.totalDeals}
+        change={null}
+        tooltip="Total number of deals in your CRM across all stages and statuses."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Deals')}
+        color={HUBSPOT_COLOR}
+      />
+      {/* Bottom row: Contacts, Pipeline, Forms */}
+      <MetricCard
+        label="Total Contacts"
+        value={metrics.crm.totalContacts}
+        change={null}
+        tooltip="Total number of contacts in your HubSpot CRM."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Total Contacts')}
+        color={HUBSPOT_COLOR}
+      />
+      <MetricCard
+        label="Pipeline Value"
+        value={metrics.crm.totalPipelineValue}
+        prefix="$"
+        change={null}
+        tooltip="Combined value of all deals currently in your pipeline."
+        period={period}
+        timeSeries={getTimeSeriesForMetric('Pipeline Value')}
         color={HUBSPOT_COLOR}
       />
       <MetricCard
         label="Form Submissions"
         value={metrics.marketing.formSubmissions}
         change={metrics.marketing.formSubmissionsChange}
-        tooltip="Discovery inquiries from potential customers."
+        tooltip="Total form submissions across all HubSpot forms."
         period={period}
         timeSeries={getTimeSeriesForMetric('Form Submissions')}
         color={HUBSPOT_COLOR}
