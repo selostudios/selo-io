@@ -1,0 +1,98 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { PanelLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { ParentSidebar, type ParentSection } from './parent-sidebar'
+import { ChildSidebar } from './child-sidebar'
+
+const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
+
+function getSectionFromPathname(pathname: string): ParentSection {
+  if (pathname.startsWith('/seo')) {
+    return 'seo'
+  }
+  // Default to home for /dashboard, /settings, /profile, etc.
+  return 'home'
+}
+
+const sectionDefaultRoutes: Record<ParentSection, string> = {
+  home: '/dashboard',
+  seo: '/seo/site-audit',
+}
+
+export function NavigationShell() {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Derive active section from current pathname
+  const activeSection = getSectionFromPathname(pathname)
+
+  const [isChildCollapsed, setIsChildCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Load collapsed state from localStorage on mount
+  // This is a legitimate pattern for hydrating persisted UI state
+  useEffect(() => {
+    const saved = localStorage.getItem(CHILD_SIDEBAR_COLLAPSED_KEY)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating persisted state on mount
+    setIsChildCollapsed(saved === 'true')
+    setMounted(true)
+  }, [])
+
+  // Handle section change - navigate to section's default route
+  const handleSectionChange = useCallback((section: ParentSection) => {
+    // Only navigate if we're changing to a different section
+    if (section !== activeSection) {
+      router.push(sectionDefaultRoutes[section])
+    }
+  }, [activeSection, router])
+
+  // Toggle child sidebar collapsed state
+  const handleToggleCollapse = useCallback(() => {
+    setIsChildCollapsed((prev) => {
+      const newValue = !prev
+      localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, String(newValue))
+      return newValue
+    })
+  }, [])
+
+  // Prevent hydration mismatch
+  const collapsed = mounted ? isChildCollapsed : false
+
+  return (
+    <div className="flex sticky top-0 h-screen">
+      <ParentSidebar
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+      />
+      <ChildSidebar
+        activeSection={activeSection}
+        isCollapsed={collapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
+      {/* Expand button when child sidebar is collapsed */}
+      {collapsed && (
+        <div className="flex h-screen w-12 flex-col items-center border-r bg-white py-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleToggleCollapse}
+                className={cn(
+                  'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                  'text-neutral-600 hover:bg-neutral-100'
+                )}
+                aria-label="Expand sidebar"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Expand</TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+    </div>
+  )
+}

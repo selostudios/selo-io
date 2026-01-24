@@ -90,7 +90,7 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
               </>
             ) : null}
             <Button asChild variant="outline" size="sm">
-              <Link href={`/audit/${audit.id}`}>View</Link>
+              <Link href={`/seo/site-audit/${audit.id}`}>View</Link>
             </Button>
           </div>
         </div>

@@ -14,9 +14,10 @@ interface AuditDashboardProps {
   websiteUrl: string
   audits: SiteAudit[]
   archivedAudits: SiteAudit[]
+  projectId?: string
 }
 
-export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDashboardProps) {
+export function AuditDashboard({ websiteUrl, audits, archivedAudits, projectId }: AuditDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showArchived, setShowArchived] = useState(false)
@@ -28,6 +29,8 @@ export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDash
       try {
         const response = await fetch('/api/audit/start', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId }),
         })
 
         if (!response.ok) {
@@ -37,7 +40,7 @@ export function AuditDashboard({ websiteUrl, audits, archivedAudits }: AuditDash
         }
 
         const data = await response.json()
-        router.push(`/audit/${data.auditId}`)
+        router.push(`/seo/site-audit/${data.auditId}`)
       } catch (err) {
         console.error('[Audit Dashboard] Failed to start audit:', err)
         setError('Failed to start audit')

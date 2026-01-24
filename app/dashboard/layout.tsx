@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Sidebar } from '@/components/dashboard/sidebar'
+import { NavigationShell } from '@/components/navigation/navigation-shell'
 import { Header } from '@/components/dashboard/header'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
@@ -28,17 +28,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
-  // Get organization's website URL for sidebar
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('website_url')
-    .eq('id', userRecord.organization_id)
-    .single()
-
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <Sidebar websiteUrl={org?.website_url ?? null} />
+        <NavigationShell />
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">{children}</main>

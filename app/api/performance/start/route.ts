@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
   // Get request body
   const body = await request.json().catch(() => ({}))
-  const { urls } = body as { urls?: string[] }
+  const { urls, projectId } = body as { urls?: string[]; projectId?: string }
 
   if (!urls || !Array.isArray(urls) || urls.length === 0) {
     return NextResponse.json({ error: 'URLs are required' }, { status: 400 })
@@ -41,11 +41,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
+  // If projectId is provided, verify it belongs to user's organization
+  if (projectId) {
+    const { data: project } = await supabase
+      .from('seo_projects')
+      .select('id')
+      .eq('id', projectId)
+      .eq('organization_id', userRecord.organization_id)
+      .single()
+
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+  }
+
   // Create audit record
   const { data: audit, error } = await supabase
     .from('performance_audits')
     .insert({
       organization_id: userRecord.organization_id,
+      project_id: projectId || null,
       created_by: user.id,
       status: 'pending',
     })

@@ -5,7 +5,7 @@ import { runAudit } from '@/lib/audit/runner'
 // Extend function timeout for long-running audits (max 300s on Pro plan)
 export const maxDuration = 300
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient()
 
   const {
@@ -15,6 +15,10 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Get request body
+  const body = await request.json().catch(() => ({}))
+  const { projectId } = body as { projectId?: string }
 
   // Get user's organization
   const { data: userRecord } = await supabase
@@ -27,15 +31,33 @@ export async function POST() {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  // Get organization's website URL
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('website_url')
-    .eq('id', userRecord.organization_id)
-    .single()
+  let websiteUrl: string
 
-  if (!org?.website_url) {
-    return NextResponse.json({ error: 'No website URL configured' }, { status: 400 })
+  // If projectId is provided, get URL from project
+  if (projectId) {
+    const { data: project } = await supabase
+      .from('seo_projects')
+      .select('url')
+      .eq('id', projectId)
+      .eq('organization_id', userRecord.organization_id)
+      .single()
+
+    if (!project?.url) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+    websiteUrl = project.url
+  } else {
+    // Fallback to organization's website URL for backward compatibility
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('website_url')
+      .eq('id', userRecord.organization_id)
+      .single()
+
+    if (!org?.website_url) {
+      return NextResponse.json({ error: 'No website URL configured' }, { status: 400 })
+    }
+    websiteUrl = org.website_url
   }
 
   // Create audit record
@@ -43,7 +65,8 @@ export async function POST() {
     .from('site_audits')
     .insert({
       organization_id: userRecord.organization_id,
-      url: org.website_url,
+      project_id: projectId || null,
+      url: websiteUrl,
       status: 'pending',
     })
     .select()
@@ -58,7 +81,7 @@ export async function POST() {
   // This tells Vercel to keep the function running after the response is sent
   after(async () => {
     try {
-      await runAudit(audit.id, org.website_url)
+      await runAudit(audit.id, websiteUrl)
     } catch (err) {
       console.error('[Audit API] Background audit failed:', err)
     }

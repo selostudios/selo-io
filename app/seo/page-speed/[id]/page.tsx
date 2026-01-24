@@ -25,11 +25,11 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link
-          href="/audit/performance"
+          href="/seo/page-speed"
           className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Performance Audits
+          Back to Page Speed
         </Link>
         {audit.status === 'completed' && (
           <Button variant="outline" asChild>
