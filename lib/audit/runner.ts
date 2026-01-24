@@ -50,18 +50,26 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Track crawled pages count for progress updates
     let pagesCrawledCount = 0
 
+    // Collect all check results and page data during crawling
+    const allCheckResults: SiteAuditCheck[] = []
+    const allPages: import('./types').SiteAuditPage[] = []
+
     // Crawl the site with stop signal support (no page limit)
+    // Run page-specific checks during crawling to avoid re-fetching pages
     const {
       pages,
       errors: crawlErrors,
       stopped: crawlStopped,
     } = await crawlSite(url, auditId, {
-      onPageCrawled: async (page) => {
+      onPageCrawled: async (page, html) => {
         // Save page to database
         const { error: pageInsertError } = await supabase.from('site_audit_pages').insert(page)
         if (pageInsertError) {
           console.error(`[Audit] Failed to insert page ${page.url}:`, pageInsertError)
         }
+
+        // Track all pages for site-wide checks later
+        allPages.push(page)
 
         // Increment and update pages_crawled count (with timestamp to prevent stale audit detection)
         pagesCrawledCount++
@@ -69,6 +77,57 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
           .from('site_audits')
           .update({ pages_crawled: pagesCrawledCount, updated_at: new Date().toISOString() })
           .eq('id', auditId)
+
+        // Skip page-specific checks for resources (PDFs, images, etc.)
+        if (page.is_resource) {
+          return
+        }
+
+        // Run page-specific checks immediately while we have the HTML
+        const context: CheckContext = {
+          url: page.url,
+          html,
+          title: page.title,
+          statusCode: page.status_code ?? 200,
+          allPages, // Note: this is incomplete during crawling, but page-specific checks don't use it
+        }
+
+        for (const check of pageSpecificChecks) {
+          // Skip dismissed checks
+          if (isDismissed(dismissedChecks, check.name, page.url)) {
+            continue
+          }
+
+          try {
+            const result = await check.run(context)
+
+            const checkResult: SiteAuditCheck = {
+              id: crypto.randomUUID(),
+              audit_id: auditId,
+              page_id: page.id,
+              check_type: check.type,
+              check_name: check.name,
+              priority: check.priority,
+              status: result.status,
+              details: result.details ?? null,
+              created_at: new Date().toISOString(),
+              display_name: check.displayName,
+              display_name_passed: check.displayNamePassed,
+              learn_more_url: check.learnMoreUrl,
+              is_site_wide: false,
+              description: check.description,
+              fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
+            }
+
+            allCheckResults.push(checkResult)
+            const { error: insertError } = await supabase.from('site_audit_checks').insert(checkResult)
+            if (insertError) {
+              console.error(`[Audit] Failed to insert check ${check.name}:`, insertError)
+            }
+          } catch (error) {
+            console.error(`[Audit] Check ${check.name} failed:`, error)
+          }
+        }
       },
       shouldStop: () => checkIfStopped(supabase, auditId),
     })
@@ -102,7 +161,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
       return
     }
 
-    // Update status to checking (unless already stopped, then keep checking but note it)
+    // Update status to checking for site-wide checks (page-specific checks already done during crawling)
     if (!wasStopped) {
       await supabase
         .from('site_audits')
@@ -110,23 +169,26 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         .eq('id', auditId)
     }
 
-    const allCheckResults: SiteAuditCheck[] = []
+    console.log(
+      `[Audit] Crawling complete. ${allPages.length} pages, ${allCheckResults.length} page-specific checks already done. Running site-wide checks...`
+    )
 
     // Find the homepage for site-wide checks
     const homepage =
-      pages.find((p) => {
+      allPages.find((p) => {
         const pageUrl = new URL(p.url)
         return pageUrl.pathname === '/' || pageUrl.pathname === ''
-      }) || pages[0]
+      }) || allPages[0]
 
     // Run site-wide checks once (using homepage context)
+    // These require the full list of pages, so must run after crawling
     const { html: homepageHtml } = await fetchPage(homepage.url)
     const siteWideContext: CheckContext = {
       url: homepage.url,
       html: homepageHtml,
       title: homepage.title,
       statusCode: homepage.status_code ?? 200,
-      allPages: pages,
+      allPages,
     }
 
     // Get base URL for site-wide dismissal checks
@@ -169,82 +231,6 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
       }
     }
 
-    // Run page-specific checks on each page (skip resources like PDFs)
-    const htmlPages = pages.filter((p) => !p.is_resource)
-    const resourcePages = pages.filter((p) => p.is_resource)
-
-    console.log(
-      `[Audit] Starting page-specific checks for ${htmlPages.length} HTML pages (skipping ${resourcePages.length} resources), ${pageSpecificChecks.length} checks per page`
-    )
-
-    for (let i = 0; i < htmlPages.length; i++) {
-      const page = htmlPages[i]
-
-      // Check for stop signal every page during checking phase
-      if (!wasStopped && i > 0) {
-        if (await checkIfStopped(supabase, auditId)) {
-          wasStopped = true
-          // Continue checking remaining pages we've already crawled
-        }
-      }
-
-      const { html } = await fetchPage(page.url)
-
-      const context: CheckContext = {
-        url: page.url,
-        html,
-        title: page.title,
-        statusCode: page.status_code ?? 200,
-        allPages: pages,
-      }
-
-      for (const check of pageSpecificChecks) {
-        // Skip dismissed checks
-        if (isDismissed(dismissedChecks, check.name, page.url)) {
-          continue
-        }
-
-        try {
-          const result = await check.run(context)
-
-          const checkResult: SiteAuditCheck = {
-            id: crypto.randomUUID(),
-            audit_id: auditId,
-            page_id: page.id,
-            check_type: check.type,
-            check_name: check.name,
-            priority: check.priority,
-            status: result.status,
-            details: result.details ?? null,
-            created_at: new Date().toISOString(),
-            display_name: check.displayName,
-            display_name_passed: check.displayNamePassed,
-            learn_more_url: check.learnMoreUrl,
-            is_site_wide: false,
-            description: check.description,
-            fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
-          }
-
-          allCheckResults.push(checkResult)
-          const { error: insertError } = await supabase
-            .from('site_audit_checks')
-            .insert(checkResult)
-          if (insertError) {
-            console.error(`[Audit] Failed to insert check ${check.name}:`, insertError)
-          }
-        } catch (error) {
-          console.error(`[Audit] Check ${check.name} failed:`, error)
-        }
-      }
-
-      // Log progress every 10 pages
-      if (i > 0 && i % 10 === 0) {
-        console.log(
-          `[Audit] Processed ${i}/${htmlPages.length} pages, ${allCheckResults.length} total checks so far`
-        )
-      }
-    }
-
     console.log(`[Audit] Finished all checks. Total: ${allCheckResults.length}`)
 
     // Calculate scores
@@ -253,7 +239,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Generate executive summary
     let executive_summary: string | null = null
     try {
-      executive_summary = await generateExecutiveSummary(url, pages.length, scores, allCheckResults)
+      executive_summary = await generateExecutiveSummary(url, allPages.length, scores, allCheckResults)
     } catch (error) {
       console.error('[Audit] Failed to generate executive summary:', error)
     }

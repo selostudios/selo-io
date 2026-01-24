@@ -27,7 +27,7 @@ function getResourceType(url: string): { isResource: boolean; resourceType: stri
 
 export interface CrawlOptions {
   maxPages?: number
-  onPageCrawled?: (page: SiteAuditPage) => void | Promise<void>
+  onPageCrawled?: (page: SiteAuditPage, html: string) => void | Promise<void>
   shouldStop?: () => Promise<boolean>
 }
 
@@ -116,7 +116,7 @@ export async function crawlSite(
     }
 
     pages.push(page)
-    await onPageCrawled?.(page)
+    await onPageCrawled?.(page, html)
 
     // Extract and queue new links (only from HTML pages, not resources)
     if (statusCode === 200 && !isResource) {

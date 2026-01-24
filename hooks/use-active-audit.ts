@@ -23,8 +23,8 @@ export function useActiveAudit() {
         }
         setIsLoading(false)
 
-        // Poll every 5 seconds to check for active audits
-        timeoutId = setTimeout(poll, 5000)
+        // Poll every 10 seconds to check for active audits
+        timeoutId = setTimeout(poll, 10000)
       } catch {
         console.error('[Active Audit Polling Error]', {
           type: 'fetch_error',
