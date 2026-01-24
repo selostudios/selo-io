@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resumeAuditChecks } from '@/lib/audit/runner'
+import { resumeAuditChecks, completeAuditWithExistingChecks } from '@/lib/audit/runner'
 
 // Extend function timeout for long-running audits
 export const maxDuration = 300
@@ -43,18 +43,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     )
   }
 
-  // Check if there are already checks (don't re-run if checks exist)
+  // Check if there are already checks
   const { count: checksCount } = await supabase
     .from('site_audit_checks')
     .select('*', { count: 'exact', head: true })
     .eq('audit_id', id)
 
-  if (checksCount && checksCount > 0) {
-    return NextResponse.json(
-      { error: 'This audit already has checks - cannot resume' },
-      { status: 400 }
-    )
-  }
+  const hasExistingChecks = checksCount && checksCount > 0
 
   // Update status to checking
   const serviceClient = createServiceClient()
@@ -70,7 +65,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Start checks in background
   after(async () => {
     try {
-      await resumeAuditChecks(id, audit.url)
+      if (hasExistingChecks) {
+        // Just run site-wide checks and calculate scores from existing checks
+        await completeAuditWithExistingChecks(id, audit.url)
+      } else {
+        // Run all checks from scratch
+        await resumeAuditChecks(id, audit.url)
+      }
     } catch (err) {
       console.error('[Audit Resume Error] Background checks failed:', err)
     }

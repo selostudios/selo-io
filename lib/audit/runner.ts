@@ -523,3 +523,148 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     throw error
   }
 }
+
+/**
+ * Complete an audit that already has checks (from crawl-time checking).
+ * Runs site-wide checks if missing, calculates scores, and completes the audit.
+ */
+export async function completeAuditWithExistingChecks(auditId: string, url: string): Promise<void> {
+  const supabase = createServiceClient()
+
+  try {
+    console.log(`[Audit Complete] Starting completion for audit ${auditId} with existing checks`)
+
+    // Fetch existing checks from the database
+    const { data: existingChecks, error: checksError } = await supabase
+      .from('site_audit_checks')
+      .select('*')
+      .eq('audit_id', auditId)
+
+    if (checksError) {
+      throw new Error(`Failed to fetch existing checks: ${checksError.message}`)
+    }
+
+    const allCheckResults = (existingChecks || []) as SiteAuditCheck[]
+    console.log(`[Audit Complete] Found ${allCheckResults.length} existing checks`)
+
+    // Check if site-wide checks are already present
+    const hasSiteWideChecks = allCheckResults.some((c) => c.is_site_wide)
+
+    if (!hasSiteWideChecks) {
+      console.log(`[Audit Complete] Running site-wide checks...`)
+
+      // Fetch pages for site-wide checks
+      const { data: pages } = await supabase
+        .from('site_audit_pages')
+        .select('*')
+        .eq('audit_id', auditId)
+
+      if (pages && pages.length > 0) {
+        // Find homepage
+        const homepage =
+          pages.find((p) => {
+            const pageUrl = new URL(p.url)
+            return pageUrl.pathname === '/' || pageUrl.pathname === ''
+          }) || pages[0]
+
+        // Fetch homepage HTML for site-wide checks
+        const { html: homepageHtml } = await fetchPage(homepage.url)
+        const siteWideContext: CheckContext = {
+          url: homepage.url,
+          html: homepageHtml,
+          title: homepage.title,
+          statusCode: homepage.status_code ?? 200,
+          allPages: pages as import('./types').SiteAuditPage[],
+        }
+
+        // Run site-wide checks
+        for (const check of siteWideChecks) {
+          try {
+            const result = await check.run(siteWideContext)
+
+            const checkResult: SiteAuditCheck = {
+              id: crypto.randomUUID(),
+              audit_id: auditId,
+              page_id: null,
+              check_type: check.type,
+              check_name: check.name,
+              priority: check.priority,
+              status: result.status,
+              details: result.details ?? null,
+              created_at: new Date().toISOString(),
+              display_name: check.displayName,
+              display_name_passed: check.displayNamePassed,
+              learn_more_url: check.learnMoreUrl,
+              is_site_wide: true,
+              description: check.description,
+              fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
+            }
+
+            allCheckResults.push(checkResult)
+            await supabase.from('site_audit_checks').insert(checkResult)
+          } catch (error) {
+            console.error(`[Audit Complete] Site-wide check ${check.name} failed:`, error)
+          }
+        }
+      }
+    }
+
+    console.log(`[Audit Complete] Calculating scores from ${allCheckResults.length} total checks`)
+
+    // Calculate scores
+    const scores = calculateScores(allCheckResults)
+
+    // Get page count for summary
+    const { count: pageCount } = await supabase
+      .from('site_audit_pages')
+      .select('*', { count: 'exact', head: true })
+      .eq('audit_id', auditId)
+
+    // Generate executive summary
+    let executive_summary: string | null = null
+    try {
+      executive_summary = await generateExecutiveSummary(
+        url,
+        pageCount || 0,
+        scores,
+        allCheckResults
+      )
+    } catch (error) {
+      console.error('[Audit Complete] Failed to generate executive summary:', error)
+    }
+
+    // Update audit with scores and summary
+    await supabase
+      .from('site_audits')
+      .update({
+        status: 'completed' as AuditStatus,
+        completed_at: new Date().toISOString(),
+        executive_summary,
+        ...scores,
+      })
+      .eq('id', auditId)
+
+    console.log(`[Audit Complete] Audit ${auditId} completed successfully`)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+
+    console.error('[Audit Complete Error]', {
+      type: 'complete_failed',
+      auditId,
+      url,
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    })
+
+    await supabase
+      .from('site_audits')
+      .update({
+        status: 'failed',
+        error_message: `Failed to complete audit: ${errorMessage}`,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+
+    throw error
+  }
+}
