@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getPageSpeedData } from './actions'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import { ProjectSelector } from '@/components/seo/project-selector'
@@ -11,6 +12,11 @@ interface PageProps {
 export default async function PageSpeedPage({ searchParams }: PageProps) {
   const { project: projectId, url: initialUrl } = await searchParams
   const { audits, monitoredPages, projects } = await getPageSpeedData(projectId)
+
+  // Auto-select if there's only one project and none selected
+  if (!projectId && projects.length === 1) {
+    redirect(`/seo/page-speed?project=${projects[0].id}`)
+  }
 
   // Find the selected project
   const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null

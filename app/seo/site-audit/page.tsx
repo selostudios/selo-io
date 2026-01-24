@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getSiteAuditData } from './actions'
 import { AuditDashboard } from '@/components/audit/audit-dashboard'
 import { ProjectSelector } from '@/components/seo/project-selector'
@@ -11,6 +12,11 @@ interface PageProps {
 export default async function SiteAuditPage({ searchParams }: PageProps) {
   const { project: projectId } = await searchParams
   const { audits, archivedAudits, projects } = await getSiteAuditData(projectId)
+
+  // Auto-select if there's only one project and none selected
+  if (!projectId && projects.length === 1) {
+    redirect(`/seo/site-audit?project=${projects[0].id}`)
+  }
 
   // Find the selected project
   const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
