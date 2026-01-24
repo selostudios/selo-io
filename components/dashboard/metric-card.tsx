@@ -142,7 +142,7 @@ export function MetricCard({
                 tickMargin={4}
                 minTickGap={24}
               />
-              <YAxis hide />
+              <YAxis hide domain={['dataMin', 'dataMax']} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
