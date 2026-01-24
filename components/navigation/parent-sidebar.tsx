@@ -52,10 +52,10 @@ export function ParentSidebar({ activeSection, onSectionChange }: ParentSidebarP
                 <button
                   onClick={() => onSectionChange(section.id)}
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                    'flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors',
                     isActive
-                      ? 'bg-violet-100 text-violet-700'
-                      : 'text-neutral-600 hover:bg-neutral-100'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'text-neutral-600 hover:bg-amber-50'
                   )}
                   aria-label={section.name}
                 >
