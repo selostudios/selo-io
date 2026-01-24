@@ -68,12 +68,13 @@ const formatSavingsDisplay = (displayValue: string): string => {
     if (seconds >= 60) {
       const minutes = seconds / 60
       if (minutes >= 60) {
-        const hours = minutes / 60
-        return `${hours.toFixed(1)} hours`
+        const hours = Math.round(minutes / 60)
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`
       }
-      return `${minutes.toFixed(1)} min`
+      const mins = Math.round(minutes)
+      return `${mins} ${mins === 1 ? 'min' : 'mins'}`
     }
-    return `${seconds.toFixed(1)}s`
+    return `${Math.round(seconds)}s`
   }
 
   // Return as-is if not a time value (e.g., "500 KB")
