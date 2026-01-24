@@ -55,6 +55,31 @@ const formatBytes = (bytes: number | null) => {
   return `${(bytes / 1024).toFixed(0)}KB`
 }
 
+const formatSavingsDisplay = (displayValue: string): string => {
+  // Parse time values like "14,772.1 s" or "1.5 s" or "500 ms"
+  const timeMatch = displayValue.match(/([\d,.]+)\s*(s|ms)/i)
+  if (timeMatch) {
+    const value = parseFloat(timeMatch[1].replace(/,/g, ''))
+    const unit = timeMatch[2].toLowerCase()
+
+    // Convert to seconds
+    const seconds = unit === 'ms' ? value / 1000 : value
+
+    if (seconds >= 60) {
+      const minutes = seconds / 60
+      if (minutes >= 60) {
+        const hours = minutes / 60
+        return `${hours.toFixed(1)} hours`
+      }
+      return `${minutes.toFixed(1)} min`
+    }
+    return `${seconds.toFixed(1)}s`
+  }
+
+  // Return as-is if not a time value (e.g., "500 KB")
+  return displayValue
+}
+
 const formatUrlDisplay = (url: string): string => {
   try {
     const parsed = new URL(url)
@@ -967,13 +992,13 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
                 {isHighPriority ? 'HIGH PRIORITY' : 'MEDIUM PRIORITY'}
               </Text>
               <Text style={styles.actionTitle}>
-                {opp.title} {opp.displayValue && `(${opp.displayValue})`}
+                {opp.title} {opp.displayValue && `(${formatSavingsDisplay(opp.displayValue)})`}
               </Text>
               <Text style={styles.actionDescription}>{cleanDescription}</Text>
               <View style={styles.actionImpact}>
                 <Text style={styles.actionImpact}>
                   <Text style={styles.actionImpactLabel}>Potential savings: </Text>
-                  {opp.displayValue || 'Improved performance'}
+                  {opp.displayValue ? formatSavingsDisplay(opp.displayValue) : 'Improved performance'}
                 </Text>
               </View>
             </View>
