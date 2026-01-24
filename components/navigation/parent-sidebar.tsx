@@ -13,7 +13,12 @@ interface ParentSidebarProps {
   onSectionChange: (section: ParentSection) => void
 }
 
-const sections: Array<{ id: ParentSection; name: string; icon: React.ComponentType<{ className?: string }>; href: string }> = [
+const sections: Array<{
+  id: ParentSection
+  name: string
+  icon: React.ComponentType<{ className?: string }>
+  href: string
+}> = [
   { id: 'home', name: 'Home', icon: House, href: '/dashboard' },
   { id: 'seo', name: 'SEO', icon: LineChart, href: '/seo/site-audit' },
 ]

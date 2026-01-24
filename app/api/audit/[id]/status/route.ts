@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const timestamp = audit.updated_at || audit.created_at
     const updatedAt = new Date(timestamp).getTime()
     const now = Date.now()
-    const isStale = !isNaN(updatedAt) && (now - updatedAt > STALE_AUDIT_THRESHOLD_MS)
+    const isStale = !isNaN(updatedAt) && now - updatedAt > STALE_AUDIT_THRESHOLD_MS
 
     if (isStale) {
       const serviceClient = createServiceClient()
@@ -35,7 +35,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         .from('site_audits')
         .update({
           status: 'failed',
-          error_message: 'Audit timed out - the server function was terminated before completion. Please try again.',
+          error_message:
+            'Audit timed out - the server function was terminated before completion. Please try again.',
           completed_at: new Date().toISOString(),
         })
         .eq('id', id)

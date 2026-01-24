@@ -45,12 +45,15 @@ export function NavigationShell() {
   }, [])
 
   // Handle section change - navigate to section's default route
-  const handleSectionChange = useCallback((section: ParentSection) => {
-    // Only navigate if we're changing to a different section
-    if (section !== activeSection) {
-      router.push(sectionDefaultRoutes[section])
-    }
-  }, [activeSection, router])
+  const handleSectionChange = useCallback(
+    (section: ParentSection) => {
+      // Only navigate if we're changing to a different section
+      if (section !== activeSection) {
+        router.push(sectionDefaultRoutes[section])
+      }
+    },
+    [activeSection, router]
+  )
 
   // Toggle child sidebar collapsed state
   const handleToggleCollapse = useCallback(() => {
@@ -65,11 +68,8 @@ export function NavigationShell() {
   const collapsed = mounted ? isChildCollapsed : false
 
   return (
-    <div className="flex sticky top-0 h-screen">
-      <ParentSidebar
-        activeSection={activeSection}
-        onSectionChange={handleSectionChange}
-      />
+    <div className="sticky top-0 flex h-screen">
+      <ParentSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <ChildSidebar
         activeSection={activeSection}
         isCollapsed={collapsed}
@@ -79,7 +79,7 @@ export function NavigationShell() {
       {/* Expand button when child sidebar is collapsed */}
       {collapsed && (
         <div className="flex h-screen w-12 flex-col items-center border-r bg-white">
-          <div className="flex h-16 items-center justify-center border-b w-full">
+          <div className="flex h-16 w-full items-center justify-center border-b">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

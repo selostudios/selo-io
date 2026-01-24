@@ -66,11 +66,16 @@ export async function crawlSite(
     if (visited.has(url)) continue
     visited.add(url)
 
-    const { html, statusCode, lastModified, finalUrl, error, usedRelaxedSSL } = await fetchPage(url, { forceRelaxedSSL })
+    const { html, statusCode, lastModified, finalUrl, error, usedRelaxedSSL } = await fetchPage(
+      url,
+      { forceRelaxedSSL }
+    )
 
     // SSL certs are at domain level - if one page needs relaxed SSL, all will
     if (usedRelaxedSSL && !forceRelaxedSSL) {
-      console.log(`[Audit Crawler] SSL certificate issue detected, using relaxed SSL for remaining pages`)
+      console.log(
+        `[Audit Crawler] SSL certificate issue detected, using relaxed SSL for remaining pages`
+      )
       forceRelaxedSSL = true
     }
 

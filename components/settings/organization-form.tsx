@@ -240,36 +240,36 @@ export function OrganizationForm({
   return (
     <>
       <form action={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Organization Information</CardTitle>
-            <CardDescription>
-              Update your organization&apos;s branding and basic information
-            </CardDescription>
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleFetchBrand}
-                disabled={!websiteUrl || isFetchingBrand || isLoading}
-              >
-                {isFetchingBrand ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Wand2 className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {websiteUrl ? 'Fetch brand assets' : 'Add a website URL first'}
-            </TooltipContent>
-          </Tooltip>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Organization Information</CardTitle>
+              <CardDescription>
+                Update your organization&apos;s branding and basic information
+              </CardDescription>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleFetchBrand}
+                  disabled={!websiteUrl || isFetchingBrand || isLoading}
+                >
+                  {isFetchingBrand ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {websiteUrl ? 'Fetch brand assets' : 'Add a website URL first'}
+              </TooltipContent>
+            </Tooltip>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Organization Name</Label>
@@ -380,115 +380,115 @@ export function OrganizationForm({
                 </div>
               </div>
             )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Brand Style</CardTitle>
-          <CardDescription>Customize your organization&apos;s visual identity</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>Organization Logo</Label>
-            <LogoUpload
-              currentLogoUrl={logoUrl || null}
-              organizationName={name}
-              primaryColor={primaryColor}
-            />
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Brand Style</CardTitle>
+            <CardDescription>Customize your organization&apos;s visual identity</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Organization Logo</Label>
+              <LogoUpload
+                currentLogoUrl={logoUrl || null}
+                organizationName={name}
+                primaryColor={primaryColor}
+              />
+            </div>
 
-          <div className="space-y-4">
-            <Label className="text-sm font-medium">Brand Colors</Label>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="primaryColor">Primary Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="primaryColor"
-                    name="primaryColor"
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    disabled={isLoading}
-                    className="h-10 w-20 cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    disabled={isLoading}
-                    placeholder="#000000"
-                    aria-label="Primary color hex value"
-                    className="flex-1 font-mono text-sm"
-                  />
+            <div className="space-y-4">
+              <Label className="text-sm font-medium">Brand Colors</Label>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="primaryColor">Primary Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="primaryColor"
+                      name="primaryColor"
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      disabled={isLoading}
+                      className="h-10 w-20 cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      disabled={isLoading}
+                      placeholder="#000000"
+                      aria-label="Primary color hex value"
+                      className="flex-1 font-mono text-sm"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="secondaryColor">Secondary Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="secondaryColor"
-                    name="secondaryColor"
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    disabled={isLoading}
-                    className="h-10 w-20 cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    disabled={isLoading}
-                    placeholder="#F5F5F0"
-                    aria-label="Secondary color hex value"
-                    className="flex-1 font-mono text-sm"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="secondaryColor">Secondary Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="secondaryColor"
+                      name="secondaryColor"
+                      type="color"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      disabled={isLoading}
+                      className="h-10 w-20 cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      disabled={isLoading}
+                      placeholder="#F5F5F0"
+                      aria-label="Secondary color hex value"
+                      className="flex-1 font-mono text-sm"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="accentColor">Accent Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="accentColor"
-                    name="accentColor"
-                    type="color"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    disabled={isLoading}
-                    className="h-10 w-20 cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    disabled={isLoading}
-                    placeholder="#666666"
-                    aria-label="Accent color hex value"
-                    className="flex-1 font-mono text-sm"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="accentColor">Accent Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="accentColor"
+                      name="accentColor"
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      disabled={isLoading}
+                      className="h-10 w-20 cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      disabled={isLoading}
+                      placeholder="#666666"
+                      aria-label="Accent color hex value"
+                      className="flex-1 font-mono text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <input type="hidden" name="description" value={description} />
-      <input type="hidden" name="city" value={city} />
-      <input type="hidden" name="country" value={country} />
-      <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
-      <input type="hidden" name="logoUrl" value={logoUrl} />
+        <input type="hidden" name="description" value={description} />
+        <input type="hidden" name="city" value={city} />
+        <input type="hidden" name="country" value={country} />
+        <input type="hidden" name="socialLinks" value={JSON.stringify(socialLinks)} />
+        <input type="hidden" name="logoUrl" value={logoUrl} />
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSaveDisabled}>
-          {isLoading ? 'Saving…' : 'Save Changes'}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSaveDisabled}>
+            {isLoading ? 'Saving…' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
 
       {brandData && (
         <BrandFetchModal

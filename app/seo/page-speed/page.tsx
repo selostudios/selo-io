@@ -25,11 +25,12 @@ export default async function PageSpeedPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-start gap-3">
-        <Gauge className="h-8 w-8 text-neutral-700 mt-1" />
+        <Gauge className="mt-1 h-8 w-8 text-neutral-700" />
         <div>
           <h1 className="text-3xl font-bold">Page Speed</h1>
           <p className="text-muted-foreground">
-            Measure Core Web Vitals, load times, and performance scores using Google PageSpeed Insights
+            Measure Core Web Vitals, load times, and performance scores using Google PageSpeed
+            Insights
           </p>
         </div>
       </div>
@@ -52,11 +53,12 @@ export default async function PageSpeedPage({ searchParams }: PageProps) {
             </div>
             <CardTitle>No Projects Yet</CardTitle>
             <CardDescription>
-              Create a project to start running page speed audits. Projects let you organize audits for different websites.
+              Create a project to start running page speed audits. Projects let you organize audits
+              for different websites.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Click the project selector above to create your first project.
             </p>
           </CardContent>

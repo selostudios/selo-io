@@ -148,7 +148,9 @@ export function MetricCard({
                   <ChartTooltipContent
                     labelFormatter={(value) => value}
                     formatter={(value) => (
-                      <span className="font-mono font-medium">{Number(value).toLocaleString()}</span>
+                      <span className="font-mono font-medium">
+                        {Number(value).toLocaleString()}
+                      </span>
                     )}
                   />
                 }

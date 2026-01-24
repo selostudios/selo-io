@@ -161,7 +161,12 @@ function formatHubSpotMetricsFromDb(
   // Cumulative metrics (use latest value)
   const totalContacts = calculateTrendFromDb(cached.metrics, 'hubspot_total_contacts', period, true)
   const totalDeals = calculateTrendFromDb(cached.metrics, 'hubspot_total_deals', period, true)
-  const totalPipelineValue = calculateTrendFromDb(cached.metrics, 'hubspot_total_pipeline_value', period, true)
+  const totalPipelineValue = calculateTrendFromDb(
+    cached.metrics,
+    'hubspot_total_pipeline_value',
+    period,
+    true
+  )
 
   // Period metrics (sum values)
   const newDeals = calculateTrendFromDb(cached.metrics, 'hubspot_new_deals', period)
@@ -251,9 +256,8 @@ export async function getHubSpotMetrics(period: Period = '30d', connectionId?: s
     ])
 
     // Get cached form submissions value (don't overwrite with 0)
-    const cachedFormSubmissions = cached.metrics.find(
-      (m) => m.metric_type === 'hubspot_form_submissions'
-    )?.value ?? 0
+    const cachedFormSubmissions =
+      cached.metrics.find((m) => m.metric_type === 'hubspot_form_submissions')?.value ?? 0
 
     // Combine into full metrics objects, preserving cached form submissions
     const marketing = {
@@ -262,15 +266,16 @@ export async function getHubSpotMetrics(period: Period = '30d', connectionId?: s
       emailsClicked: 0,
       openRate: 0,
       clickRate: 0,
-      formSubmissions: cachedFormSubmissions
+      formSubmissions: cachedFormSubmissions,
     }
     const currentMetrics = { crm: currentCRM, marketing }
     const previousMetrics = { crm: previousCRM, marketing }
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
     // Only store CRM metrics, preserve existing marketing metrics
-    const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
-      .filter(r => !r.metric_type.includes('form_submissions')) // Don't overwrite form submissions
+    const records = adapter
+      .normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+      .filter((r) => !r.metric_type.includes('form_submissions')) // Don't overwrite form submissions
 
     await supabase
       .from('campaign_metrics')
@@ -284,16 +289,30 @@ export async function getHubSpotMetrics(period: Period = '30d', connectionId?: s
 
     // 5. Return fresh data with historical time series from DB
     // Re-query DB for historical time series (now includes fresh data)
-    const updatedCache = await getMetricsFromDb(supabase, userRecord.organization_id, 'hubspot', period)
+    const updatedCache = await getMetricsFromDb(
+      supabase,
+      userRecord.organization_id,
+      'hubspot',
+      period
+    )
     const timeSeries = buildTimeSeriesArray(updatedCache.metrics, HUBSPOT_METRICS, period)
 
     return {
       metrics: {
         crm: {
           ...currentMetrics.crm,
-          newDealsChange: calculateChange(currentMetrics.crm.newDeals, previousMetrics.crm.newDeals),
-          dealsWonChange: calculateChange(currentMetrics.crm.dealsWon, previousMetrics.crm.dealsWon),
-          dealsLostChange: calculateChange(currentMetrics.crm.dealsLost, previousMetrics.crm.dealsLost),
+          newDealsChange: calculateChange(
+            currentMetrics.crm.newDeals,
+            previousMetrics.crm.newDeals
+          ),
+          dealsWonChange: calculateChange(
+            currentMetrics.crm.dealsWon,
+            previousMetrics.crm.dealsWon
+          ),
+          dealsLostChange: calculateChange(
+            currentMetrics.crm.dealsLost,
+            previousMetrics.crm.dealsLost
+          ),
         },
         marketing: {
           ...currentMetrics.marketing,

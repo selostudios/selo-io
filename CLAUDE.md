@@ -63,6 +63,7 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 **Server Actions**: Mutations use `'use server'` in `actions.ts` files colocated with features. Call `revalidatePath()` after mutations.
 
 **Supabase Clients**:
+
 - `lib/supabase/server.ts` - Server-side (RSC, server actions)
 - `lib/supabase/client.ts` - Browser-side
 
@@ -80,6 +81,7 @@ Platform API → Client (fetch + token refresh) → Adapter (normalize) → Data
 - `actions.ts` - Server actions for sync operations
 
 **Two sync pathways**:
+
 1. **Service-level** (`syncMetricsFor{Platform}Connection`): Cron jobs with service client (bypasses RLS)
 2. **User-triggered** (`sync{Platform}Metrics`): Dashboard refresh with user auth
 
@@ -93,6 +95,7 @@ Located in `lib/metrics/`:
 - Returns `null` for trends when insufficient historical data exists
 
 **Data flow**:
+
 ```
 Dashboard Page (RSC) → IntegrationsPanel (period state)
                     → Platform Sections call getMetrics(period)
@@ -103,6 +106,7 @@ Dashboard Page (RSC) → IntegrationsPanel (period state)
 ### Cron Jobs
 
 Located in `app/api/cron/`:
+
 - `daily-metrics-sync/` - Syncs all platform connections daily (secured by CRON_SECRET)
 - Requires `CRON_SECRET` environment variable in Vercel
 

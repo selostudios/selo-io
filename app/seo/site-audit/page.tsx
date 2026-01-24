@@ -25,11 +25,12 @@ export default async function SiteAuditPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-start gap-3">
-        <FileSearch className="h-8 w-8 text-neutral-700 mt-1" />
+        <FileSearch className="mt-1 h-8 w-8 text-neutral-700" />
         <div>
           <h1 className="text-3xl font-bold">Site Audit</h1>
           <p className="text-muted-foreground">
-            Crawl and analyze websites for SEO issues, missing meta tags, broken links, and technical problems
+            Crawl and analyze websites for SEO issues, missing meta tags, broken links, and
+            technical problems
           </p>
         </div>
       </div>
@@ -52,11 +53,12 @@ export default async function SiteAuditPage({ searchParams }: PageProps) {
             </div>
             <CardTitle>No Projects Yet</CardTitle>
             <CardDescription>
-              Create a project to start running site audits. Projects let you organize audits for different websites.
+              Create a project to start running site audits. Projects let you organize audits for
+              different websites.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Click the project selector above to create your first project.
             </p>
           </CardContent>

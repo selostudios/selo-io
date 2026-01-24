@@ -126,7 +126,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSuccess }: Projec
           </div>
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-destructive text-sm" role="alert">
               {error}
             </p>
           )}

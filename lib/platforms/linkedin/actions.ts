@@ -231,7 +231,11 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
     ])
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
-    const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+    const records = adapter.normalizeToDbRecords(
+      currentMetrics,
+      userRecord.organization_id,
+      new Date()
+    )
 
     await supabase
       .from('campaign_metrics')
@@ -273,7 +277,12 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
     ]
 
     // Re-query DB for historical time series (now includes fresh data)
-    const updatedCache = await getMetricsFromDb(supabase, userRecord.organization_id, 'linkedin', period)
+    const updatedCache = await getMetricsFromDb(
+      supabase,
+      userRecord.organization_id,
+      'linkedin',
+      period
+    )
     const timeSeries = buildTimeSeriesArray(updatedCache.metrics, LINKEDIN_METRICS, period)
 
     return { metrics, timeSeries }

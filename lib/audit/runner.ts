@@ -51,7 +51,11 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     let pagesCrawledCount = 0
 
     // Crawl the site with stop signal support (no page limit)
-    const { pages, errors: crawlErrors, stopped: crawlStopped } = await crawlSite(url, auditId, {
+    const {
+      pages,
+      errors: crawlErrors,
+      stopped: crawlStopped,
+    } = await crawlSite(url, auditId, {
       onPageCrawled: async (page) => {
         // Save page to database
         const { error: pageInsertError } = await supabase.from('site_audit_pages').insert(page)

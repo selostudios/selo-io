@@ -35,9 +35,7 @@ export default async function SeoLayout({ children }: { children: React.ReactNod
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">
-            <div className="space-y-6 p-8">
-              {children}
-            </div>
+            <div className="space-y-6 p-8">{children}</div>
           </main>
         </div>
       </div>

@@ -43,8 +43,13 @@ function formatChange(change: number | null): string {
   return ` (${sign}${change.toFixed(1)}%)`
 }
 
-function formatMetricsForClipboard(metrics: Metric[], period: Period, accountName?: string): string {
-  const periodLabel = period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
+function formatMetricsForClipboard(
+  metrics: Metric[],
+  period: Period,
+  accountName?: string
+): string {
+  const periodLabel =
+    period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
   const header = accountName
     ? `📊 LinkedIn Metrics - ${accountName} (${periodLabel})`
     : `📊 LinkedIn Metrics (${periodLabel})`
@@ -115,7 +120,11 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
                   className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
                   aria-label="Copy metrics to clipboard"
                 >
-                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                  {copied ? (
+                    <Check className="size-4 text-green-600" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
@@ -152,7 +161,7 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
       <CollapsibleContent className="mt-4 space-y-6">
         {connections.map((connection) => (
           <div key={connection.id} className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">
+            <h4 className="text-muted-foreground text-sm font-medium">
               {getConnectionLabel(connection)}
             </h4>
             <ConnectionMetrics connection={connection} period={period} />

@@ -86,7 +86,7 @@ export function ProjectSelector({ projects, selectedProjectId, basePath }: Proje
           <Button variant="outline" className="min-w-[200px] justify-between">
             {selectedProject ? (
               <span className="flex items-center gap-2 truncate">
-                <Globe className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <Globe className="text-muted-foreground h-4 w-4 flex-shrink-0" />
                 <span className="truncate">{selectedProject.name}</span>
               </span>
             ) : (
@@ -104,14 +104,14 @@ export function ProjectSelector({ projects, selectedProjectId, basePath }: Proje
                   onClick={() => handleSelectProject(project.id)}
                   className="flex items-center justify-between"
                 >
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="font-medium truncate">{project.name}</span>
-                    <span className="text-xs text-muted-foreground truncate">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="truncate font-medium">{project.name}</span>
+                    <span className="text-muted-foreground truncate text-xs">
                       {getDomain(project.url)}
                     </span>
                   </div>
                   {project.id === selectedProjectId && (
-                    <Check className="h-4 w-4 flex-shrink-0 text-primary" />
+                    <Check className="text-primary h-4 w-4 flex-shrink-0" />
                   )}
                 </DropdownMenuItem>
               ))}

@@ -50,7 +50,10 @@ interface PlatformConnectionGroupProps {
   connections: Connection[]
 }
 
-export function PlatformConnectionGroup({ platformType, connections }: PlatformConnectionGroupProps) {
+export function PlatformConnectionGroup({
+  platformType,
+  connections,
+}: PlatformConnectionGroupProps) {
   const info = platformInfo[platformType] || { name: 'Unknown', description: '' }
 
   if (connections.length === 0) {
@@ -119,7 +122,7 @@ function ConnectionRow({ connection }: { connection: Connection }) {
           <span className="sr-only">Edit display name</span>
         </Button>
         <Button variant="ghost" size="icon" onClick={() => setDisconnectOpen(true)}>
-          <Trash2 className="h-4 w-4 text-destructive" />
+          <Trash2 className="text-destructive h-4 w-4" />
           <span className="sr-only">Disconnect</span>
         </Button>
       </div>

@@ -113,7 +113,9 @@ export class HubSpotClient {
       if (response.status === 429 && retryCount < MAX_RETRIES) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
         if (!silent) {
-          console.log(`[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+          console.log(
+            `[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+          )
         }
         await sleep(delayMs)
         return this.fetch<T>(endpoint, silent, retryCount + 1)
@@ -170,7 +172,9 @@ export class HubSpotClient {
       // Retry on rate limit (429) with exponential backoff
       if (response.status === 429 && retryCount < MAX_RETRIES) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
-        console.log(`[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        console.log(
+          `[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+        )
         await sleep(delayMs)
         return this.postSearch<T>(endpoint, body, retryCount + 1)
       }
@@ -427,7 +431,11 @@ export class HubSpotClient {
   /**
    * Fetch only CRM metrics (for date-specific period comparisons)
    */
-  async getCRMMetricsOnly(startDate?: Date, endDate?: Date, days: number = 30): Promise<HubSpotCRMMetrics> {
+  async getCRMMetricsOnly(
+    startDate?: Date,
+    endDate?: Date,
+    days: number = 30
+  ): Promise<HubSpotCRMMetrics> {
     return this.getCRMMetrics(startDate, endDate, days)
   }
 

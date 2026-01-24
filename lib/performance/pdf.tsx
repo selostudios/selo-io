@@ -1,9 +1,5 @@
 import { Document, Page, Text, View, Image } from '@react-pdf/renderer'
-import type {
-  PerformanceAudit,
-  PerformanceAuditResult,
-  PageSpeedResult,
-} from './types'
+import type { PerformanceAudit, PerformanceAuditResult, PageSpeedResult } from './types'
 import { extractOpportunities, extractAdditionalMetrics } from './api'
 import { getLogoDataUri } from '@/lib/pdf/logo'
 import { StyleSheet } from '@react-pdf/renderer'
@@ -607,7 +603,10 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
       acc[result.url][result.device] = result
       return acc
     },
-    {} as Record<string, { mobile: PerformanceAuditResult | null; desktop: PerformanceAuditResult | null }>
+    {} as Record<
+      string,
+      { mobile: PerformanceAuditResult | null; desktop: PerformanceAuditResult | null }
+    >
   )
 
   const urls = Object.keys(resultsByUrl)
@@ -625,33 +624,63 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
   const desktopResults = results.filter((r) => r.device === 'desktop')
 
   const avgMobileScores = {
-    performance: mobileResults.length > 0
-      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) / mobileResults.length)
-      : null,
-    accessibility: mobileResults.length > 0
-      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) / mobileResults.length)
-      : null,
-    bestPractices: mobileResults.length > 0
-      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) / mobileResults.length)
-      : null,
-    seo: mobileResults.length > 0
-      ? Math.round(mobileResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / mobileResults.length)
-      : null,
+    performance:
+      mobileResults.length > 0
+        ? Math.round(
+            mobileResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) /
+              mobileResults.length
+          )
+        : null,
+    accessibility:
+      mobileResults.length > 0
+        ? Math.round(
+            mobileResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) /
+              mobileResults.length
+          )
+        : null,
+    bestPractices:
+      mobileResults.length > 0
+        ? Math.round(
+            mobileResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) /
+              mobileResults.length
+          )
+        : null,
+    seo:
+      mobileResults.length > 0
+        ? Math.round(
+            mobileResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / mobileResults.length
+          )
+        : null,
   }
 
   const avgDesktopScores = {
-    performance: desktopResults.length > 0
-      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) / desktopResults.length)
-      : null,
-    accessibility: desktopResults.length > 0
-      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) / desktopResults.length)
-      : null,
-    bestPractices: desktopResults.length > 0
-      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) / desktopResults.length)
-      : null,
-    seo: desktopResults.length > 0
-      ? Math.round(desktopResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / desktopResults.length)
-      : null,
+    performance:
+      desktopResults.length > 0
+        ? Math.round(
+            desktopResults.reduce((sum, r) => sum + (r.performance_score || 0), 0) /
+              desktopResults.length
+          )
+        : null,
+    accessibility:
+      desktopResults.length > 0
+        ? Math.round(
+            desktopResults.reduce((sum, r) => sum + (r.accessibility_score || 0), 0) /
+              desktopResults.length
+          )
+        : null,
+    bestPractices:
+      desktopResults.length > 0
+        ? Math.round(
+            desktopResults.reduce((sum, r) => sum + (r.best_practices_score || 0), 0) /
+              desktopResults.length
+          )
+        : null,
+    seo:
+      desktopResults.length > 0
+        ? Math.round(
+            desktopResults.reduce((sum, r) => sum + (r.seo_score || 0), 0) / desktopResults.length
+          )
+        : null,
   }
 
   const overallScore = avgMobileScores.performance
@@ -712,7 +741,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
         <View style={styles.coverFooter}>
           <Text style={styles.coverFooterText}>
-            {"This report analyzes your website's performance, accessibility, and search visibility using Google's PageSpeed Insights methodology."}
+            {
+              "This report analyzes your website's performance, accessibility, and search visibility using Google's PageSpeed Insights methodology."
+            }
           </Text>
         </View>
       </Page>
@@ -730,7 +761,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
           <Text style={styles.summaryText}>{getSummaryText()}</Text>
           {overallScore !== null && overallScore < 90 && (
             <Text style={styles.summaryText}>
-              {"The good news? These issues are fixable. With targeted optimizations, we can significantly improve your site's speed, user experience, and search rankings."}
+              {
+                "The good news? These issues are fixable. With targeted optimizations, we can significantly improve your site's speed, user experience, and search rankings."
+              }
             </Text>
           )}
         </View>
@@ -744,7 +777,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             <Text style={styles.bigScoreLabel}>Overall Performance Score</Text>
             <Text style={styles.scoreDescription}>
               Scores range from 0-100. A score of 90+ is considered good.
-              {overallScore !== null && ` Your score of ${overallScore} indicates ${getScoreLabel(overallScore).toLowerCase()} performance.`}
+              {overallScore !== null &&
+                ` Your score of ${overallScore} indicates ${getScoreLabel(overallScore).toLowerCase()} performance.`}
             </Text>
           </View>
         </View>
@@ -755,7 +789,16 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <View style={styles.findingsGrid}>
           <View style={styles.findingCard}>
             <Text style={styles.findingTitle}>Page Load Time (LCP)</Text>
-            <Text style={[styles.findingValue, { color: getScoreColor(lcpMs && lcpMs <= 2500 ? 90 : lcpMs && lcpMs <= 4000 ? 60 : 30) }]}>
+            <Text
+              style={[
+                styles.findingValue,
+                {
+                  color: getScoreColor(
+                    lcpMs && lcpMs <= 2500 ? 90 : lcpMs && lcpMs <= 4000 ? 60 : 30
+                  ),
+                },
+              ]}
+            >
               {formatMs(lcpMs)}
             </Text>
             <Text style={styles.findingDescription}>
@@ -765,7 +808,18 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
           <View style={styles.findingCard}>
             <Text style={styles.findingTitle}>Page Size</Text>
-            <Text style={[styles.findingValue, { color: additionalMetrics.total_byte_weight && additionalMetrics.total_byte_weight > 3000000 ? colors.scorePoor : colors.scoreOkay }]}>
+            <Text
+              style={[
+                styles.findingValue,
+                {
+                  color:
+                    additionalMetrics.total_byte_weight &&
+                    additionalMetrics.total_byte_weight > 3000000
+                      ? colors.scorePoor
+                      : colors.scoreOkay,
+                },
+              ]}
+            >
               {formatBytes(additionalMetrics.total_byte_weight)}
             </Text>
             <Text style={styles.findingDescription}>
@@ -785,7 +839,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
           <View style={styles.findingCard}>
             <Text style={styles.findingTitle}>Best Practices</Text>
-            <Text style={[styles.findingValue, { color: getScoreColor(avgMobileScores.bestPractices) }]}>
+            <Text
+              style={[styles.findingValue, { color: getScoreColor(avgMobileScores.bestPractices) }]}
+            >
               {avgMobileScores.bestPractices ?? '—'}/100
             </Text>
             <Text style={styles.findingDescription}>
@@ -806,14 +862,18 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <Text style={styles.sectionTitle}>What This Means for Your Business</Text>
 
         <Text style={styles.paragraph}>
-          {"Website performance isn't just a technical concern—it directly impacts your bottom line. Here's how your current scores translate to real business outcomes:"}
+          {
+            "Website performance isn't just a technical concern—it directly impacts your bottom line. Here's how your current scores translate to real business outcomes:"
+          }
         </Text>
 
         {/* Business Impact Stats */}
         <View style={styles.impactBox}>
           <View style={styles.impactStat}>
             <Text style={styles.impactNumber}>53%</Text>
-            <Text style={styles.impactLabel}>of visitors leave if a page takes {'>'}3s to load</Text>
+            <Text style={styles.impactLabel}>
+              of visitors leave if a page takes {'>'}3s to load
+            </Text>
           </View>
           <View style={styles.impactStat}>
             <Text style={styles.impactNumber}>1s</Text>
@@ -830,7 +890,10 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             <Text style={styles.explainerTitle}>The Bottom Line</Text>
             <Text style={styles.explainerText}>
               With a {formatMs(lcpMs)} load time, your site may be losing potential customers before
-              they even see what you offer. {avgMobileScores.seo && avgMobileScores.seo < 70 && 'Combined with low search visibility, this creates a double problem: fewer people find you, and many who do leave before engaging.'}
+              they even see what you offer.{' '}
+              {avgMobileScores.seo &&
+                avgMobileScores.seo < 70 &&
+                'Combined with low search visibility, this creates a double problem: fewer people find you, and many who do leave before engaging.'}
             </Text>
           </View>
         )}
@@ -849,32 +912,72 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
           <View style={styles.tableRow}>
             <Text style={[styles.tableCell, styles.tableCellBold, { width: '20%' }]}>Mobile</Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.performance) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgMobileScores.performance) },
+              ]}
+            >
               {avgMobileScores.performance ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.accessibility) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgMobileScores.accessibility) },
+              ]}
+            >
               {avgMobileScores.accessibility ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.bestPractices) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgMobileScores.bestPractices) },
+              ]}
+            >
               {avgMobileScores.bestPractices ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgMobileScores.seo) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgMobileScores.seo) },
+              ]}
+            >
               {avgMobileScores.seo ?? '—'}
             </Text>
           </View>
 
           <View style={[styles.tableRow, styles.tableRowAlt]}>
             <Text style={[styles.tableCell, styles.tableCellBold, { width: '20%' }]}>Desktop</Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.performance) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgDesktopScores.performance) },
+              ]}
+            >
               {avgDesktopScores.performance ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.accessibility) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgDesktopScores.accessibility) },
+              ]}
+            >
               {avgDesktopScores.accessibility ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.bestPractices) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgDesktopScores.bestPractices) },
+              ]}
+            >
               {avgDesktopScores.bestPractices ?? '—'}
             </Text>
-            <Text style={[styles.tableCell, { width: '20%', color: getScoreColor(avgDesktopScores.seo) }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { width: '20%', color: getScoreColor(avgDesktopScores.seo) },
+              ]}
+            >
               {avgDesktopScores.seo ?? '—'}
             </Text>
           </View>
@@ -882,9 +985,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
         <Text style={styles.paragraph}>
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>Why Mobile Matters Most: </Text>
-          Over 60% of web traffic comes from mobile devices. Google uses mobile performance
-          as a primary ranking factor, meaning slow mobile speeds hurt both user experience AND
-          your search rankings.
+          Over 60% of web traffic comes from mobile devices. Google uses mobile performance as a
+          primary ranking factor, meaning slow mobile speeds hurt both user experience AND your
+          search rankings.
         </Text>
 
         <PageFooter clientDomain={clientDomain} />
@@ -899,7 +1002,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <Text style={styles.sectionTitle}>Understanding the Metrics</Text>
 
         <Text style={styles.paragraph}>
-          {"Technical jargon can be confusing. Here's what each metric means for your visitors and your business:"}
+          {
+            "Technical jargon can be confusing. Here's what each metric means for your visitors and your business:"
+          }
         </Text>
 
         <View style={styles.glossaryItem}>
@@ -907,11 +1012,17 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             Largest Contentful Paint (LCP) — Your Result: {formatMs(lcpMs)}
           </Text>
           <Text style={styles.glossaryDefinition}>
-            Measures how long it takes for your main content to appear on screen.
-            This is the moment visitors can actually start reading or viewing your page.
+            Measures how long it takes for your main content to appear on screen. This is the moment
+            visitors can actually start reading or viewing your page.
           </Text>
           <Text style={styles.glossaryAnalogy}>
-            {"Like a store's front door: "}{formatMs(lcpMs)}{" is "}{lcpMs && lcpMs > 2500 ? 'too long—' : ''}{"making customers wait "}{lcpMs && lcpMs > 2500 ? 'while you slowly open the blinds' : 'just briefly'}{". Target: under 2.5s."}
+            {"Like a store's front door: "}
+            {formatMs(lcpMs)}
+            {' is '}
+            {lcpMs && lcpMs > 2500 ? 'too long—' : ''}
+            {'making customers wait '}
+            {lcpMs && lcpMs > 2500 ? 'while you slowly open the blinds' : 'just briefly'}
+            {'. Target: under 2.5s.'}
           </Text>
         </View>
 
@@ -920,11 +1031,13 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             First Contentful Paint (FCP) — Your Result: {formatMs(additionalMetrics.fcp_ms)}
           </Text>
           <Text style={styles.glossaryDefinition}>
-            The time until visitors see anything at all—even just a loading indicator.
-            This is their first visual feedback that your site is working.
+            The time until visitors see anything at all—even just a loading indicator. This is their
+            first visual feedback that your site is working.
           </Text>
           <Text style={styles.glossaryAnalogy}>
-            {'Like acknowledging a customer when they walk in: a quick "be right with you" builds trust. Target: under 1.8s.'}
+            {
+              'Like acknowledging a customer when they walk in: a quick "be right with you" builds trust. Target: under 1.8s.'
+            }
           </Text>
         </View>
 
@@ -933,8 +1046,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             Speed Index — Your Result: {formatMs(additionalMetrics.speed_index_ms)}
           </Text>
           <Text style={styles.glossaryDefinition}>
-            Measures how quickly the visible parts of your page are populated.
-            A lower score means content appears faster and more smoothly.
+            Measures how quickly the visible parts of your page are populated. A lower score means
+            content appears faster and more smoothly.
           </Text>
           <Text style={styles.glossaryAnalogy}>
             Think of it as how fast a picture comes into focus. Target: under 3.4s.
@@ -946,8 +1059,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             Time to Interactive (TTI) — Your Result: {formatMs(additionalMetrics.tti_ms)}
           </Text>
           <Text style={styles.glossaryDefinition}>
-            How long before visitors can actually click buttons, fill forms, or interact.
-            Before this point, the page may look ready but feels frozen.
+            How long before visitors can actually click buttons, fill forms, or interact. Before
+            this point, the page may look ready but feels frozen.
           </Text>
           <Text style={styles.glossaryAnalogy}>
             Like a store that looks open but the doors are still locked. Target: under 3.8s.
@@ -959,11 +1072,12 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             SEO Score — Your Result: {avgMobileScores.seo ?? '—'}/100
           </Text>
           <Text style={styles.glossaryDefinition}>
-            Search Engine Optimization measures how easily Google can find, understand,
-            and recommend your site to people searching for what you offer.
+            Search Engine Optimization measures how easily Google can find, understand, and
+            recommend your site to people searching for what you offer.
           </Text>
           <Text style={styles.glossaryAnalogy}>
-            A low score is like having a great store on a hidden side street with no signage. Target: 90+.
+            A low score is like having a great store on a hidden side street with no signage.
+            Target: 90+.
           </Text>
         </View>
 
@@ -979,17 +1093,25 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <Text style={styles.sectionTitle}>Recommended Improvements</Text>
 
         <Text style={styles.paragraph}>
-          Based on our analysis, here are the highest-impact improvements,
-          prioritized by potential benefit to your business:
+          Based on our analysis, here are the highest-impact improvements, prioritized by potential
+          benefit to your business:
         </Text>
 
         {opportunities.slice(0, 4).map((opp, index) => {
           const isHighPriority = index < 2
-          const cleanDescription = opp.description.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').substring(0, 200)
+          const cleanDescription = opp.description
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .substring(0, 200)
 
           return (
             <View key={opp.id} style={styles.actionItem}>
-              <Text style={isHighPriority ? styles.actionPriority : [styles.actionPriority, styles.actionPriorityMedium]}>
+              <Text
+                style={
+                  isHighPriority
+                    ? styles.actionPriority
+                    : [styles.actionPriority, styles.actionPriorityMedium]
+                }
+              >
                 {isHighPriority ? 'HIGH PRIORITY' : 'MEDIUM PRIORITY'}
               </Text>
               <Text style={styles.actionTitle}>
@@ -999,7 +1121,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
               <View style={styles.actionImpact}>
                 <Text style={styles.actionImpact}>
                   <Text style={styles.actionImpactLabel}>Potential savings: </Text>
-                  {opp.displayValue ? formatSavingsDisplay(opp.displayValue) : 'Improved performance'}
+                  {opp.displayValue
+                    ? formatSavingsDisplay(opp.displayValue)
+                    : 'Improved performance'}
                 </Text>
               </View>
             </View>
@@ -1010,7 +1134,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
           <View style={styles.explainerBox}>
             <Text style={styles.explainerTitle}>No Major Issues Found</Text>
             <Text style={styles.explainerText}>
-              Your website is well-optimized! Continue monitoring performance to maintain these results.
+              Your website is well-optimized! Continue monitoring performance to maintain these
+              results.
             </Text>
           </View>
         )}
@@ -1027,9 +1152,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
 
           <Text style={styles.sectionTitle}>Per-Page Results</Text>
 
-          <Text style={styles.paragraph}>
-            Detailed performance scores for each page analyzed:
-          </Text>
+          <Text style={styles.paragraph}>Detailed performance scores for each page analyzed:</Text>
 
           {urls.map((url) => {
             const mobileResult = resultsByUrl[url].mobile
@@ -1040,25 +1163,45 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
                 <Text style={styles.pageResultUrl}>{formatUrlDisplay(url)}</Text>
                 <View style={styles.pageResultScores}>
                   <View style={styles.pageResultScore}>
-                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.performance_score || null) }]}>
+                    <Text
+                      style={[
+                        styles.pageResultScoreValue,
+                        { color: getScoreColor(mobileResult?.performance_score || null) },
+                      ]}
+                    >
                       {mobileResult?.performance_score ?? '—'}
                     </Text>
                     <Text style={styles.pageResultScoreLabel}>Mobile Perf</Text>
                   </View>
                   <View style={styles.pageResultScore}>
-                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(desktopResult?.performance_score || null) }]}>
+                    <Text
+                      style={[
+                        styles.pageResultScoreValue,
+                        { color: getScoreColor(desktopResult?.performance_score || null) },
+                      ]}
+                    >
                       {desktopResult?.performance_score ?? '—'}
                     </Text>
                     <Text style={styles.pageResultScoreLabel}>Desktop Perf</Text>
                   </View>
                   <View style={styles.pageResultScore}>
-                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.accessibility_score || null) }]}>
+                    <Text
+                      style={[
+                        styles.pageResultScoreValue,
+                        { color: getScoreColor(mobileResult?.accessibility_score || null) },
+                      ]}
+                    >
                       {mobileResult?.accessibility_score ?? '—'}
                     </Text>
                     <Text style={styles.pageResultScoreLabel}>Accessibility</Text>
                   </View>
                   <View style={styles.pageResultScore}>
-                    <Text style={[styles.pageResultScoreValue, { color: getScoreColor(mobileResult?.seo_score || null) }]}>
+                    <Text
+                      style={[
+                        styles.pageResultScoreValue,
+                        { color: getScoreColor(mobileResult?.seo_score || null) },
+                      ]}
+                    >
                       {mobileResult?.seo_score ?? '—'}
                     </Text>
                     <Text style={styles.pageResultScoreLabel}>SEO</Text>
@@ -1091,7 +1234,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
           <Text style={styles.listBullet}>→</Text>
           <Text style={styles.listText}>
             <Text style={{ fontFamily: 'Helvetica-Bold' }}>Faster Load Times: </Text>
-            Target under 2.5 seconds {lcpMs ? `(currently ${formatMs(lcpMs)})` : ''} to keep visitors engaged
+            Target under 2.5 seconds {lcpMs ? `(currently ${formatMs(lcpMs)})` : ''} to keep
+            visitors engaged
           </Text>
         </View>
 
@@ -1099,7 +1243,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
           <Text style={styles.listBullet}>→</Text>
           <Text style={styles.listText}>
             <Text style={{ fontFamily: 'Helvetica-Bold' }}>Better Search Rankings: </Text>
-            Improve SEO {avgMobileScores.seo ? `from ${avgMobileScores.seo}` : ''} to 90+ so customers can find you
+            Improve SEO {avgMobileScores.seo ? `from ${avgMobileScores.seo}` : ''} to 90+ so
+            customers can find you
           </Text>
         </View>
 
@@ -1122,7 +1267,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <View style={styles.explainerBox}>
           <Text style={styles.explainerTitle}>Our Approach</Text>
           <Text style={styles.explainerText}>
-            {"At Selo Studios, we don't just fix technical issues—we partner with you to understand your business goals and ensure your website actively supports them. We combine data-driven analysis with creative solutions to deliver results that matter to your bottom line."}
+            {
+              "At Selo Studios, we don't just fix technical issues—we partner with you to understand your business goals and ensure your website actively supports them. We combine data-driven analysis with creative solutions to deliver results that matter to your bottom line."
+            }
           </Text>
         </View>
 
@@ -1130,7 +1277,9 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         <View style={styles.ctaBox}>
           <Text style={styles.ctaTitle}>Ready to Improve Your Website Performance?</Text>
           <Text style={styles.ctaText}>
-            {"Let's discuss how we can implement these improvements and help your website become a powerful tool for your business growth."}
+            {
+              "Let's discuss how we can implement these improvements and help your website become a powerful tool for your business growth."
+            }
           </Text>
           <View style={styles.ctaContact}>
             <View style={styles.ctaContactItem}>

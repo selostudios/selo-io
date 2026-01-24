@@ -12,13 +12,7 @@ const iconMap = {
 
 export type SocialPlatform = keyof typeof iconMap
 
-export function SocialIcon({
-  platform,
-  className,
-}: {
-  platform: string
-  className?: string
-}) {
+export function SocialIcon({ platform, className }: { platform: string; className?: string }) {
   const Icon = iconMap[platform as SocialPlatform] || Link
   return <Icon className={className} />
 }

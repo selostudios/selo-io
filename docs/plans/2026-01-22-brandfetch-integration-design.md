@@ -23,10 +23,11 @@ ADD COLUMN social_links JSONB DEFAULT '[]';
 ```
 
 **Social links structure:**
+
 ```json
 [
-  {"platform": "twitter", "url": "https://twitter.com/acme"},
-  {"platform": "linkedin", "url": "https://linkedin.com/company/acme"}
+  { "platform": "twitter", "url": "https://twitter.com/acme" },
+  { "platform": "linkedin", "url": "https://linkedin.com/company/acme" }
 ]
 ```
 
@@ -82,6 +83,7 @@ Buttons: "Cancel" | "Apply Selected"
 ### Logo Handling
 
 When user applies logo:
+
 1. Server action downloads image from Brandfetch CDN
 2. Uploads to Supabase storage at `{org_id}/logo.{format}`
 3. Returns Supabase public URL
@@ -95,12 +97,12 @@ User can always override by manually uploading a different logo.
 
 ## Error Handling
 
-| Scenario | User Feedback |
-|----------|---------------|
-| Brand not found | Toast: "No brand data found for this domain" |
-| API error | Toast: "Failed to fetch brand data. Please try again." |
-| Rate limited | Toast: "Too many requests. Please wait a moment." |
-| No website URL | Button disabled with tooltip |
+| Scenario        | User Feedback                                          |
+| --------------- | ------------------------------------------------------ |
+| Brand not found | Toast: "No brand data found for this domain"           |
+| API error       | Toast: "Failed to fetch brand data. Please try again." |
+| Rate limited    | Toast: "Too many requests. Please wait a moment."      |
+| No website URL  | Button disabled with tooltip                           |
 
 ---
 
@@ -108,21 +110,21 @@ User can always override by manually uploading a different logo.
 
 ### New Files
 
-| File | Purpose |
-|------|---------|
-| `lib/brandfetch/types.ts` | TypeScript types for API response |
-| `lib/brandfetch/client.ts` | Brandfetch API client |
-| `lib/brandfetch/actions.ts` | Server action `fetchBrandData()` |
-| `components/settings/brand-fetch-modal.tsx` | Preview modal component |
-| `supabase/migrations/[timestamp]_add_brand_fields.sql` | New columns |
+| File                                                   | Purpose                           |
+| ------------------------------------------------------ | --------------------------------- |
+| `lib/brandfetch/types.ts`                              | TypeScript types for API response |
+| `lib/brandfetch/client.ts`                             | Brandfetch API client             |
+| `lib/brandfetch/actions.ts`                            | Server action `fetchBrandData()`  |
+| `components/settings/brand-fetch-modal.tsx`            | Preview modal component           |
+| `supabase/migrations/[timestamp]_add_brand_fields.sql` | New columns                       |
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `components/settings/organization-form.tsx` | Add wand button, modal trigger, handle apply |
-| `app/settings/organization/page.tsx` | Fetch new fields (description, city, country, social_links) |
-| `app/settings/organization/actions.ts` | Update `updateOrganization` for new fields |
+| File                                        | Changes                                                     |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| `components/settings/organization-form.tsx` | Add wand button, modal trigger, handle apply                |
+| `app/settings/organization/page.tsx`        | Fetch new fields (description, city, country, social_links) |
+| `app/settings/organization/actions.ts`      | Update `updateOrganization` for new fields                  |
 
 ---
 
@@ -132,27 +134,27 @@ Key fields we use:
 
 ```typescript
 {
-  name: string;
-  description: string | null;
+  name: string
+  description: string | null
   logos: Array<{
-    theme: 'dark' | 'light' | null;
-    type: 'icon' | 'logo' | 'symbol' | 'other';
-    formats: Array<{ src: string; format: string; }>;
-  }>;
+    theme: 'dark' | 'light' | null
+    type: 'icon' | 'logo' | 'symbol' | 'other'
+    formats: Array<{ src: string; format: string }>
+  }>
   colors: Array<{
-    hex: string;
-    type: 'accent' | 'dark' | 'light' | 'brand';
-  }>;
+    hex: string
+    type: 'accent' | 'dark' | 'light' | 'brand'
+  }>
   links: Array<{
-    name: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'youtube' | 'github';
-    url: string;
-  }>;
+    name: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'youtube' | 'github'
+    url: string
+  }>
   company: {
     location: {
-      city: string;
-      country: string;
-    };
-  };
+      city: string
+      country: string
+    }
+  }
 }
 ```
 
@@ -162,14 +164,14 @@ Full response stored in `brand_preferences` for future theming features.
 
 ## Social Link Icons
 
-| Platform | Icon |
-|----------|------|
-| twitter | Twitter icon (or X) |
-| facebook | Facebook icon |
-| instagram | Instagram icon |
-| linkedin | LinkedIn icon |
-| youtube | YouTube icon |
-| github | GitHub icon |
+| Platform   | Icon                 |
+| ---------- | -------------------- |
+| twitter    | Twitter icon (or X)  |
+| facebook   | Facebook icon        |
+| instagram  | Instagram icon       |
+| linkedin   | LinkedIn icon        |
+| youtube    | YouTube icon         |
+| github     | GitHub icon          |
 | crunchbase | Link icon (fallback) |
 
 Icons from lucide-react or custom SVGs. Links open in new tab (`target="_blank" rel="noopener noreferrer"`).

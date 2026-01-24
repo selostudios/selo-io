@@ -65,7 +65,8 @@ function selectBestLogo(logos: BrandfetchResponse['logos']): BrandData['logo'] {
   // Sort by preference
   const sorted = [...logos].sort((a, b) => {
     // Prefer light theme
-    const themeScore = (logo: typeof a) => (logo.theme === 'light' ? 2 : logo.theme === null ? 1 : 0)
+    const themeScore = (logo: typeof a) =>
+      logo.theme === 'light' ? 2 : logo.theme === null ? 1 : 0
     // Prefer logo type
     const typeScore = (logo: typeof a) => {
       if (logo.type === 'logo') return 3

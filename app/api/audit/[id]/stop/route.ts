@@ -58,7 +58,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Failed to stop audit' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, message: 'Audit marked as failed (runner was not responding)' })
+    return NextResponse.json({
+      success: true,
+      message: 'Audit marked as failed (runner was not responding)',
+    })
   }
 
   // Runner might still be alive, set status to 'stopped' for it to detect

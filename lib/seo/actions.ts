@@ -160,9 +160,7 @@ export async function updateProject(
   return { success: true, project }
 }
 
-export async function deleteProject(
-  id: string
-): Promise<{ success: boolean; error?: string }> {
+export async function deleteProject(id: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
 
   const {
@@ -173,10 +171,7 @@ export async function deleteProject(
     return { success: false, error: 'Not authenticated' }
   }
 
-  const { error } = await supabase
-    .from('seo_projects')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('seo_projects').delete().eq('id', id)
 
   if (error) {
     console.error('[SEO Projects Error]', {

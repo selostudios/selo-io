@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Megaphone, Settings, FileSearch, Gauge, PanelLeftClose, Loader2 } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Megaphone,
+  Settings,
+  FileSearch,
+  Gauge,
+  PanelLeftClose,
+  Loader2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
 
@@ -54,7 +62,12 @@ interface ChildSidebarProps {
   hasActiveAudit?: boolean
 }
 
-export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse, hasActiveAudit }: ChildSidebarProps) {
+export function ChildSidebar({
+  activeSection,
+  isCollapsed,
+  onToggleCollapse,
+  hasActiveAudit,
+}: ChildSidebarProps) {
   const pathname = usePathname()
   const navigation = navigationConfig[activeSection]
 
@@ -69,7 +82,7 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse, has
         <h2 className="text-sm font-semibold text-neutral-900">{sectionTitles[activeSection]}</h2>
         <button
           onClick={onToggleCollapse}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
           aria-label="Collapse sidebar"
         >
           <PanelLeftClose className="h-4 w-4" />
@@ -81,7 +94,7 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse, has
         {navigation.map((group, groupIndex) => (
           <div key={groupIndex}>
             {group.header && (
-              <h3 className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <h3 className="mb-2 px-3 text-xs font-medium tracking-wider text-neutral-500 uppercase">
                 {group.header}
               </h3>
             )}
@@ -115,9 +128,7 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse, has
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
                     <span className="flex-1">{item.name}</span>
-                    {showSpinner && (
-                      <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />
-                    )}
+                    {showSpinner && <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />}
                   </Link>
                 )
               })}

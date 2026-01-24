@@ -17,7 +17,12 @@ interface AuditDashboardProps {
   projectId?: string
 }
 
-export function AuditDashboard({ websiteUrl, audits, archivedAudits, projectId }: AuditDashboardProps) {
+export function AuditDashboard({
+  websiteUrl,
+  audits,
+  archivedAudits,
+  projectId,
+}: AuditDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showArchived, setShowArchived] = useState(false)

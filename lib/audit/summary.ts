@@ -18,17 +18,25 @@ export async function generateExecutiveSummary(
   checks: SiteAuditCheck[]
 ): Promise<string> {
   const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
-  const warnings = checks.filter((c) => c.status === 'warning' || (c.priority === 'recommended' && c.status === 'failed'))
+  const warnings = checks.filter(
+    (c) => c.status === 'warning' || (c.priority === 'recommended' && c.status === 'failed')
+  )
   const passed = checks.filter((c) => c.status === 'passed')
 
   const criticalList =
     criticalFails.length > 0
-      ? criticalFails.slice(0, 5).map((c) => `- ${formatCheckName(c)}`).join('\n')
+      ? criticalFails
+          .slice(0, 5)
+          .map((c) => `- ${formatCheckName(c)}`)
+          .join('\n')
       : '- None'
 
   const warningList =
     warnings.length > 0
-      ? warnings.slice(0, 5).map((c) => `- ${formatCheckName(c)}`).join('\n')
+      ? warnings
+          .slice(0, 5)
+          .map((c) => `- ${formatCheckName(c)}`)
+          .join('\n')
       : '- None'
 
   const prompt = `Analyze this website audit and write a brief executive summary for the site owner.

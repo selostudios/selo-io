@@ -37,9 +37,7 @@ interface IntegrationsPanelProps {
 }
 
 function getMostRecentSync(connections: Connection[]): string | null {
-  const allSyncTimes = connections
-    .map((c) => c.last_sync_at)
-    .filter((t): t is string => t !== null)
+  const allSyncTimes = connections.map((c) => c.last_sync_at).filter((t): t is string => t !== null)
   if (allSyncTimes.length === 0) return null
   return allSyncTimes.reduce((latest, current) =>
     new Date(current) > new Date(latest) ? current : latest
@@ -55,8 +53,14 @@ export function IntegrationsPanel({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const allConnections = [...linkedInConnections, ...googleAnalyticsConnections, ...hubspotConnections]
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(() => getMostRecentSync(allConnections))
+  const allConnections = [
+    ...linkedInConnections,
+    ...googleAnalyticsConnections,
+    ...hubspotConnections,
+  ]
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(() =>
+    getMostRecentSync(allConnections)
+  )
 
   // Count unique platform types that have at least one connection
   const connectedPlatforms = new Set(allConnections.map((c) => c.platform_type)).size
@@ -118,7 +122,7 @@ export function IntegrationsPanel({
         </div>
         <div className="flex items-center gap-2">
           <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[130px] bg-background">
+            <SelectTrigger className="bg-background w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

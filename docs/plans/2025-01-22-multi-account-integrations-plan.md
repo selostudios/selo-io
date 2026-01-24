@@ -15,6 +15,7 @@
 ### Task 1.1: Create Migration for Multi-Account Support
 
 **Files:**
+
 - Create: `supabase/migrations/20260122100000_multi_account_integrations.sql`
 
 **Step 1: Write the migration**
@@ -74,6 +75,7 @@ git commit -m "feat: add multi-account support schema migration"
 ### Task 2.1: Update OAuth Callback to Support Multiple Accounts
 
 **Files:**
+
 - Modify: `app/api/auth/oauth/[provider]/callback/route.ts`
 
 **Step 1: Update the duplicate check logic**
@@ -81,6 +83,7 @@ git commit -m "feat: add multi-account support schema migration"
 Change the existing check from "is this platform connected" to "is this specific account connected":
 
 Find (around lines 156-171):
+
 ```typescript
 // Check if already connected
 const { data: existing } = await supabase
@@ -101,6 +104,7 @@ if (existing) {
 ```
 
 Replace with:
+
 ```typescript
 // Check if this specific account is already connected
 const { data: existing } = await supabase
@@ -124,6 +128,7 @@ if (existing) {
 **Step 2: Update the insert to include account_name**
 
 Find (around lines 173-188):
+
 ```typescript
 const { error: insertError } = await supabase.from('platform_connections').insert({
   organization_id: userRecord.organization_id,
@@ -141,6 +146,7 @@ const { error: insertError } = await supabase.from('platform_connections').inser
 ```
 
 Replace with:
+
 ```typescript
 const { error: insertError } = await supabase.from('platform_connections').insert({
   organization_id: userRecord.organization_id,
@@ -178,6 +184,7 @@ git commit -m "feat: allow multiple accounts per platform in OAuth callback"
 ### Task 3.1: Update Integrations Page to Show Multiple Connections
 
 **Files:**
+
 - Modify: `app/settings/integrations/page.tsx`
 
 **Step 1: Update the page to group connections by platform**
@@ -246,6 +253,7 @@ git commit -m "refactor: group connections by platform in integrations page"
 ### Task 3.2: Create IntegrationsPageContent Component
 
 **Files:**
+
 - Create: `app/settings/integrations/integrations-page-content.tsx`
 
 **Step 1: Create the component**
@@ -318,6 +326,7 @@ git commit -m "feat: add IntegrationsPageContent with add integration button"
 ### Task 3.3: Create PlatformConnectionGroup Component
 
 **Files:**
+
 - Create: `components/settings/platform-connection-group.tsx`
 
 **Step 1: Create the component**
@@ -478,6 +487,7 @@ git commit -m "feat: add PlatformConnectionGroup component for multiple connecti
 ### Task 3.4: Create AddIntegrationDialog Component
 
 **Files:**
+
 - Create: `components/settings/add-integration-dialog.tsx`
 
 **Step 1: Create the component**
@@ -576,6 +586,7 @@ git commit -m "feat: add AddIntegrationDialog component"
 ### Task 3.5: Create EditDisplayNameDialog Component
 
 **Files:**
+
 - Create: `components/settings/edit-display-name-dialog.tsx`
 
 **Step 1: Create the component**
@@ -673,6 +684,7 @@ git commit -m "feat: add EditDisplayNameDialog component"
 ### Task 3.6: Create DisconnectConfirmDialog Component
 
 **Files:**
+
 - Create: `components/settings/disconnect-confirm-dialog.tsx`
 
 **Step 1: Create the component**
@@ -757,6 +769,7 @@ git commit -m "feat: add DisconnectConfirmDialog component"
 ### Task 3.7: Add Server Action for Updating Display Name
 
 **Files:**
+
 - Modify: `app/settings/integrations/actions.ts`
 
 **Step 1: Add the updateConnectionDisplayName action**
@@ -819,6 +832,7 @@ git commit -m "feat: add updateConnectionDisplayName server action"
 ### Task 3.8: Delete Old PlatformConnectionCard Component
 
 **Files:**
+
 - Delete: `components/settings/platform-connection-card.tsx`
 
 **Step 1: Remove the file**
@@ -841,6 +855,7 @@ git commit -m "refactor: remove old PlatformConnectionCard component"
 ### Task 4.1: Update Dashboard Page to Pass Connections Array
 
 **Files:**
+
 - Modify: `app/dashboard/page.tsx`
 
 **Step 1: Read the current file to find the data fetching section**
@@ -848,6 +863,7 @@ git commit -m "refactor: remove old PlatformConnectionCard component"
 Find the section that fetches platform connections and update it to return all connections, not just one per platform.
 
 The current code likely does something like:
+
 ```typescript
 const connectionsMap = new Map(connections?.map((c) => [c.platform_type, c]) || [])
 ```
@@ -875,11 +891,13 @@ git commit -m "feat: pass multiple connections to IntegrationsPanel"
 ### Task 4.2: Update IntegrationsPanel Props
 
 **Files:**
+
 - Modify: `components/dashboard/integrations-panel.tsx`
 
 **Step 1: Update the props interface and component**
 
 Change from:
+
 ```typescript
 interface IntegrationsPanelProps {
   linkedIn: { isConnected: boolean; lastSyncAt: string | null }
@@ -891,6 +909,7 @@ interface IntegrationsPanelProps {
 ```
 
 To:
+
 ```typescript
 type Connection = {
   id: string
@@ -909,6 +928,7 @@ interface IntegrationsPanelProps {
 ```
 
 Update the component to:
+
 - Calculate `connectionCount` from the sum of all connections
 - Pass connections array to each platform section
 - Update sync logic to sync all connections
@@ -923,11 +943,13 @@ git commit -m "feat: update IntegrationsPanel to support multiple connections"
 ### Task 4.3: Update LinkedInSection to Support Multiple Connections
 
 **Files:**
+
 - Modify: `components/dashboard/linkedin-section.tsx`
 
 **Step 1: Update props and rendering**
 
 Change from:
+
 ```typescript
 interface LinkedInSectionProps {
   isConnected: boolean
@@ -936,6 +958,7 @@ interface LinkedInSectionProps {
 ```
 
 To:
+
 ```typescript
 type Connection = {
   id: string
@@ -950,6 +973,7 @@ interface LinkedInSectionProps {
 ```
 
 Update the component to:
+
 - Show "not connected" state when `connections.length === 0`
 - When single connection: render current UI (no account header)
 - When multiple connections: render a sub-section for each with account name header
@@ -965,6 +989,7 @@ git commit -m "feat: update LinkedInSection for multiple accounts"
 ### Task 4.4: Update GoogleAnalyticsSection for Multiple Connections
 
 **Files:**
+
 - Modify: `components/dashboard/google-analytics-section.tsx`
 
 Follow the same pattern as Task 4.3.
@@ -981,6 +1006,7 @@ git commit -m "feat: update GoogleAnalyticsSection for multiple accounts"
 ### Task 4.5: Update HubSpotSection for Multiple Connections
 
 **Files:**
+
 - Modify: `components/dashboard/hubspot-section.tsx`
 
 Follow the same pattern as Task 4.3.
@@ -1001,16 +1027,19 @@ git commit -m "feat: update HubSpotSection for multiple accounts"
 ### Task 5.1: Update LinkedIn Actions for Connection-Specific Metrics
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/actions.ts`
 
 **Step 1: Update getLinkedInMetrics to accept connectionId**
 
 Change signature from:
+
 ```typescript
 export async function getLinkedInMetrics(period: Period)
 ```
 
 To:
+
 ```typescript
 export async function getLinkedInMetrics(period: Period, connectionId?: string)
 ```
@@ -1029,6 +1058,7 @@ git commit -m "feat: add connectionId parameter to LinkedIn metrics actions"
 ### Task 5.2: Update Google Analytics Actions
 
 **Files:**
+
 - Modify: `lib/platforms/google-analytics/actions.ts`
 
 Apply same changes as Task 5.1.
@@ -1045,6 +1075,7 @@ git commit -m "feat: add connectionId parameter to GA metrics actions"
 ### Task 5.3: Update HubSpot Actions
 
 **Files:**
+
 - Modify: `lib/platforms/hubspot/actions.ts`
 
 Apply same changes as Task 5.1.
@@ -1099,23 +1130,23 @@ Test the following scenarios:
 
 ## File Summary
 
-| File | Action |
-|------|--------|
+| File                                                                | Action |
+| ------------------------------------------------------------------- | ------ |
 | `supabase/migrations/20260122100000_multi_account_integrations.sql` | Create |
-| `app/api/auth/oauth/[provider]/callback/route.ts` | Modify |
-| `app/settings/integrations/page.tsx` | Modify |
-| `app/settings/integrations/integrations-page-content.tsx` | Create |
-| `app/settings/integrations/actions.ts` | Modify |
-| `components/settings/platform-connection-group.tsx` | Create |
-| `components/settings/add-integration-dialog.tsx` | Create |
-| `components/settings/edit-display-name-dialog.tsx` | Create |
-| `components/settings/disconnect-confirm-dialog.tsx` | Create |
-| `components/settings/platform-connection-card.tsx` | Delete |
-| `app/dashboard/page.tsx` | Modify |
-| `components/dashboard/integrations-panel.tsx` | Modify |
-| `components/dashboard/linkedin-section.tsx` | Modify |
-| `components/dashboard/google-analytics-section.tsx` | Modify |
-| `components/dashboard/hubspot-section.tsx` | Modify |
-| `lib/platforms/linkedin/actions.ts` | Modify |
-| `lib/platforms/google-analytics/actions.ts` | Modify |
-| `lib/platforms/hubspot/actions.ts` | Modify |
+| `app/api/auth/oauth/[provider]/callback/route.ts`                   | Modify |
+| `app/settings/integrations/page.tsx`                                | Modify |
+| `app/settings/integrations/integrations-page-content.tsx`           | Create |
+| `app/settings/integrations/actions.ts`                              | Modify |
+| `components/settings/platform-connection-group.tsx`                 | Create |
+| `components/settings/add-integration-dialog.tsx`                    | Create |
+| `components/settings/edit-display-name-dialog.tsx`                  | Create |
+| `components/settings/disconnect-confirm-dialog.tsx`                 | Create |
+| `components/settings/platform-connection-card.tsx`                  | Delete |
+| `app/dashboard/page.tsx`                                            | Modify |
+| `components/dashboard/integrations-panel.tsx`                       | Modify |
+| `components/dashboard/linkedin-section.tsx`                         | Modify |
+| `components/dashboard/google-analytics-section.tsx`                 | Modify |
+| `components/dashboard/hubspot-section.tsx`                          | Modify |
+| `lib/platforms/linkedin/actions.ts`                                 | Modify |
+| `lib/platforms/google-analytics/actions.ts`                         | Modify |
+| `lib/platforms/hubspot/actions.ts`                                  | Modify |

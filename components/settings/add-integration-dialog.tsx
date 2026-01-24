@@ -52,9 +52,7 @@ export function AddIntegrationDialog({ open, onOpenChange }: AddIntegrationDialo
       >
         <DialogHeader>
           <DialogTitle>Add Integration</DialogTitle>
-          <DialogDescription>
-            Connect a new marketing platform to track metrics.
-          </DialogDescription>
+          <DialogDescription>Connect a new marketing platform to track metrics.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

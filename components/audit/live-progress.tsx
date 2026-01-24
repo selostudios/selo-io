@@ -220,15 +220,12 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
                   <p className="text-sm">
                     <span className="font-medium">{progress.pages_crawled}</span>{' '}
                     <span className="text-muted-foreground">
-                      page{progress.pages_crawled !== 1 ? 's were' : ' was'} crawled before the failure
+                      page{progress.pages_crawled !== 1 ? 's were' : ' was'} crawled before the
+                      failure
                     </span>
                   </p>
                 </div>
-                <Button
-                  className="w-full"
-                  onClick={handleResume}
-                  disabled={isResuming}
-                >
+                <Button className="w-full" onClick={handleResume} disabled={isResuming}>
                   {isResuming ? (
                     <>
                       <Loader2 className="mr-2 size-4 animate-spin" />
@@ -237,7 +234,8 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
                   ) : (
                     <>
                       <CheckCircle2 className="mr-2 size-4" />
-                      Run Checks on {progress.pages_crawled} Page{progress.pages_crawled !== 1 ? 's' : ''}
+                      Run Checks on {progress.pages_crawled} Page
+                      {progress.pages_crawled !== 1 ? 's' : ''}
                     </>
                   )}
                 </Button>
@@ -288,7 +286,9 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
                       index + 1
                     )}
                   </div>
-                  <span className={`mt-1 text-xs ${index === currentPhaseIndex ? 'font-medium' : 'text-muted-foreground'}`}>
+                  <span
+                    className={`mt-1 text-xs ${index === currentPhaseIndex ? 'font-medium' : 'text-muted-foreground'}`}
+                  >
                     {phase.label}
                   </span>
                 </div>

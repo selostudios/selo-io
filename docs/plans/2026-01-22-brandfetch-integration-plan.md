@@ -15,6 +15,7 @@
 ### Task 1.1: Add Brand Fields Migration
 
 **Files:**
+
 - Create: `supabase/migrations/20260122000001_add_brand_fields.sql`
 
 **Step 1: Create the migration file**
@@ -53,6 +54,7 @@ git commit -m "feat: add brand fields migration for Brandfetch integration"
 ### Task 2.1: Create Brandfetch Types
 
 **Files:**
+
 - Create: `lib/brandfetch/types.ts`
 
 **Step 1: Create the types file**
@@ -149,6 +151,7 @@ git commit -m "feat: add Brandfetch API types"
 ### Task 2.2: Create Brandfetch Client
 
 **Files:**
+
 - Create: `lib/brandfetch/client.ts`
 
 **Step 1: Create the client file**
@@ -221,7 +224,8 @@ function selectBestLogo(logos: BrandfetchResponse['logos']): BrandData['logo'] {
   // Sort by preference
   const sorted = [...logos].sort((a, b) => {
     // Prefer light theme
-    const themeScore = (logo: typeof a) => (logo.theme === 'light' ? 2 : logo.theme === null ? 1 : 0)
+    const themeScore = (logo: typeof a) =>
+      logo.theme === 'light' ? 2 : logo.theme === null ? 1 : 0
     // Prefer logo type
     const typeScore = (logo: typeof a) => {
       if (logo.type === 'logo') return 3
@@ -307,6 +311,7 @@ git commit -m "feat: add Brandfetch API client with normalization"
 ### Task 2.3: Create Brandfetch Server Action
 
 **Files:**
+
 - Create: `lib/brandfetch/actions.ts`
 
 **Step 1: Create the server action**
@@ -464,6 +469,7 @@ git commit -m "feat: add Brandfetch server actions"
 ### Task 3.1: Create Social Icon Component
 
 **Files:**
+
 - Create: `components/icons/social-icons.tsx`
 
 **Step 1: Create the social icons file**
@@ -507,6 +513,7 @@ git commit -m "feat: add social platform icons component"
 ### Task 3.2: Create Brand Fetch Modal
 
 **Files:**
+
 - Create: `components/settings/brand-fetch-modal.tsx`
 
 **Step 1: Create the modal component**
@@ -742,6 +749,7 @@ git commit -m "feat: add Brandfetch preview modal component"
 ### Task 4.1: Update Organization Form Props and Page
 
 **Files:**
+
 - Modify: `app/settings/organization/page.tsx`
 - Modify: `components/settings/organization-form.tsx`
 
@@ -750,14 +758,14 @@ git commit -m "feat: add Brandfetch preview modal component"
 In `app/settings/organization/page.tsx`, update the select query (line 35-37):
 
 ```typescript
-  // Get organization details with industry relationship
-  const { data: org } = await supabase
-    .from('organizations')
-    .select(
-      'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url, description, city, country, social_links'
-    )
-    .eq('id', userRecord.organization_id)
-    .single()
+// Get organization details with industry relationship
+const { data: org } = await supabase
+  .from('organizations')
+  .select(
+    'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url, description, city, country, social_links'
+  )
+  .eq('id', userRecord.organization_id)
+  .single()
 ```
 
 Update the OrganizationForm props (lines 67-78):
@@ -793,6 +801,7 @@ git commit -m "feat: fetch new brand fields in organization page"
 ### Task 4.2: Update Organization Form Component
 
 **Files:**
+
 - Modify: `components/settings/organization-form.tsx`
 
 **Step 1: Add imports and update interface**
@@ -835,97 +844,97 @@ interface OrganizationFormProps {
 After existing state declarations, add:
 
 ```typescript
-  const [description, setDescription] = useState(initialDescription)
-  const [city, setCity] = useState(initialCity)
-  const [country, setCountry] = useState(initialCountry)
-  const [socialLinks, setSocialLinks] = useState(initialSocialLinks)
-  const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
+const [description, setDescription] = useState(initialDescription)
+const [city, setCity] = useState(initialCity)
+const [country, setCountry] = useState(initialCountry)
+const [socialLinks, setSocialLinks] = useState(initialSocialLinks)
+const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
 
-  // Brandfetch state
-  const [isFetchingBrand, setIsFetchingBrand] = useState(false)
-  const [brandData, setBrandData] = useState<BrandData | null>(null)
-  const [showBrandModal, setShowBrandModal] = useState(false)
+// Brandfetch state
+const [isFetchingBrand, setIsFetchingBrand] = useState(false)
+const [brandData, setBrandData] = useState<BrandData | null>(null)
+const [showBrandModal, setShowBrandModal] = useState(false)
 ```
 
 Add the fetch handler:
 
 ```typescript
-  async function handleFetchBrand() {
-    if (!websiteUrl) return
+async function handleFetchBrand() {
+  if (!websiteUrl) return
 
-    setIsFetchingBrand(true)
-    const result = await fetchBrandData(websiteUrl)
-    setIsFetchingBrand(false)
+  setIsFetchingBrand(true)
+  const result = await fetchBrandData(websiteUrl)
+  setIsFetchingBrand(false)
 
-    if (result.error) {
+  if (result.error) {
+    showError(result.error)
+    return
+  }
+
+  if (result.data) {
+    setBrandData(result.data)
+    setShowBrandModal(true)
+  }
+}
+
+async function handleApplyBrandData(selections: BrandSelections) {
+  if (!brandData) return
+
+  setIsLoading(true)
+
+  // Apply logo if selected
+  if (selections.logo && brandData.logo) {
+    const result = await uploadBrandLogo(brandData.logo.url, brandData.logo.format)
+    if (result.logoUrl) {
+      setLogoUrl(result.logoUrl)
+    } else if (result.error) {
       showError(result.error)
-      return
-    }
-
-    if (result.data) {
-      setBrandData(result.data)
-      setShowBrandModal(true)
     }
   }
 
-  async function handleApplyBrandData(selections: BrandSelections) {
-    if (!brandData) return
-
-    setIsLoading(true)
-
-    // Apply logo if selected
-    if (selections.logo && brandData.logo) {
-      const result = await uploadBrandLogo(brandData.logo.url, brandData.logo.format)
-      if (result.logoUrl) {
-        setLogoUrl(result.logoUrl)
-      } else if (result.error) {
-        showError(result.error)
-      }
-    }
-
-    // Apply colors if selected
-    if (selections.colors) {
-      if (brandData.colors.primary) setPrimaryColor(brandData.colors.primary)
-      if (brandData.colors.secondary) setSecondaryColor(brandData.colors.secondary)
-      if (brandData.colors.accent) setAccentColor(brandData.colors.accent)
-    }
-
-    // Apply description if selected
-    if (selections.description && brandData.description) {
-      setDescription(brandData.description)
-    }
-
-    // Apply social links if selected
-    if (selections.socialLinks) {
-      setSocialLinks(brandData.socialLinks)
-    }
-
-    // Apply location if selected
-    if (selections.location) {
-      if (brandData.location.city) setCity(brandData.location.city)
-      if (brandData.location.country) setCountry(brandData.location.country)
-    }
-
-    setIsLoading(false)
-    showSuccess('Brand assets applied! Click Save to confirm changes.')
+  // Apply colors if selected
+  if (selections.colors) {
+    if (brandData.colors.primary) setPrimaryColor(brandData.colors.primary)
+    if (brandData.colors.secondary) setSecondaryColor(brandData.colors.secondary)
+    if (brandData.colors.accent) setAccentColor(brandData.colors.accent)
   }
+
+  // Apply description if selected
+  if (selections.description && brandData.description) {
+    setDescription(brandData.description)
+  }
+
+  // Apply social links if selected
+  if (selections.socialLinks) {
+    setSocialLinks(brandData.socialLinks)
+  }
+
+  // Apply location if selected
+  if (selections.location) {
+    if (brandData.location.city) setCity(brandData.location.city)
+    if (brandData.location.country) setCountry(brandData.location.country)
+  }
+
+  setIsLoading(false)
+  showSuccess('Brand assets applied! Click Save to confirm changes.')
+}
 ```
 
 Update hasChanges to include new fields:
 
 ```typescript
-  const hasChanges =
-    name !== initialName ||
-    industryId !== initialIndustryId ||
-    primaryColor !== initialPrimaryColor ||
-    secondaryColor !== initialSecondaryColor ||
-    accentColor !== initialAccentColor ||
-    websiteUrl !== initialWebsiteUrl ||
-    description !== initialDescription ||
-    city !== initialCity ||
-    country !== initialCountry ||
-    JSON.stringify(socialLinks) !== JSON.stringify(initialSocialLinks) ||
-    logoUrl !== initialLogoUrl
+const hasChanges =
+  name !== initialName ||
+  industryId !== initialIndustryId ||
+  primaryColor !== initialPrimaryColor ||
+  secondaryColor !== initialSecondaryColor ||
+  accentColor !== initialAccentColor ||
+  websiteUrl !== initialWebsiteUrl ||
+  description !== initialDescription ||
+  city !== initialCity ||
+  country !== initialCountry ||
+  JSON.stringify(socialLinks) !== JSON.stringify(initialSocialLinks) ||
+  logoUrl !== initialLogoUrl
 ```
 
 **Step 3: Update CardHeader with magic wand button**
@@ -1078,6 +1087,7 @@ git commit -m "feat: integrate Brandfetch into organization form"
 ### Task 4.3: Update Organization Action
 
 **Files:**
+
 - Modify: `app/settings/organization/actions.ts`
 
 **Step 1: Update updateOrganization to handle new fields**
@@ -1085,41 +1095,41 @@ git commit -m "feat: integrate Brandfetch into organization form"
 Add parsing for new fields after existing field parsing:
 
 ```typescript
-  const description = formData.get('description') as string | null
-  const city = formData.get('city') as string | null
-  const country = formData.get('country') as string | null
-  const socialLinksJson = formData.get('socialLinks') as string | null
+const description = formData.get('description') as string | null
+const city = formData.get('city') as string | null
+const country = formData.get('country') as string | null
+const socialLinksJson = formData.get('socialLinks') as string | null
 
-  let socialLinks: Array<{ platform: string; url: string }> = []
-  if (socialLinksJson) {
-    try {
-      socialLinks = JSON.parse(socialLinksJson)
-    } catch {
-      // Invalid JSON, use empty array
-    }
+let socialLinks: Array<{ platform: string; url: string }> = []
+if (socialLinksJson) {
+  try {
+    socialLinks = JSON.parse(socialLinksJson)
+  } catch {
+    // Invalid JSON, use empty array
   }
+}
 ```
 
 Update the Supabase update call to include new fields:
 
 ```typescript
-  const { error } = await supabase
-    .from('organizations')
-    .update({
-      name: name.trim(),
-      industry: industryId || null,
-      logo_url: logoUrl?.trim() || null,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-      accent_color: accentColor,
-      website_url: newWebsiteUrl,
-      description: description?.trim() || null,
-      city: city?.trim() || null,
-      country: country?.trim() || null,
-      social_links: socialLinks,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userRecord.organization_id)
+const { error } = await supabase
+  .from('organizations')
+  .update({
+    name: name.trim(),
+    industry: industryId || null,
+    logo_url: logoUrl?.trim() || null,
+    primary_color: primaryColor,
+    secondary_color: secondaryColor,
+    accent_color: accentColor,
+    website_url: newWebsiteUrl,
+    description: description?.trim() || null,
+    city: city?.trim() || null,
+    country: country?.trim() || null,
+    social_links: socialLinks,
+    updated_at: new Date().toISOString(),
+  })
+  .eq('id', userRecord.organization_id)
 ```
 
 **Step 2: Commit**
@@ -1151,6 +1161,7 @@ git commit -m "feat: update organization action for new brand fields"
 ### Task 5.2: Run Linting and Build
 
 **Run:**
+
 ```bash
 npm run lint && npm run test:unit && npm run build
 ```
@@ -1169,14 +1180,14 @@ git push origin main
 
 ## File Summary
 
-| File | Action |
-|------|--------|
+| File                                                      | Action |
+| --------------------------------------------------------- | ------ |
 | `supabase/migrations/20260122000001_add_brand_fields.sql` | Create |
-| `lib/brandfetch/types.ts` | Create |
-| `lib/brandfetch/client.ts` | Create |
-| `lib/brandfetch/actions.ts` | Create |
-| `components/icons/social-icons.tsx` | Create |
-| `components/settings/brand-fetch-modal.tsx` | Create |
-| `components/settings/organization-form.tsx` | Modify |
-| `app/settings/organization/page.tsx` | Modify |
-| `app/settings/organization/actions.ts` | Modify |
+| `lib/brandfetch/types.ts`                                 | Create |
+| `lib/brandfetch/client.ts`                                | Create |
+| `lib/brandfetch/actions.ts`                               | Create |
+| `components/icons/social-icons.tsx`                       | Create |
+| `components/settings/brand-fetch-modal.tsx`               | Create |
+| `components/settings/organization-form.tsx`               | Modify |
+| `app/settings/organization/page.tsx`                      | Modify |
+| `app/settings/organization/actions.ts`                    | Modify |

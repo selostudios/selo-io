@@ -95,7 +95,8 @@ export function extractMetrics(result: PageSpeedResult) {
     | undefined
 
   // Use field data (CrUX) if available, otherwise fall back to lab data
-  const lcp_ms = fieldData?.LARGEST_CONTENTFUL_PAINT_MS?.percentile ?? lcpAudit?.numericValue ?? null
+  const lcp_ms =
+    fieldData?.LARGEST_CONTENTFUL_PAINT_MS?.percentile ?? lcpAudit?.numericValue ?? null
   const cls_raw = fieldData?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile ?? null
   const cls_lab = clsAudit?.numericValue ?? null
   // CLS from CrUX is multiplied by 100 (e.g., 10 = 0.10), lab data is already decimal
@@ -106,7 +107,8 @@ export function extractMetrics(result: PageSpeedResult) {
   const lcp_rating =
     mapCategoryToRating(fieldData?.LARGEST_CONTENTFUL_PAINT_MS?.category) ?? getLcpRating(lcp_ms)
   const cls_rating =
-    mapCategoryToRating(fieldData?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.category) ?? getClsRating(cls_score)
+    mapCategoryToRating(fieldData?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.category) ??
+    getClsRating(cls_score)
   const inp_rating =
     mapCategoryToRating(fieldData?.INTERACTION_TO_NEXT_PAINT?.category) ?? getInpRating(inp_ms)
 
@@ -187,7 +189,9 @@ export function extractAdditionalMetrics(result: PageSpeedResult) {
     speed_index_ms: speedIndexAudit?.numericValue ? Math.round(speedIndexAudit.numericValue) : null,
     tti_ms: ttiAudit?.numericValue ? Math.round(ttiAudit.numericValue) : null,
     tbt_ms: tbtAudit?.numericValue ? Math.round(tbtAudit.numericValue) : null,
-    total_byte_weight: totalByteWeightAudit?.numericValue ? Math.round(totalByteWeightAudit.numericValue) : null,
+    total_byte_weight: totalByteWeightAudit?.numericValue
+      ? Math.round(totalByteWeightAudit.numericValue)
+      : null,
   }
 }
 

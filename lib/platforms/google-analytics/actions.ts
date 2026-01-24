@@ -177,9 +177,17 @@ function formatGAMetricsFromDb(
   const newUsers = calculateTrendFromDb(cached.metrics, 'ga_new_users', period)
   const sessions = calculateTrendFromDb(cached.metrics, 'ga_sessions', period)
   const trafficDirect = calculateTrendFromDb(cached.metrics, 'ga_traffic_direct', period)
-  const trafficOrganicSearch = calculateTrendFromDb(cached.metrics, 'ga_traffic_organic_search', period)
+  const trafficOrganicSearch = calculateTrendFromDb(
+    cached.metrics,
+    'ga_traffic_organic_search',
+    period
+  )
   const trafficEmail = calculateTrendFromDb(cached.metrics, 'ga_traffic_email', period)
-  const trafficOrganicSocial = calculateTrendFromDb(cached.metrics, 'ga_traffic_organic_social', period)
+  const trafficOrganicSocial = calculateTrendFromDb(
+    cached.metrics,
+    'ga_traffic_organic_social',
+    period
+  )
   const trafficReferral = calculateTrendFromDb(cached.metrics, 'ga_traffic_referral', period)
 
   return {
@@ -249,7 +257,12 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
 
   try {
     // 1. Try DB cache first
-    const cached = await getMetricsFromDb(supabase, userRecord.organization_id, 'google_analytics', period)
+    const cached = await getMetricsFromDb(
+      supabase,
+      userRecord.organization_id,
+      'google_analytics',
+      period
+    )
 
     // 2. If fresh (< 1 hour), use DB data
     if (isCacheValid(cached)) {
@@ -268,7 +281,11 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     ])
 
     // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
-    const records = adapter.normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
+    const records = adapter.normalizeToDbRecords(
+      currentMetrics,
+      userRecord.organization_id,
+      new Date()
+    )
 
     await supabase
       .from('campaign_metrics')
@@ -282,7 +299,12 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
 
     // 5. Return fresh data with historical time series from DB
     // Re-query DB for historical time series (now includes fresh data)
-    const updatedCache = await getMetricsFromDb(supabase, userRecord.organization_id, 'google_analytics', period)
+    const updatedCache = await getMetricsFromDb(
+      supabase,
+      userRecord.organization_id,
+      'google_analytics',
+      period
+    )
     const timeSeries = buildTimeSeriesArray(updatedCache.metrics, GA_METRICS, period)
 
     return {

@@ -83,7 +83,12 @@ interface ConnectionMetricsProps {
   onMetricsLoaded?: (metrics: GAMetrics) => void
 }
 
-function ConnectionMetrics({ connection, period, showHeader, onMetricsLoaded }: ConnectionMetricsProps) {
+function ConnectionMetrics({
+  connection,
+  period,
+  showHeader,
+  onMetricsLoaded,
+}: ConnectionMetricsProps) {
   const [metrics, setMetrics] = useState<GAMetrics | null>(null)
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
   const [isPending, startTransition] = useTransition()
@@ -122,7 +127,7 @@ function ConnectionMetrics({ connection, period, showHeader, onMetricsLoaded }: 
     <div className="space-y-4">
       {showHeader && (
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-muted-foreground">
+          <h4 className="text-muted-foreground text-sm font-medium">
             {getConnectionLabel(connection)}
           </h4>
           {metrics && (
@@ -133,7 +138,11 @@ function ConnectionMetrics({ connection, period, showHeader, onMetricsLoaded }: 
                   className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
                   aria-label="Copy metrics to clipboard"
                 >
-                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                  {copied ? (
+                    <Check className="size-4 text-green-600" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>
@@ -290,7 +299,11 @@ export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsS
                   className="text-muted-foreground hover:text-foreground cursor-pointer rounded p-1.5 transition-colors"
                   aria-label="Copy metrics to clipboard"
                 >
-                  {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                  {copied ? (
+                    <Check className="size-4 text-green-600" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent>{copied ? 'Copied!' : 'Copy metrics'}</TooltipContent>

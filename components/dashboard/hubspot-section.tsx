@@ -246,9 +246,12 @@ export function HubSpotSection({ connections, period }: HubSpotSectionProps) {
   }
 
   // Callback to collect metrics from ConnectionMetrics for single connection copy
-  const onMetricsLoaded = useCallback((connectionId: string, metrics: HubSpotMetricsWithChanges) => {
-    setAllMetrics((prev) => new Map(prev).set(connectionId, metrics))
-  }, [])
+  const onMetricsLoaded = useCallback(
+    (connectionId: string, metrics: HubSpotMetricsWithChanges) => {
+      setAllMetrics((prev) => new Map(prev).set(connectionId, metrics))
+    },
+    []
+  )
 
   if (connections.length === 0) {
     return (

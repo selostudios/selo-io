@@ -1,4 +1,10 @@
-import type { Period, DateRanges, MetricRecord, MetricTimeSeries, TimeSeriesDataPoint } from './types'
+import type {
+  Period,
+  DateRanges,
+  MetricRecord,
+  MetricTimeSeries,
+  TimeSeriesDataPoint,
+} from './types'
 
 /**
  * Calculate date ranges for current and previous periods based on the selected period.

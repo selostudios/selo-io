@@ -38,8 +38,8 @@ interface SummaryInput {
 export async function generateExecutiveSummary(input: SummaryInput): Promise<string> {
   const { url, overallScore, pagesCrawled, criticalIssues, warnings, passedCount } = input
 
-  const criticalList = criticalIssues.map(i => `- ${i.name}`).join('\n') || '- None'
-  const warningList = warnings.map(i => `- ${i.name}`).join('\n') || '- None'
+  const criticalList = criticalIssues.map((i) => `- ${i.name}`).join('\n') || '- None'
+  const warningList = warnings.map((i) => `- ${i.name}`).join('\n') || '- None'
 
   const prompt = `Analyze this website audit and write a brief executive summary for the site owner.
 
@@ -146,6 +146,7 @@ export const baseStyles = StyleSheet.create({
 **Create:** `lib/pdf/components.tsx`
 
 Components to create:
+
 - `CoverPage` - Logo, title, URL, date, overall score badge
 - `ScoreBadge` - Circular score display with color coding
 - `SectionHeader` - Consistent section titles
@@ -170,6 +171,7 @@ Components to create:
 **Modify:** `lib/audit/checks/*.ts`
 
 Add to each check definition:
+
 ```typescript
 {
   name: 'missing_meta_description',
@@ -185,6 +187,7 @@ Add to each check definition:
 **Modify:** `lib/audit/types.ts`
 
 Add new optional fields to check type:
+
 - `description?: string`
 - `fix_guidance?: string`
 
@@ -193,6 +196,7 @@ Add new optional fields to check type:
 **Rewrite:** `lib/audit/pdf.tsx`
 
 New structure:
+
 1. **Cover Page**
    - Selo logo centered
    - "Website Audit Report"
@@ -249,6 +253,7 @@ npm run build
 ## Environment Variables
 
 Add to `.env.local` and Vercel:
+
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 ```

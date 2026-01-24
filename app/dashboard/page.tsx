@@ -39,7 +39,9 @@ export default async function DashboardPage() {
 
   // Group connections by platform type
   const linkedInConnections = (connections || []).filter((c) => c.platform_type === 'linkedin')
-  const googleAnalyticsConnections = (connections || []).filter((c) => c.platform_type === 'google_analytics')
+  const googleAnalyticsConnections = (connections || []).filter(
+    (c) => c.platform_type === 'google_analytics'
+  )
   const hubspotConnections = (connections || []).filter((c) => c.platform_type === 'hubspot')
 
   return (

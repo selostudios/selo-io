@@ -33,7 +33,9 @@ async function getCertificateInfo(hostname: string): Promise<CertificateInfo> {
       const validFrom = new Date(cert.valid_from)
       const validTo = new Date(cert.valid_to)
       const now = new Date()
-      const daysUntilExpiry = Math.floor((validTo.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      const daysUntilExpiry = Math.floor(
+        (validTo.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      )
 
       // Check if self-signed (issuer matches subject)
       const issuerCN = cert.issuer?.CN || ''
@@ -120,7 +122,8 @@ export const invalidSslCertificate: AuditCheckDefinition = {
       return {
         status: 'failed',
         details: {
-          message: 'SSL certificate is self-signed. Browsers will show security warnings. Use a certificate from a trusted Certificate Authority (e.g., Let\'s Encrypt).',
+          message:
+            "SSL certificate is self-signed. Browsers will show security warnings. Use a certificate from a trusted Certificate Authority (e.g., Let's Encrypt).",
           issuer: certInfo.issuer,
           selfSigned: true,
         },
