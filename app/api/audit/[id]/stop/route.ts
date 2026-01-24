@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Verify the audit exists and belongs to user's organization
   const { data: audit, error: fetchError } = await supabase
     .from('site_audits')
-    .select('id, status')
+    .select('id, status, updated_at, created_at')
     .eq('id', id)
     .single()
 
@@ -32,7 +32,36 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     )
   }
 
-  // Set status to 'stopped' - the runner will detect this and finalize
+  // Check if the audit has been stuck (no updates for over 5 minutes = runner is dead)
+  const timestamp = audit.updated_at || audit.created_at
+  const lastUpdate = timestamp ? new Date(timestamp).getTime() : 0
+  const isStuck = Date.now() - lastUpdate > 5 * 60 * 1000
+
+  if (isStuck) {
+    // Runner is dead, mark as failed immediately
+    const { error: updateError } = await supabase
+      .from('site_audits')
+      .update({
+        status: 'failed',
+        error_message: 'Audit was stopped - the crawl did not complete.',
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (updateError) {
+      console.error('[Audit Stop Error]', {
+        type: 'update_failed',
+        auditId: id,
+        error: updateError.message,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json({ error: 'Failed to stop audit' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: 'Audit marked as failed (runner was not responding)' })
+  }
+
+  // Runner might still be alive, set status to 'stopped' for it to detect
   const { error: updateError } = await supabase
     .from('site_audits')
     .update({ status: 'stopped' })
