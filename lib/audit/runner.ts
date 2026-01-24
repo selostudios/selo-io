@@ -59,11 +59,11 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
           console.error(`[Audit] Failed to insert page ${page.url}:`, pageInsertError)
         }
 
-        // Increment and update pages_crawled count
+        // Increment and update pages_crawled count (with timestamp to prevent stale audit detection)
         pagesCrawledCount++
         await supabase
           .from('site_audits')
-          .update({ pages_crawled: pagesCrawledCount })
+          .update({ pages_crawled: pagesCrawledCount, updated_at: new Date().toISOString() })
           .eq('id', auditId)
       },
       shouldStop: () => checkIfStopped(supabase, auditId),

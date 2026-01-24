@@ -16,6 +16,9 @@ export interface FetchOptions {
   forceRelaxedSSL?: boolean
 }
 
+// Default timeout for page fetches (30 seconds)
+const FETCH_TIMEOUT_MS = 30000
+
 /**
  * Fetch a page with SSL error recovery.
  * First tries normal fetch, then falls back to relaxed SSL if certificate errors occur.
@@ -27,16 +30,21 @@ export async function fetchPage(url: string, options?: FetchOptions): Promise<Fe
     return fetchWithRelaxedSSL(url)
   }
 
-  // Try normal fetch first
+  // Try normal fetch first with timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
   try {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'SeloBot/1.0 (Site Audit)',
       },
       redirect: 'follow',
+      signal: controller.signal,
     })
 
     const html = await response.text()
+    clearTimeout(timeoutId)
     const lastModified = parseLastModified(response.headers.get('last-modified'))
 
     return {
@@ -46,6 +54,18 @@ export async function fetchPage(url: string, options?: FetchOptions): Promise<Fe
       finalUrl: response.url,
     }
   } catch (error) {
+    clearTimeout(timeoutId)
+
+    // Check if it's a timeout/abort error
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        html: '',
+        statusCode: 0,
+        lastModified: null,
+        error: 'Request timeout',
+      }
+    }
+
     // Check if it's an SSL certificate error
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const cause = (error as { cause?: Error })?.cause

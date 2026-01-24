@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Megaphone, Settings, FileSearch, Gauge, PanelLeftClose } from 'lucide-react'
+import { LayoutDashboard, Megaphone, Settings, FileSearch, Gauge, PanelLeftClose, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
 
@@ -51,9 +51,10 @@ interface ChildSidebarProps {
   activeSection: ParentSection
   isCollapsed: boolean
   onToggleCollapse: () => void
+  hasActiveAudit?: boolean
 }
 
-export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: ChildSidebarProps) {
+export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse, hasActiveAudit }: ChildSidebarProps) {
   const pathname = usePathname()
   const navigation = navigationConfig[activeSection]
 
@@ -98,6 +99,9 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: C
                   isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 }
 
+                // Show spinner for Site Audit when there's an active audit
+                const showSpinner = item.href === '/seo/site-audit' && hasActiveAudit
+
                 return (
                   <Link
                     key={item.href}
@@ -110,7 +114,10 @@ export function ChildSidebar({ activeSection, isCollapsed, onToggleCollapse }: C
                     )}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
-                    <span>{item.name}</span>
+                    <span className="flex-1">{item.name}</span>
+                    {showSpinner && (
+                      <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />
+                    )}
                   </Link>
                 )
               })}

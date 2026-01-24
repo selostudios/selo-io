@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ParentSidebar, type ParentSection } from './parent-sidebar'
 import { ChildSidebar } from './child-sidebar'
+import { useActiveAudit } from '@/hooks/use-active-audit'
 
 const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
 
@@ -26,6 +27,7 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
 export function NavigationShell() {
   const pathname = usePathname()
   const router = useRouter()
+  const { hasActiveAudit } = useActiveAudit()
 
   // Derive active section from current pathname
   const activeSection = getSectionFromPathname(pathname)
@@ -72,6 +74,7 @@ export function NavigationShell() {
         activeSection={activeSection}
         isCollapsed={collapsed}
         onToggleCollapse={handleToggleCollapse}
+        hasActiveAudit={hasActiveAudit}
       />
       {/* Expand button when child sidebar is collapsed */}
       {collapsed && (
