@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { ScoreCards } from './score-cards'
 import { CheckList } from './check-list'
 import { ResourceList } from './resource-list'
@@ -22,6 +23,7 @@ type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'
 
 export function AuditReport({ audit, checks, pages }: AuditReportProps) {
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [dismissedChecks, setDismissedChecks] = useState<DismissedCheck[]>([])
 
   // Fetch dismissed checks on mount
@@ -50,6 +52,17 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
 
   const visibleChecks = checks.filter((c) => !isDismissed(c))
 
+  // Filter by search query
+  const searchFilteredChecks = useMemo(() => {
+    if (!searchQuery.trim()) return visibleChecks
+    const query = searchQuery.toLowerCase()
+    return visibleChecks.filter((c) => {
+      const displayName = c.display_name?.toLowerCase() || ''
+      const checkName = c.check_name.toLowerCase()
+      return displayName.includes(query) || checkName.includes(query)
+    })
+  }, [visibleChecks, searchQuery])
+
   // Handle dismiss action
   const handleDismissCheck = useCallback(async (checkName: string, url: string) => {
     const response = await fetch('/api/audit/dismiss', {
@@ -64,19 +77,19 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
     }
   }, [])
 
-  // Group checks by type
-  const seoChecks = visibleChecks.filter((c) => c.check_type === 'seo')
-  const aiChecks = visibleChecks.filter((c) => c.check_type === 'ai_readiness')
-  const technicalChecks = visibleChecks.filter((c) => c.check_type === 'technical')
+  // Group checks by type (using search-filtered checks)
+  const seoChecks = searchFilteredChecks.filter((c) => c.check_type === 'seo')
+  const aiChecks = searchFilteredChecks.filter((c) => c.check_type === 'ai_readiness')
+  const technicalChecks = searchFilteredChecks.filter((c) => c.check_type === 'technical')
 
   // Separate HTML pages from resources
   const htmlPages = pages.filter((p) => !p.is_resource)
   const resourcePages = pages.filter((p) => p.is_resource)
 
-  // Count by status
-  const failedCount = visibleChecks.filter((c) => c.status === 'failed').length
-  const warningCount = visibleChecks.filter((c) => c.status === 'warning').length
-  const passedCount = visibleChecks.filter((c) => c.status === 'passed').length
+  // Count by status (using search-filtered checks)
+  const failedCount = searchFilteredChecks.filter((c) => c.status === 'failed').length
+  const warningCount = searchFilteredChecks.filter((c) => c.status === 'warning').length
+  const passedCount = searchFilteredChecks.filter((c) => c.status === 'passed').length
 
   // Filter checks based on active filter
   const filterChecks = (checkList: SiteAuditCheck[]) => {
@@ -157,14 +170,32 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
         technical={audit.technical_score}
       />
 
-      {/* Status Filter Badges */}
-      <div className="flex flex-wrap gap-2">
+      {/* Search and Status Filter Badges */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            type="text"
+            placeholder="Search checks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 w-48 pl-8 pr-8 text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
         <Badge
           variant={activeFilter === 'all' ? 'default' : 'outline'}
           className="cursor-pointer"
           onClick={() => setActiveFilter('all')}
         >
-          All ({visibleChecks.length})
+          All ({searchFilteredChecks.length})
         </Badge>
         <Badge
           variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
