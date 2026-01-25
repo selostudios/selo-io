@@ -90,7 +90,7 @@ export function OrganizationSelector({
           <Button variant="ghost" className="h-auto gap-2 px-3 py-2 hover:bg-neutral-100">
             {selectedOrg ? (
               <>
-                <Building2 className="h-4 w-4 text-neutral-500" />
+                <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
                 <span className="font-medium">{selectedOrg.name}</span>
                 <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
                   {selectedOrg.status}
@@ -98,11 +98,11 @@ export function OrganizationSelector({
               </>
             ) : (
               <>
-                <Building2 className="h-4 w-4 text-neutral-500" />
+                <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
                 <span className="text-neutral-500">Select organization</span>
               </>
             )}
-            <ChevronDown className="h-4 w-4 text-neutral-400" />
+            <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
@@ -128,7 +128,7 @@ export function OrganizationSelector({
                     )}
                   </div>
                   {org.id === selectedOrganizationId && (
-                    <Check className="h-4 w-4 flex-shrink-0 text-green-600" />
+                    <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
                   )}
                 </DropdownMenuItem>
               ))}
@@ -136,7 +136,7 @@ export function OrganizationSelector({
             </>
           ) : null}
           <DropdownMenuItem onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
             New Organization
           </DropdownMenuItem>
         </DropdownMenuContent>

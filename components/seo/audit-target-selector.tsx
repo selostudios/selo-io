@@ -61,7 +61,7 @@ export function AuditTargetSelector({
     if (selectedTarget.type === 'one-time') {
       return (
         <span className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-neutral-500" />
+          <Link2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
           <span className="truncate">{getDomain(selectedTarget.url)}</span>
           <Badge variant="secondary" className="text-xs">
             One-time
@@ -77,7 +77,7 @@ export function AuditTargetSelector({
 
     return (
       <>
-        <Building2 className="h-4 w-4 text-neutral-500" />
+        <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
         <span className="truncate font-medium">{org.name}</span>
         <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
           {org.status}
@@ -135,7 +135,7 @@ export function AuditTargetSelector({
     if (!org) {
       return (
         <div className="flex items-center gap-2 px-3 py-2">
-          <Building2 className="h-4 w-4 text-neutral-500" />
+          <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
           <span className="text-neutral-500">No organization</span>
         </div>
       )
@@ -143,7 +143,7 @@ export function AuditTargetSelector({
 
     return (
       <div className="flex items-center gap-2 px-3 py-2">
-        <Building2 className="h-4 w-4 text-neutral-500" />
+        <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
         <span className="font-medium">{org.name}</span>
         {org.website_url && (
           <span className="text-muted-foreground text-sm">({getDomain(org.website_url)})</span>
@@ -170,6 +170,7 @@ export function AuditTargetSelector({
             }
           }}
           className="w-[280px]"
+          autoComplete="off"
           autoFocus
         />
         <Button size="sm" onClick={handleUseOneTimeUrl} disabled={!oneTimeUrl.trim()}>
@@ -190,17 +191,17 @@ export function AuditTargetSelector({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-auto gap-2 px-3 py-2 hover:bg-neutral-100">
             {getDisplayLabel()}
-            <ChevronDown className="h-4 w-4 text-neutral-400" />
+            <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
           <DropdownMenuItem onClick={() => setShowUrlInput(true)}>
-            <Link2 className="mr-2 h-4 w-4" />
-            Enter one-time URL...
+            <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            Enter one-time URL…
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create new organization...
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+            Create new organization…
           </DropdownMenuItem>
           {organizations.length > 0 && (
             <>
@@ -229,7 +230,7 @@ export function AuditTargetSelector({
                   </div>
                   {selectedTarget?.type === 'organization' &&
                     selectedTarget.organizationId === org.id && (
-                      <Check className="h-4 w-4 flex-shrink-0 text-green-600" />
+                      <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
                     )}
                 </DropdownMenuItem>
               ))}

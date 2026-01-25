@@ -94,7 +94,7 @@ export function SiteAuditClient({
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-start gap-3">
-        <FileSearch className="mt-1 h-8 w-8 text-neutral-700" />
+        <FileSearch className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
         <div>
           <h1 className="text-3xl font-bold">Site Audit</h1>
           <p className="text-muted-foreground">
@@ -119,7 +119,7 @@ export function SiteAuditClient({
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-              <FileSearch className="h-6 w-6 text-neutral-600" />
+              <FileSearch className="h-6 w-6 text-neutral-600" aria-hidden="true" />
             </div>
             <CardTitle>No Organizations Yet</CardTitle>
             <CardDescription>
@@ -140,7 +140,7 @@ export function SiteAuditClient({
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-              <FileSearch className="h-6 w-6 text-neutral-600" />
+              <FileSearch className="h-6 w-6 text-neutral-600" aria-hidden="true" />
             </div>
             <CardTitle>Select an Audit Target</CardTitle>
             <CardDescription>

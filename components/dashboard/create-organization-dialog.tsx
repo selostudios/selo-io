@@ -94,10 +94,11 @@ export function CreateOrganizationDialog({
             <Label htmlFor="org-name">Organization Name</Label>
             <Input
               id="org-name"
-              placeholder="e.g., Acme Corporation"
+              placeholder="e.g., Acme Corporation…"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="off"
             />
           </div>
 
@@ -110,6 +111,7 @@ export function CreateOrganizationDialog({
               value={websiteUrl}
               onChange={(e) => setWebsiteUrl(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="off"
             />
           </div>
 
@@ -131,8 +133,8 @@ export function CreateOrganizationDialog({
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  Creating…
                 </>
               ) : (
                 'Create Organization'
