@@ -60,21 +60,22 @@ export function OrganizationSelector({
     handleSelectOrganization(organization.id)
   }
 
-  // Restore last selected org from localStorage on mount
+  // Restore last selected org from localStorage on mount (exclude inactive orgs)
   useEffect(() => {
-    if (!selectedOrganizationId && organizations.length > 0) {
+    const activeOrgs = organizations.filter((o) => o.status !== 'inactive')
+    if (!selectedOrganizationId && activeOrgs.length > 0) {
       const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
       if (lastOrgId) {
-        const orgExists = organizations.some((o) => o.id === lastOrgId)
+        const orgExists = activeOrgs.some((o) => o.id === lastOrgId)
         if (orgExists) {
           handleSelectOrganization(lastOrgId)
         } else {
-          // Fallback to first org
-          handleSelectOrganization(organizations[0].id)
+          // Fallback to first active org
+          handleSelectOrganization(activeOrgs[0].id)
         }
       } else {
-        // Default to first org
-        handleSelectOrganization(organizations[0].id)
+        // Default to first active org
+        handleSelectOrganization(activeOrgs[0].id)
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -122,9 +123,9 @@ export function OrganizationSelector({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
-          {organizations.length > 0 ? (
+          {organizations.filter((o) => o.status !== 'inactive').length > 0 ? (
             <>
-              {organizations.map((org) => (
+              {organizations.filter((o) => o.status !== 'inactive').map((org) => (
                 <DropdownMenuItem
                   key={org.id}
                   onClick={() => handleSelectOrganization(org.id)}
