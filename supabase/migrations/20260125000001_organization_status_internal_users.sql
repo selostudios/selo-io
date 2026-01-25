@@ -117,7 +117,6 @@ CREATE POLICY "View organizations"
   USING (
     public.is_internal_user()
     OR id = (SELECT public.get_user_organization_id())
-    OR public.is_developer()
   );
 
 -- Create: only internal users can create organizations
@@ -244,5 +243,4 @@ CREATE POLICY "Users can view users"
     id = (SELECT auth.uid())
     OR public.is_internal_user()
     OR (organization_id IS NOT NULL AND organization_id = (SELECT public.get_user_organization_id()))
-    OR public.is_developer()
   );
