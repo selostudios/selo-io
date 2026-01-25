@@ -64,14 +64,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-8 p-8">
       <WebsiteUrlToast websiteUrl={orgData?.website_url || null} />
-      <div>
-        <h1 className="text-3xl font-bold">
-          Welcome to {orgData?.name || 'Selo IO'}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Track your marketing performance across all platforms
-        </p>
-      </div>
 
       <IntegrationsPanel
         linkedInConnections={linkedInConnections}
