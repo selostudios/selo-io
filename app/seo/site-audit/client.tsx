@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileSearch } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -90,6 +90,30 @@ export function SiteAuditClient({
     }
   }
 
+  // Filter audits to match the selected target
+  // - For organization targets: only show audits for that organization
+  // - For one-time targets: only show audits with no organization (null)
+  const filteredAudits = useMemo(() => {
+    if (!selectedTarget) return []
+
+    if (selectedTarget.type === 'organization') {
+      return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
+    } else {
+      // One-time audits have no organization_id
+      return audits.filter((audit) => audit.organization_id === null)
+    }
+  }, [audits, selectedTarget])
+
+  const filteredArchivedAudits = useMemo(() => {
+    if (!selectedTarget) return []
+
+    if (selectedTarget.type === 'organization') {
+      return archivedAudits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
+    } else {
+      return archivedAudits.filter((audit) => audit.organization_id === null)
+    }
+  }, [archivedAudits, selectedTarget])
+
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -155,8 +179,8 @@ export function SiteAuditClient({
       {selectedTarget && (
         <AuditDashboard
           websiteUrl={selectedTarget.url}
-          audits={audits}
-          archivedAudits={archivedAudits}
+          audits={filteredAudits}
+          archivedAudits={filteredArchivedAudits}
           organizationId={selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined}
         />
       )}
