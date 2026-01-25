@@ -247,7 +247,18 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Calculate scores
     const scores = calculateScores(allCheckResults)
 
-    // Generate executive summary
+    // Save scores immediately to prevent data loss if summary generation times out
+    await supabase
+      .from('site_audits')
+      .update({
+        ...scores,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+
+    console.log(`[Audit] Scores saved, generating executive summary...`)
+
+    // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
     try {
       executive_summary = await generateExecutiveSummary(url, allPages.length, scores, allCheckResults)
@@ -255,7 +266,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
       console.error('[Audit] Failed to generate executive summary:', error)
     }
 
-    // Update audit with scores and summary - use 'stopped' status if was stopped
+    // Update audit with status and summary - use 'stopped' status if was stopped
     const finalStatus: AuditStatus = wasStopped ? 'stopped' : 'completed'
     await supabase
       .from('site_audits')
@@ -263,7 +274,6 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         status: finalStatus,
         completed_at: new Date().toISOString(),
         executive_summary,
-        ...scores,
       })
       .eq('id', auditId)
   } catch (error) {
@@ -490,7 +500,19 @@ async function finishAudit(
   // Calculate scores
   const scores = calculateScores(checksForScoring)
 
-  // Generate executive summary
+  // Save scores immediately to prevent data loss if summary generation times out
+  // Status remains 'checking' until summary completes
+  await supabase
+    .from('site_audits')
+    .update({
+      ...scores,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', auditId)
+
+  console.log(`[Audit Finish] Scores saved, generating executive summary...`)
+
+  // Generate executive summary (can be slow due to AI)
   let executive_summary: string | null = null
   try {
     executive_summary = await generateExecutiveSummary(
@@ -510,7 +532,6 @@ async function finishAudit(
       status: 'completed',
       completed_at: new Date().toISOString(),
       executive_summary,
-      ...scores,
     })
     .eq('id', auditId)
 
@@ -717,7 +738,18 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     // Calculate scores
     const scores = calculateScores(allCheckResults)
 
-    // Generate executive summary
+    // Save scores immediately to prevent data loss if summary generation times out
+    await supabase
+      .from('site_audits')
+      .update({
+        ...scores,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+
+    console.log(`[Audit Resume] Scores saved, generating executive summary...`)
+
+    // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
     try {
       executive_summary = await generateExecutiveSummary(url, pages.length, scores, allCheckResults)
@@ -725,14 +757,13 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
       console.error('[Audit Resume] Failed to generate executive summary:', error)
     }
 
-    // Update audit with scores and summary
+    // Update audit with status and summary
     await supabase
       .from('site_audits')
       .update({
         status: 'completed' as AuditStatus,
         completed_at: new Date().toISOString(),
         executive_summary,
-        ...scores,
       })
       .eq('id', auditId)
 
@@ -851,13 +882,24 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
     // Calculate scores
     const scores = calculateScores(allCheckResults)
 
+    // Save scores immediately to prevent data loss if summary generation times out
+    await supabase
+      .from('site_audits')
+      .update({
+        ...scores,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+
     // Get page count for summary
     const { count: pageCount } = await supabase
       .from('site_audit_pages')
       .select('*', { count: 'exact', head: true })
       .eq('audit_id', auditId)
 
-    // Generate executive summary
+    console.log(`[Audit Complete] Scores saved, generating executive summary...`)
+
+    // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
     try {
       executive_summary = await generateExecutiveSummary(
@@ -870,14 +912,13 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
       console.error('[Audit Complete] Failed to generate executive summary:', error)
     }
 
-    // Update audit with scores and summary
+    // Update audit with status and summary
     await supabase
       .from('site_audits')
       .update({
         status: 'completed' as AuditStatus,
         completed_at: new Date().toISOString(),
         executive_summary,
-        ...scores,
       })
       .eq('id', auditId)
 

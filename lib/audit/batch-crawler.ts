@@ -86,7 +86,15 @@ export async function crawlBatch(
 
   let pagesProcessed = 0
   let stopped = false
-  let forceRelaxedSSL = false
+
+  // Get audit settings including persisted SSL mode
+  const { data: auditSettings } = await supabase
+    .from('site_audits')
+    .select('use_relaxed_ssl')
+    .eq('id', auditId)
+    .single()
+
+  let forceRelaxedSSL = auditSettings?.use_relaxed_ssl ?? false
 
   // Get all already-crawled pages for context (needed for page-specific checks)
   const { data: existingPages } = await supabase
@@ -146,8 +154,10 @@ export async function crawlBatch(
     )
 
     if (usedRelaxedSSL && !forceRelaxedSSL) {
-      console.log(`[Batch Crawler] SSL certificate issue detected, using relaxed SSL`)
+      console.log(`[Batch Crawler] SSL certificate issue detected, persisting relaxed SSL mode`)
       forceRelaxedSSL = true
+      // Persist for future batches
+      await supabase.from('site_audits').update({ use_relaxed_ssl: true }).eq('id', auditId)
     }
 
     if (error) {
