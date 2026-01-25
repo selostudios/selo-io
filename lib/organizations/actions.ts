@@ -425,3 +425,48 @@ export async function archiveOrganization(
 
   return { success: true }
 }
+
+/**
+ * Restore an archived organization (sets status back to prospect)
+ */
+export async function restoreOrganization(
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+
+  // Verify user is internal
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.isInternal) {
+    return { success: false, error: 'Only internal users can restore organizations' }
+  }
+
+  // Validate organizationId
+  if (!organizationId) {
+    return { success: false, error: 'Organization ID is required' }
+  }
+
+  // Restore by setting status to prospect
+  const { error } = await supabase
+    .from('organizations')
+    .update({
+      status: 'prospect' as OrganizationStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', organizationId)
+
+  if (error) {
+    console.error('[Organizations Error]', {
+      type: 'restore_organization',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    })
+    return { success: false, error: 'Failed to restore organization' }
+  }
+
+  revalidatePath('/organizations')
+  revalidatePath('/seo')
+  revalidatePath('/seo/site-audit')
+  revalidatePath('/seo/page-speed')
+
+  return { success: true }
+}

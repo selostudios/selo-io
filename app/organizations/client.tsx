@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Pencil, Trash2, ExternalLink, Search } from 'lucide-react'
+import { Building2, Plus, Pencil, Trash2, RotateCcw, ExternalLink, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ import {
 import { CreateOrganizationDialog } from '@/components/dashboard/create-organization-dialog'
 import { EditOrganizationDialog } from './edit-organization-dialog'
 import { DeleteOrganizationDialog } from './delete-organization-dialog'
+import { RestoreOrganizationDialog } from './restore-organization-dialog'
 import { cn } from '@/lib/utils'
 import type { OrganizationStatus, Industry } from '@/lib/organizations/types'
 
@@ -66,6 +67,7 @@ export function OrganizationsClient({ organizations, industries }: Organizations
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null)
   const [deletingOrg, setDeletingOrg] = useState<Organization | null>(null)
+  const [restoringOrg, setRestoringOrg] = useState<Organization | null>(null)
 
   const filteredOrgs = organizations.filter(
     (org) =>
@@ -86,6 +88,11 @@ export function OrganizationsClient({ organizations, industries }: Organizations
 
   const handleDeleteSuccess = () => {
     setDeletingOrg(null)
+    router.refresh()
+  }
+
+  const handleRestoreSuccess = () => {
+    setRestoringOrg(null)
     router.refresh()
   }
 
@@ -225,16 +232,29 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingOrg(org)}
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          title="Delete organization"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        {org.status === 'inactive' ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setRestoringOrg(org)}
+                            className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                            title="Restore organization"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            <span className="sr-only">Restore</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeletingOrg(org)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            title="Archive organization"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Archive</span>
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -268,6 +288,15 @@ export function OrganizationsClient({ organizations, industries }: Organizations
           open={!!deletingOrg}
           onOpenChange={(open) => !open && setDeletingOrg(null)}
           onSuccess={handleDeleteSuccess}
+        />
+      )}
+
+      {restoringOrg && (
+        <RestoreOrganizationDialog
+          organization={restoringOrg}
+          open={!!restoringOrg}
+          onOpenChange={(open) => !open && setRestoringOrg(null)}
+          onSuccess={handleRestoreSuccess}
         />
       )}
     </div>
