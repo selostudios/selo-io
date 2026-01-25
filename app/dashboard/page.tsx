@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
-export default async function DashboardPage() {
+interface PageProps {
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -15,26 +20,38 @@ export default async function DashboardPage() {
 
   const { data: userRecord, error: userError } = await supabase
     .from('users')
-    .select('organization:organizations(name), organization_id')
+    .select('organization:organizations(name), organization_id, is_internal')
     .eq('id', user.id)
     .single()
 
-  if (userError || !userRecord || !userRecord.organization_id) {
+  // Internal users can view any org, external users only their own
+  const isInternal = userRecord?.is_internal === true
+  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord?.organization_id
+
+  if (userError || !userRecord || !organizationId) {
+    if (isInternal && !selectedOrgId) {
+      // Internal user without org selected - show prompt
+      return (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Select an organization to view dashboard.</p>
+        </div>
+      )
+    }
     redirect('/onboarding')
   }
 
-  // Get organization's website URL
+  // Get organization's details
   const { data: orgData } = await supabase
     .from('organizations')
-    .select('website_url')
-    .eq('id', userRecord.organization_id)
+    .select('name, website_url')
+    .eq('id', organizationId)
     .single()
 
   // Get all platform connections for this organization
   const { data: connections } = await supabase
     .from('platform_connections')
     .select('id, platform_type, account_name, display_name, status, last_sync_at')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', organizationId)
     .order('created_at', { ascending: true })
 
   // Group connections by platform type
@@ -49,8 +66,7 @@ export default async function DashboardPage() {
       <WebsiteUrlToast websiteUrl={orgData?.website_url || null} />
       <div>
         <h1 className="text-3xl font-bold">
-          Welcome to{' '}
-          {(userRecord?.organization as unknown as { name: string } | null)?.name || 'Selo IO'}
+          Welcome to {orgData?.name || 'Selo IO'}
         </h1>
         <p className="text-muted-foreground mt-2">
           Track your marketing performance across all platforms
