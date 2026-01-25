@@ -33,6 +33,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'campaigns:create',
     'campaigns:update',
     'campaigns:delete',
+    'feedback:manage',
   ],
   developer: ['org:update', 'org:view', 'team:view', 'feedback:manage'],
   team_member: [

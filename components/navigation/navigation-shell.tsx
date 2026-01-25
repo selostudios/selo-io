@@ -18,6 +18,9 @@ function getSectionFromPathname(pathname: string): ParentSection {
   if (pathname.startsWith('/organizations')) {
     return 'organizations'
   }
+  if (pathname.startsWith('/support')) {
+    return 'support'
+  }
   // Default to home for /dashboard, /settings, /profile, etc.
   return 'home'
 }
@@ -26,6 +29,7 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
   home: '/dashboard',
   seo: '/seo/site-audit',
   organizations: '/organizations',
+  support: '/support',
 }
 
 interface NavigationShellProps {

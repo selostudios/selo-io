@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   Loader2,
   Building2,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
@@ -52,16 +53,24 @@ const organizationsNavigation: NavigationGroup[] = [
   },
 ]
 
+const supportNavigation: NavigationGroup[] = [
+  {
+    items: [{ name: 'Feedback', href: '/support', icon: MessageSquare }],
+  },
+]
+
 const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
   home: homeNavigation,
   seo: seoNavigation,
   organizations: organizationsNavigation,
+  support: supportNavigation,
 }
 
 const sectionTitles: Record<ParentSection, string> = {
   home: 'Home',
   seo: 'SEO',
   organizations: 'Organizations',
+  support: 'Support',
 }
 
 interface ChildSidebarProps {

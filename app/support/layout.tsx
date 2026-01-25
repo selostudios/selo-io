@@ -1,6 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { canManageFeedback } from '@/lib/permissions'
+import { NavigationShell } from '@/components/navigation/navigation-shell'
+import { HeaderMinimal } from '@/components/dashboard/header-minimal'
+import { FeedbackProvider } from '@/components/feedback/feedback-provider'
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
+import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
+import { canManageFeedback, isInternalUser } from '@/lib/permissions'
 
 export default async function SupportLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -13,10 +18,10 @@ export default async function SupportLayout({ children }: { children: React.Reac
     redirect('/login')
   }
 
-  // Check if user is a developer
+  // Check if user has permissions and internal status
   const { data: userRecord } = await supabase
     .from('users')
-    .select('role')
+    .select('role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -24,13 +29,21 @@ export default async function SupportLayout({ children }: { children: React.Reac
     redirect('/dashboard')
   }
 
+  const isInternal = isInternalUser(userRecord.is_internal)
+
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="border-b bg-white px-6 py-4">
-        <h1 className="text-2xl font-bold text-neutral-900">Support</h1>
-        <p className="text-sm text-neutral-500">Manage user feedback and issues</p>
+    <FeedbackProvider>
+      <div className="flex min-h-screen bg-neutral-50">
+        <NavigationShell isInternal={isInternal} />
+        <div className="flex flex-1 flex-col">
+          <HeaderMinimal />
+          <main className="flex-1">
+            <div className="space-y-6 p-8">{children}</div>
+          </main>
+        </div>
       </div>
-      <main className="p-6">{children}</main>
-    </div>
+      <FeedbackDialog />
+      <FeedbackTrigger />
+    </FeedbackProvider>
   )
 }

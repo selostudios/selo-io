@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { Headphones } from 'lucide-react'
 import { SupportTable } from '@/components/support/support-table'
 import { SupportFilters } from '@/components/support/support-filters'
 import { SupportSlideout } from '@/components/support/support-slideout'
@@ -64,7 +65,18 @@ export function SupportPageClient({ feedback, initialIssueId }: SupportPageClien
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Page Title */}
+      <div className="flex items-start gap-3">
+        <Headphones className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
+        <div>
+          <h1 className="text-3xl font-bold">Support</h1>
+          <p className="text-muted-foreground">
+            Manage user feedback and issues from across the platform
+          </p>
+        </div>
+      </div>
+
       <SupportFilters
         status={statusFilter}
         category={categoryFilter}

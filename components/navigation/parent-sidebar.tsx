@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { House, LineChart, Building2 } from 'lucide-react'
+import { House, LineChart, Building2, Headphones } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export type ParentSection = 'home' | 'seo' | 'organizations'
+export type ParentSection = 'home' | 'seo' | 'organizations' | 'support'
 
 interface ParentSidebarProps {
   activeSection: ParentSection
@@ -30,6 +30,13 @@ const sections: SectionItem[] = [
     name: 'Organizations',
     icon: Building2,
     href: '/organizations',
+    internalOnly: true,
+  },
+  {
+    id: 'support',
+    name: 'Support',
+    icon: Headphones,
+    href: '/support',
     internalOnly: true,
   },
 ]
