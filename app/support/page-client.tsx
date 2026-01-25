@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Headphones } from 'lucide-react'
+import { LifeBuoy, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useFeedback } from '@/components/feedback/feedback-provider'
 import { SupportTable } from '@/components/support/support-table'
 import { SupportFilters } from '@/components/support/support-filters'
 import { SupportSlideout } from '@/components/support/support-slideout'
@@ -20,6 +22,7 @@ interface SupportPageClientProps {
 
 export function SupportPageClient({ feedback, initialIssueId }: SupportPageClientProps) {
   const router = useRouter()
+  const { openFeedback } = useFeedback()
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | undefined>(undefined)
   const [categoryFilter, setCategoryFilter] = useState<FeedbackCategory | undefined>(undefined)
   const [priorityFilter, setPriorityFilter] = useState<FeedbackPriority | undefined>(undefined)
@@ -67,14 +70,20 @@ export function SupportPageClient({ feedback, initialIssueId }: SupportPageClien
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div className="flex items-start gap-3">
-        <Headphones className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div>
-          <h1 className="text-3xl font-bold">Support</h1>
-          <p className="text-muted-foreground">
-            Manage user feedback and issues from across the platform
-          </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <LifeBuoy className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
+          <div>
+            <h1 className="text-3xl font-bold">Support</h1>
+            <p className="text-muted-foreground">
+              Manage user feedback and issues from across the platform
+            </p>
+          </div>
         </div>
+        <Button onClick={openFeedback}>
+          <Plus className="mr-2 h-4 w-4" />
+          Report an Issue
+        </Button>
       </div>
 
       <SupportFilters

@@ -67,6 +67,8 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 - `lib/supabase/server.ts` - Server-side (RSC, server actions)
 - `lib/supabase/client.ts` - Browser-side
 
+**Empty States**: Always use the `EmptyState` component from `components/ui/empty-state.tsx` when displaying empty results (e.g., no data, no search results, no items in a list). Pass an appropriate icon, title, and optional description. This provides consistent UI with an icon and dashed border.
+
 ### Platform Integration Architecture
 
 Each platform (LinkedIn, HubSpot, Google Analytics) follows the **Adapter Pattern** in `lib/platforms/{platform}/`:

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { House, LineChart, Building2, Headphones } from 'lucide-react'
+import { House, LineChart, Building2, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -35,7 +35,7 @@ const sections: SectionItem[] = [
   {
     id: 'support',
     name: 'Support',
-    icon: Headphones,
+    icon: LifeBuoy,
     href: '/support',
     internalOnly: true,
   },

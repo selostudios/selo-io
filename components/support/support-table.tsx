@@ -1,7 +1,9 @@
 'use client'
 
 import { formatDistanceToNow } from 'date-fns'
+import { MessageSquare } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Table,
   TableBody,
@@ -27,7 +29,13 @@ interface SupportTableProps {
 
 export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
   if (feedback.length === 0) {
-    return <div className="text-muted-foreground py-8 text-center">No feedback items found.</div>
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="No feedback items found"
+        description="Feedback submissions will appear here when users report issues or share suggestions"
+      />
+    )
   }
 
   return (
