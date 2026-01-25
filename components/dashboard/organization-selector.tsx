@@ -99,9 +99,10 @@ export function OrganizationSelector({
                   <Image
                     src={selectedOrg.logo_url}
                     alt=""
-                    width={20}
-                    height={20}
-                    className="rounded object-contain"
+                    width={0}
+                    height={0}
+                    sizes="24px"
+                    className="h-5 w-auto max-w-8 rounded object-contain"
                   />
                 ) : (
                   <Building2 className="h-5 w-5 text-neutral-500" aria-hidden="true" />
