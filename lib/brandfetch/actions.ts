@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import { canManageOrg } from '@/lib/permissions'
 import { fetchBrandfetch, extractDomain, normalizeBrandData, BrandfetchError } from './client'
 import type { BrandData } from './types'
@@ -124,6 +125,23 @@ export async function uploadBrandLogo(
     const {
       data: { publicUrl },
     } = supabase.storage.from('organization-logos').getPublicUrl(filePath)
+
+    // Update organization with new logo URL
+    const { error: updateError } = await supabase
+      .from('organizations')
+      .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+      .eq('id', orgId)
+
+    if (updateError) {
+      console.error('[Brand Logo Update Error]', {
+        error: updateError,
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to save logo to organization' }
+    }
+
+    revalidatePath('/settings/organization')
+    revalidatePath('/dashboard')
 
     return { logoUrl: publicUrl }
   } catch (error) {
