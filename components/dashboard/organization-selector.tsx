@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -31,12 +31,15 @@ const statusColors: Record<string, string> = {
 
 export function OrganizationSelector({
   organizations,
-  selectedOrganizationId,
+  selectedOrganizationId: initialSelectedOrgId,
 }: OrganizationSelectorProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [dialogOpen, setDialogOpen] = useState(false)
 
+  // Read org from URL searchParams, falling back to prop
+  const selectedOrganizationId = searchParams.get('org') || initialSelectedOrgId
   const selectedOrg = organizations.find((o) => o.id === selectedOrganizationId)
 
   const handleSelectOrganization = (orgId: string) => {
