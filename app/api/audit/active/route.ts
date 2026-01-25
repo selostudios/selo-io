@@ -13,7 +13,7 @@ export async function GET() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ hasActiveAudit: false })
+    return NextResponse.json({ hasSiteAudit: false, hasPerformanceAudit: false })
   }
 
   // Get user's organization
@@ -24,10 +24,13 @@ export async function GET() {
     .single()
 
   if (!userRecord) {
-    return NextResponse.json({ hasActiveAudit: false })
+    return NextResponse.json({ hasSiteAudit: false, hasPerformanceAudit: false })
   }
 
-  // Check for any active site audits (pending, crawling, or checking)
+  let hasSiteAudit = false
+  let hasPerformanceAudit = false
+
+  // Check for active site audits
   const { data: activeAudit } = await supabase
     .from('site_audits')
     .select('id, status, updated_at, created_at')
@@ -39,7 +42,6 @@ export async function GET() {
 
   if (activeAudit) {
     // Check if audit is stale (stuck for too long)
-    // Use updated_at if available, otherwise fall back to created_at
     const timestamp = activeAudit.updated_at || activeAudit.created_at
     const updatedAt = new Date(timestamp).getTime()
     const now = Date.now()
@@ -64,12 +66,51 @@ export async function GET() {
         updatedAt: activeAudit.updated_at,
         timestamp: new Date().toISOString(),
       })
-
-      return NextResponse.json({ hasActiveAudit: false })
+    } else {
+      hasSiteAudit = true
     }
-
-    return NextResponse.json({ hasActiveAudit: true, auditId: activeAudit.id })
   }
 
-  return NextResponse.json({ hasActiveAudit: false })
+  // Check for active performance audits
+  const { data: activePerformanceAudit } = await supabase
+    .from('performance_audits')
+    .select('id, status, updated_at, created_at')
+    .eq('organization_id', userRecord.organization_id)
+    .in('status', ['pending', 'running'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (activePerformanceAudit) {
+    // Check if performance audit is stale (stuck for too long)
+    const timestamp = activePerformanceAudit.updated_at || activePerformanceAudit.created_at
+    const updatedAt = new Date(timestamp).getTime()
+    const now = Date.now()
+    const isStale = !isNaN(updatedAt) && now - updatedAt > STALE_AUDIT_THRESHOLD_MS
+
+    if (isStale && activePerformanceAudit.status === 'running') {
+      // Mark stale performance audit as failed using service client (bypasses RLS)
+      const serviceClient = createServiceClient()
+      await serviceClient
+        .from('performance_audits')
+        .update({
+          status: 'failed',
+          error_message:
+            'Audit timed out - the server function was terminated before completion. Please try again.',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', activePerformanceAudit.id)
+
+      console.log('[Performance Audit Active Check] Marked stale audit as failed', {
+        auditId: activePerformanceAudit.id,
+        status: activePerformanceAudit.status,
+        updatedAt: activePerformanceAudit.updated_at,
+        timestamp: new Date().toISOString(),
+      })
+    } else {
+      hasPerformanceAudit = true
+    }
+  }
+
+  return NextResponse.json({ hasSiteAudit, hasPerformanceAudit })
 }

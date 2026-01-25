@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 
 interface ActiveAuditStatus {
-  hasActiveAudit: boolean
-  auditId?: string
+  hasSiteAudit: boolean
+  hasPerformanceAudit: boolean
 }
 
 export function useActiveAudit() {
-  const [status, setStatus] = useState<ActiveAuditStatus>({ hasActiveAudit: false })
+  const [status, setStatus] = useState<ActiveAuditStatus>({
+    hasSiteAudit: false,
+    hasPerformanceAudit: false,
+  })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

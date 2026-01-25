@@ -70,14 +70,16 @@ interface ChildSidebarProps {
   activeSection: ParentSection
   isCollapsed: boolean
   onToggleCollapse: () => void
-  hasActiveAudit?: boolean
+  hasSiteAudit?: boolean
+  hasPerformanceAudit?: boolean
 }
 
 export function ChildSidebar({
   activeSection,
   isCollapsed,
   onToggleCollapse,
-  hasActiveAudit,
+  hasSiteAudit,
+  hasPerformanceAudit,
 }: ChildSidebarProps) {
   const pathname = usePathname()
   const navigation = navigationConfig[activeSection]
@@ -123,8 +125,10 @@ export function ChildSidebar({
                   isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 }
 
-                // Show spinner for Site Audit when there's an active audit
-                const showSpinner = item.href === '/seo/site-audit' && hasActiveAudit
+                // Show spinner for Site Audit or Page Speed based on active audit type
+                const showSpinner =
+                  (item.href === '/seo/site-audit' && hasSiteAudit) ||
+                  (item.href === '/seo/page-speed' && hasPerformanceAudit)
 
                 return (
                   <Link
