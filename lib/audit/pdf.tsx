@@ -4,7 +4,7 @@ import { getLogoDataUri } from '@/lib/pdf/logo'
 import {
   CoverPage,
   SectionHeader,
-  IssueCard,
+  IssueTable,
   StatBar,
   PageFooter,
   ActionItem,
@@ -13,6 +13,7 @@ import {
   baseStyles,
   colors,
   getScoreColor,
+  type GroupedIssue,
 } from '@/lib/pdf/components'
 
 interface AuditPDFProps {
@@ -67,6 +68,44 @@ function sortByPriority(checks: SiteAuditCheck[]): SiteAuditCheck[] {
   )
 }
 
+// Group checks by check_name to eliminate repetition
+function groupChecksByName(checks: SiteAuditCheck[]): GroupedIssue[] {
+  const groupMap = new Map<
+    string,
+    { name: string; priority: 'critical' | 'recommended' | 'optional'; count: number; fixGuidance: string }
+  >()
+
+  for (const check of checks) {
+    const key = check.check_name
+    const existing = groupMap.get(key)
+
+    if (existing) {
+      existing.count++
+      // Keep higher priority if mixed
+      const priorityOrder = { critical: 0, recommended: 1, optional: 2 }
+      if (priorityOrder[check.priority as keyof typeof priorityOrder] < priorityOrder[existing.priority]) {
+        existing.priority = check.priority as 'critical' | 'recommended' | 'optional'
+      }
+    } else {
+      groupMap.set(key, {
+        name: formatCheckName(check),
+        priority: check.priority as 'critical' | 'recommended' | 'optional',
+        count: 1,
+        fixGuidance: getCheckFixGuidance(check) || getCheckDescription(check) || '',
+      })
+    }
+  }
+
+  // Convert to array and sort by priority then count
+  const grouped = Array.from(groupMap.values())
+  const priorityOrder = { critical: 0, recommended: 1, optional: 2 }
+  return grouped.sort((a, b) => {
+    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+    if (priorityDiff !== 0) return priorityDiff
+    return b.count - a.count // Higher count first within same priority
+  })
+}
+
 function IssuesSection({
   title,
   issues,
@@ -78,22 +117,17 @@ function IssuesSection({
 }) {
   if (issues.length === 0 && passedCount === 0) return null
 
-  const sortedIssues = sortByPriority(issues)
+  // Group identical issues to eliminate repetition
+  const groupedIssues = groupChecksByName(issues)
+  const uniqueIssueCount = groupedIssues.length
 
   return (
     <View style={baseStyles.section}>
       <Text style={baseStyles.sectionSubtitle}>
-        {title} ({issues.length} issue{issues.length !== 1 ? 's' : ''})
+        {title} ({issues.length} issue{issues.length !== 1 ? 's' : ''} across {uniqueIssueCount}{' '}
+        type{uniqueIssueCount !== 1 ? 's' : ''})
       </Text>
-      {sortedIssues.map((check) => (
-        <IssueCard
-          key={check.id}
-          name={formatCheckName(check)}
-          priority={check.priority as 'critical' | 'recommended' | 'optional'}
-          description={getCheckDescription(check)}
-          fixGuidance={getCheckFixGuidance(check)}
-        />
-      ))}
+      <IssueTable issues={groupedIssues} />
       {passedCount > 0 && <PassedChecksSummary count={passedCount} />}
     </View>
   )

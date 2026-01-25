@@ -221,3 +221,63 @@ export function PassedChecksSummary({ count }: PassedChecksSummaryProps) {
     </View>
   )
 }
+
+// Grouped issue for compact table display
+export interface GroupedIssue {
+  name: string
+  priority: 'critical' | 'recommended' | 'optional'
+  count: number
+  fixGuidance: string
+}
+
+interface IssueTableProps {
+  issues: GroupedIssue[]
+}
+
+export function IssueTable({ issues }: IssueTableProps) {
+  if (issues.length === 0) return null
+
+  return (
+    <View style={baseStyles.table}>
+      {/* Table Header */}
+      <View style={baseStyles.tableHeader}>
+        <Text style={[baseStyles.tableHeaderCell, baseStyles.colIssue]}>Issue</Text>
+        <Text style={[baseStyles.tableHeaderCell, baseStyles.colPriority]}>Priority</Text>
+        <Text style={[baseStyles.tableHeaderCell, baseStyles.colPages]}>Pages</Text>
+        <Text style={[baseStyles.tableHeaderCell, baseStyles.colFix]}>Fix</Text>
+      </View>
+
+      {/* Table Rows */}
+      {issues.map((issue, index) => {
+        const rowStyle =
+          issue.priority === 'critical'
+            ? baseStyles.tableRowCritical
+            : issue.priority === 'recommended'
+              ? baseStyles.tableRowWarning
+              : baseStyles.tableRowOptional
+
+        const priorityColor =
+          issue.priority === 'critical'
+            ? colors.error
+            : issue.priority === 'recommended'
+              ? colors.warning
+              : colors.textLight
+
+        // Truncate fix guidance for table display
+        const shortFix =
+          issue.fixGuidance.length > 60 ? issue.fixGuidance.slice(0, 57) + '...' : issue.fixGuidance
+
+        return (
+          <View key={index} style={[baseStyles.tableRow, rowStyle]} wrap={false}>
+            <Text style={[baseStyles.tableCellBold, baseStyles.colIssue]}>{issue.name}</Text>
+            <Text style={[baseStyles.tableCell, baseStyles.colPriority, { color: priorityColor }]}>
+              {issue.priority}
+            </Text>
+            <Text style={[baseStyles.tableCell, baseStyles.colPages]}>{issue.count}</Text>
+            <Text style={[baseStyles.tableCellSmall, baseStyles.colFix]}>{shortFix}</Text>
+          </View>
+        )
+      })}
+    </View>
+  )
+}

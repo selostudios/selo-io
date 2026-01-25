@@ -284,4 +284,57 @@ export const baseStyles = StyleSheet.create({
     color: colors.success,
     marginLeft: spacing.sm,
   },
+
+  // Compact table styles for issues
+  table: {
+    marginBottom: spacing.md,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.secondary,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tableHeaderCell: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: colors.textLight,
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tableRowCritical: {
+    backgroundColor: '#fef2f2',
+  },
+  tableRowWarning: {
+    backgroundColor: '#fffbeb',
+  },
+  tableRowOptional: {
+    backgroundColor: colors.white,
+  },
+  tableCell: {
+    fontSize: 9,
+    color: colors.text,
+  },
+  tableCellBold: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  tableCellSmall: {
+    fontSize: 8,
+    color: colors.textLight,
+  },
+  // Column widths for issue table
+  colIssue: { width: '45%' },
+  colPriority: { width: '15%' },
+  colPages: { width: '12%', textAlign: 'right' as const },
+  colFix: { width: '28%' },
 })
