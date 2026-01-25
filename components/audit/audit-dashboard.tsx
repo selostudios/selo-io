@@ -95,8 +95,8 @@ export function AuditDashboard({
         </Card>
       )}
 
-      {/* Score History */}
-      {audits.length > 0 && (
+      {/* Score History - Only show for organization audits (same domain) */}
+      {audits.length > 0 && !isOneTimeHistory && (
         <Card>
           <CardHeader>
             <CardTitle>Score History</CardTitle>
