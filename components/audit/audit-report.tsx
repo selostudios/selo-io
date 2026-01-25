@@ -172,24 +172,6 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
 
       {/* Search and Status Filter Badges */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
-          <Input
-            type="text"
-            placeholder="Search checks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 w-48 pl-8 pr-8 text-sm"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
         <Badge
           variant={activeFilter === 'all' ? 'default' : 'outline'}
           className="cursor-pointer"
@@ -218,6 +200,24 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
         >
           Passed ({passedCount})
         </Badge>
+        <div className="relative ml-auto">
+          <Search className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            type="text"
+            placeholder="Search checks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 w-48 pl-8 pr-8 text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Check Lists */}
