@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Gauge } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -92,6 +92,20 @@ export function PageSpeedClient({
     }
   }
 
+  // Filter audits to match the selected target
+  // - For organization targets: only show audits for that organization
+  // - For one-time/one-time-history targets: only show audits with no organization (null)
+  const filteredAudits = useMemo(() => {
+    if (!selectedTarget) return []
+
+    if (selectedTarget.type === 'organization') {
+      return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
+    } else {
+      // One-time and one-time-history audits have no organization_id
+      return audits.filter((audit) => audit.organization_id === null)
+    }
+  }, [audits, selectedTarget])
+
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -156,7 +170,7 @@ export function PageSpeedClient({
       {/* Show dashboard when target is selected */}
       {selectedTarget && selectedTarget.type !== 'one-time-history' && (
         <PerformanceDashboard
-          audits={audits}
+          audits={filteredAudits}
           monitoredPages={monitoredPages}
           websiteUrl={selectedTarget.url}
           initialUrl={initialUrl}

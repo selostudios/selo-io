@@ -29,15 +29,15 @@ interface ScoreCardProps {
 
 function getScoreColor(score: number | null): string {
   if (score === null) return 'hsl(var(--muted-foreground))'
-  if (score >= 70) return 'hsl(142, 76%, 36%)' // green-600
-  if (score >= 40) return 'hsl(45, 92%, 39%)' // yellow-700 (matches warning pill)
+  if (score >= 80) return 'hsl(142, 76%, 36%)' // green-600
+  if (score >= 60) return 'hsl(45, 92%, 39%)' // yellow-700 (matches warning pill)
   return 'hsl(0, 84%, 60%)' // red-600
 }
 
 function getScoreTextClass(score: number | null): string {
   if (score === null) return 'fill-muted-foreground'
-  if (score >= 70) return 'fill-green-600'
-  if (score >= 40) return 'fill-yellow-700'
+  if (score >= 80) return 'fill-green-600'
+  if (score >= 60) return 'fill-yellow-700'
   return 'fill-red-600'
 }
 

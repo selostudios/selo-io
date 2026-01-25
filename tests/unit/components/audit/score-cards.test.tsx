@@ -51,35 +51,35 @@ describe('ScoreCards', () => {
   it('applies correct color classes based on score thresholds', () => {
     const { container } = render(
       <ScoreCards
-        overall={85} // Green (70+)
-        seo={55} // Yellow (40-69)
-        ai={30} // Red (<40)
-        technical={70} // Green (exactly 70)
+        overall={85} // Green (80+)
+        seo={70} // Yellow (60-79)
+        ai={50} // Red (<60)
+        technical={80} // Green (exactly 80)
       />
     )
 
     // Verify scores are rendered
     expect(container.textContent).toContain('85')
-    expect(container.textContent).toContain('55')
-    expect(container.textContent).toContain('30')
     expect(container.textContent).toContain('70')
+    expect(container.textContent).toContain('50')
+    expect(container.textContent).toContain('80')
 
     // Check for fill classes in the SVG chart text elements
-    // Green scores (70+) should have fill-green-600
+    // Green scores (80+) should have fill-green-600
     expect(container.querySelector('.fill-green-600')).toBeInTheDocument()
-    // Yellow scores (40-69) should have fill-yellow-700
+    // Yellow scores (60-79) should have fill-yellow-700
     expect(container.querySelector('.fill-yellow-700')).toBeInTheDocument()
-    // Red scores (<40) should have fill-red-600
+    // Red scores (<60) should have fill-red-600
     expect(container.querySelector('.fill-red-600')).toBeInTheDocument()
   })
 
   it('handles edge case scores correctly', () => {
-    render(<ScoreCards overall={0} seo={100} ai={40} technical={69} />)
+    render(<ScoreCards overall={0} seo={100} ai={60} technical={79} />)
 
     expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.getByText('100')).toBeInTheDocument()
-    expect(screen.getByText('40')).toBeInTheDocument()
-    expect(screen.getByText('69')).toBeInTheDocument()
+    expect(screen.getByText('60')).toBeInTheDocument()
+    expect(screen.getByText('79')).toBeInTheDocument()
   })
 
   it('applies muted style for null scores', () => {
