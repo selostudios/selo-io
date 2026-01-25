@@ -69,7 +69,8 @@ function parseDescription(description: string): { text: string; learnMoreUrl: st
 }
 
 export function OpportunityItem({ opportunity }: OpportunityItemProps) {
-  const savingsDisplay = formatSeconds(opportunity.numericValue)
+  // Use displayValue from PageSpeed API if available (already formatted), otherwise format numericValue
+  const savingsDisplay = opportunity.displayValue || formatSeconds(opportunity.numericValue)
   const { text: descriptionText, learnMoreUrl } = parseDescription(opportunity.description)
 
   // Extract URLs from details.items

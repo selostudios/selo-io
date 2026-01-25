@@ -137,6 +137,19 @@ export function extractMetrics(result: PageSpeedResult) {
   }
 }
 
+// Metric audit IDs that should NOT be treated as opportunities
+const METRIC_AUDIT_IDS = new Set([
+  'first-contentful-paint',
+  'largest-contentful-paint',
+  'speed-index',
+  'interactive',
+  'total-blocking-time',
+  'cumulative-layout-shift',
+  'max-potential-fid',
+  'first-meaningful-paint',
+  'estimated-input-latency',
+])
+
 export function extractOpportunities(result: PageSpeedResult): Opportunity[] {
   const audits = result.lighthouseResult.audits
 
@@ -144,8 +157,13 @@ export function extractOpportunities(result: PageSpeedResult): Opportunity[] {
     .filter((audit): audit is Record<string, unknown> => {
       if (typeof audit !== 'object' || audit === null) return false
       const auditObj = audit as Record<string, unknown>
+      const id = auditObj['id'] as string
       const score = auditObj['score'] as number | null
       const numericValue = auditObj['numericValue'] as number | undefined
+
+      // Exclude metric audits - they measure performance, not opportunities for improvement
+      if (METRIC_AUDIT_IDS.has(id)) return false
+
       return score !== null && score < 1 && typeof numericValue === 'number' && numericValue > 0
     })
     .sort((a, b) => (b['numericValue'] as number) - (a['numericValue'] as number))
