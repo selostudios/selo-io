@@ -2,28 +2,36 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { House, LineChart } from 'lucide-react'
+import { House, LineChart, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export type ParentSection = 'home' | 'seo'
+export type ParentSection = 'home' | 'seo' | 'organizations'
 
 interface ParentSidebarProps {
   activeSection: ParentSection
   onSectionChange: (section: ParentSection) => void
+  isInternal?: boolean
 }
 
-const sections: Array<{
+type SectionItem = {
   id: ParentSection
   name: string
   icon: React.ComponentType<{ className?: string }>
   href: string
-}> = [
+  internalOnly?: boolean
+}
+
+const sections: SectionItem[] = [
   { id: 'home', name: 'Home', icon: House, href: '/dashboard' },
   { id: 'seo', name: 'SEO', icon: LineChart, href: '/seo/site-audit' },
+  { id: 'organizations', name: 'Organizations', icon: Building2, href: '/organizations', internalOnly: true },
 ]
 
-export function ParentSidebar({ activeSection, onSectionChange }: ParentSidebarProps) {
+export function ParentSidebar({ activeSection, onSectionChange, isInternal = false }: ParentSidebarProps) {
+  // Filter sections based on internal status
+  const visibleSections = sections.filter((section) => !section.internalOnly || isInternal)
+
   return (
     <div className="flex h-screen w-16 flex-col border-r bg-white">
       {/* Logo */}
@@ -42,7 +50,7 @@ export function ParentSidebar({ activeSection, onSectionChange }: ParentSidebarP
 
       {/* Navigation Icons */}
       <nav className="flex flex-1 flex-col items-center gap-2 py-4">
-        {sections.map((section) => {
+        {visibleSections.map((section) => {
           const Icon = section.icon
           const isActive = activeSection === section.id
 

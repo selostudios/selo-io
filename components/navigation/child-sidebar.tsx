@@ -10,6 +10,7 @@ import {
   Gauge,
   PanelLeftClose,
   Loader2,
+  Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
@@ -45,14 +46,24 @@ const seoNavigation: NavigationGroup[] = [
   },
 ]
 
+const organizationsNavigation: NavigationGroup[] = [
+  {
+    items: [
+      { name: 'All Organizations', href: '/organizations', icon: Building2 },
+    ],
+  },
+]
+
 const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
   home: homeNavigation,
   seo: seoNavigation,
+  organizations: organizationsNavigation,
 }
 
 const sectionTitles: Record<ParentSection, string> = {
   home: 'Home',
   seo: 'SEO',
+  organizations: 'Organizations',
 }
 
 interface ChildSidebarProps {

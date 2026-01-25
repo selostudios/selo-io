@@ -298,3 +298,130 @@ export async function updateOrganizationStatus(
 
   return { success: true, organization: data as Organization }
 }
+
+/**
+ * Update organization details (internal users only)
+ */
+export async function updateOrganization(
+  organizationId: string,
+  updates: {
+    name: string
+    website_url: string | null
+    status: OrganizationStatus
+    contact_email: string | null
+    industry: string | null
+  }
+): Promise<{ success: boolean; organization?: Organization; error?: string }> {
+  const supabase = await createClient()
+
+  // Verify user is internal
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.isInternal) {
+    return { success: false, error: 'Only internal users can update organizations' }
+  }
+
+  // Validate organizationId
+  if (!organizationId) {
+    return { success: false, error: 'Organization ID is required' }
+  }
+
+  // Validate name
+  if (!updates.name || updates.name.trim().length === 0) {
+    return { success: false, error: 'Organization name is required' }
+  }
+
+  if (updates.name.length > 100) {
+    return { success: false, error: 'Organization name must be less than 100 characters' }
+  }
+
+  // Validate status
+  const validStatuses: OrganizationStatus[] = ['prospect', 'customer', 'inactive']
+  if (!validStatuses.includes(updates.status)) {
+    return { success: false, error: 'Invalid status value' }
+  }
+
+  // Validate contact email if provided
+  if (updates.contact_email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(updates.contact_email)) {
+      return { success: false, error: 'Invalid email address format' }
+    }
+  }
+
+  // Update organization
+  const { data, error } = await supabase
+    .from('organizations')
+    .update({
+      name: updates.name.trim(),
+      website_url: updates.website_url?.trim() || null,
+      status: updates.status,
+      contact_email: updates.contact_email?.trim().toLowerCase() || null,
+      industry: updates.industry?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', organizationId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[Organizations Error]', {
+      type: 'update_organization',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    })
+    return { success: false, error: 'Failed to update organization' }
+  }
+
+  revalidatePath('/organizations')
+  revalidatePath('/seo')
+  revalidatePath('/seo/site-audit')
+  revalidatePath('/seo/page-speed')
+
+  return { success: true, organization: data as Organization }
+}
+
+/**
+ * Archive an organization (soft delete - sets status to inactive)
+ * Preserves data for billing and audit purposes
+ */
+export async function archiveOrganization(
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+
+  // Verify user is internal
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.isInternal) {
+    return { success: false, error: 'Only internal users can archive organizations' }
+  }
+
+  // Validate organizationId
+  if (!organizationId) {
+    return { success: false, error: 'Organization ID is required' }
+  }
+
+  // Archive by setting status to inactive
+  const { error } = await supabase
+    .from('organizations')
+    .update({
+      status: 'inactive' as OrganizationStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', organizationId)
+
+  if (error) {
+    console.error('[Organizations Error]', {
+      type: 'archive_organization',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    })
+    return { success: false, error: 'Failed to archive organization' }
+  }
+
+  revalidatePath('/organizations')
+  revalidatePath('/seo')
+  revalidatePath('/seo/site-audit')
+  revalidatePath('/seo/page-speed')
+
+  return { success: true }
+}

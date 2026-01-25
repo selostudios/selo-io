@@ -6,6 +6,7 @@ import { SettingsTabs } from '@/components/settings/settings-tabs'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
+import { isInternalUser } from '@/lib/permissions'
 
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -18,10 +19,10 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     redirect('/login')
   }
 
-  // Check if user has organization
+  // Check if user has organization and internal status
   const { data: userRecord, error } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('organization_id, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -29,10 +30,12 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     redirect('/onboarding')
   }
 
+  const isInternal = isInternalUser(userRecord.is_internal)
+
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <NavigationShell />
+        <NavigationShell isInternal={isInternal} />
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">

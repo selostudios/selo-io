@@ -112,3 +112,11 @@ export function canManageCampaigns(role: string | undefined): boolean {
 export function canManageFeedback(role: string | undefined): boolean {
   return hasPermission(role, 'feedback:manage')
 }
+
+/**
+ * Check if user is an internal Selo employee.
+ * This is separate from role-based permissions - internal users can access all organizations.
+ */
+export function isInternalUser(isInternal: boolean | null | undefined): boolean {
+  return isInternal === true
+}

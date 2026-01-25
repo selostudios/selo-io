@@ -150,6 +150,16 @@ Always run lint and tests before pushing to remote:
 npm run lint && npm run test:unit && npm run build
 ```
 
+### Permissions Service
+
+Use `lib/permissions.ts` for all permission-based logic:
+
+- **Role-based permissions**: `hasPermission(role, permission)`, `canManageOrg(role)`, `canManageTeam(role)`, etc.
+- **Internal user checks**: `isInternalUser(is_internal)` for Selo employee access
+- RLS policies are the security boundary; these helpers are for UX decisions
+
+Always import from `@/lib/permissions` rather than duplicating permission checks inline.
+
 ### Error Logging Convention
 
 ```typescript

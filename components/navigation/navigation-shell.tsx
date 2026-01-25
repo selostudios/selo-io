@@ -15,6 +15,9 @@ function getSectionFromPathname(pathname: string): ParentSection {
   if (pathname.startsWith('/seo')) {
     return 'seo'
   }
+  if (pathname.startsWith('/organizations')) {
+    return 'organizations'
+  }
   // Default to home for /dashboard, /settings, /profile, etc.
   return 'home'
 }
@@ -22,9 +25,14 @@ function getSectionFromPathname(pathname: string): ParentSection {
 const sectionDefaultRoutes: Record<ParentSection, string> = {
   home: '/dashboard',
   seo: '/seo/site-audit',
+  organizations: '/organizations',
 }
 
-export function NavigationShell() {
+interface NavigationShellProps {
+  isInternal?: boolean
+}
+
+export function NavigationShell({ isInternal = false }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { hasActiveAudit } = useActiveAudit()
@@ -76,7 +84,7 @@ export function NavigationShell() {
 
   return (
     <div className="sticky top-0 flex h-screen">
-      <ParentSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+      <ParentSidebar activeSection={activeSection} onSectionChange={handleSectionChange} isInternal={isInternal} />
       <ChildSidebar
         activeSection={activeSection}
         isCollapsed={collapsed}
