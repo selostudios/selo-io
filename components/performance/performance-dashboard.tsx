@@ -29,7 +29,7 @@ interface PerformanceDashboardProps {
   monitoredPages: MonitoredPage[]
   websiteUrl: string
   initialUrl?: string
-  projectId?: string
+  organizationId?: string
 }
 
 export function PerformanceDashboard({
@@ -37,7 +37,7 @@ export function PerformanceDashboard({
   monitoredPages: initialPages,
   websiteUrl,
   initialUrl,
-  projectId,
+  organizationId,
 }: PerformanceDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -57,7 +57,7 @@ export function PerformanceDashboard({
         const response = await fetch('/api/performance/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ urls: uniqueUrls, projectId }),
+          body: JSON.stringify({ urls: uniqueUrls, organizationId }),
         })
 
         if (!response.ok) {

@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runPerformanceAudit } from '@/lib/performance/runner'
+import { getCurrentUser } from '@/lib/organizations/actions'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const { isInternal, organizationId: userOrgId } = currentUser
+
   // Get request body
   const body = await request.json().catch(() => ({}))
-  const { urls, projectId } = body as { urls?: string[]; projectId?: string }
+  const { urls, organizationId } = body as { urls?: string[]; organizationId?: string }
 
   if (!urls || !Array.isArray(urls) || urls.length === 0) {
     return NextResponse.json({ error: 'URLs are required' }, { status: 400 })
@@ -30,38 +31,42 @@ export async function POST(request: Request) {
     }
   }
 
-  // Get user's organization
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id')
-    .eq('id', user.id)
-    .single()
+  // Determine the organization to associate the audit with
+  let auditOrgId: string | null = null
 
-  if (!userRecord) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 })
-  }
+  if (organizationId) {
+    // If organizationId is provided, verify access
+    if (isInternal) {
+      // Internal users can audit any organization
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('id', organizationId)
+        .single()
 
-  // If projectId is provided, verify it belongs to user's organization
-  if (projectId) {
-    const { data: project } = await supabase
-      .from('seo_projects')
-      .select('id')
-      .eq('id', projectId)
-      .eq('organization_id', userRecord.organization_id)
-      .single()
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      if (!org) {
+        return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+      }
+      auditOrgId = organizationId
+    } else {
+      // External users can only audit their own organization
+      if (organizationId !== userOrgId) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      }
+      auditOrgId = organizationId
     }
+  } else if (!isInternal) {
+    // External users must always have an organizationId (their own)
+    auditOrgId = userOrgId
   }
+  // For internal users with no organizationId, auditOrgId remains null (one-time audit)
 
   // Create audit record
   const { data: audit, error } = await supabase
     .from('performance_audits')
     .insert({
-      organization_id: userRecord.organization_id,
-      project_id: projectId || null,
-      created_by: user.id,
+      organization_id: auditOrgId,
+      created_by: currentUser.id,
       status: 'pending',
     })
     .select()
