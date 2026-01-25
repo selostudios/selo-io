@@ -4,6 +4,7 @@ import { siteWideChecks, pageSpecificChecks } from './checks'
 import { fetchPage } from './fetcher'
 import { generateExecutiveSummary } from './summary'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
+import { cleanupOlderAuditDetails, cleanupCrawlQueue } from './cleanup'
 import type { SiteAuditCheck, SiteAuditPage, CheckContext, AuditStatus, DismissedCheck } from './types'
 
 async function checkIfStopped(
@@ -276,6 +277,9 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         executive_summary,
       })
       .eq('id', auditId)
+
+    // Cleanup: delete checks/pages from older audits to save storage
+    await cleanupOlderAuditDetails(auditId, auditData?.organization_id ?? null, url)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
 
@@ -534,6 +538,17 @@ async function finishAudit(
       executive_summary,
     })
     .eq('id', auditId)
+
+  // Get organization_id for cleanup
+  const { data: auditForCleanup } = await supabase
+    .from('site_audits')
+    .select('organization_id')
+    .eq('id', auditId)
+    .single()
+
+  // Cleanup: delete checks/pages from older audits to save storage
+  await cleanupOlderAuditDetails(auditId, auditForCleanup?.organization_id ?? null, url)
+  await cleanupCrawlQueue(auditId)
 
   console.log(`[Audit Finish] Audit ${auditId} completed successfully`)
 }
@@ -921,6 +936,17 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
         executive_summary,
       })
       .eq('id', auditId)
+
+    // Get organization_id for cleanup
+    const { data: auditForCleanup } = await supabase
+      .from('site_audits')
+      .select('organization_id')
+      .eq('id', auditId)
+      .single()
+
+    // Cleanup: delete checks/pages from older audits to save storage
+    await cleanupOlderAuditDetails(auditId, auditForCleanup?.organization_id ?? null, url)
+    await cleanupCrawlQueue(auditId)
 
     console.log(`[Audit Complete] Audit ${auditId} completed successfully`)
   } catch (error) {
