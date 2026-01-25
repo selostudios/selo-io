@@ -15,6 +15,7 @@
 ### Task 1.1: Create Database Migration File
 
 **Files:**
+
 - Create: `supabase/migrations/20260125000001_organization_status_internal_users.sql`
 
 **Step 1: Write the migration**
@@ -198,6 +199,7 @@ git commit -m "feat(db): add organization status and internal users migration"
 ### Task 2.1: Create Organization Types
 
 **Files:**
+
 - Create: `lib/organizations/types.ts`
 
 **Step 1: Write the types file**
@@ -254,6 +256,7 @@ git commit -m "feat: add organization types"
 ### Task 3.1: Create Organization Actions
 
 **Files:**
+
 - Create: `lib/organizations/actions.ts`
 
 **Step 1: Write the actions file**
@@ -263,11 +266,7 @@ git commit -m "feat: add organization types"
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type {
-  Organization,
-  OrganizationForSelector,
-  OrganizationStatus,
-} from './types'
+import type { Organization, OrganizationForSelector, OrganizationStatus } from './types'
 
 /**
  * Check if the current user is internal (Selo employee)
@@ -536,10 +535,7 @@ export async function updateOrganizationStatus(
     return { success: false, error: 'Only internal users can update organization status' }
   }
 
-  const { error } = await supabase
-    .from('organizations')
-    .update({ status })
-    .eq('id', organizationId)
+  const { error } = await supabase.from('organizations').update({ status }).eq('id', organizationId)
 
   if (error) {
     console.error('[Organizations Error]', {
@@ -572,6 +568,7 @@ git commit -m "feat: add organization server actions"
 ### Task 4.1: Create Organization Selector
 
 **Files:**
+
 - Create: `components/dashboard/organization-selector.tsx`
 
 **Step 1: Write the component**
@@ -749,6 +746,7 @@ git commit -m "feat: add organization selector component"
 ### Task 4.2: Create Organization Dialog
 
 **Files:**
+
 - Create: `components/dashboard/create-organization-dialog.tsx`
 
 **Step 1: Write the component**
@@ -900,6 +898,7 @@ git commit -m "feat: add create organization dialog"
 ### Task 5.1: Update Header for Internal Users
 
 **Files:**
+
 - Modify: `components/dashboard/header.tsx`
 
 **Step 1: Update the header**
@@ -1001,6 +1000,7 @@ git commit -m "feat: update header to show org selector for internal users"
 ### Task 6.1: Create Audit Target Selector
 
 **Files:**
+
 - Create: `components/seo/audit-target-selector.tsx`
 
 **Step 1: Write the component**
@@ -1252,6 +1252,7 @@ git commit -m "feat: add audit target selector component"
 ### Task 7.1: Update Site Audit Actions
 
 **Files:**
+
 - Modify: `app/seo/site-audit/actions.ts`
 
 **Step 1: Replace the file**
@@ -1333,6 +1334,7 @@ git commit -m "feat: update site audit actions for org-based filtering"
 ### Task 7.2: Update Site Audit Page
 
 **Files:**
+
 - Modify: `app/seo/site-audit/page.tsx`
 
 **Step 1: Replace the file**
@@ -1510,6 +1512,7 @@ git commit -m "feat: update site audit page for org-based selection"
 ### Task 8.1: Update Audit Dashboard Props
 
 **Files:**
+
 - Modify: `components/audit/audit-dashboard.tsx`
 
 **Step 1: Update the component props**
@@ -1556,6 +1559,7 @@ git commit -m "feat: update audit dashboard to use organizationId"
 ### Task 8.2: Update Audit API Route
 
 **Files:**
+
 - Modify: `app/api/audit/start/route.ts`
 
 **Step 1: Replace the file**
@@ -1699,6 +1703,7 @@ git commit -m "feat: update audit API for org-based and one-time audits"
 ### Task 9.1: Remove Project-Related Files
 
 **Files:**
+
 - Delete: `components/seo/project-selector.tsx`
 - Delete: `components/seo/project-dialog.tsx`
 - Delete: `lib/seo/actions.ts`
@@ -1727,6 +1732,7 @@ git commit -m "chore: remove seo_projects related files"
 Apply the same pattern as site-audit to page-speed:
 
 **Files:**
+
 - Modify: `app/seo/page-speed/actions.ts`
 - Modify: `app/seo/page-speed/page.tsx`
 - Create: `app/seo/page-speed/client.tsx`
@@ -1748,6 +1754,7 @@ git commit -m "feat: update page speed for org-based selection"
 ### Task 11.1: Pass Org ID to Header
 
 **Files:**
+
 - Modify: `app/dashboard/layout.tsx`
 - Modify: `app/seo/layout.tsx`
 
@@ -1788,16 +1795,16 @@ npm run build
 
 ## Summary
 
-| Phase | Tasks | Description |
-|-------|-------|-------------|
-| 1 | 1.1 | Database migration |
-| 2 | 2.1 | TypeScript types |
-| 3 | 3.1 | Organization server actions |
-| 4 | 4.1-4.2 | Organization selector components |
-| 5 | 5.1 | Update header component |
-| 6 | 6.1 | Audit target selector |
-| 7 | 7.1-7.2 | Update site audit page |
-| 8 | 8.1-8.2 | Update audit dashboard & API |
-| 9 | 9.1 | Remove old project files |
-| 10 | 10.1 | Update page speed (same pattern) |
-| 11 | 11.1 | Update layouts |
+| Phase | Tasks   | Description                      |
+| ----- | ------- | -------------------------------- |
+| 1     | 1.1     | Database migration               |
+| 2     | 2.1     | TypeScript types                 |
+| 3     | 3.1     | Organization server actions      |
+| 4     | 4.1-4.2 | Organization selector components |
+| 5     | 5.1     | Update header component          |
+| 6     | 6.1     | Audit target selector            |
+| 7     | 7.1-7.2 | Update site audit page           |
+| 8     | 8.1-8.2 | Update audit dashboard & API     |
+| 9     | 9.1     | Remove old project files         |
+| 10    | 10.1    | Update page speed (same pattern) |
+| 11    | 11.1    | Update layouts                   |

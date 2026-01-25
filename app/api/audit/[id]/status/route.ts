@@ -25,7 +25,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   // Check if audit is stale (stuck for too long)
-  if (audit.status === 'crawling' || audit.status === 'checking' || audit.status === 'batch_complete') {
+  if (
+    audit.status === 'crawling' ||
+    audit.status === 'checking' ||
+    audit.status === 'batch_complete'
+  ) {
     const timestamp = audit.updated_at || audit.created_at
     const updatedAt = new Date(timestamp).getTime()
     const now = Date.now()

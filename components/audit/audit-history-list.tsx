@@ -68,7 +68,9 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
               {formatAuditDate(audit.created_at)}
             </span>
             {showUrl && (
-              <span className="max-w-[200px] truncate text-sm font-medium">{getDomain(audit.url)}</span>
+              <span className="max-w-[200px] truncate text-sm font-medium">
+                {getDomain(audit.url)}
+              </span>
             )}
             {isInProgress(audit.status) ? (
               <div className="flex items-center gap-2">

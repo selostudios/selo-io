@@ -16,7 +16,8 @@ export default async function OrganizationsPage() {
   // Get all organizations
   const { data: organizations } = await supabase
     .from('organizations')
-    .select(`
+    .select(
+      `
       id,
       name,
       website_url,
@@ -25,7 +26,8 @@ export default async function OrganizationsPage() {
       contact_email,
       created_at,
       updated_at
-    `)
+    `
+    )
     .order('created_at', { ascending: false })
 
   // Fetch industries for the edit dialog

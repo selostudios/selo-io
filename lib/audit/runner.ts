@@ -5,7 +5,13 @@ import { fetchPage } from './fetcher'
 import { generateExecutiveSummary } from './summary'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { cleanupOlderAuditDetails, cleanupCrawlQueue } from './cleanup'
-import type { SiteAuditCheck, SiteAuditPage, CheckContext, AuditStatus, DismissedCheck } from './types'
+import type {
+  SiteAuditCheck,
+  SiteAuditPage,
+  CheckContext,
+  AuditStatus,
+  DismissedCheck,
+} from './types'
 
 async function checkIfStopped(
   supabase: ReturnType<typeof createServiceClient>,
@@ -262,7 +268,12 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
     try {
-      executive_summary = await generateExecutiveSummary(url, allPages.length, scores, allCheckResults)
+      executive_summary = await generateExecutiveSummary(
+        url,
+        allPages.length,
+        scores,
+        allCheckResults
+      )
     } catch (error) {
       console.error('[Audit] Failed to generate executive summary:', error)
     }

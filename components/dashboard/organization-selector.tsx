@@ -109,7 +109,10 @@ export function OrganizationSelector({
                   <Building2 className="h-6 w-6 text-neutral-500" aria-hidden="true" />
                 )}
                 <span className="font-medium">{selectedOrg.name}</span>
-                <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
+                <Badge
+                  variant="secondary"
+                  className={cn('text-xs', statusColors[selectedOrg.status])}
+                >
                   {selectedOrg.status}
                 </Badge>
               </>
@@ -125,30 +128,35 @@ export function OrganizationSelector({
         <DropdownMenuContent align="start" className="w-[300px]">
           {organizations.filter((o) => o.status !== 'inactive').length > 0 ? (
             <>
-              {organizations.filter((o) => o.status !== 'inactive').map((org) => (
-                <DropdownMenuItem
-                  key={org.id}
-                  onClick={() => handleSelectOrganization(org.id)}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-medium">{org.name}</span>
-                      <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
-                        {org.status}
-                      </Badge>
+              {organizations
+                .filter((o) => o.status !== 'inactive')
+                .map((org) => (
+                  <DropdownMenuItem
+                    key={org.id}
+                    onClick={() => handleSelectOrganization(org.id)}
+                    className="flex items-center justify-between py-2"
+                  >
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">{org.name}</span>
+                        <Badge
+                          variant="secondary"
+                          className={cn('text-xs', statusColors[org.status])}
+                        >
+                          {org.status}
+                        </Badge>
+                      </div>
+                      {org.website_url && (
+                        <span className="text-muted-foreground truncate text-xs">
+                          {getDomain(org.website_url)}
+                        </span>
+                      )}
                     </div>
-                    {org.website_url && (
-                      <span className="text-muted-foreground truncate text-xs">
-                        {getDomain(org.website_url)}
-                      </span>
+                    {org.id === selectedOrganizationId && (
+                      <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
                     )}
-                  </div>
-                  {org.id === selectedOrganizationId && (
-                    <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
-                  )}
-                </DropdownMenuItem>
-              ))}
+                  </DropdownMenuItem>
+                ))}
               <DropdownMenuSeparator />
             </>
           ) : null}

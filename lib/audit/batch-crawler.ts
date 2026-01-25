@@ -274,7 +274,9 @@ export async function crawlBatch(
 
         if (newUrls.length > 0) {
           // Upsert to handle duplicates gracefully
-          await supabase.from('site_audit_crawl_queue').upsert(newUrls, { onConflict: 'audit_id,url' })
+          await supabase
+            .from('site_audit_crawl_queue')
+            .upsert(newUrls, { onConflict: 'audit_id,url' })
 
           // Update urls_discovered count
           const { count } = await supabase

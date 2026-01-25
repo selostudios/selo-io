@@ -111,9 +111,7 @@ export function OrganizationsClient({ organizations, industries }: Organizations
           <Building2 className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
           <div>
             <h1 className="text-3xl font-bold">Organizations</h1>
-            <p className="text-muted-foreground">
-              Manage prospect and customer organizations
-            </p>
+            <p className="text-muted-foreground">Manage prospect and customer organizations</p>
           </div>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
@@ -156,7 +154,10 @@ export function OrganizationsClient({ organizations, industries }: Organizations
           <div className="flex items-center justify-between">
             <CardTitle>All Organizations</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+              <Search
+                className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
+              />
               <Input
                 placeholder="Search organizations…"
                 value={searchQuery}
@@ -205,7 +206,10 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
+                      <Badge
+                        variant="secondary"
+                        className={cn('text-xs', statusColors[org.status])}
+                      >
                         {org.status}
                       </Badge>
                     </TableCell>

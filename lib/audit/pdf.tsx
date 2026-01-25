@@ -72,7 +72,12 @@ function sortByPriority(checks: SiteAuditCheck[]): SiteAuditCheck[] {
 function groupChecksByName(checks: SiteAuditCheck[]): GroupedIssue[] {
   const groupMap = new Map<
     string,
-    { name: string; priority: 'critical' | 'recommended' | 'optional'; count: number; fixGuidance: string }
+    {
+      name: string
+      priority: 'critical' | 'recommended' | 'optional'
+      count: number
+      fixGuidance: string
+    }
   >()
 
   for (const check of checks) {
@@ -83,7 +88,10 @@ function groupChecksByName(checks: SiteAuditCheck[]): GroupedIssue[] {
       existing.count++
       // Keep higher priority if mixed
       const priorityOrder = { critical: 0, recommended: 1, optional: 2 }
-      if (priorityOrder[check.priority as keyof typeof priorityOrder] < priorityOrder[existing.priority]) {
+      if (
+        priorityOrder[check.priority as keyof typeof priorityOrder] <
+        priorityOrder[existing.priority]
+      ) {
         existing.priority = check.priority as 'critical' | 'recommended' | 'optional'
       }
     } else {

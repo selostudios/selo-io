@@ -84,7 +84,11 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
 
   return (
     <div className="sticky top-0 flex h-screen">
-      <ParentSidebar activeSection={activeSection} onSectionChange={handleSectionChange} isInternal={isInternal} />
+      <ParentSidebar
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        isInternal={isInternal}
+      />
       <ChildSidebar
         activeSection={activeSection}
         isCollapsed={collapsed}

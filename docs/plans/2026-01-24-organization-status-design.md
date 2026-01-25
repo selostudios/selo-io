@@ -14,18 +14,18 @@
 
 ### User Types
 
-| Type | `is_internal` | `organization_id` | Can See | Can Audit |
-|------|---------------|-------------------|---------|-----------|
-| Internal (Selo) | `true` | `NULL` | All orgs | Any URL |
-| External (Customer) | `false` | Required | Own org only | Own org only |
+| Type                | `is_internal` | `organization_id` | Can See      | Can Audit    |
+| ------------------- | ------------- | ----------------- | ------------ | ------------ |
+| Internal (Selo)     | `true`        | `NULL`            | All orgs     | Any URL      |
+| External (Customer) | `false`       | Required          | Own org only | Own org only |
 
 ### Organization Status
 
-| Status | Description | Required Fields |
-|--------|-------------|-----------------|
-| `prospect` | Lead for auditing | name, website_url |
+| Status     | Description          | Required Fields                            |
+| ---------- | -------------------- | ------------------------------------------ |
+| `prospect` | Lead for auditing    | name, website_url                          |
 | `customer` | Active paying client | name, website_url, industry, contact_email |
-| `inactive` | Former customer | (no change) |
+| `inactive` | Former customer      | (no change)                                |
 
 ---
 
@@ -152,6 +152,7 @@ Location: Next to Selo logo in header
 ```
 
 Dropdown contents:
+
 - List of all organizations with status badges
 - "New Organization" option at bottom
 - Persists last selected org to localStorage
@@ -161,6 +162,7 @@ Component: `components/dashboard/organization-selector.tsx`
 ### Audit Page URL Input (Internal Users)
 
 Three options:
+
 1. Select existing organization (uses org's website_url)
 2. Create new organization (inline dialog)
 3. Enter one-time URL (no org created)
@@ -281,32 +283,32 @@ startPerformanceAudit(organizationId: string | null, urls: string[]): Promise<Au
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `components/dashboard/organization-selector.tsx` | Header org dropdown |
-| `components/dashboard/create-organization-dialog.tsx` | Quick prospect creation |
-| `components/dashboard/convert-organization-form.tsx` | Prospect → customer |
-| `components/seo/audit-target-selector.tsx` | Org/URL selection for audits |
-| `lib/organizations/actions.ts` | Server actions for org management |
+| File                                                  | Purpose                           |
+| ----------------------------------------------------- | --------------------------------- |
+| `components/dashboard/organization-selector.tsx`      | Header org dropdown               |
+| `components/dashboard/create-organization-dialog.tsx` | Quick prospect creation           |
+| `components/dashboard/convert-organization-form.tsx`  | Prospect → customer               |
+| `components/seo/audit-target-selector.tsx`            | Org/URL selection for audits      |
+| `lib/organizations/actions.ts`                        | Server actions for org management |
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `components/dashboard/header.tsx` | Add OrganizationSelector for internal users |
-| `app/seo/site-audit/page.tsx` | Replace ProjectSelector with AuditTargetSelector |
-| `app/seo/page-speed/page.tsx` | Replace ProjectSelector with AuditTargetSelector |
-| `lib/audit/actions.ts` | Accept nullable organizationId |
-| `lib/performance/actions.ts` | Accept nullable organizationId |
-| `app/settings/organization/page.tsx` | Add conversion form |
+| File                                 | Changes                                          |
+| ------------------------------------ | ------------------------------------------------ |
+| `components/dashboard/header.tsx`    | Add OrganizationSelector for internal users      |
+| `app/seo/site-audit/page.tsx`        | Replace ProjectSelector with AuditTargetSelector |
+| `app/seo/page-speed/page.tsx`        | Replace ProjectSelector with AuditTargetSelector |
+| `lib/audit/actions.ts`               | Accept nullable organizationId                   |
+| `lib/performance/actions.ts`         | Accept nullable organizationId                   |
+| `app/settings/organization/page.tsx` | Add conversion form                              |
 
 ## Files to Remove
 
-| File | Reason |
-|------|--------|
-| `components/seo/project-selector.tsx` | Replaced by org selector |
-| `components/seo/project-dialog.tsx` | Replaced by create org dialog |
-| `lib/seo/actions.ts` | Projects no longer exist |
+| File                                  | Reason                        |
+| ------------------------------------- | ----------------------------- |
+| `components/seo/project-selector.tsx` | Replaced by org selector      |
+| `components/seo/project-dialog.tsx`   | Replaced by create org dialog |
+| `lib/seo/actions.ts`                  | Projects no longer exist      |
 
 ---
 

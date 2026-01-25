@@ -85,9 +85,7 @@ export function CreateOrganizationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Organization</DialogTitle>
-          <DialogDescription>
-            Add a new prospect organization to run audits for.
-          </DialogDescription>
+          <DialogDescription>Add a new prospect organization to run audits for.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

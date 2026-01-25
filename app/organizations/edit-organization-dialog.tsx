@@ -102,9 +102,7 @@ export function EditOrganizationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Organization</DialogTitle>
-          <DialogDescription>
-            Update organization details.
-          </DialogDescription>
+          <DialogDescription>Update organization details.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

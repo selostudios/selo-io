@@ -48,9 +48,7 @@ const seoNavigation: NavigationGroup[] = [
 
 const organizationsNavigation: NavigationGroup[] = [
   {
-    items: [
-      { name: 'All Organizations', href: '/organizations', icon: Building2 },
-    ],
+    items: [{ name: 'All Organizations', href: '/organizations', icon: Building2 }],
   },
 ]
 

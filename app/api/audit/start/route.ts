@@ -45,7 +45,10 @@ export async function POST(request: Request) {
     // Scenario 1: URL provided with organizationId
     // Verify user has access to this organization
     if (!isInternal && organizationId !== userRecord.organization_id) {
-      return NextResponse.json({ error: 'Unauthorized to audit this organization' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Unauthorized to audit this organization' },
+        { status: 403 }
+      )
     }
 
     websiteUrl = url
@@ -66,7 +69,10 @@ export async function POST(request: Request) {
     // Scenario 3: organizationId without URL - get from org's website_url
     // Verify user has access to this organization
     if (!isInternal && organizationId !== userRecord.organization_id) {
-      return NextResponse.json({ error: 'Unauthorized to audit this organization' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Unauthorized to audit this organization' },
+        { status: 403 }
+      )
     }
 
     const { data: org } = await supabase
@@ -76,7 +82,10 @@ export async function POST(request: Request) {
       .single()
 
     if (!org?.website_url) {
-      return NextResponse.json({ error: 'No website URL configured for organization' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'No website URL configured for organization' },
+        { status: 400 }
+      )
     }
 
     websiteUrl = org.website_url

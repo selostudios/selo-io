@@ -25,10 +25,20 @@ type SectionItem = {
 const sections: SectionItem[] = [
   { id: 'home', name: 'Home', icon: House, href: '/dashboard' },
   { id: 'seo', name: 'SEO', icon: LineChart, href: '/seo/site-audit' },
-  { id: 'organizations', name: 'Organizations', icon: Building2, href: '/organizations', internalOnly: true },
+  {
+    id: 'organizations',
+    name: 'Organizations',
+    icon: Building2,
+    href: '/organizations',
+    internalOnly: true,
+  },
 ]
 
-export function ParentSidebar({ activeSection, onSectionChange, isInternal = false }: ParentSidebarProps) {
+export function ParentSidebar({
+  activeSection,
+  onSectionChange,
+  isInternal = false,
+}: ParentSidebarProps) {
   // Filter sections based on internal status
   const visibleSections = sections.filter((section) => !section.internalOnly || isInternal)
 
@@ -61,9 +71,7 @@ export function ParentSidebar({ activeSection, onSectionChange, isInternal = fal
                   onClick={() => onSectionChange(section.id)}
                   className={cn(
                     'flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors',
-                    isActive
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'text-neutral-600 hover:bg-amber-50'
+                    isActive ? 'bg-amber-100 text-amber-700' : 'text-neutral-600 hover:bg-amber-50'
                   )}
                   aria-label={section.name}
                 >

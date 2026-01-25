@@ -39,13 +39,15 @@ export async function cleanupOlderAuditDetails(
 
     // Filter to same base URL (domain)
     olderAuditIds =
-      olderAudits?.filter((a) => {
-        try {
-          return new URL(a.url).origin === baseUrl
-        } catch {
-          return false
-        }
-      }).map((a) => a.id) ?? []
+      olderAudits
+        ?.filter((a) => {
+          try {
+            return new URL(a.url).origin === baseUrl
+          } catch {
+            return false
+          }
+        })
+        .map((a) => a.id) ?? []
   }
 
   if (olderAuditIds.length === 0) {

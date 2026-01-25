@@ -94,11 +94,7 @@ export async function getOrganization(
 ): Promise<{ success: boolean; organization?: Organization; error?: string }> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from('organizations')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.from('organizations').select('*').eq('id', id).single()
 
   if (error) {
     console.error('[Organizations Error]', {

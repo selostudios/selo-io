@@ -108,7 +108,9 @@ export function SiteAuditClient({
     if (!selectedTarget) return []
 
     if (selectedTarget.type === 'organization') {
-      return archivedAudits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
+      return archivedAudits.filter(
+        (audit) => audit.organization_id === selectedTarget.organizationId
+      )
     } else {
       // One-time and one-time-history audits have no organization_id
       return archivedAudits.filter((audit) => audit.organization_id === null)
@@ -182,7 +184,9 @@ export function SiteAuditClient({
           websiteUrl={selectedTarget.url}
           audits={filteredAudits}
           archivedAudits={filteredArchivedAudits}
-          organizationId={selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined}
+          organizationId={
+            selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined
+          }
         />
       )}
 
