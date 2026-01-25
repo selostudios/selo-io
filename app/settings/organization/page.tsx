@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
 import { canManageOrg } from '@/lib/permissions'
 
-export default async function OrganizationSettingsPage() {
+interface PageProps {
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function OrganizationSettingsPage({ searchParams }: PageProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -17,7 +22,7 @@ export default async function OrganizationSettingsPage() {
   // Get user's organization and role
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -25,7 +30,21 @@ export default async function OrganizationSettingsPage() {
     redirect('/onboarding')
   }
 
-  if (!canManageOrg(userRecord.role)) {
+  // Internal users can view any org, external users only their own
+  const isInternal = userRecord.is_internal === true
+  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+
+  // For internal users without an org_id, require org selection
+  if (!organizationId) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Select an organization to view settings.</p>
+      </div>
+    )
+  }
+
+  // Only check permissions for external users
+  if (!isInternal && !canManageOrg(userRecord.role)) {
     redirect('/settings/team')
   }
 
@@ -35,7 +54,7 @@ export default async function OrganizationSettingsPage() {
     .select(
       'id, name, industry, logo_url, primary_color, secondary_color, accent_color, website_url, description, city, country, social_links'
     )
-    .eq('id', userRecord.organization_id)
+    .eq('id', organizationId)
     .single()
 
   if (!org) {
@@ -46,7 +65,7 @@ export default async function OrganizationSettingsPage() {
   const { count: auditCount } = await supabase
     .from('site_audits')
     .select('*', { count: 'exact', head: true })
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', organizationId)
     .is('archived_at', null)
 
   // Fetch industries

@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation'
 import { OAuthToastHandler } from './oauth-toast-handler'
 import { IntegrationsPageContent } from './integrations-page-content'
 
-export default async function IntegrationsPage() {
+interface PageProps {
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function IntegrationsPage({ searchParams }: PageProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -15,7 +20,7 @@ export default async function IntegrationsPage() {
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('organization_id, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -23,10 +28,23 @@ export default async function IntegrationsPage() {
     redirect('/login')
   }
 
+  // Internal users can view any org, external users only their own
+  const isInternal = userRecord.is_internal === true
+  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+
+  // For internal users without an org_id, require org selection
+  if (!organizationId) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Select an organization to view integrations.</p>
+      </div>
+    )
+  }
+
   const { data: connections } = await supabase
     .from('platform_connections')
     .select('*')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', organizationId)
     .order('created_at', { ascending: true })
 
   const platforms = ['linkedin', 'hubspot', 'google_analytics'] as const

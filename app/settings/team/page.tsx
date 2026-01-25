@@ -17,7 +17,12 @@ function getInitials(name: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
-export default async function TeamSettingsPage() {
+interface PageProps {
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function TeamSettingsPage({ searchParams }: PageProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -31,7 +36,7 @@ export default async function TeamSettingsPage() {
   // Get user's organization and role
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -39,18 +44,31 @@ export default async function TeamSettingsPage() {
     redirect('/onboarding')
   }
 
-  const isAdmin = canManageTeam(userRecord.role)
+  // Internal users can view any org, external users only their own
+  const isInternal = userRecord.is_internal === true
+  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+
+  // For internal users without an org_id, require org selection
+  if (!organizationId) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Select an organization to view team members.</p>
+      </div>
+    )
+  }
+
+  const isAdmin = isInternal || canManageTeam(userRecord.role)
 
   // Get organization name
   const { data: org } = await supabase
     .from('organizations')
     .select('name')
-    .eq('id', userRecord.organization_id)
+    .eq('id', organizationId)
     .single()
 
   // Get team members with emails using security definer function
   const { data: userEmails } = await supabase.rpc('get_organization_user_emails', {
-    org_id: userRecord.organization_id,
+    org_id: organizationId,
   })
 
   const { data: teamMembers } = await supabase
@@ -62,7 +80,7 @@ export default async function TeamSettingsPage() {
       created_at
     `
     )
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
 
   // Map emails and names to team members
@@ -97,7 +115,7 @@ export default async function TeamSettingsPage() {
     const { data: invites } = await supabase
       .from('invites')
       .select('*')
-      .eq('organization_id', userRecord.organization_id)
+      .eq('organization_id', organizationId)
       .is('accepted_at', null)
       .order('created_at', { ascending: false })
 
