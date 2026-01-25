@@ -142,7 +142,7 @@ export function SiteAuditClient({
           websiteUrl={selectedTarget.url}
           audits={audits}
           archivedAudits={archivedAudits}
-          projectId={selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined}
+          organizationId={selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined}
         />
       )}
     </div>

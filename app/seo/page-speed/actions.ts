@@ -4,10 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
 
-export async function getPageSpeedData(projectId?: string): Promise<{
+export async function getPageSpeedData(): Promise<{
   audits: PerformanceAudit[]
   monitoredPages: MonitoredPage[]
-  projects: Array<{ id: string; name: string; url: string }>
   organizationId: string
 }> {
   const supabase = await createClient()
@@ -26,20 +25,13 @@ export async function getPageSpeedData(projectId?: string): Promise<{
 
   if (!userRecord) redirect('/login')
 
-  // Build audits query
-  let auditsQuery = supabase
+  // Get audits for organization
+  const { data: audits, error: auditsError } = await supabase
     .from('performance_audits')
     .select('*')
     .eq('organization_id', userRecord.organization_id)
     .order('created_at', { ascending: false })
     .limit(20)
-
-  // Filter by project if provided
-  if (projectId) {
-    auditsQuery = auditsQuery.eq('project_id', projectId)
-  }
-
-  const { data: audits, error: auditsError } = await auditsQuery
 
   if (auditsError) {
     console.error('[Performance Error]', {
@@ -64,17 +56,9 @@ export async function getPageSpeedData(projectId?: string): Promise<{
     })
   }
 
-  // Get projects for selector
-  const { data: projects } = await supabase
-    .from('seo_projects')
-    .select('*')
-    .eq('organization_id', userRecord.organization_id)
-    .order('created_at', { ascending: false })
-
   return {
     audits: audits ?? [],
     monitoredPages: monitoredPages ?? [],
-    projects: projects ?? [],
     organizationId: userRecord.organization_id,
   }
 }

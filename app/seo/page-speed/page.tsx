@@ -1,25 +1,15 @@
-import { redirect } from 'next/navigation'
 import { getPageSpeedData } from './actions'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
-import { ProjectSelector } from '@/components/seo/project-selector'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Gauge } from 'lucide-react'
 
 interface PageProps {
-  searchParams: Promise<{ project?: string; url?: string }>
+  searchParams: Promise<{ url?: string }>
 }
 
 export default async function PageSpeedPage({ searchParams }: PageProps) {
-  const { project: projectId, url: initialUrl } = await searchParams
-  const { audits, monitoredPages, projects } = await getPageSpeedData(projectId)
-
-  // Auto-select if there's only one project and none selected
-  if (!projectId && projects.length === 1) {
-    redirect(`/seo/page-speed?project=${projects[0].id}`)
-  }
-
-  // Find the selected project
-  const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
+  const { url: initialUrl } = await searchParams
+  const { audits, monitoredPages, organizationId } = await getPageSpeedData()
 
   return (
     <div className="space-y-6">
@@ -35,73 +25,29 @@ export default async function PageSpeedPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Project Selector Header */}
-      <div className="flex items-center justify-between">
-        <ProjectSelector
-          projects={projects}
-          selectedProjectId={projectId}
-          basePath="/seo/page-speed"
-        />
-      </div>
-
-      {/* If no projects exist, show setup message */}
-      {projects.length === 0 && (
+      {/* If no audits exist, show getting started message */}
+      {audits.length === 0 && monitoredPages.length === 0 ? (
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
               <Gauge className="h-6 w-6 text-neutral-600" />
             </div>
-            <CardTitle>No Projects Yet</CardTitle>
+            <CardTitle>Get Started with Page Speed</CardTitle>
             <CardDescription>
-              Create a project to start running page speed audits. Projects let you organize audits
-              for different websites.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground text-sm">
-              Click the project selector above to create your first project.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* If projects exist but none selected, prompt to select one */}
-      {projects.length > 0 && !projectId && (
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-              <Gauge className="h-6 w-6 text-neutral-600" />
-            </div>
-            <CardTitle>Select a Project</CardTitle>
-            <CardDescription>
-              Choose a project from the selector above to view its page speed audits.
+              Run your first page speed audit by entering a URL below.
             </CardDescription>
           </CardHeader>
         </Card>
-      )}
+      ) : null}
 
-      {/* Project not found */}
-      {projectId && !selectedProject && (
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Project Not Found</CardTitle>
-            <CardDescription>
-              The selected project could not be found. Please select another project.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      {/* Show dashboard when project is selected */}
-      {selectedProject && (
-        <PerformanceDashboard
-          audits={audits}
-          monitoredPages={monitoredPages}
-          websiteUrl={selectedProject.url}
-          initialUrl={initialUrl}
-          projectId={selectedProject.id}
-        />
-      )}
+      {/* Show dashboard */}
+      <PerformanceDashboard
+        audits={audits}
+        monitoredPages={monitoredPages}
+        websiteUrl=""
+        initialUrl={initialUrl}
+        projectId={organizationId}
+      />
     </div>
   )
 }
