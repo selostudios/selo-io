@@ -1,37 +1,41 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser, getOrganizations } from '@/lib/organizations/actions'
 import { redirect } from 'next/navigation'
 import type { SiteAudit } from '@/lib/audit/types'
+import type { OrganizationForSelector } from '@/lib/organizations/types'
 
-export async function getSiteAuditData(projectId?: string) {
+export async function getSiteAuditData(organizationId?: string): Promise<{
+  audits: SiteAudit[]
+  archivedAudits: SiteAudit[]
+  organizations: OrganizationForSelector[]
+  isInternal: boolean
+  selectedOrganizationId: string | null
+}> {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) redirect('/login')
+  if (!currentUser) redirect('/login')
 
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id')
-    .eq('id', user.id)
-    .single()
+  const { isInternal, organizationId: userOrgId } = currentUser
 
-  if (!userRecord) redirect('/login')
+  // Determine the filter organization:
+  // - For internal users: use provided org or null (see all)
+  // - For external users: always use their own org
+  const filterOrgId = isInternal ? organizationId || null : userOrgId
 
   // Build audits query
   let auditsQuery = supabase
     .from('site_audits')
     .select('*')
-    .eq('organization_id', userRecord.organization_id)
     .is('archived_at', null)
     .order('created_at', { ascending: false })
 
-  // Filter by project if provided
-  if (projectId) {
-    auditsQuery = auditsQuery.eq('project_id', projectId)
+  // Filter by organization if we have one
+  if (filterOrgId) {
+    auditsQuery = auditsQuery.eq('organization_id', filterOrgId)
   }
 
   const { data: audits } = await auditsQuery
@@ -40,27 +44,29 @@ export async function getSiteAuditData(projectId?: string) {
   let archivedQuery = supabase
     .from('site_audits')
     .select('*')
-    .eq('organization_id', userRecord.organization_id)
     .not('archived_at', 'is', null)
     .order('created_at', { ascending: false })
 
-  if (projectId) {
-    archivedQuery = archivedQuery.eq('project_id', projectId)
+  if (filterOrgId) {
+    archivedQuery = archivedQuery.eq('organization_id', filterOrgId)
   }
 
   const { data: archivedAudits } = await archivedQuery
 
-  // Get projects for selector
-  const { data: projects } = await supabase
-    .from('seo_projects')
-    .select('*')
-    .eq('organization_id', userRecord.organization_id)
-    .order('created_at', { ascending: false })
+  // Get organizations for selector
+  const orgs = await getOrganizations()
+  const organizations: OrganizationForSelector[] = orgs.map((org) => ({
+    id: org.id,
+    name: org.name,
+    website_url: org.website_url,
+    status: org.status,
+  }))
 
   return {
     audits: (audits ?? []) as SiteAudit[],
     archivedAudits: (archivedAudits ?? []) as SiteAudit[],
-    projects: projects ?? [],
-    organizationId: userRecord.organization_id,
+    organizations,
+    isInternal,
+    selectedOrganizationId: filterOrgId,
   }
 }
