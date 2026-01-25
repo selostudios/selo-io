@@ -42,6 +42,13 @@ export function NavigationShell() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating persisted state on mount
     setIsChildCollapsed(saved === 'true')
     setMounted(true)
+
+    // Listen for sidebar expand events (e.g., when selecting an organization)
+    const handleExpand = () => {
+      setIsChildCollapsed(false)
+    }
+    window.addEventListener('sidebar-expand', handleExpand)
+    return () => window.removeEventListener('sidebar-expand', handleExpand)
   }, [])
 
   // Handle section change - navigate to section's default route

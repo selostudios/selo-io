@@ -17,6 +17,7 @@ import { CreateOrganizationDialog } from './create-organization-dialog'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
+const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
 
 interface OrganizationSelectorProps {
   organizations: OrganizationForSelector[]
@@ -44,6 +45,9 @@ export function OrganizationSelector({
 
   const handleSelectOrganization = (orgId: string) => {
     localStorage.setItem(LAST_ORG_KEY, orgId)
+    // Expand sidebar when selecting an organization
+    localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
+    window.dispatchEvent(new Event('sidebar-expand'))
     // Add org param to current URL
     const url = new URL(window.location.href)
     url.searchParams.set('org', orgId)
