@@ -1,11 +1,48 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { AuditProgress } from '@/lib/audit/types'
 
 export function useAuditPolling(auditId: string, enabled: boolean) {
   const [progress, setProgress] = useState<AuditProgress | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isContinuing, setIsContinuing] = useState(false)
+  const isContinuingRef = useRef(false)
+
+  const triggerContinue = useCallback(async () => {
+    // Prevent duplicate continuation calls
+    if (isContinuingRef.current) return
+    isContinuingRef.current = true
+    setIsContinuing(true)
+
+    try {
+      const response = await fetch(`/api/audit/${auditId}/continue`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        console.error('[Audit Continue Error]', {
+          type: 'continue_request_failed',
+          auditId,
+          status: response.status,
+          timestamp: new Date().toISOString(),
+        })
+      }
+    } catch (error) {
+      console.error('[Audit Continue Error]', {
+        type: 'continue_request_error',
+        auditId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      })
+    } finally {
+      // Reset after a short delay to allow status to change
+      setTimeout(() => {
+        isContinuingRef.current = false
+        setIsContinuing(false)
+      }, 1000)
+    }
+  }, [auditId])
 
   useEffect(() => {
     if (!enabled) return
@@ -19,8 +56,21 @@ export function useAuditPolling(auditId: string, enabled: boolean) {
         setProgress(data)
         setIsLoading(false)
 
-        // Continue polling if not complete/failed
-        if (data.status === 'pending' || data.status === 'crawling' || data.status === 'checking') {
+        // Handle batch_complete status - auto-trigger continuation
+        if (data.status === 'batch_complete' && !isContinuingRef.current) {
+          triggerContinue()
+          // Continue polling while waiting for next batch to start
+          timeoutId = setTimeout(poll, 2000)
+          return
+        }
+
+        // Continue polling if not complete/failed/stopped
+        if (
+          data.status === 'pending' ||
+          data.status === 'crawling' ||
+          data.status === 'checking' ||
+          data.status === 'batch_complete'
+        ) {
           timeoutId = setTimeout(poll, 2000) // 2 seconds
         }
       } catch {
@@ -36,7 +86,7 @@ export function useAuditPolling(auditId: string, enabled: boolean) {
     poll()
 
     return () => clearTimeout(timeoutId)
-  }, [auditId, enabled])
+  }, [auditId, enabled, triggerContinue])
 
-  return { progress, isLoading }
+  return { progress, isLoading, isContinuing }
 }

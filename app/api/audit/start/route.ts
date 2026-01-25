@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { runAudit } from '@/lib/audit/runner'
+import { runAuditBatch } from '@/lib/audit/runner'
 
 // Extend function timeout for long-running audits (max 300s on Pro plan)
 export const maxDuration = 300
@@ -105,13 +105,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create audit' }, { status: 500 })
   }
 
-  // Start crawl in background using Next.js after() to ensure completion
+  // Start first batch in background using Next.js after() to ensure completion
   // This tells Vercel to keep the function running after the response is sent
   after(async () => {
     try {
-      await runAudit(audit.id, websiteUrl)
+      await runAuditBatch(audit.id, websiteUrl)
     } catch (err) {
-      console.error('[Audit API] Background audit failed:', err)
+      console.error('[Audit API] Background audit batch failed:', err)
     }
   })
 

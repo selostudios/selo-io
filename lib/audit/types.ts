@@ -1,4 +1,11 @@
-export type AuditStatus = 'pending' | 'crawling' | 'checking' | 'completed' | 'failed' | 'stopped'
+export type AuditStatus =
+  | 'pending'
+  | 'crawling'
+  | 'batch_complete'
+  | 'checking'
+  | 'completed'
+  | 'failed'
+  | 'stopped'
 
 export type CheckType = 'seo' | 'ai_readiness' | 'technical'
 
@@ -103,6 +110,9 @@ export interface AuditProgress {
   technical_score: number | null
   error_message: string | null
   started_at: string | null
+  current_batch: number
+  urls_discovered: number
+  urls_remaining: number
 }
 
 export interface DismissedCheck {

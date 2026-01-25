@@ -3,7 +3,8 @@ import { crawlSite } from './crawler'
 import { siteWideChecks, pageSpecificChecks } from './checks'
 import { fetchPage } from './fetcher'
 import { generateExecutiveSummary } from './summary'
-import type { SiteAuditCheck, CheckContext, AuditStatus, DismissedCheck } from './types'
+import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
+import type { SiteAuditCheck, SiteAuditPage, CheckContext, AuditStatus, DismissedCheck } from './types'
 
 async function checkIfStopped(
   supabase: ReturnType<typeof createServiceClient>,
@@ -288,6 +289,232 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
 
     throw error
   }
+}
+
+/**
+ * Run an audit in batch mode - processes ~50 pages per execution.
+ * On first batch, initializes the crawl queue.
+ * Returns 'batch_complete' status if more pages remain.
+ */
+export async function runAuditBatch(auditId: string, url: string): Promise<void> {
+  const supabase = createServiceClient()
+
+  try {
+    // Fetch audit data including batch tracking
+    const { data: auditData } = await supabase
+      .from('site_audits')
+      .select('organization_id, current_batch, status')
+      .eq('id', auditId)
+      .single()
+
+    if (!auditData) {
+      throw new Error('Audit not found')
+    }
+
+    const currentBatch = auditData.current_batch || 0
+    const isFirstBatch = currentBatch === 0
+
+    // Load dismissed checks
+    const dismissedChecks: DismissedCheck[] = []
+    if (auditData.organization_id) {
+      const { data: dismissed } = await supabase
+        .from('dismissed_checks')
+        .select('*')
+        .eq('organization_id', auditData.organization_id)
+
+      if (dismissed) {
+        dismissedChecks.push(...dismissed)
+      }
+    }
+
+    // First batch: initialize queue with start URL
+    if (isFirstBatch) {
+      await supabase
+        .from('site_audits')
+        .update({
+          status: 'crawling',
+          started_at: new Date().toISOString(),
+          current_batch: 1,
+        })
+        .eq('id', auditId)
+
+      await initializeCrawlQueue(auditId, url)
+    } else {
+      // Subsequent batches: increment batch counter
+      await supabase
+        .from('site_audits')
+        .update({
+          status: 'crawling',
+          current_batch: currentBatch + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', auditId)
+    }
+
+    // Run the batch crawl
+    const result = await crawlBatch(auditId, { dismissedChecks })
+
+    console.log(
+      `[Audit Batch] Batch ${currentBatch + 1} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`
+    )
+
+    // Handle results
+    if (result.stopped) {
+      // User stopped the audit - complete with current results
+      await completeAuditWithExistingChecks(auditId, url)
+    } else if (result.hasMorePages) {
+      // More pages to crawl - signal batch complete
+      await supabase.from('site_audits').update({ status: 'batch_complete' }).eq('id', auditId)
+    } else {
+      // No more pages - run site-wide checks and complete
+      await finishAudit(auditId, url, dismissedChecks)
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+
+    console.error('[Audit Batch Error]', {
+      type: 'batch_failed',
+      auditId,
+      url,
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    })
+
+    await supabase
+      .from('site_audits')
+      .update({
+        status: 'failed',
+        error_message: errorMessage,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+  }
+}
+
+/**
+ * Finish an audit after all pages are crawled.
+ * Runs site-wide checks, calculates scores, and generates summary.
+ */
+async function finishAudit(
+  auditId: string,
+  url: string,
+  dismissedChecks: DismissedCheck[]
+): Promise<void> {
+  const supabase = createServiceClient()
+
+  // Update status to checking
+  await supabase.from('site_audits').update({ status: 'checking' }).eq('id', auditId)
+
+  // Get all pages
+  const { data: pages } = await supabase
+    .from('site_audit_pages')
+    .select('*')
+    .eq('audit_id', auditId)
+
+  const allPages = (pages as SiteAuditPage[]) || []
+
+  if (allPages.length === 0) {
+    await supabase
+      .from('site_audits')
+      .update({
+        status: 'failed',
+        error_message: 'No pages were crawled',
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
+    return
+  }
+
+  // Find homepage for site-wide checks
+  const homepage =
+    allPages.find((p) => {
+      const pageUrl = new URL(p.url)
+      return pageUrl.pathname === '/' || pageUrl.pathname === ''
+    }) || allPages[0]
+
+  // Fetch homepage HTML for site-wide checks
+  const { html: homepageHtml } = await fetchPage(homepage.url)
+  const siteWideContext: CheckContext = {
+    url: homepage.url,
+    html: homepageHtml,
+    title: homepage.title,
+    statusCode: homepage.status_code ?? 200,
+    allPages,
+  }
+
+  const baseUrl = new URL(url).origin
+  const allCheckResults: SiteAuditCheck[] = []
+
+  // Run site-wide checks
+  for (const check of siteWideChecks) {
+    if (isDismissed(dismissedChecks, check.name, baseUrl)) {
+      continue
+    }
+
+    try {
+      const result = await check.run(siteWideContext)
+
+      const checkResult: SiteAuditCheck = {
+        id: crypto.randomUUID(),
+        audit_id: auditId,
+        page_id: null,
+        check_type: check.type,
+        check_name: check.name,
+        priority: check.priority,
+        status: result.status,
+        details: result.details ?? null,
+        created_at: new Date().toISOString(),
+        display_name: check.displayName,
+        display_name_passed: check.displayNamePassed,
+        learn_more_url: check.learnMoreUrl,
+        is_site_wide: true,
+        description: check.description,
+        fix_guidance: check.fixGuidance || (result.details?.message as string) || undefined,
+      }
+
+      allCheckResults.push(checkResult)
+      await supabase.from('site_audit_checks').insert(checkResult)
+    } catch (error) {
+      console.error(`[Audit Finish] Site-wide check ${check.name} failed:`, error)
+    }
+  }
+
+  // Get all checks (page-specific + site-wide)
+  const { data: allChecks } = await supabase
+    .from('site_audit_checks')
+    .select('*')
+    .eq('audit_id', auditId)
+
+  const checksForScoring = (allChecks as SiteAuditCheck[]) || []
+
+  // Calculate scores
+  const scores = calculateScores(checksForScoring)
+
+  // Generate executive summary
+  let executive_summary: string | null = null
+  try {
+    executive_summary = await generateExecutiveSummary(
+      url,
+      allPages.length,
+      scores,
+      checksForScoring
+    )
+  } catch (error) {
+    console.error('[Audit Finish] Failed to generate executive summary:', error)
+  }
+
+  // Complete the audit
+  await supabase
+    .from('site_audits')
+    .update({
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      executive_summary,
+      ...scores,
+    })
+    .eq('id', auditId)
+
+  console.log(`[Audit Finish] Audit ${auditId} completed successfully`)
 }
 
 export function calculateScores(checks: SiteAuditCheck[]) {

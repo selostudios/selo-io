@@ -33,6 +33,17 @@ const checkTypeLabels: Record<CheckType, string> = {
   technical: 'Technical',
 }
 
+const checkDescriptions = [
+  'Analyzing page structure...',
+  'Checking meta tags...',
+  'Validating heading hierarchy...',
+  'Scanning for broken links...',
+  'Evaluating mobile friendliness...',
+  'Reviewing schema markup...',
+  'Inspecting image optimization...',
+  'Checking page load performance...',
+]
+
 function getDomain(url: string | undefined): string {
   if (!url) return 'site'
   try {
@@ -57,9 +68,21 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>('default')
   const shouldPoll =
-    initialStatus === 'pending' || initialStatus === 'crawling' || initialStatus === 'checking'
+    initialStatus === 'pending' ||
+    initialStatus === 'crawling' ||
+    initialStatus === 'checking' ||
+    initialStatus === 'batch_complete'
 
-  const { progress, isLoading } = useAuditPolling(auditId, shouldPoll)
+  const { progress, isLoading, isContinuing } = useAuditPolling(auditId, shouldPoll)
+
+  // Rotating check descriptions
+  const [descIndex, setDescIndex] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDescIndex((i) => (i + 1) % checkDescriptions.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   const [supportsNotifications, setSupportsNotifications] = useState(false)
 
@@ -261,13 +284,19 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const pagesCrawled = progress?.pages_crawled ?? 0
   const status = progress?.status ?? initialStatus
 
-  // Phase indicator helper
+  // Phase indicator helper - batch_complete is treated as crawling phase
   const phases = [
     { key: 'pending', label: 'Starting' },
     { key: 'crawling', label: 'Crawling' },
     { key: 'checking', label: 'Analyzing' },
   ]
-  const currentPhaseIndex = phases.findIndex((p) => p.key === status)
+  const effectiveStatus = status === 'batch_complete' ? 'crawling' : status
+  const currentPhaseIndex = phases.findIndex((p) => p.key === effectiveStatus)
+
+  // Batch progress info
+  const currentBatch = progress?.current_batch ?? 0
+  const urlsDiscovered = progress?.urls_discovered ?? 0
+  const urlsRemaining = progress?.urls_remaining ?? 0
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-4">
@@ -317,12 +346,16 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
               ? 'Starting Audit...'
               : status === 'checking'
                 ? 'Running Checks...'
-                : `Crawling ${getDomain(progress?.url)}...`}
+                : status === 'batch_complete' || isContinuing
+                  ? 'Continuing...'
+                  : `Crawling ${getDomain(progress?.url)}...`}
           </CardTitle>
-          <p className="text-muted-foreground text-sm text-pretty">
+          <p className="text-muted-foreground text-sm text-pretty transition-opacity duration-300">
             {status === 'checking'
               ? `Analyzing ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} for SEO and AI readiness`
-              : 'Preparing to analyze your website'}
+              : status === 'batch_complete' || isContinuing
+                ? 'Starting next batch...'
+                : checkDescriptions[descIndex]}
           </p>
         </CardHeader>
 
@@ -332,7 +365,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
             <div className="bg-muted/50 flex flex-1 items-center justify-between rounded-lg p-4">
               <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
                 <FileText className="size-4" />
-                Pages Found
+                Pages Crawled
               </span>
               <span className="text-2xl font-bold tabular-nums">{pagesCrawled}</span>
             </div>
@@ -346,6 +379,29 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
               </div>
             )}
           </div>
+
+          {/* Batch progress */}
+          {urlsDiscovered > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {currentBatch > 0 && `Batch ${currentBatch} \u00b7 `}
+                  {urlsDiscovered} URLs discovered
+                </span>
+                {urlsRemaining > 0 && (
+                  <span className="text-muted-foreground">{urlsRemaining} remaining</span>
+                )}
+              </div>
+              <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                <div
+                  className="bg-primary h-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, ((urlsDiscovered - urlsRemaining) / urlsDiscovered) * 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Stop button - always show for in-progress audits */}
           <Button variant="outline" className="w-full" onClick={handleStop} disabled={isStopping}>

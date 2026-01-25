@@ -63,6 +63,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .order('created_at', { ascending: false })
     .limit(50)
 
+  // Get remaining URLs in queue for batch progress
+  const { count: urlsRemaining } = await supabase
+    .from('site_audit_crawl_queue')
+    .select('*', { count: 'exact', head: true })
+    .eq('audit_id', id)
+    .is('crawled_at', null)
+
   return NextResponse.json({
     status: audit.status,
     url: audit.url,
@@ -74,5 +81,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     error_message: audit.error_message,
     started_at: audit.started_at,
     checks: checks ?? [],
+    current_batch: audit.current_batch ?? 0,
+    urls_discovered: audit.urls_discovered ?? 0,
+    urls_remaining: urlsRemaining ?? 0,
   })
 }
