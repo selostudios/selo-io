@@ -17,10 +17,11 @@ interface SiteAuditClientProps {
   selectedOrganizationId: string | null
 }
 
+const LAST_ORG_KEY = 'selo-last-organization-id'
+
 function getInitialTarget(
   selectedOrganizationId: string | null,
-  organizations: OrganizationForSelector[],
-  isInternal: boolean
+  organizations: OrganizationForSelector[]
 ): AuditTarget {
   // If an organization is selected via URL param
   if (selectedOrganizationId) {
@@ -34,15 +35,28 @@ function getInitialTarget(
     }
   }
 
-  // For external users, auto-select their organization
-  if (!isInternal && organizations.length === 1) {
-    const org = organizations[0]
-    if (org.website_url) {
-      return {
-        type: 'organization',
-        organizationId: org.id,
-        url: org.website_url,
+  // Check localStorage for last selected org
+  if (typeof window !== 'undefined') {
+    const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
+    if (lastOrgId) {
+      const org = organizations.find((o) => o.id === lastOrgId)
+      if (org?.website_url) {
+        return {
+          type: 'organization',
+          organizationId: org.id,
+          url: org.website_url,
+        }
       }
+    }
+  }
+
+  // Fall back to first organization with a website URL
+  const firstOrgWithUrl = organizations.find((o) => o.website_url)
+  if (firstOrgWithUrl) {
+    return {
+      type: 'organization',
+      organizationId: firstOrgWithUrl.id,
+      url: firstOrgWithUrl.website_url!,
     }
   }
 
@@ -58,16 +72,17 @@ export function SiteAuditClient({
 }: SiteAuditClientProps) {
   const router = useRouter()
 
-  // Initialize selectedTarget based on selectedOrganizationId or auto-select for external users
+  // Initialize selectedTarget based on URL param, localStorage, or first org
   const [selectedTarget, setSelectedTarget] = useState<AuditTarget>(() =>
-    getInitialTarget(selectedOrganizationId, organizations, isInternal)
+    getInitialTarget(selectedOrganizationId, organizations)
   )
 
   const handleTargetChange = (target: AuditTarget) => {
     setSelectedTarget(target)
 
-    // Update URL when organization is selected
+    // Update URL and localStorage when organization is selected
     if (target?.type === 'organization') {
+      localStorage.setItem(LAST_ORG_KEY, target.organizationId)
       router.push(`/seo/site-audit?org=${target.organizationId}`)
     } else if (target?.type === 'one-time') {
       // For one-time URLs, clear the org param
