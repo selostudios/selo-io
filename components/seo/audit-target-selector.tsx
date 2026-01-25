@@ -172,6 +172,7 @@ export function AuditTargetSelector({
           className="w-[280px]"
           autoComplete="off"
           autoFocus
+          aria-label="One-time URL to audit"
         />
         <Button size="sm" onClick={handleUseOneTimeUrl} disabled={!oneTimeUrl.trim()}>
           Use URL
@@ -189,7 +190,7 @@ export function AuditTargetSelector({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-auto gap-2 px-3 py-2 hover:bg-neutral-100">
+          <Button variant="ghost" className="h-auto min-h-11 gap-2 px-3 py-2 hover:bg-neutral-100">
             {getDisplayLabel()}
             <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
           </Button>

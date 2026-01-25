@@ -87,7 +87,7 @@ export function OrganizationSelector({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-auto gap-2 px-3 py-2 hover:bg-neutral-100">
+          <Button variant="ghost" className="h-auto min-h-11 gap-2 px-3 py-2 hover:bg-neutral-100">
             {selectedOrg ? (
               <>
                 <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
