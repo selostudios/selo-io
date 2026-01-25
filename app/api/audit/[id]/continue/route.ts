@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { runAuditBatch } from '@/lib/audit/runner'
 
 // Extend function timeout for batch processing (max 300s on Pro plan)
-export const maxDuration = 300
+export const maxDuration = 800
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: auditId } = await params

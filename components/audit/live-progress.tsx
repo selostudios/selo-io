@@ -75,12 +75,12 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
 
   const { progress, isLoading, isContinuing } = useAuditPolling(auditId, shouldPoll)
 
-  // Rotating check descriptions
+  // Rotating check descriptions (every 15 seconds)
   const [descIndex, setDescIndex] = useState(0)
   useEffect(() => {
     const interval = setInterval(() => {
       setDescIndex((i) => (i + 1) % checkDescriptions.length)
-    }, 3000)
+    }, 15000)
     return () => clearInterval(interval)
   }, [])
 

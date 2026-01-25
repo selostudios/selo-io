@@ -2,8 +2,8 @@ import { NextResponse, after } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resumeAuditChecks, completeAuditWithExistingChecks } from '@/lib/audit/runner'
 
-// Extend function timeout for long-running audits
-export const maxDuration = 300
+// Extend function timeout for long-running audits (Vercel config set to 800s)
+export const maxDuration = 800
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { runAuditBatch } from '@/lib/audit/runner'
 
 // Extend function timeout for long-running audits (max 300s on Pro plan)
-export const maxDuration = 300
+export const maxDuration = 800
 
 export async function POST(request: Request) {
   const supabase = await createClient()
