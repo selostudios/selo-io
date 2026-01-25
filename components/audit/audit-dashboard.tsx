@@ -14,14 +14,14 @@ interface AuditDashboardProps {
   websiteUrl: string
   audits: SiteAudit[]
   archivedAudits: SiteAudit[]
-  projectId?: string
+  organizationId?: string | null
 }
 
 export function AuditDashboard({
   websiteUrl,
   audits,
   archivedAudits,
-  projectId,
+  organizationId,
 }: AuditDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -35,7 +35,7 @@ export function AuditDashboard({
         const response = await fetch('/api/audit/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId }),
+          body: JSON.stringify({ organizationId, url: websiteUrl }),
         })
 
         if (!response.ok) {
