@@ -63,7 +63,7 @@ Tone: Direct, helpful, professional. Write for someone who isn't technical but m
 Maximum 120 words.`
 
   const { text } = await generateText({
-    model: anthropic('claude-opus-4-5-20250514'),
+    model: anthropic('claude-opus-4-5-20251101'),
     prompt,
     maxOutputTokens: 300,
   })
