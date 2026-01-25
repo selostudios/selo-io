@@ -53,7 +53,7 @@ const formatBytes = (bytes: number | null) => {
 
 const formatSavingsDisplay = (displayValue: string): string => {
   // Remove redundant "Est savings of" or "Potential savings of" prefixes
-  let cleaned = displayValue
+  const cleaned = displayValue
     .replace(/^Est\.?\s+savings\s+of\s+/i, '')
     .replace(/^Potential\s+savings\s+of\s+/i, '')
     .replace(/^Total\s+size\s+was\s+/i, '')
@@ -790,70 +790,75 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
           </View>
         </View>
 
-        {/* Key Findings */}
-        <Text style={styles.sectionSubtitle}>Key Findings at a Glance</Text>
+        {/* Key Findings - wrap entire section together */}
+        <View wrap={false}>
+          <Text style={styles.sectionSubtitle}>Key Findings at a Glance</Text>
 
-        <View style={styles.findingsGrid} wrap={false}>
-          <View style={styles.findingCard}>
-            <Text style={styles.findingTitle}>Page Load Time (LCP)</Text>
-            <Text
-              style={[
-                styles.findingValue,
-                {
-                  color: getScoreColor(
-                    lcpMs && lcpMs <= 2500 ? 90 : lcpMs && lcpMs <= 4000 ? 60 : 30
-                  ),
-                },
-              ]}
-            >
-              {formatMs(lcpMs)}
-            </Text>
-            <Text style={styles.findingDescription}>
-              Main content appears in {formatMs(lcpMs)}. Target: under 2.5 seconds.
-            </Text>
-          </View>
+          <View style={styles.findingsGrid}>
+            <View style={styles.findingCard}>
+              <Text style={styles.findingTitle}>Page Load Time (LCP)</Text>
+              <Text
+                style={[
+                  styles.findingValue,
+                  {
+                    color: getScoreColor(
+                      lcpMs && lcpMs <= 2500 ? 90 : lcpMs && lcpMs <= 4000 ? 60 : 30
+                    ),
+                  },
+                ]}
+              >
+                {formatMs(lcpMs)}
+              </Text>
+              <Text style={styles.findingDescription}>
+                Main content appears in {formatMs(lcpMs)}. Target: under 2.5 seconds.
+              </Text>
+            </View>
 
-          <View style={styles.findingCard}>
-            <Text style={styles.findingTitle}>Page Size</Text>
-            <Text
-              style={[
-                styles.findingValue,
-                {
-                  color:
-                    additionalMetrics.total_byte_weight &&
-                    additionalMetrics.total_byte_weight > 3000000
-                      ? colors.scorePoor
-                      : colors.scoreOkay,
-                },
-              ]}
-            >
-              {formatBytes(additionalMetrics.total_byte_weight)}
-            </Text>
-            <Text style={styles.findingDescription}>
-              Total download size. Large pages slow loading, especially on mobile.
-            </Text>
-          </View>
+            <View style={styles.findingCard}>
+              <Text style={styles.findingTitle}>Page Size</Text>
+              <Text
+                style={[
+                  styles.findingValue,
+                  {
+                    color:
+                      additionalMetrics.total_byte_weight &&
+                      additionalMetrics.total_byte_weight > 3000000
+                        ? colors.scorePoor
+                        : colors.scoreOkay,
+                  },
+                ]}
+              >
+                {formatBytes(additionalMetrics.total_byte_weight)}
+              </Text>
+              <Text style={styles.findingDescription}>
+                Total download size. Large pages slow loading, especially on mobile.
+              </Text>
+            </View>
 
-          <View style={styles.findingCard}>
-            <Text style={styles.findingTitle}>Search Visibility (SEO)</Text>
-            <Text style={[styles.findingValue, { color: getScoreColor(avgMobileScores.seo) }]}>
-              {avgMobileScores.seo ?? '—'}/100
-            </Text>
-            <Text style={styles.findingDescription}>
-              How easily search engines can find and recommend your site.
-            </Text>
-          </View>
+            <View style={styles.findingCard}>
+              <Text style={styles.findingTitle}>Search Visibility (SEO)</Text>
+              <Text style={[styles.findingValue, { color: getScoreColor(avgMobileScores.seo) }]}>
+                {avgMobileScores.seo ?? '—'}/100
+              </Text>
+              <Text style={styles.findingDescription}>
+                How easily search engines can find and recommend your site.
+              </Text>
+            </View>
 
-          <View style={styles.findingCard}>
-            <Text style={styles.findingTitle}>Best Practices</Text>
-            <Text
-              style={[styles.findingValue, { color: getScoreColor(avgMobileScores.bestPractices) }]}
-            >
-              {avgMobileScores.bestPractices ?? '—'}/100
-            </Text>
-            <Text style={styles.findingDescription}>
-              Modern web development standards and security practices.
-            </Text>
+            <View style={styles.findingCard}>
+              <Text style={styles.findingTitle}>Best Practices</Text>
+              <Text
+                style={[
+                  styles.findingValue,
+                  { color: getScoreColor(avgMobileScores.bestPractices) },
+                ]}
+              >
+                {avgMobileScores.bestPractices ?? '—'}/100
+              </Text>
+              <Text style={styles.findingDescription}>
+                Modern web development standards and security practices.
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -1111,7 +1116,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             .substring(0, 200)
 
           return (
-            <View key={opp.id} style={styles.actionItem}>
+            <View key={opp.id} style={styles.actionItem} wrap={false}>
               <Text
                 style={
                   isHighPriority
@@ -1138,7 +1143,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         })}
 
         {opportunities.length === 0 && (
-          <View style={styles.explainerBox}>
+          <View style={styles.explainerBox} wrap={false}>
             <Text style={styles.explainerTitle}>No Major Issues Found</Text>
             <Text style={styles.explainerText}>
               Your website is well-optimized! Continue monitoring performance to maintain these
@@ -1166,7 +1171,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
             const desktopResult = resultsByUrl[url].desktop
 
             return (
-              <View key={url} style={styles.pageResultCard}>
+              <View key={url} style={styles.pageResultCard} wrap={false}>
                 <Text style={styles.pageResultUrl}>{formatUrlDisplay(url)}</Text>
                 <View style={styles.pageResultScores}>
                   <View style={styles.pageResultScore}>
