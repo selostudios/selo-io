@@ -101,11 +101,11 @@ export function OrganizationSelector({
                     alt=""
                     width={0}
                     height={0}
-                    sizes="24px"
-                    className="h-5 w-auto max-w-8 rounded object-contain"
+                    sizes="100px"
+                    className="h-7 w-auto max-w-24 rounded object-contain"
                   />
                 ) : (
-                  <Building2 className="h-5 w-5 text-neutral-500" aria-hidden="true" />
+                  <Building2 className="h-6 w-6 text-neutral-500" aria-hidden="true" />
                 )}
                 <span className="font-medium">{selectedOrg.name}</span>
                 <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
