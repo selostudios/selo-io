@@ -52,8 +52,15 @@ const formatBytes = (bytes: number | null) => {
 }
 
 const formatSavingsDisplay = (displayValue: string): string => {
+  // Remove redundant "Est savings of" or "Potential savings of" prefixes
+  let cleaned = displayValue
+    .replace(/^Est\.?\s+savings\s+of\s+/i, '')
+    .replace(/^Potential\s+savings\s+of\s+/i, '')
+    .replace(/^Total\s+size\s+was\s+/i, '')
+    .trim()
+
   // Parse time values like "14,772.1 s" or "1.5 s" or "500 ms"
-  const timeMatch = displayValue.match(/([\d,.]+)\s*(s|ms)/i)
+  const timeMatch = cleaned.match(/([\d,.]+)\s*(s|ms)/i)
   if (timeMatch) {
     const value = parseFloat(timeMatch[1].replace(/,/g, ''))
     const unit = timeMatch[2].toLowerCase()
@@ -73,8 +80,8 @@ const formatSavingsDisplay = (displayValue: string): string => {
     return `${Math.round(seconds)}s`
   }
 
-  // Return as-is if not a time value (e.g., "500 KB")
-  return displayValue
+  // Return cleaned value if not a time value (e.g., "192 KiB")
+  return cleaned
 }
 
 const formatUrlDisplay = (url: string): string => {

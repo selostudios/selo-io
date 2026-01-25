@@ -128,7 +128,7 @@ export function OpportunityItem({ opportunity }: OpportunityItemProps) {
           )}
         </div>
         <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 tabular-nums dark:bg-yellow-900/30 dark:text-yellow-400">
-          Save {savingsDisplay}
+          {savingsDisplay}
         </span>
       </div>
     </div>
