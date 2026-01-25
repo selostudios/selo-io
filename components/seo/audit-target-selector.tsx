@@ -177,7 +177,7 @@ export function AuditTargetSelector({
         <Button size="sm" onClick={handleUseOneTimeUrl} disabled={!oneTimeUrl.trim()}>
           Use URL
         </Button>
-        <Button size="sm" variant="ghost" onClick={handleCancelUrlInput}>
+        <Button size="sm" variant="ghost" onClick={handleCancelUrlInput} title="Cancel">
           <X className="h-4 w-4" />
           <span className="sr-only">Cancel</span>
         </Button>
