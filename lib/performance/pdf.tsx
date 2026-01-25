@@ -720,7 +720,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
   }
 
   // Calculate total pages for pagination
-  const totalPages = 5 + (urls.length > 1 ? 1 : 0) // Cover + Summary + Business + Metrics + Actions + CTA + (Per-page if multiple)
+  const totalPages = 6 + (urls.length > 1 ? 1 : 0) // Cover + Summary + Business + Metrics + Actions + CTA + (Per-page if multiple)
 
   return (
     <Document>
@@ -769,7 +769,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         </View>
 
         {/* Overall Score Display */}
-        <View style={styles.scoreContainer}>
+        <View style={styles.scoreContainer} wrap={false}>
           <View style={styles.bigScoreBox}>
             <Text style={[styles.bigScoreNumber, { color: getScoreColor(overallScore) }]}>
               {overallScore ?? '—'}
@@ -786,7 +786,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         {/* Key Findings */}
         <Text style={styles.sectionSubtitle}>Key Findings at a Glance</Text>
 
-        <View style={styles.findingsGrid}>
+        <View style={styles.findingsGrid} wrap={false}>
           <View style={styles.findingCard}>
             <Text style={styles.findingTitle}>Page Load Time (LCP)</Text>
             <Text
@@ -868,7 +868,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         </Text>
 
         {/* Business Impact Stats */}
-        <View style={styles.impactBox}>
+        <View style={styles.impactBox} wrap={false}>
           <View style={styles.impactStat}>
             <Text style={styles.impactNumber}>53%</Text>
             <Text style={styles.impactLabel}>
@@ -901,7 +901,7 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
         {/* Detailed Results Table */}
         <Text style={styles.sectionSubtitle}>Detailed Score Breakdown</Text>
 
-        <View style={styles.table}>
+        <View style={styles.table} wrap={false}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { width: '20%' }]}>DEVICE</Text>
             <Text style={[styles.tableHeaderCell, { width: '20%' }]}>PERFORMANCE</Text>
