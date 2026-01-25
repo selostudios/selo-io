@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { ChevronDown, Plus, Building2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -94,7 +95,17 @@ export function OrganizationSelector({
           <Button variant="ghost" className="h-auto min-h-11 gap-2 px-3 py-2 hover:bg-neutral-100">
             {selectedOrg ? (
               <>
-                <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+                {selectedOrg.logo_url ? (
+                  <Image
+                    src={selectedOrg.logo_url}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="rounded object-contain"
+                  />
+                ) : (
+                  <Building2 className="h-5 w-5 text-neutral-500" aria-hidden="true" />
+                )}
                 <span className="font-medium">{selectedOrg.name}</span>
                 <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
                   {selectedOrg.status}
@@ -102,7 +113,7 @@ export function OrganizationSelector({
               </>
             ) : (
               <>
-                <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+                <Building2 className="h-5 w-5 text-neutral-500" aria-hidden="true" />
                 <span className="text-neutral-500">Select organization</span>
               </>
             )}

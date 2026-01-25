@@ -26,6 +26,7 @@ export interface OrganizationForSelector {
   name: string
   website_url: string | null
   status: OrganizationStatus
+  logo_url: string | null
 }
 
 export interface CreateOrganizationInput {

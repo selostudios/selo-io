@@ -66,6 +66,7 @@ export function CreateOrganizationDialog({
           name: result.organization.name,
           website_url: result.organization.website_url,
           status: result.organization.status,
+          logo_url: result.organization.logo_url ?? null,
         }
         onSuccess(orgForSelector)
         onOpenChange(false)

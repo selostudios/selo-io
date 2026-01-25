@@ -55,6 +55,7 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
       name: org.name,
       website_url: org.website_url,
       status: org.status,
+      logo_url: org.logo_url,
     }))
   }
 
