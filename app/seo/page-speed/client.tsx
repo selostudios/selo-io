@@ -154,7 +154,7 @@ export function PageSpeedClient({
       )}
 
       {/* Show dashboard when target is selected */}
-      {selectedTarget && (
+      {selectedTarget && selectedTarget.type !== 'one-time-history' && (
         <PerformanceDashboard
           audits={audits}
           monitoredPages={monitoredPages}

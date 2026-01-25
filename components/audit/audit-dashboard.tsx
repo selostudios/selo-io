@@ -11,10 +11,11 @@ import { DismissedChecksList } from './dismissed-checks-list'
 import type { SiteAudit } from '@/lib/audit/types'
 
 interface AuditDashboardProps {
-  websiteUrl: string
+  websiteUrl?: string
   audits: SiteAudit[]
   archivedAudits: SiteAudit[]
   organizationId?: string | null
+  isOneTimeHistory?: boolean
 }
 
 export function AuditDashboard({
@@ -22,6 +23,7 @@ export function AuditDashboard({
   audits,
   archivedAudits,
   organizationId,
+  isOneTimeHistory = false,
 }: AuditDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -68,28 +70,30 @@ export function AuditDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Website URL Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{websiteUrl}</CardTitle>
-              <CardDescription>Organization URL</CardDescription>
+      {/* Website URL Card - Only show when there's a specific URL */}
+      {websiteUrl && !isOneTimeHistory && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>{websiteUrl}</CardTitle>
+                <CardDescription>Organization URL</CardDescription>
+              </div>
+              <Button onClick={handleRunAudit} disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  'Run New Audit'
+                )}
+              </Button>
             </div>
-            <Button onClick={handleRunAudit} disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Starting...
-                </>
-              ) : (
-                'Run New Audit'
-              )}
-            </Button>
-          </div>
-          {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
-        </CardHeader>
-      </Card>
+            {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Score History */}
       {audits.length > 0 && (
@@ -106,10 +110,15 @@ export function AuditDashboard({
       {/* Audit History */}
       <Card>
         <CardHeader>
-          <CardTitle>Audit History</CardTitle>
+          <CardTitle>{isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}</CardTitle>
+          {isOneTimeHistory && (
+            <CardDescription>
+              Audits run on URLs not associated with an organization
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
-          <AuditHistoryList audits={audits} />
+          <AuditHistoryList audits={audits} showUrl={isOneTimeHistory} />
         </CardContent>
       </Card>
 

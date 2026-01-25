@@ -19,6 +19,7 @@ import type { OrganizationForSelector } from '@/lib/organizations/types'
 export type AuditTarget =
   | { type: 'organization'; organizationId: string; url: string }
   | { type: 'one-time'; url: string }
+  | { type: 'one-time-history' }
   | null
 
 interface AuditTargetSelectorProps {
@@ -56,6 +57,18 @@ export function AuditTargetSelector({
   const getDisplayLabel = (): React.ReactNode => {
     if (!selectedTarget) {
       return <span className="text-neutral-500">Select audit target</span>
+    }
+
+    if (selectedTarget.type === 'one-time-history') {
+      return (
+        <span className="flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+          <span className="truncate">One-time Audits</span>
+          <Badge variant="secondary" className="text-xs">
+            History
+          </Badge>
+        </span>
+      )
     }
 
     if (selectedTarget.type === 'one-time') {
@@ -200,6 +213,14 @@ export function AuditTargetSelector({
             <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Enter one-time URL…
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onTargetChange({ type: 'one-time-history' })}>
+            <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            One-time Audit History
+            {selectedTarget?.type === 'one-time-history' && (
+              <Check className="ml-auto h-4 w-4 text-green-600" aria-hidden="true" />
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
             Create new organization…

@@ -11,6 +11,7 @@ import { formatDuration, calculateDuration } from '@/lib/utils'
 
 interface AuditHistoryListProps {
   audits: SiteAudit[]
+  showUrl?: boolean
 }
 
 function formatAuditDate(dateString: string): string {
@@ -26,7 +27,15 @@ function isInProgress(status: SiteAudit['status']): boolean {
   return status === 'pending' || status === 'crawling'
 }
 
-export function AuditHistoryList({ audits }: AuditHistoryListProps) {
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
+export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListProps) {
   const router = useRouter()
 
   const handleDeleteAudit = async (auditId: string) => {
@@ -58,6 +67,9 @@ export function AuditHistoryList({ audits }: AuditHistoryListProps) {
             <span className="text-muted-foreground w-28 text-sm">
               {formatAuditDate(audit.created_at)}
             </span>
+            {showUrl && (
+              <span className="max-w-[200px] truncate text-sm font-medium">{getDomain(audit.url)}</span>
+            )}
             {isInProgress(audit.status) ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />

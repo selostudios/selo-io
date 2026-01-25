@@ -84,22 +84,22 @@ export function SiteAuditClient({
     if (target?.type === 'organization') {
       localStorage.setItem(LAST_ORG_KEY, target.organizationId)
       router.push(`/seo/site-audit?org=${target.organizationId}`)
-    } else if (target?.type === 'one-time') {
-      // For one-time URLs, clear the org param
+    } else if (target?.type === 'one-time' || target?.type === 'one-time-history') {
+      // For one-time URLs and history view, clear the org param
       router.push('/seo/site-audit')
     }
   }
 
   // Filter audits to match the selected target
   // - For organization targets: only show audits for that organization
-  // - For one-time targets: only show audits with no organization (null)
+  // - For one-time/one-time-history targets: only show audits with no organization (null)
   const filteredAudits = useMemo(() => {
     if (!selectedTarget) return []
 
     if (selectedTarget.type === 'organization') {
       return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
     } else {
-      // One-time audits have no organization_id
+      // One-time and one-time-history audits have no organization_id
       return audits.filter((audit) => audit.organization_id === null)
     }
   }, [audits, selectedTarget])
@@ -110,6 +110,7 @@ export function SiteAuditClient({
     if (selectedTarget.type === 'organization') {
       return archivedAudits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
     } else {
+      // One-time and one-time-history audits have no organization_id
       return archivedAudits.filter((audit) => audit.organization_id === null)
     }
   }, [archivedAudits, selectedTarget])
@@ -176,12 +177,21 @@ export function SiteAuditClient({
       )}
 
       {/* Show dashboard when target is selected */}
-      {selectedTarget && (
+      {selectedTarget && selectedTarget.type !== 'one-time-history' && (
         <AuditDashboard
           websiteUrl={selectedTarget.url}
           audits={filteredAudits}
           archivedAudits={filteredArchivedAudits}
           organizationId={selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined}
+        />
+      )}
+
+      {/* Show one-time audit history when selected */}
+      {selectedTarget?.type === 'one-time-history' && (
+        <AuditDashboard
+          audits={filteredAudits}
+          archivedAudits={filteredArchivedAudits}
+          isOneTimeHistory
         />
       )}
     </div>
