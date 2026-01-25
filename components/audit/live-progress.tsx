@@ -322,9 +322,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
           <p className="text-muted-foreground text-sm text-pretty">
             {status === 'checking'
               ? `Analyzing ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} for SEO and AI readiness`
-              : status === 'crawling'
-                ? `Discovering pages - ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} found`
-                : 'Preparing to analyze your website'}
+              : 'Preparing to analyze your website'}
           </p>
         </CardHeader>
 
