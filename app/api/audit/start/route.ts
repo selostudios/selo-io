@@ -96,6 +96,7 @@ export async function POST(request: Request) {
       organization_id: auditOrganizationId,
       url: websiteUrl,
       status: 'pending',
+      created_by: user.id,
     })
     .select()
     .single()

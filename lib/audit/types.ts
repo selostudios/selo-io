@@ -15,7 +15,8 @@ export type CheckStatus = 'passed' | 'failed' | 'warning'
 
 export interface SiteAudit {
   id: string
-  organization_id: string
+  organization_id: string | null
+  created_by: string | null
   url: string
   status: AuditStatus
   overall_score: number | null
