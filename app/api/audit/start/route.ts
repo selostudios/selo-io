@@ -18,12 +18,12 @@ export async function POST(request: Request) {
 
   // Get request body
   const body = await request.json().catch(() => ({}))
-  const { projectId } = body as { projectId?: string }
+  const { organizationId, url } = body as { organizationId?: string; url?: string }
 
-  // Get user's organization
+  // Get user record with is_internal flag
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('organization_id, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -31,41 +31,69 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
+  const isInternal = userRecord.is_internal === true
+
   let websiteUrl: string
+  let auditOrganizationId: string | null = null
 
-  // If projectId is provided, get URL from project
-  if (projectId) {
-    const { data: project } = await supabase
-      .from('seo_projects')
-      .select('url')
-      .eq('id', projectId)
-      .eq('organization_id', userRecord.organization_id)
-      .single()
+  // Handle three scenarios:
+  // 1. URL provided with organizationId: Use URL, link to org (verify access)
+  // 2. URL provided without organizationId: One-time audit (internal only)
+  // 3. organizationId without URL: Get URL from org's website_url field
 
-    if (!project?.url) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+  if (url && organizationId) {
+    // Scenario 1: URL provided with organizationId
+    // Verify user has access to this organization
+    if (!isInternal && organizationId !== userRecord.organization_id) {
+      return NextResponse.json({ error: 'Unauthorized to audit this organization' }, { status: 403 })
     }
-    websiteUrl = project.url
-  } else {
-    // Fallback to organization's website URL for backward compatibility
+
+    websiteUrl = url
+    auditOrganizationId = organizationId
+  } else if (url && !organizationId) {
+    // Scenario 2: URL provided without organizationId (one-time audit)
+    // Only internal users can do one-time audits
+    if (!isInternal) {
+      return NextResponse.json(
+        { error: 'Organization ID required for external users' },
+        { status: 400 }
+      )
+    }
+
+    websiteUrl = url
+    auditOrganizationId = null
+  } else if (organizationId && !url) {
+    // Scenario 3: organizationId without URL - get from org's website_url
+    // Verify user has access to this organization
+    if (!isInternal && organizationId !== userRecord.organization_id) {
+      return NextResponse.json({ error: 'Unauthorized to audit this organization' }, { status: 403 })
+    }
+
     const { data: org } = await supabase
       .from('organizations')
       .select('website_url')
-      .eq('id', userRecord.organization_id)
+      .eq('id', organizationId)
       .single()
 
     if (!org?.website_url) {
-      return NextResponse.json({ error: 'No website URL configured' }, { status: 400 })
+      return NextResponse.json({ error: 'No website URL configured for organization' }, { status: 400 })
     }
+
     websiteUrl = org.website_url
+    auditOrganizationId = organizationId
+  } else {
+    // No URL and no organizationId provided
+    return NextResponse.json(
+      { error: 'Either URL or organization ID must be provided' },
+      { status: 400 }
+    )
   }
 
   // Create audit record
   const { data: audit, error } = await supabase
     .from('site_audits')
     .insert({
-      organization_id: userRecord.organization_id,
-      project_id: projectId || null,
+      organization_id: auditOrganizationId,
       url: websiteUrl,
       status: 'pending',
     })
