@@ -105,10 +105,19 @@ Dashboard Page (RSC) → IntegrationsPanel (period state)
 
 ### Cron Jobs
 
-Located in `app/api/cron/`:
+Located in `app/api/cron/`. All cron jobs require `CRON_SECRET` environment variable and are configured in `vercel.json`.
 
-- `daily-metrics-sync/` - Syncs all platform connections daily (secured by CRON_SECRET)
-- Requires `CRON_SECRET` environment variable in Vercel
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `weekly-audits` | Sun 2 AM UTC | Runs scheduled site audits for organizations with monitoring enabled |
+| `daily-metrics-sync` | Daily 3 AM UTC | Syncs metrics from all active platform connections (LinkedIn, HubSpot, GA) |
+| `audit-cleanup` | Sun 4 AM UTC | Cleans up old audit data to reduce storage |
+
+**Audit Cleanup Strategy:**
+- Keeps checks/pages only for the **most recent audit** per organization
+- Previous audits retain scores for trend history but detailed checks are deleted (~90% storage savings)
+- One-time audits (no organization) are deleted entirely after 30 days
+- Checks/pages from any audit older than 6 months are deleted
 
 ### Directory Structure
 
