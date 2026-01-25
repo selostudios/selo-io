@@ -215,21 +215,3 @@ CREATE POLICY "Users can access their organization's monitored sites"
   USING (
     organization_id IN (SELECT organization_id FROM users WHERE id = (SELECT auth.uid()))
   );
-
--- ============================================================================
--- SEO_PROJECTS TABLE - Fix initplan + consolidate duplicate policies
--- ============================================================================
-
--- Drop all existing duplicate policies
-DROP POLICY IF EXISTS "Users can view their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can manage their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can insert projects for their org" ON seo_projects;
-DROP POLICY IF EXISTS "Users can update their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can delete their org projects" ON seo_projects;
-
--- Single ALL policy covers SELECT, INSERT, UPDATE, DELETE
-CREATE POLICY "Users can access their organization's projects"
-  ON seo_projects FOR ALL
-  USING (
-    organization_id IN (SELECT organization_id FROM users WHERE id = (SELECT auth.uid()))
-  );

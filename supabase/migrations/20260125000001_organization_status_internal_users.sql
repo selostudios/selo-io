@@ -2,7 +2,6 @@
 -- This enables:
 -- 1. Internal users (Selo employees) who can view all organizations
 -- 2. Organization status tracking (prospect -> customer -> inactive)
--- 3. Removal of seo_projects in favor of direct organization selection
 
 -- ============================================================================
 -- PART 1: CREATE ENUM TYPE
@@ -61,28 +60,7 @@ DROP INDEX IF EXISTS idx_site_audits_project;
 DROP INDEX IF EXISTS idx_performance_audits_project;
 
 -- ============================================================================
--- PART 5: DROP SEO_PROJECTS TABLE
--- ============================================================================
-
--- Drop the trigger first
-DROP TRIGGER IF EXISTS seo_projects_updated_at ON seo_projects;
-
--- Drop the trigger function
-DROP FUNCTION IF EXISTS update_seo_projects_updated_at();
-
--- Drop all RLS policies on seo_projects
-DROP POLICY IF EXISTS "Users can view their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can insert projects for their org" ON seo_projects;
-DROP POLICY IF EXISTS "Users can update their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can delete their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can manage their org projects" ON seo_projects;
-DROP POLICY IF EXISTS "Users can access their organization's projects" ON seo_projects;
-
--- Drop the table
-DROP TABLE IF EXISTS seo_projects;
-
--- ============================================================================
--- PART 6: HELPER FUNCTION FOR INTERNAL USER CHECK
+-- PART 5: HELPER FUNCTION FOR INTERNAL USER CHECK
 -- ============================================================================
 
 -- Create or replace helper function to check if current user is internal
@@ -100,7 +78,7 @@ AS $$
 $$;
 
 -- ============================================================================
--- PART 7: UPDATE ORGANIZATIONS RLS POLICIES
+-- PART 6: UPDATE ORGANIZATIONS RLS POLICIES
 -- ============================================================================
 
 -- Drop existing organization policies (various naming patterns)
@@ -138,7 +116,7 @@ CREATE POLICY "Update organizations"
   );
 
 -- ============================================================================
--- PART 8: UPDATE SITE_AUDITS RLS POLICIES
+-- PART 7: UPDATE SITE_AUDITS RLS POLICIES
 -- ============================================================================
 
 -- Drop existing site_audits policies
@@ -184,7 +162,7 @@ CREATE POLICY "Delete site audits"
   );
 
 -- ============================================================================
--- PART 9: UPDATE PERFORMANCE_AUDITS RLS POLICIES
+-- PART 8: UPDATE PERFORMANCE_AUDITS RLS POLICIES
 -- ============================================================================
 
 -- Drop existing performance_audits policies
@@ -230,7 +208,7 @@ CREATE POLICY "Delete performance audits"
   );
 
 -- ============================================================================
--- PART 10: UPDATE USERS RLS POLICY TO INCLUDE INTERNAL USER SUPPORT
+-- PART 9: UPDATE USERS RLS POLICY TO INCLUDE INTERNAL USER SUPPORT
 -- ============================================================================
 
 -- Drop and recreate users SELECT policy to support internal users viewing all

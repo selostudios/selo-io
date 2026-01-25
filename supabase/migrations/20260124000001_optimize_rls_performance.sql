@@ -175,22 +175,6 @@ CREATE POLICY "Users can update their organization's performance audits"
   USING (organization_id IN (SELECT organization_id FROM users WHERE id = (SELECT auth.uid())));
 
 -- ============================================================================
--- SEO_PROJECTS TABLE
--- ============================================================================
-
--- Fix SELECT policy
-DROP POLICY IF EXISTS "Users can view their org projects" ON seo_projects;
-CREATE POLICY "Users can view their org projects"
-  ON seo_projects FOR SELECT
-  USING (organization_id IN (SELECT organization_id FROM users WHERE id = (SELECT auth.uid())));
-
--- Fix ALL policy
-DROP POLICY IF EXISTS "Users can manage their org projects" ON seo_projects;
-CREATE POLICY "Users can manage their org projects"
-  ON seo_projects FOR ALL
-  USING (organization_id IN (SELECT organization_id FROM users WHERE id = (SELECT auth.uid())));
-
--- ============================================================================
 -- DISMISSED_CHECKS TABLE
 -- ============================================================================
 
