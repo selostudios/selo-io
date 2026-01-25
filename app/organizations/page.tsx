@@ -13,7 +13,7 @@ export default async function OrganizationsPage() {
     redirect('/login')
   }
 
-  // Get all organizations with counts
+  // Get all organizations
   const { data: organizations } = await supabase
     .from('organizations')
     .select(`
@@ -28,5 +28,11 @@ export default async function OrganizationsPage() {
     `)
     .order('created_at', { ascending: false })
 
-  return <OrganizationsClient organizations={organizations || []} />
+  // Fetch industries for the edit dialog
+  const { data: industries } = await supabase
+    .from('industries')
+    .select('id, name')
+    .order('name', { ascending: true })
+
+  return <OrganizationsClient organizations={organizations || []} industries={industries || []} />
 }

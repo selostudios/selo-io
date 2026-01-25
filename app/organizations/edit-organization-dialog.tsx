@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { updateOrganization } from '@/lib/organizations/actions'
-import type { OrganizationStatus } from '@/lib/organizations/types'
+import type { OrganizationStatus, Industry } from '@/lib/organizations/types'
 
 interface Organization {
   id: string
@@ -34,6 +34,7 @@ interface Organization {
 
 interface EditOrganizationDialogProps {
   organization: Organization
+  industries: Industry[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
@@ -41,6 +42,7 @@ interface EditOrganizationDialogProps {
 
 export function EditOrganizationDialog({
   organization,
+  industries,
   open,
   onOpenChange,
   onSuccess,
@@ -159,14 +161,18 @@ export function EditOrganizationDialog({
 
           <div className="space-y-2">
             <Label htmlFor="edit-org-industry">Industry</Label>
-            <Input
-              id="edit-org-industry"
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              placeholder="e.g., Technology, Healthcare…"
-              disabled={isSubmitting}
-              autoComplete="off"
-            />
+            <Select value={industry} onValueChange={setIndustry}>
+              <SelectTrigger id="edit-org-industry">
+                <SelectValue placeholder="Select industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {industries.map((ind) => (
+                  <SelectItem key={ind.id} value={ind.id}>
+                    {ind.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {error && (

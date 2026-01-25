@@ -19,7 +19,7 @@ import { CreateOrganizationDialog } from '@/components/dashboard/create-organiza
 import { EditOrganizationDialog } from './edit-organization-dialog'
 import { DeleteOrganizationDialog } from './delete-organization-dialog'
 import { cn } from '@/lib/utils'
-import type { OrganizationStatus } from '@/lib/organizations/types'
+import type { OrganizationStatus, Industry } from '@/lib/organizations/types'
 
 interface Organization {
   id: string
@@ -34,6 +34,7 @@ interface Organization {
 
 interface OrganizationsClientProps {
   organizations: Organization[]
+  industries: Industry[]
 }
 
 const statusColors: Record<OrganizationStatus, string> = {
@@ -59,7 +60,7 @@ function formatDate(dateString: string): string {
   })
 }
 
-export function OrganizationsClient({ organizations }: OrganizationsClientProps) {
+export function OrganizationsClient({ organizations, industries }: OrganizationsClientProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -254,6 +255,7 @@ export function OrganizationsClient({ organizations }: OrganizationsClientProps)
       {editingOrg && (
         <EditOrganizationDialog
           organization={editingOrg}
+          industries={industries}
           open={!!editingOrg}
           onOpenChange={(open) => !open && setEditingOrg(null)}
           onSuccess={handleEditSuccess}

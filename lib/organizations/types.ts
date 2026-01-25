@@ -1,5 +1,10 @@
 export type OrganizationStatus = 'prospect' | 'customer' | 'inactive'
 
+export interface Industry {
+  id: string
+  name: string
+}
+
 export interface Organization {
   id: string
   name: string
