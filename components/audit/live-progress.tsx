@@ -33,6 +33,15 @@ const checkTypeLabels: Record<CheckType, string> = {
   technical: 'Technical',
 }
 
+function getDomain(url: string | undefined): string {
+  if (!url) return 'site'
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
 const statusIcons: Record<CheckStatus, React.ReactNode> = {
   passed: <CheckCircle2 className="h-4 w-4 text-green-600" />,
   failed: <XCircle className="h-4 w-4 text-red-600" />,
@@ -308,7 +317,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
               ? 'Starting Audit...'
               : status === 'checking'
                 ? 'Running Checks...'
-                : 'Crawling Site...'}
+                : `Crawling ${getDomain(progress?.url)}...`}
           </CardTitle>
           <p className="text-muted-foreground text-sm text-pretty">
             {status === 'checking'

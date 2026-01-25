@@ -94,6 +94,7 @@ export interface CheckResult {
 
 export interface AuditProgress {
   status: AuditStatus
+  url: string
   pages_crawled: number
   checks: SiteAuditCheck[]
   overall_score: number | null

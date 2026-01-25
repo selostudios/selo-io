@@ -65,6 +65,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({
     status: audit.status,
+    url: audit.url,
     pages_crawled: audit.pages_crawled,
     overall_score: audit.overall_score,
     seo_score: audit.seo_score,
