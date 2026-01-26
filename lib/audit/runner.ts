@@ -48,7 +48,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     if (auditData?.organization_id) {
       const { data: dismissed } = await supabase
         .from('dismissed_checks')
-        .select('check_name, url')
+        .select('id, organization_id, check_name, url, dismissed_by, created_at')
         .eq('organization_id', auditData.organization_id)
 
       if (dismissed) {
@@ -344,7 +344,7 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
     if (auditData.organization_id) {
       const { data: dismissed } = await supabase
         .from('dismissed_checks')
-        .select('check_name, url')
+        .select('id, organization_id, check_name, url, dismissed_by, created_at')
         .eq('organization_id', auditData.organization_id)
 
       if (dismissed) {
@@ -626,7 +626,7 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     if (auditData?.organization_id) {
       const { data: dismissed } = await supabase
         .from('dismissed_checks')
-        .select('check_name, url')
+        .select('id, organization_id, check_name, url, dismissed_by, created_at')
         .eq('organization_id', auditData.organization_id)
 
       if (dismissed) {
