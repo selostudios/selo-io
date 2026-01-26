@@ -55,3 +55,7 @@ test-results/
 
 # Supabase
 supabase/.temp/
+
+# Working documents
+AIO_FEATURE_GAP_ANALYSIS.md
+GEO_AUDIT_ARCHITECTURE_COMPARISON.md
