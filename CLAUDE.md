@@ -129,6 +129,79 @@ Located in `app/api/cron/`. All cron jobs require `CRON_SECRET` environment vari
 - One-time audits (no organization) are deleted entirely after 30 days
 - Checks/pages from any audit older than 6 months are deleted
 
+### Site Audit Checks
+
+Located in `lib/audit/checks/`. The site audit runs **35 comprehensive checks** across 3 categories:
+
+#### SEO Checks (20 total)
+
+**Critical (9 checks):**
+- `missing-meta-description` - Every page needs a meta description
+- `missing-title` - Every page needs a title tag
+- `missing-h1` - Every page needs an H1 heading
+- `missing-sitemap` - XML sitemap existence (checks multiple paths + robots.txt)
+- `broken-internal-links` - Detects 4xx/5xx errors with status grouping
+- `missing-robots-txt` - Validates robots.txt directives, sitemap reference, crawl rules
+- `duplicate-titles` - Finds duplicate page titles across site
+- `noindex-on-important-pages` - Detects noindex tags preventing indexation
+- `http-to-https-redirect` - Verifies HTTP redirects to HTTPS properly
+
+**Recommended (9 checks):**
+- `meta-description-length` - 150-160 characters optimal
+- `title-length` - 50-60 characters optimal
+- `multiple-h1` - Only one H1 per page
+- `heading-hierarchy` - Proper H1→H2→H3 structure
+- `images-missing-alt` - Alt text for accessibility and SEO
+- `missing-canonical` - Canonical URL tag presence
+- `canonical-validation` - Validates canonical accessibility, chains, self-referencing
+- `redirect-chains` - Detects multi-hop redirects (warns if >2 hops)
+- `non-descriptive-url` - URL structure readability
+
+**Optional (2 checks):**
+- `thin-content` - Content length analysis
+- `oversized-images` - Large image detection
+
+#### AI-Readiness Checks (9 total)
+
+**Critical (5 checks):**
+- `missing-llms-txt` - AI crawler configuration file
+- `ai-crawlers-blocked` - Ensures AI crawlers not blocked in robots.txt
+- `missing-structured-data` - JSON-LD structured data presence
+- `slow-page-response` - Page load time under 3s
+- `js-rendered-content` - Detects client-side rendering issues
+
+**Recommended (3 checks):**
+- `no-faq-content` - FAQ sections for LLM training
+- `missing-organization-schema` - Organization schema markup
+- `no-recent-updates` - Content freshness (last modified)
+
+**Optional (1 check):**
+- `missing-markdown` - Markdown content for AI parsing
+
+#### Technical Checks (6 total)
+
+**Critical (2 checks):**
+- `missing-ssl` - HTTPS encryption required
+- `invalid-ssl-certificate` - SSL certificate validity
+
+**Recommended (2 checks):**
+- `missing-viewport` - Mobile viewport meta tag
+- `mixed-content` - HTTP resources on HTTPS pages
+
+**Optional (2 checks):**
+- `missing-og-tags` - Open Graph meta tags
+- `missing-favicon` - Favicon presence
+
+**Check Types:**
+- **Site-wide checks** - Run once per audit (robots.txt, sitemap, duplicate titles, redirect chains, etc.)
+- **Page-specific checks** - Run on each crawled page (title, meta, H1, images, etc.)
+
+**Implementation Details:**
+- Checks are defined in `lib/audit/checks/{category}/{check-name}.ts`
+- All checks follow `AuditCheckDefinition` interface with priority (critical/recommended/optional)
+- Results include actionable fix guidance and learn-more URLs
+- Checks can be dismissed per organization via `dismissed_checks` table
+
 ### Directory Structure
 
 ```

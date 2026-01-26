@@ -16,6 +16,10 @@ import { oversizedImages } from './seo/oversized-images'
 import { brokenInternalLinks } from './seo/broken-internal-links'
 import { missingRobotsTxt } from './seo/missing-robots-txt'
 import { duplicateTitles } from './seo/duplicate-titles'
+import { noindexOnImportantPages } from './seo/noindex-on-important-pages'
+import { httpToHttpsRedirect } from './seo/http-to-https-redirect'
+import { canonicalValidation } from './seo/canonical-validation'
+import { redirectChains } from './seo/redirect-chains'
 // AI-Readiness checks
 import { missingLlmsTxt } from './ai/missing-llms-txt'
 import { aiCrawlersBlocked } from './ai/ai-crawlers-blocked'
@@ -43,6 +47,8 @@ export const allChecks: AuditCheckDefinition[] = [
   brokenInternalLinks,
   missingRobotsTxt,
   duplicateTitles,
+  noindexOnImportantPages,
+  httpToHttpsRedirect,
   // SEO - Recommended
   metaDescriptionLength,
   titleLength,
@@ -50,6 +56,8 @@ export const allChecks: AuditCheckDefinition[] = [
   headingHierarchy,
   imagesMissingAlt,
   missingCanonical,
+  canonicalValidation,
+  redirectChains,
   nonDescriptiveUrl,
   // SEO - Optional
   thinContent,
