@@ -109,25 +109,25 @@ export const GEOPageAnalysisSchema = z.object({
   }),
   findings: z.object({
     originalData: z.object({
-      present: z.boolean(),
-      count: z.number(),
-      quality: z.string(), // Changed from enum to string
-      examples: z.array(z.string()),
-      issues: z.array(z.string()),
+      present: z.boolean().optional(),
+      count: z.number().optional(),
+      quality: z.string().optional(),
+      examples: z.array(z.string()).optional(),
+      issues: z.array(z.string()).optional(),
     }),
     expertQuotes: z.object({
-      present: z.boolean(),
-      count: z.number(),
-      credibility: z.string(), // Changed from enum to string
-      examples: z.array(z.string()),
-      issues: z.array(z.string()),
+      present: z.boolean().optional(),
+      count: z.number().optional(),
+      credibility: z.string().optional(),
+      examples: z.array(z.string()).optional(),
+      issues: z.array(z.string()).optional(),
     }),
     comprehensiveness: z.object({
-      topicsCovered: z.array(z.string()),
-      gapsIdentified: z.array(z.string()),
-      depth: z.string(), // Changed from enum to string
+      topicsCovered: z.array(z.string()).optional(),
+      gapsIdentified: z.array(z.string()).optional(),
+      depth: z.string().optional(),
     }),
-    citableElements: z.array(z.string()),
+    citableElements: z.array(z.string()).optional(),
   }),
   recommendations: z.array(
     z.object({
