@@ -23,14 +23,21 @@ export function useActiveAudit() {
         if (response.ok) {
           const data = await response.json()
           setStatus(data)
+        } else {
+          console.error('[Active Audit Polling Error]', {
+            type: 'http_error',
+            status: response.status,
+            timestamp: new Date().toISOString(),
+          })
         }
         setIsLoading(false)
 
         // Poll every 10 seconds to check for active audits
         timeoutId = setTimeout(poll, 10000)
-      } catch {
+      } catch (error) {
         console.error('[Active Audit Polling Error]', {
           type: 'fetch_error',
+          error,
           timestamp: new Date().toISOString(),
         })
         setIsLoading(false)

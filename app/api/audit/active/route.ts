@@ -38,7 +38,7 @@ export async function GET() {
     .in('status', ['pending', 'crawling', 'checking'])
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (activeAudit) {
     // Check if audit is stale (stuck for too long)
@@ -79,7 +79,7 @@ export async function GET() {
     .in('status', ['pending', 'running'])
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (activePerformanceAudit) {
     // Check if performance audit is stale (stuck for too long)
