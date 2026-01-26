@@ -209,7 +209,15 @@ export function AuditTargetSelector({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
-          <DropdownMenuItem onClick={() => setShowUrlInput(true)}>
+          <DropdownMenuItem
+            onClick={() => {
+              setShowUrlInput(true)
+              // Set temporary target if none exists, so dashboard renders while typing
+              if (!selectedTarget) {
+                onTargetChange({ type: 'one-time', url: '' })
+              }
+            }}
+          >
             <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Enter one-time URL…
           </DropdownMenuItem>

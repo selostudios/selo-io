@@ -19,6 +19,7 @@ interface PageSpeedClientProps {
 }
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
+const LAST_ONE_TIME_URL_KEY = 'selo-last-one-time-url'
 
 function getInitialTarget(
   selectedOrganizationId: string | null,
@@ -41,6 +42,17 @@ function getInitialTarget(
         type: 'organization',
         organizationId: org.id,
         url: org.website_url,
+      }
+    }
+  }
+
+  // Check localStorage for last one-time URL (takes precedence over org)
+  if (typeof window !== 'undefined') {
+    const lastOneTimeUrl = localStorage.getItem(LAST_ONE_TIME_URL_KEY)
+    if (lastOneTimeUrl) {
+      return {
+        type: 'one-time',
+        url: lastOneTimeUrl,
       }
     }
   }
@@ -94,12 +106,17 @@ export function PageSpeedClient({
     // Update URL and localStorage when organization is selected
     if (target?.type === 'organization') {
       localStorage.setItem(LAST_ORG_KEY, target.organizationId)
+      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
       router.push(`/seo/page-speed?org=${target.organizationId}`)
     } else if (target?.type === 'one-time') {
-      // For one-time URLs, persist the URL in the query param
+      // For one-time URLs, persist the URL in localStorage and query param
+      localStorage.setItem(LAST_ONE_TIME_URL_KEY, target.url)
+      localStorage.removeItem(LAST_ORG_KEY)
       router.push(`/seo/page-speed?url=${encodeURIComponent(target.url)}`)
     } else if (target?.type === 'one-time-history') {
-      // For one-time history, clear params
+      // For one-time history, clear localStorage and params
+      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
+      localStorage.removeItem(LAST_ORG_KEY)
       router.push('/seo/page-speed')
     }
   }
@@ -185,7 +202,7 @@ export function PageSpeedClient({
       )}
 
       {/* Show dashboard when target is selected */}
-      {selectedTarget && selectedTarget.type !== 'one-time-history' && (
+      {selectedTarget && selectedTarget.type !== 'one-time-history' && selectedTarget.url && (
         <PerformanceDashboard
           audits={filteredAudits}
           monitoredPages={monitoredPages}
