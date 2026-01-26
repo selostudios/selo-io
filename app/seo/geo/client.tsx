@@ -183,6 +183,16 @@ export function GEOAuditClient({
         </p>
       </div>
 
+      {/* Audit Target Selector */}
+      <div className="flex items-center justify-between">
+        <AuditTargetSelector
+          organizations={organizations}
+          selectedTarget={selectedTarget}
+          onTargetChange={handleTargetChange}
+          isInternal={isInternal}
+        />
+      </div>
+
       {/* Audit Configuration Card */}
       <Card>
         <CardHeader>
@@ -192,17 +202,6 @@ export function GEOAuditClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Organization/URL Selector */}
-          <div className="space-y-2">
-            <Label>Audit Target</Label>
-            <AuditTargetSelector
-              organizations={organizations}
-              selectedTarget={selectedTarget}
-              onTargetChange={handleTargetChange}
-              isInternal={isInternal}
-            />
-          </div>
-
           {/* One-time URL input (only shown for one-time audits) */}
           {selectedTarget?.type === 'one-time' && (
             <div className="space-y-2">

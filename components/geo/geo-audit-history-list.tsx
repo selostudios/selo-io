@@ -87,6 +87,20 @@ export function GEOAuditHistoryList({ audits, showUrl = false }: GEOAuditHistory
             <span className="text-muted-foreground text-sm">
               {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'}
             </span>
+            {audit.status === 'completed' && (
+              <div className="flex items-center gap-2">
+                {audit.critical_recommendations && audit.critical_recommendations > 0 ? (
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700 tabular-nums">
+                    {audit.critical_recommendations} critical
+                  </span>
+                ) : null}
+                {audit.high_recommendations && audit.high_recommendations > 0 ? (
+                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 tabular-nums">
+                    {audit.high_recommendations} high
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             {/* Show duration for completed audits */}

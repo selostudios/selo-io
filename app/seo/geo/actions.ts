@@ -84,6 +84,49 @@ export async function getGEOAuditData(organizationId?: string) {
     audits = oneTimeAudits ?? []
   }
 
+  // Fetch recommendation counts for each completed audit
+  if (audits.length > 0) {
+    const auditIds = audits.filter((a) => a.status === 'completed').map((a) => a.id)
+
+    if (auditIds.length > 0) {
+      const { data: analyses } = await supabase
+        .from('geo_ai_analyses')
+        .select('audit_id, recommendations')
+        .in('audit_id', auditIds)
+
+      if (analyses) {
+        // Count recommendations by priority for each audit
+        const countsByAudit: Record<
+          string,
+          { critical: number; high: number }
+        > = {}
+
+        for (const analysis of analyses) {
+          if (!countsByAudit[analysis.audit_id]) {
+            countsByAudit[analysis.audit_id] = { critical: 0, high: 0 }
+          }
+
+          const recommendations = analysis.recommendations as Array<{ priority: string }>
+          for (const rec of recommendations) {
+            const priority = rec.priority.toLowerCase()
+            if (priority === 'critical') {
+              countsByAudit[analysis.audit_id].critical++
+            } else if (priority === 'high') {
+              countsByAudit[analysis.audit_id].high++
+            }
+          }
+        }
+
+        // Attach counts to audits
+        audits = audits.map((audit) => ({
+          ...audit,
+          critical_recommendations: countsByAudit[audit.id]?.critical || 0,
+          high_recommendations: countsByAudit[audit.id]?.high || 0,
+        }))
+      }
+    }
+  }
+
   return {
     organizations,
     isInternal,

@@ -42,6 +42,10 @@ export interface GEOAudit {
   completed_at: string | null
   created_at: string
   updated_at: string
+
+  // Optional: Recommendation counts (computed, not in DB)
+  critical_recommendations?: number
+  high_recommendations?: number
 }
 
 export interface GEOCheck {

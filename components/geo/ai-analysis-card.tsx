@@ -1,5 +1,8 @@
 'use client'
 
+import { ChevronDown } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { cn } from '@/lib/utils'
 import type { GEOPageAnalysis } from '@/lib/geo/types'
 
 interface AIAnalysisCardProps {
@@ -21,7 +24,6 @@ function getPriorityColor(priority: string): string {
 }
 
 export function AIAnalysisCard({ analyses }: AIAnalysisCardProps) {
-
   // Collect all recommendations and sort by priority
   const allRecommendations = analyses.flatMap((a) => a.recommendations)
   const sortedRecommendations = allRecommendations.sort((a, b) => {
@@ -34,49 +36,74 @@ export function AIAnalysisCard({ analyses }: AIAnalysisCardProps) {
   // Take top 10 recommendations
   const topRecommendations = sortedRecommendations.slice(0, 10)
 
+  // Count by priority
+  const criticalCount = topRecommendations.filter(
+    (r) => r.priority.toLowerCase() === 'critical'
+  ).length
+  const highCount = topRecommendations.filter((r) => r.priority.toLowerCase() === 'high').length
+
+  if (topRecommendations.length === 0) {
+    return null
+  }
+
   return (
-    <div className="space-y-4 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-      <div>
-        <h4 className="text-sm font-semibold">Top Recommendations</h4>
-        <p className="text-xs text-muted-foreground">
-          Based on analysis of {analyses.length} {analyses.length === 1 ? 'page' : 'pages'}
-        </p>
+    <Collapsible defaultOpen className="group/recommendations">
+      <div className="bg-background flex w-full items-center justify-between rounded-md px-4 py-3">
+        <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
+          <ChevronDown
+            className={cn(
+              'text-muted-foreground size-5 transition-transform duration-200',
+              'group-data-[state=closed]/recommendations:-rotate-90'
+            )}
+          />
+          <span className="text-lg font-semibold">Recommendations</span>
+        </CollapsibleTrigger>
+        <div className="flex items-center gap-2 text-sm">
+          {criticalCount > 0 && (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700 tabular-nums">
+              {criticalCount} critical
+            </span>
+          )}
+          {highCount > 0 && (
+            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-orange-700 tabular-nums">
+              {highCount} high
+            </span>
+          )}
+        </div>
       </div>
-      {topRecommendations.length > 0 && (
-        <div className="space-y-2">
-          {topRecommendations.map((rec, idx) => (
-            <div key={idx} className="rounded-md border bg-muted/30 p-3">
-              <div className="flex items-start gap-3">
-                <span
-                  className={`mt-0.5 rounded px-1.5 py-0.5 text-xs font-medium ${getPriorityColor(rec.priority)}`}
-                >
-                  {rec.priority}
-                </span>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="text-sm font-medium">{rec.category}</p>
-                  <p className="text-xs text-muted-foreground">{rec.issue}</p>
-                  <p className="text-xs">{rec.recommendation}</p>
-                  {rec.expectedImpact && (
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium">Impact:</span> {rec.expectedImpact}
-                    </p>
-                  )}
-                  {rec.learnMoreUrl && (
-                    <a
-                      href={rec.learnMoreUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Learn more →
-                    </a>
-                  )}
-                </div>
+      <CollapsibleContent className="mt-2 space-y-2 pl-4">
+        {topRecommendations.map((rec, idx) => (
+          <div key={idx} className="rounded-md border bg-muted/30 p-3">
+            <div className="flex items-start gap-3">
+              <span
+                className={`mt-0.5 rounded px-1.5 py-0.5 text-xs font-medium ${getPriorityColor(rec.priority)}`}
+              >
+                {rec.priority}
+              </span>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-sm font-medium">{rec.category}</p>
+                <p className="text-xs text-muted-foreground">{rec.issue}</p>
+                <p className="text-xs">{rec.recommendation}</p>
+                {rec.expectedImpact && (
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium">Impact:</span> {rec.expectedImpact}
+                  </p>
+                )}
+                {rec.learnMoreUrl && (
+                  <a
+                    href={rec.learnMoreUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Learn more →
+                  </a>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
