@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Gauge } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
@@ -212,6 +214,80 @@ export function PageSpeedClient({
             selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined
           }
         />
+      )}
+
+      {/* Show one-time audit history when selected */}
+      {selectedTarget?.type === 'one-time-history' && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>One-time Audit History</CardTitle>
+              <CardDescription>
+                Performance audits run on URLs not associated with an organization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredAudits.length === 0 ? (
+                <div className="text-center py-12">
+                  <Gauge className="mx-auto h-12 w-12 text-neutral-400" />
+                  <h3 className="mt-4 text-lg font-medium">No one-time audits yet</h3>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    Run a one-time audit by entering a URL from the selector above.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredAudits.map((audit) => (
+                    <div
+                      key={audit.id}
+                      className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-6">
+                        <span className="text-muted-foreground w-28 text-sm">
+                          {new Date(audit.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        {(audit.first_url || audit.current_url) && (
+                          <span className="max-w-[300px] truncate text-sm font-medium">
+                            {audit.first_url || audit.current_url}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground text-sm">
+                          {audit.total_urls
+                            ? `${audit.total_urls} ${audit.total_urls === 1 ? 'page' : 'pages'}`
+                            : '-'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {audit.status === 'completed' && (
+                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                            Completed
+                          </span>
+                        )}
+                        {audit.status === 'failed' && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                            Failed
+                          </span>
+                        )}
+                        {(audit.status === 'pending' || audit.status === 'running') && (
+                          <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
+                            In Progress
+                          </span>
+                        )}
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/seo/page-speed/${audit.id}`}>View</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   )
