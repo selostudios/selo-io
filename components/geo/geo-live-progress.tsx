@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckItem } from '@/components/audit/check-item'
 import { useGEOAuditPolling } from '@/hooks/use-geo-audit-polling'
@@ -38,14 +38,11 @@ export function GEOLiveProgress({ auditId, initialStatus }: GEOLiveProgressProps
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">GEO Audit in Progress</h1>
-          <p className="text-muted-foreground">
-            Analyzing {audit?.url ? getDomain(audit.url) : 'website'} for AI search optimization
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">GEO Audit in Progress</h1>
+        <p className="text-muted-foreground">
+          Analyzing {audit?.url ? getDomain(audit.url) : 'website'} for AI search optimization
+        </p>
       </div>
 
       {/* Status Card */}

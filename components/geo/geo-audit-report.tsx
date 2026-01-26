@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, ChevronDown, ExternalLink, FileText } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ExternalLink, FileText } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
+import { QualityDimensionCards } from '@/components/geo/quality-dimension-cards'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import type { GEOAudit, GEOCheck, GEOAIAnalysis } from '@/lib/geo/types'
@@ -26,31 +27,6 @@ function getDomain(url: string): string {
   } catch {
     return url
   }
-}
-
-function calculateStrategicScore(analyses: GEOAIAnalysis[]): number {
-  if (analyses.length === 0) return 0
-
-  const weights = {
-    dataQuality: 0.25,
-    expertCredibility: 0.20,
-    comprehensiveness: 0.20,
-    citability: 0.25,
-    authority: 0.10,
-  }
-
-  const totalScore = analyses.reduce((sum, analysis) => {
-    const pageScore =
-      (analysis.score_data_quality ?? 0) * weights.dataQuality +
-      (analysis.score_expert_credibility ?? 0) * weights.expertCredibility +
-      (analysis.score_comprehensiveness ?? 0) * weights.comprehensiveness +
-      (analysis.score_citability ?? 0) * weights.citability +
-      (analysis.score_authority ?? 0) * weights.authority
-
-    return sum + pageScore
-  }, 0)
-
-  return Math.round(totalScore / analyses.length)
 }
 
 export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProps) {
@@ -79,8 +55,6 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
     recommendations: analysis.recommendations ?? [],
   }))
 
-  const strategicScore = calculateStrategicScore(aiAnalyses)
-
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Back Button */}
@@ -93,37 +67,34 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
       </Link>
 
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">GEO Audit</h1>
-            <Badge
-              variant={
-                audit.status === 'completed'
-                  ? 'success'
-                  : audit.status === 'failed'
-                    ? 'destructive'
-                    : 'secondary'
-              }
-            >
-              {audit.status}
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm mt-1">
-            {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
-            {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} analyzed
-            {audit.execution_time_ms !== null
-              ? ` · ${(audit.execution_time_ms / 1000).toFixed(1)}s`
-              : ''}
-            {audit.total_input_tokens && audit.total_output_tokens
-              ? ` · ${((audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)).toLocaleString()} tokens`
-              : ''}
-            {audit.total_cost !== null && audit.total_cost !== undefined
-              ? ` · $${audit.total_cost.toFixed(4)}`
-              : ''}
-          </p>
+      <div>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">GEO Audit</h1>
+          <Badge
+            variant={
+              audit.status === 'completed'
+                ? 'success'
+                : audit.status === 'failed'
+                  ? 'destructive'
+                  : 'secondary'
+            }
+          >
+            {audit.status}
+          </Badge>
         </div>
+        <p className="text-muted-foreground text-sm mt-1">
+          {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
+          {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} analyzed
+          {audit.execution_time_ms !== null
+            ? ` · ${(audit.execution_time_ms / 1000).toFixed(1)}s`
+            : ''}
+          {audit.total_input_tokens && audit.total_output_tokens
+            ? ` · ${((audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)).toLocaleString()} tokens`
+            : ''}
+          {audit.total_cost !== null && audit.total_cost !== undefined
+            ? ` · $${audit.total_cost.toFixed(4)}`
+            : ''}
+        </p>
       </div>
 
       {/* Domain URL Section */}
@@ -144,27 +115,59 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
       </Card>
 
       {/* Score Cards */}
-      <div className="flex gap-4">
-        <ScoreCard
-          label="Overall GEO"
-          score={audit.overall_geo_score}
-          description="Combined score of technical foundation and strategic content quality. Represents your overall readiness for AI citation."
-        />
-        <ScoreCard
-          label="Technical"
-          score={audit.technical_score}
-          description="Technical infrastructure for AI crawling: robots.txt access, schema markup, page speed, and content structure."
-        />
-        <ScoreCard
-          label="Strategic"
-          score={audit.strategic_score}
-          description="Content quality assessed by AI: data quality, expert credibility, comprehensiveness, citability, and authority."
-        />
+      <div>
+        <h4 className="text-muted-foreground mb-4 text-sm font-medium">GEO Scores</h4>
+        <div className="flex gap-4">
+          <ScoreCard
+            label="Overall GEO"
+            score={audit.overall_geo_score}
+            description="Combined score of technical foundation and strategic content quality. Represents your overall readiness for AI citation."
+          />
+          <ScoreCard
+            label="Technical"
+            score={audit.technical_score}
+            description="Technical infrastructure for AI crawling: robots.txt access, schema markup, page speed, and content structure."
+          />
+          <ScoreCard
+            label="Strategic"
+            score={audit.strategic_score}
+            description="Content quality assessed by AI: data quality, expert credibility, comprehensiveness, citability, and authority."
+          />
+        </div>
       </div>
 
-      {/* AI Analysis at Top */}
-      {formattedAnalyses.length > 0 && strategicScore !== null && (
-        <AIAnalysisCard analyses={formattedAnalyses} strategicScore={strategicScore} />
+      {/* AI Analysis Quality Dimensions */}
+      {formattedAnalyses.length > 0 && (
+        <div>
+          <h4 className="text-muted-foreground mb-4 text-sm font-medium">AI Analysis</h4>
+          <QualityDimensionCards
+            dataQuality={Math.round(
+              formattedAnalyses.reduce((sum, a) => sum + a.scores.dataQuality, 0) /
+                formattedAnalyses.length
+            )}
+            expertCredibility={Math.round(
+              formattedAnalyses.reduce((sum, a) => sum + a.scores.expertCredibility, 0) /
+                formattedAnalyses.length
+            )}
+            comprehensiveness={Math.round(
+              formattedAnalyses.reduce((sum, a) => sum + a.scores.comprehensiveness, 0) /
+                formattedAnalyses.length
+            )}
+            citability={Math.round(
+              formattedAnalyses.reduce((sum, a) => sum + a.scores.citability, 0) /
+                formattedAnalyses.length
+            )}
+            authority={Math.round(
+              formattedAnalyses.reduce((sum, a) => sum + a.scores.authority, 0) /
+                formattedAnalyses.length
+            )}
+          />
+        </div>
+      )}
+
+      {/* AI Recommendations */}
+      {formattedAnalyses.length > 0 && (
+        <AIAnalysisCard analyses={formattedAnalyses} />
       )}
 
       {/* Programmatic Checks in Collapsible Sections */}

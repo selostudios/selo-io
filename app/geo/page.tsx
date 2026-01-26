@@ -271,10 +271,7 @@ export default function GEOAuditPage() {
 
                 {/* AI Analysis Results */}
                 {geoAudit.aiAnalyses.length > 0 && geoAudit.strategicScore !== null && (
-                  <AIAnalysisCard
-                    analyses={geoAudit.aiAnalyses}
-                    strategicScore={geoAudit.strategicScore}
-                  />
+                  <AIAnalysisCard analyses={geoAudit.aiAnalyses} />
                 )}
 
                 {/* Token Usage and Cost */}

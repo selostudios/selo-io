@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ import { CheckItem } from '@/components/audit/check-item'
 import { SampleSizeSelector } from '@/components/geo/sample-size-selector'
 import { TokenUsageBadge } from '@/components/geo/token-usage-badge'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
+import { QualityDimensionCards } from '@/components/geo/quality-dimension-cards'
 import { GEOInfoDialog } from '@/components/geo/geo-info-dialog'
 import { GEOAuditHistoryList } from '@/components/geo/geo-audit-history-list'
 import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
@@ -171,18 +172,15 @@ export function GEOAuditClient({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-start gap-3">
-        <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold">GEO Audit</h1>
-            <GEOInfoDialog />
-          </div>
-          <p className="text-muted-foreground">
-            Analyze your content for Generative Engine Optimization - how well AI systems like
-            ChatGPT, Claude, and Perplexity can discover and cite your content
-          </p>
+      <div>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold">GEO Audit</h1>
+          <GEOInfoDialog />
         </div>
+        <p className="text-muted-foreground">
+          Analyze your content for Generative Engine Optimization - how well AI systems like
+          ChatGPT, Claude, and Perplexity can discover and cite your content
+        </p>
       </div>
 
       {/* Audit Configuration Card */}
@@ -265,22 +263,25 @@ export function GEOAuditClient({
           {(geoAudit.technicalScore !== null ||
             geoAudit.strategicScore !== null ||
             geoAudit.overallScore !== null) && (
-            <div className="flex gap-4">
-              <ScoreCard
-                label="Overall GEO"
-                score={geoAudit.overallScore}
-                description="Combined score of technical foundation and strategic content quality. Represents your overall readiness for AI citation."
-              />
-              <ScoreCard
-                label="Technical"
-                score={geoAudit.technicalScore}
-                description="Technical infrastructure for AI crawling: robots.txt access, schema markup, page speed, and content structure."
-              />
-              <ScoreCard
-                label="Strategic"
-                score={geoAudit.strategicScore}
-                description="Content quality assessed by AI: data quality, expert credibility, comprehensiveness, citability, and authority."
-              />
+            <div>
+              <h4 className="text-muted-foreground mb-4 text-sm font-medium">GEO Scores</h4>
+              <div className="flex gap-4">
+                <ScoreCard
+                  label="Overall GEO"
+                  score={geoAudit.overallScore}
+                  description="Combined score of technical foundation and strategic content quality. Represents your overall readiness for AI citation."
+                />
+                <ScoreCard
+                  label="Technical"
+                  score={geoAudit.technicalScore}
+                  description="Technical infrastructure for AI crawling: robots.txt access, schema markup, page speed, and content structure."
+                />
+                <ScoreCard
+                  label="Strategic"
+                  score={geoAudit.strategicScore}
+                  description="Content quality assessed by AI: data quality, expert credibility, comprehensiveness, citability, and authority."
+                />
+              </div>
             </div>
           )}
 
@@ -356,92 +357,110 @@ export function GEOAuditClient({
               </Card>
             )}
 
-          {/* Content Quality Checks + AI Analysis */}
-          {(checksByCategory['content_quality']?.length > 0 ||
-            geoAudit.aiAnalyses.length > 0 ||
-            geoAudit.status === 'running_ai') && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Content Quality</CardTitle>
-                <CardDescription>
-                  Depth, readability, and strategic quality of your content
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Programmatic Content Quality Checks */}
-                {checksByCategory['content_quality'] &&
-                  checksByCategory['content_quality'].length > 0 && (
-                    <div className="space-y-2">
-                      {checksByCategory['content_quality'].map((check, idx) => (
-                        <CheckItem
-                          key={idx}
-                          check={
-                            {
-                              id: `check-${idx}`,
-                              audit_id: '',
-                              page_id: null,
-                              check_type: 'ai_readiness',
-                              check_name: check.name,
-                              priority: 'recommended',
-                              status: check.status,
-                              display_name: check.displayName,
-                              display_name_passed: check.displayName,
-                              details: null,
-                              learn_more_url: undefined,
-                              created_at: new Date().toISOString(),
-                            } as SiteAuditCheck
-                          }
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                {/* AI Analysis Loading State - Show during running_ai */}
-                {geoAudit.status === 'running_ai' && (
-                  <div className="flex items-center justify-center rounded-md border bg-muted/30 py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-                      <p className="text-sm text-muted-foreground">
-                        Running AI quality analysis on {geoAudit.selectedPages.length}{' '}
-                        {geoAudit.selectedPages.length === 1 ? 'page' : 'pages'}…
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* AI Analysis Results - Only show when complete */}
-                {isComplete && geoAudit.aiAnalyses.length > 0 && geoAudit.strategicScore !== null && (
-                  <>
-                    <AIAnalysisCard
-                      analyses={geoAudit.aiAnalyses}
-                      strategicScore={geoAudit.strategicScore}
+          {/* Content Quality Checks */}
+          {checksByCategory['content_quality'] &&
+            checksByCategory['content_quality'].length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content Quality</CardTitle>
+                  <CardDescription>
+                    Depth, readability, and strategic quality of your content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {checksByCategory['content_quality'].map((check, idx) => (
+                    <CheckItem
+                      key={idx}
+                      check={
+                        {
+                          id: `check-${idx}`,
+                          audit_id: '',
+                          page_id: null,
+                          check_type: 'ai_readiness',
+                          check_name: check.name,
+                          priority: 'recommended',
+                          status: check.status,
+                          display_name: check.displayName,
+                          display_name_passed: check.displayName,
+                          details: null,
+                          learn_more_url: undefined,
+                          created_at: new Date().toISOString(),
+                        } as SiteAuditCheck
+                      }
                     />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-                    {/* Token Usage and Cost */}
-                    {geoAudit.tokenUsage.total > 0 && (
-                      <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4">
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">Analysis Complete</p>
-                          <p className="text-xs text-muted-foreground">
-                            Analyzed {geoAudit.selectedPages.length}{' '}
-                            {geoAudit.selectedPages.length === 1 ? 'page' : 'pages'} in{' '}
-                            {geoAudit.executionTime !== null
-                              ? `${(geoAudit.executionTime / 1000).toFixed(1)}s`
-                              : 'N/A'}
-                          </p>
-                        </div>
-                        <TokenUsageBadge
-                          inputTokens={geoAudit.tokenUsage.input}
-                          outputTokens={geoAudit.tokenUsage.output}
-                          totalTokens={geoAudit.tokenUsage.total}
-                          cost={geoAudit.cost}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
+          {/* AI Analysis Loading State */}
+          {geoAudit.status === 'running_ai' && (
+            <Card>
+              <CardContent className="py-8">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+                  <p className="text-sm text-muted-foreground">
+                    Running AI quality analysis on {geoAudit.selectedPages.length}{' '}
+                    {geoAudit.selectedPages.length === 1 ? 'page' : 'pages'}…
+                  </p>
+                </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* AI Analysis Results */}
+          {isComplete && geoAudit.aiAnalyses.length > 0 && (
+            <>
+              <div>
+                <h4 className="text-muted-foreground mb-4 text-sm font-medium">AI Analysis</h4>
+                <QualityDimensionCards
+                  dataQuality={Math.round(
+                    geoAudit.aiAnalyses.reduce((sum, a) => sum + a.scores.dataQuality, 0) /
+                      geoAudit.aiAnalyses.length
+                  )}
+                  expertCredibility={Math.round(
+                    geoAudit.aiAnalyses.reduce((sum, a) => sum + a.scores.expertCredibility, 0) /
+                      geoAudit.aiAnalyses.length
+                  )}
+                  comprehensiveness={Math.round(
+                    geoAudit.aiAnalyses.reduce((sum, a) => sum + a.scores.comprehensiveness, 0) /
+                      geoAudit.aiAnalyses.length
+                  )}
+                  citability={Math.round(
+                    geoAudit.aiAnalyses.reduce((sum, a) => sum + a.scores.citability, 0) /
+                      geoAudit.aiAnalyses.length
+                  )}
+                  authority={Math.round(
+                    geoAudit.aiAnalyses.reduce((sum, a) => sum + a.scores.authority, 0) /
+                      geoAudit.aiAnalyses.length
+                  )}
+                />
+              </div>
+
+              <AIAnalysisCard analyses={geoAudit.aiAnalyses} />
+
+              {/* Token Usage and Cost */}
+              {geoAudit.tokenUsage.total > 0 && (
+                <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Analysis Complete</p>
+                    <p className="text-xs text-muted-foreground">
+                      Analyzed {geoAudit.selectedPages.length}{' '}
+                      {geoAudit.selectedPages.length === 1 ? 'page' : 'pages'} in{' '}
+                      {geoAudit.executionTime !== null
+                        ? `${(geoAudit.executionTime / 1000).toFixed(1)}s`
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <TokenUsageBadge
+                    inputTokens={geoAudit.tokenUsage.input}
+                    outputTokens={geoAudit.tokenUsage.output}
+                    totalTokens={geoAudit.tokenUsage.total}
+                    cost={geoAudit.cost}
+                  />
+                </div>
+              )}
+            </>
           )}
         </>
       )}
