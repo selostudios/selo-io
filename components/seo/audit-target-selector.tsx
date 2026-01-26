@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Plus, Building2, Check, Link2, X } from 'lucide-react'
+import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +17,7 @@ import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 export type AuditTarget =
   | { type: 'organization'; organizationId: string; url: string }
-  | { type: 'one-time'; url: string }
-  | { type: 'one-time-history' }
+  | { type: 'one-time' }
   | null
 
 interface AuditTargetSelectorProps {
@@ -42,8 +40,6 @@ export function AuditTargetSelector({
   isInternal,
 }: AuditTargetSelectorProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [showUrlInput, setShowUrlInput] = useState(false)
-  const [oneTimeUrl, setOneTimeUrl] = useState('')
 
   const getDomain = (url: string | null): string => {
     if (!url) return ''
@@ -59,26 +55,11 @@ export function AuditTargetSelector({
       return <span className="text-neutral-500">Select audit target</span>
     }
 
-    if (selectedTarget.type === 'one-time-history') {
-      return (
-        <span className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
-          <span className="truncate">One-time Audits</span>
-          <Badge variant="secondary" className="text-xs">
-            History
-          </Badge>
-        </span>
-      )
-    }
-
     if (selectedTarget.type === 'one-time') {
       return (
         <span className="flex items-center gap-2">
           <Link2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
-          <span className="truncate">{getDomain(selectedTarget.url)}</span>
-          <Badge variant="secondary" className="text-xs">
-            One-time
-          </Badge>
+          <span className="truncate">One-time Audits</span>
         </span>
       )
     }
@@ -106,7 +87,6 @@ export function AuditTargetSelector({
       organizationId: org.id,
       url: org.website_url,
     })
-    setShowUrlInput(false)
   }
 
   const handleOrganizationCreated = (organization: OrganizationForSelector) => {
@@ -120,26 +100,10 @@ export function AuditTargetSelector({
     }
   }
 
-  const handleUseOneTimeUrl = () => {
-    if (!oneTimeUrl.trim()) return
-
-    let url = oneTimeUrl.trim()
-    // Add https:// if no protocol specified
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url
-    }
-
+  const handleSelectOneTime = () => {
     onTargetChange({
       type: 'one-time',
-      url,
     })
-    setShowUrlInput(false)
-    setOneTimeUrl('')
-  }
-
-  const handleCancelUrlInput = () => {
-    setShowUrlInput(false)
-    setOneTimeUrl('')
   }
 
   // For external users, show simple display of their org
@@ -165,39 +129,6 @@ export function AuditTargetSelector({
     )
   }
 
-  // Inline URL input mode
-  if (showUrlInput) {
-    return (
-      <div className="flex items-center gap-2">
-        <Input
-          type="url"
-          placeholder="https://example.com"
-          value={oneTimeUrl}
-          onChange={(e) => setOneTimeUrl(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              handleUseOneTimeUrl()
-            } else if (e.key === 'Escape') {
-              handleCancelUrlInput()
-            }
-          }}
-          className="w-[280px]"
-          autoComplete="off"
-          autoFocus
-          aria-label="One-time URL to audit"
-        />
-        <Button size="sm" onClick={handleUseOneTimeUrl} disabled={!oneTimeUrl.trim()}>
-          Use URL
-        </Button>
-        <Button size="sm" variant="ghost" onClick={handleCancelUrlInput} title="Cancel">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Cancel</span>
-        </Button>
-      </div>
-    )
-  }
-
   // Internal users get dropdown
   return (
     <>
@@ -209,22 +140,10 @@ export function AuditTargetSelector({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
-          <DropdownMenuItem
-            onClick={() => {
-              setShowUrlInput(true)
-              // Set temporary target if none exists, so dashboard renders while typing
-              if (!selectedTarget) {
-                onTargetChange({ type: 'one-time', url: '' })
-              }
-            }}
-          >
+          <DropdownMenuItem onClick={handleSelectOneTime}>
             <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Enter one-time URL…
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onTargetChange({ type: 'one-time-history' })}>
-            <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
-            One-time Audit History
-            {selectedTarget?.type === 'one-time-history' && (
+            {selectedTarget?.type === 'one-time' && (
               <Check className="ml-auto h-4 w-4 text-green-600" aria-hidden="true" />
             )}
           </DropdownMenuItem>

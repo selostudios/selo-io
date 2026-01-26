@@ -3,9 +3,10 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Gauge } from 'lucide-react'
+import { Gauge, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
@@ -17,25 +18,15 @@ interface PageSpeedClientProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
-  initialUrl?: string
 }
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
-const LAST_ONE_TIME_URL_KEY = 'selo-last-one-time-url'
+const LAST_VIEW_KEY = 'selo-last-view-type'
 
 function getInitialTarget(
   selectedOrganizationId: string | null,
-  initialUrl: string | undefined,
   organizations: OrganizationForSelector[]
 ): AuditTarget {
-  // If a URL is provided (one-time audit), use it
-  if (initialUrl) {
-    return {
-      type: 'one-time',
-      url: initialUrl,
-    }
-  }
-
   // If an organization is selected via URL param
   if (selectedOrganizationId) {
     const org = organizations.find((o) => o.id === selectedOrganizationId)
@@ -48,14 +39,11 @@ function getInitialTarget(
     }
   }
 
-  // Check localStorage for last one-time URL (takes precedence over org)
+  // Check localStorage for last view type
   if (typeof window !== 'undefined') {
-    const lastOneTimeUrl = localStorage.getItem(LAST_ONE_TIME_URL_KEY)
-    if (lastOneTimeUrl) {
-      return {
-        type: 'one-time',
-        url: lastOneTimeUrl,
-      }
+    const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
+    if (lastViewType === 'one-time') {
+      return { type: 'one-time' }
     }
   }
 
@@ -93,54 +81,55 @@ export function PageSpeedClient({
   organizations,
   isInternal,
   selectedOrganizationId,
-  initialUrl,
 }: PageSpeedClientProps) {
   const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Initialize selectedTarget based on URL param, localStorage, or first org
   const [selectedTarget, setSelectedTarget] = useState<AuditTarget>(() =>
-    getInitialTarget(selectedOrganizationId, initialUrl, organizations)
+    getInitialTarget(selectedOrganizationId, organizations)
   )
 
   const handleTargetChange = (target: AuditTarget) => {
     setSelectedTarget(target)
+    setSearchQuery('')
 
-    // Update URL and localStorage when organization is selected
+    // Update URL and localStorage when target changes
     if (target?.type === 'organization') {
       localStorage.setItem(LAST_ORG_KEY, target.organizationId)
-      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
+      localStorage.setItem(LAST_VIEW_KEY, 'organization')
       router.push(`/seo/page-speed?org=${target.organizationId}`)
     } else if (target?.type === 'one-time') {
-      // For one-time URLs, persist the URL in localStorage and query param
-      localStorage.setItem(LAST_ONE_TIME_URL_KEY, target.url)
       localStorage.removeItem(LAST_ORG_KEY)
-      router.push(`/seo/page-speed?url=${encodeURIComponent(target.url)}`)
-    } else if (target?.type === 'one-time-history') {
-      // For one-time history, clear localStorage and params
-      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
-      localStorage.removeItem(LAST_ORG_KEY)
+      localStorage.setItem(LAST_VIEW_KEY, 'one-time')
       router.push('/seo/page-speed')
     }
   }
 
   // Filter audits to match the selected target
   // - For organization targets: only show audits for that organization
-  // - For one-time targets: only show audits for the specific URL
-  // - For one-time-history targets: show all audits with no organization
+  // - For one-time targets: show all one-time audits, filtered by search query
   const filteredAudits = useMemo(() => {
     if (!selectedTarget) return []
 
     if (selectedTarget.type === 'organization') {
       return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
-    } else if (selectedTarget.type === 'one-time') {
-      // For one-time URLs, show all one-time audits
-      // TODO: In the future, we could filter by specific URL by querying audit results
-      return audits.filter((audit) => audit.organization_id === null)
     } else {
-      // One-time-history: show all audits with no organization_id
-      return audits.filter((audit) => audit.organization_id === null)
+      // One-time: show all audits with no organization_id
+      let oneTimeAudits = audits.filter((audit) => audit.organization_id === null)
+
+      // Apply search filter if query exists
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        oneTimeAudits = oneTimeAudits.filter((audit) => {
+          const url = audit.first_url || audit.current_url || ''
+          return url.toLowerCase().includes(query)
+        })
+      }
+
+      return oneTimeAudits
     }
-  }, [audits, selectedTarget])
+  }, [audits, selectedTarget, searchQuery])
 
   return (
     <div className="space-y-6">
@@ -203,36 +192,51 @@ export function PageSpeedClient({
         </Card>
       )}
 
-      {/* Show dashboard when target is selected */}
-      {selectedTarget && selectedTarget.type !== 'one-time-history' && selectedTarget.url && (
+      {/* Show dashboard when organization is selected */}
+      {selectedTarget?.type === 'organization' && (
         <PerformanceDashboard
           audits={filteredAudits}
           monitoredPages={monitoredPages}
           websiteUrl={selectedTarget.url}
-          initialUrl={initialUrl}
-          organizationId={
-            selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined
-          }
+          organizationId={selectedTarget.organizationId}
         />
       )}
 
-      {/* Show one-time audit history when selected */}
-      {selectedTarget?.type === 'one-time-history' && (
+      {/* Show one-time audit history with search when one-time is selected */}
+      {selectedTarget?.type === 'one-time' && (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>One-time Audit History</CardTitle>
-              <CardDescription>
-                Performance audits run on URLs not associated with an organization
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>One-time Audit History</CardTitle>
+                  <CardDescription>
+                    Performance audits run on URLs not associated with an organization
+                  </CardDescription>
+                </div>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search by URL..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {filteredAudits.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="py-12 text-center">
                   <Gauge className="mx-auto h-12 w-12 text-neutral-400" />
-                  <h3 className="mt-4 text-lg font-medium">No one-time audits yet</h3>
+                  <h3 className="mt-4 text-lg font-medium">
+                    {searchQuery ? 'No matching audits' : 'No one-time audits yet'}
+                  </h3>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Run a one-time audit by entering a URL from the selector above.
+                    {searchQuery
+                      ? 'Try a different search term'
+                      : 'Run a one-time audit by entering a URL in the dashboard.'}
                   </p>
                 </div>
               ) : (

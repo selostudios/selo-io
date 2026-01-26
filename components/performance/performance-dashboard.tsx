@@ -28,7 +28,6 @@ interface PerformanceDashboardProps {
   audits: PerformanceAudit[]
   monitoredPages: MonitoredPage[]
   websiteUrl: string
-  initialUrl?: string
   organizationId?: string
 }
 
@@ -36,14 +35,13 @@ export function PerformanceDashboard({
   audits,
   monitoredPages: initialPages,
   websiteUrl,
-  initialUrl,
   organizationId,
 }: PerformanceDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [monitoredPages, setMonitoredPages] = useState(initialPages)
-  const [newUrl, setNewUrl] = useState(initialUrl ?? '')
+  const [newUrl, setNewUrl] = useState('')
 
   // Determine if this is a one-time audit (no organization)
   const isOneTimeAudit = !organizationId

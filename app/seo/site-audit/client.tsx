@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileSearch } from 'lucide-react'
+import { FileSearch, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
 import { AuditDashboard } from '@/components/audit/audit-dashboard'
 import type { SiteAudit } from '@/lib/audit/types'
@@ -15,25 +16,15 @@ interface SiteAuditClientProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
-  initialUrl?: string
 }
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
-const LAST_ONE_TIME_URL_KEY = 'selo-last-one-time-url'
+const LAST_VIEW_KEY = 'selo-last-view-type'
 
 function getInitialTarget(
   selectedOrganizationId: string | null,
-  initialUrl: string | undefined,
   organizations: OrganizationForSelector[]
 ): AuditTarget {
-  // If a URL is provided (one-time audit), use it
-  if (initialUrl) {
-    return {
-      type: 'one-time',
-      url: initialUrl,
-    }
-  }
-
   // If an organization is selected via URL param
   if (selectedOrganizationId) {
     const org = organizations.find((o) => o.id === selectedOrganizationId)
@@ -46,14 +37,11 @@ function getInitialTarget(
     }
   }
 
-  // Check localStorage for last one-time URL (takes precedence over org)
+  // Check localStorage for last view type
   if (typeof window !== 'undefined') {
-    const lastOneTimeUrl = localStorage.getItem(LAST_ONE_TIME_URL_KEY)
-    if (lastOneTimeUrl) {
-      return {
-        type: 'one-time',
-        url: lastOneTimeUrl,
-      }
+    const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
+    if (lastViewType === 'one-time') {
+      return { type: 'one-time' }
     }
   }
 
@@ -91,54 +79,54 @@ export function SiteAuditClient({
   organizations,
   isInternal,
   selectedOrganizationId,
-  initialUrl,
 }: SiteAuditClientProps) {
   const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Initialize selectedTarget based on URL param, localStorage, or first org
   const [selectedTarget, setSelectedTarget] = useState<AuditTarget>(() =>
-    getInitialTarget(selectedOrganizationId, initialUrl, organizations)
+    getInitialTarget(selectedOrganizationId, organizations)
   )
 
   const handleTargetChange = (target: AuditTarget) => {
     setSelectedTarget(target)
+    setSearchQuery('')
 
-    // Update URL and localStorage when organization is selected
+    // Update URL and localStorage when target changes
     if (target?.type === 'organization') {
       localStorage.setItem(LAST_ORG_KEY, target.organizationId)
-      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
+      localStorage.setItem(LAST_VIEW_KEY, 'organization')
       router.push(`/seo/site-audit?org=${target.organizationId}`)
     } else if (target?.type === 'one-time') {
-      // For one-time URLs, persist the URL in localStorage and query param
-      localStorage.setItem(LAST_ONE_TIME_URL_KEY, target.url)
       localStorage.removeItem(LAST_ORG_KEY)
-      router.push(`/seo/site-audit?url=${encodeURIComponent(target.url)}`)
-    } else if (target?.type === 'one-time-history') {
-      // For one-time history view, clear localStorage and params
-      localStorage.removeItem(LAST_ONE_TIME_URL_KEY)
-      localStorage.removeItem(LAST_ORG_KEY)
+      localStorage.setItem(LAST_VIEW_KEY, 'one-time')
       router.push('/seo/site-audit')
     }
   }
 
   // Filter audits to match the selected target
   // - For organization targets: only show audits for that organization
-  // - For one-time targets: show all one-time audits
-  // - For one-time-history targets: show all audits with no organization
+  // - For one-time targets: show all one-time audits, filtered by search query
   const filteredAudits = useMemo(() => {
     if (!selectedTarget) return []
 
     if (selectedTarget.type === 'organization') {
       return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
-    } else if (selectedTarget.type === 'one-time') {
-      // For one-time URLs, show all one-time audits
-      // TODO: In the future, we could filter by specific URL
-      return audits.filter((audit) => audit.organization_id === null)
     } else {
-      // One-time-history: show all audits with no organization_id
-      return audits.filter((audit) => audit.organization_id === null)
+      // One-time: show all audits with no organization_id
+      let oneTimeAudits = audits.filter((audit) => audit.organization_id === null)
+
+      // Apply search filter if query exists
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        oneTimeAudits = oneTimeAudits.filter((audit) => {
+          return audit.url.toLowerCase().includes(query)
+        })
+      }
+
+      return oneTimeAudits
     }
-  }, [audits, selectedTarget])
+  }, [audits, selectedTarget, searchQuery])
 
   const filteredArchivedAudits = useMemo(() => {
     if (!selectedTarget) return []
@@ -147,14 +135,21 @@ export function SiteAuditClient({
       return archivedAudits.filter(
         (audit) => audit.organization_id === selectedTarget.organizationId
       )
-    } else if (selectedTarget.type === 'one-time') {
-      // For one-time URLs, show all one-time audits
-      return archivedAudits.filter((audit) => audit.organization_id === null)
     } else {
-      // One-time-history: show all audits with no organization_id
-      return archivedAudits.filter((audit) => audit.organization_id === null)
+      // One-time: show all archived audits with no organization_id
+      let oneTimeAudits = archivedAudits.filter((audit) => audit.organization_id === null)
+
+      // Apply search filter if query exists
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        oneTimeAudits = oneTimeAudits.filter((audit) => {
+          return audit.url.toLowerCase().includes(query)
+        })
+      }
+
+      return oneTimeAudits
     }
-  }, [archivedAudits, selectedTarget])
+  }, [archivedAudits, selectedTarget, searchQuery])
 
   return (
     <div className="space-y-6">
@@ -217,25 +212,47 @@ export function SiteAuditClient({
         </Card>
       )}
 
-      {/* Show dashboard when target is selected */}
-      {selectedTarget && selectedTarget.type !== 'one-time-history' && selectedTarget.url && (
+      {/* Show dashboard when organization is selected */}
+      {selectedTarget?.type === 'organization' && (
         <AuditDashboard
           websiteUrl={selectedTarget.url}
           audits={filteredAudits}
           archivedAudits={filteredArchivedAudits}
-          organizationId={
-            selectedTarget.type === 'organization' ? selectedTarget.organizationId : undefined
-          }
+          organizationId={selectedTarget.organizationId}
         />
       )}
 
-      {/* Show one-time audit history when selected */}
-      {selectedTarget?.type === 'one-time-history' && (
-        <AuditDashboard
-          audits={filteredAudits}
-          archivedAudits={filteredArchivedAudits}
-          isOneTimeHistory
-        />
+      {/* Show one-time audit history with search when one-time is selected */}
+      {selectedTarget?.type === 'one-time' && (
+        <>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>One-time Audit History</CardTitle>
+                  <CardDescription>
+                    Site audits run on URLs not associated with an organization
+                  </CardDescription>
+                </div>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search by URL..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+          <AuditDashboard
+            audits={filteredAudits}
+            archivedAudits={filteredArchivedAudits}
+            isOneTimeHistory
+          />
+        </>
       )}
     </div>
   )

@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const hasAccess =
     audit.organization_id === userRecord.organization_id ||
     (audit.organization_id === null && audit.created_by === user.id) || // One-time audits: only creator
-    canAccessAllAudits(userRecord.is_internal, userRecord.role)
+    canAccessAllAudits(userRecord)
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })

@@ -52,7 +52,7 @@ export async function getPerformanceAuditData(id: string): Promise<{
   // Verify organization ownership or admin/developer access
   const hasAccess =
     audit.organization_id === userRecord.organization_id ||
-    canAccessAllAudits(userRecord.is_internal, userRecord.role)
+    canAccessAllAudits(userRecord)
 
   if (!hasAccess) {
     console.error('[Performance Error]', {
