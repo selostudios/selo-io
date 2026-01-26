@@ -170,7 +170,9 @@ export function PerformanceDashboard({
               {isOneTimeAudit ? (
                 <>
                   <CardTitle className="break-all">{websiteUrl}</CardTitle>
-                  <CardDescription>One-time url • Test 1 page with PageSpeed Insights</CardDescription>
+                  <CardDescription className="mt-2">
+                    One-time url • Test 1 page with PageSpeed Insights
+                  </CardDescription>
                 </>
               ) : (
                 <>
@@ -287,9 +289,9 @@ export function PerformanceDashboard({
                     <span className="text-muted-foreground w-28 text-sm">
                       {formatAuditDate(audit.created_at)}
                     </span>
-                    {audit.organization_id === null && audit.first_url && (
-                      <span className="text-muted-foreground max-w-[300px] truncate text-sm">
-                        {audit.first_url}
+                    {audit.organization_id === null && (audit.first_url || audit.current_url) && (
+                      <span className="max-w-[300px] truncate text-sm font-medium">
+                        {audit.first_url || audit.current_url}
                       </span>
                     )}
                     {isInProgress(audit.status) ? (
