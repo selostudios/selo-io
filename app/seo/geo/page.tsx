@@ -11,6 +11,7 @@ import { CheckItem } from '@/components/audit/check-item'
 import { SampleSizeSelector } from '@/components/geo/sample-size-selector'
 import { TokenUsageBadge } from '@/components/geo/token-usage-badge'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
+import { GEOInfoDialog } from '@/components/geo/geo-info-dialog'
 import { useGEOAuditStream } from '@/hooks/use-geo-audit-stream'
 import type { ProgrammaticCheck } from '@/hooks/use-geo-audit-stream'
 import type { SiteAuditCheck } from '@/lib/audit/types'
@@ -52,8 +53,11 @@ export default function GEOAuditPage() {
       {/* Page Header */}
       <div className="flex items-start gap-3">
         <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div>
-          <h1 className="text-3xl font-bold">GEO Audit</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">GEO Audit</h1>
+            <GEOInfoDialog />
+          </div>
           <p className="text-muted-foreground">
             Analyze your content for Generative Engine Optimization - how well AI systems like
             ChatGPT, Claude, and Perplexity can discover and cite your content
@@ -304,47 +308,6 @@ export default function GEOAuditPage() {
         </>
       )}
 
-      {/* Empty State - Show before audit starts */}
-      {geoAudit.status === 'idle' && (
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-              <Sparkles className="h-6 w-6 text-neutral-600" aria-hidden="true" />
-            </div>
-            <CardTitle>Ready to Analyze</CardTitle>
-            <CardDescription>
-              Enter your website URL above and configure the sample size to start your GEO audit
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">What is GEO?</p>
-              <p>
-                Generative Engine Optimization (GEO) is the practice of optimizing content for AI
-                systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need
-                different signals than traditional search engines.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">What we check:</p>
-              <ul className="list-inside list-disc space-y-1">
-                <li>
-                  <strong>Technical Foundation:</strong> AI crawler access, schema markup, page
-                  speed
-                </li>
-                <li>
-                  <strong>Content Structure:</strong> FAQ sections, comparison tables, step-by-step
-                  guides
-                </li>
-                <li>
-                  <strong>Content Quality:</strong> Data sourcing, expert credibility,
-                  comprehensiveness
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
