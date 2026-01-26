@@ -8,17 +8,15 @@ const STALE_AUDIT_THRESHOLD_MS = 15 * 60 * 1000
 export async function GET() {
   const supabase = await createClient()
 
-  // Use getSession() instead of getUser() to avoid rate limits
-  // This endpoint is polled frequently, so we use session-based auth
+  // Use getUser() to securely validate the session with the Auth server
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
-  if (!session?.user) {
+  if (error || !user) {
     return NextResponse.json({ hasSiteAudit: false, hasPerformanceAudit: false })
   }
-
-  const user = session.user
 
   // Get user's organization
   const { data: userRecord } = await supabase

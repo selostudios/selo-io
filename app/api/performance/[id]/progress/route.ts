@@ -6,17 +6,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params
   const supabase = await createClient()
 
-  // Use getSession() instead of getUser() to avoid rate limits
-  // This endpoint is polled every 2 seconds during active audits
+  // Use getUser() to securely validate the session with the Auth server
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
 
-  if (!session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const user = session.user
 
   // Get user's organization, internal status, and role
   const { data: userRecord } = await supabase
