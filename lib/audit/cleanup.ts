@@ -116,77 +116,32 @@ export async function runPeriodicCleanup(): Promise<{
 }> {
   const supabase = createServiceClient()
 
-  const sixMonthsAgo = new Date()
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
   console.log('[Audit Cleanup] Starting periodic cleanup...')
 
-  // 1. Delete checks/pages from audits older than 6 months (keep audit record for history)
-  const { data: oldAudits } = await supabase
-    .from('site_audits')
-    .select('id')
-    .lt('completed_at', sixMonthsAgo.toISOString())
-    .in('status', ['completed', 'stopped'])
+  // Call optimized database function that performs all cleanup operations in one transaction
+  // This reduces 6 round trips to 1 and ensures atomic cleanup
+  const { data, error } = await supabase.rpc('cleanup_old_audit_data')
 
-  const oldAuditIds = oldAudits?.map((a) => a.id) ?? []
-
-  let deletedChecks = 0
-  let deletedPages = 0
-
-  if (oldAuditIds.length > 0) {
-    const { count: checks } = await supabase
-      .from('site_audit_checks')
-      .delete({ count: 'exact' })
-      .in('audit_id', oldAuditIds)
-
-    const { count: pages } = await supabase
-      .from('site_audit_pages')
-      .delete({ count: 'exact' })
-      .in('audit_id', oldAuditIds)
-
-    deletedChecks = checks ?? 0
-    deletedPages = pages ?? 0
+  if (error) {
+    console.error('[Audit Cleanup] Error during cleanup:', error)
+    throw new Error(`Cleanup failed: ${error.message}`)
   }
 
-  // 2. Delete one-time audits older than 30 days entirely (including the audit record)
-  const { data: oldOneTimeAudits } = await supabase
-    .from('site_audits')
-    .select('id')
-    .is('organization_id', null)
-    .lt('completed_at', thirtyDaysAgo.toISOString())
-    .in('status', ['completed', 'stopped', 'failed'])
-
-  let deletedAudits = 0
-  if (oldOneTimeAudits && oldOneTimeAudits.length > 0) {
-    // Cascade will handle checks/pages deletion
-    const { count } = await supabase
-      .from('site_audits')
-      .delete({ count: 'exact' })
-      .in(
-        'id',
-        oldOneTimeAudits.map((a) => a.id)
-      )
-
-    deletedAudits = count ?? 0
+  const result = data?.[0] ?? {
+    deleted_checks: 0,
+    deleted_pages: 0,
+    deleted_audits: 0,
+    deleted_queue_entries: 0,
   }
-
-  // 3. Clean up orphaned crawl queue entries (from failed/stuck audits)
-  const { count: deletedQueueEntries } = await supabase
-    .from('site_audit_crawl_queue')
-    .delete({ count: 'exact' })
-    .lt('discovered_at', thirtyDaysAgo.toISOString())
 
   console.log(
-    `[Audit Cleanup] Periodic cleanup complete: ${deletedChecks} checks, ${deletedPages} pages, ${deletedAudits} one-time audits, ${deletedQueueEntries ?? 0} queue entries`
+    `[Audit Cleanup] Periodic cleanup complete: ${result.deleted_checks} checks, ${result.deleted_pages} pages, ${result.deleted_audits} one-time audits, ${result.deleted_queue_entries} queue entries`
   )
 
   return {
-    deletedChecks,
-    deletedPages,
-    deletedAudits,
-    deletedQueueEntries: deletedQueueEntries ?? 0,
+    deletedChecks: Number(result.deleted_checks),
+    deletedPages: Number(result.deleted_pages),
+    deletedAudits: Number(result.deleted_audits),
+    deletedQueueEntries: Number(result.deleted_queue_entries),
   }
 }

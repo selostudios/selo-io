@@ -29,7 +29,9 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
   // Build audits query
   let auditsQuery = supabase
     .from('performance_audits')
-    .select('*')
+    .select(
+      'id, organization_id, created_by, status, error_message, started_at, completed_at, created_at, current_url, current_device, total_urls, completed_count'
+    )
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -91,7 +93,7 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
   // Build monitored pages query
   let pagesQuery = supabase
     .from('monitored_pages')
-    .select('*')
+    .select('id, organization_id, url, added_by, created_at')
     .order('created_at', { ascending: false })
 
   if (filterOrgId) {

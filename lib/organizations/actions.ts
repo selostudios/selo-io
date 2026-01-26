@@ -72,7 +72,9 @@ export async function getOrganizations(): Promise<Organization[]> {
 
   const { data, error } = await supabase
     .from('organizations')
-    .select('*')
+    .select(
+      'id, name, website_url, status, industry, contact_email, contact_info, logo_url, primary_color, secondary_color, accent_color, created_at, updated_at'
+    )
     .neq('status', 'inactive')
     .order('name', { ascending: true })
 

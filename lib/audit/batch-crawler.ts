@@ -97,9 +97,10 @@ export async function crawlBatch(
   let forceRelaxedSSL = auditSettings?.use_relaxed_ssl ?? false
 
   // Get all already-crawled pages for context (needed for page-specific checks)
+  // Only select fields needed by checks (exclude id, audit_id, crawled_at which aren't used)
   const { data: existingPages } = await supabase
     .from('site_audit_pages')
-    .select('*')
+    .select('url, title, status_code, last_modified, is_resource, resource_type')
     .eq('audit_id', auditId)
 
   const allPages: SiteAuditPage[] = (existingPages as SiteAuditPage[]) || []

@@ -29,7 +29,9 @@ export async function getSiteAuditData(organizationId?: string): Promise<{
   // Build audits query
   let auditsQuery = supabase
     .from('site_audits')
-    .select('*')
+    .select(
+      'id, organization_id, created_by, url, status, overall_score, seo_score, ai_readiness_score, technical_score, pages_crawled, failed_count, warning_count, passed_count, executive_summary, error_message, archived_at, started_at, completed_at, created_at'
+    )
     .is('archived_at', null)
     .order('created_at', { ascending: false })
 
@@ -43,7 +45,9 @@ export async function getSiteAuditData(organizationId?: string): Promise<{
   // Build archived audits query
   let archivedQuery = supabase
     .from('site_audits')
-    .select('*')
+    .select(
+      'id, organization_id, created_by, url, status, overall_score, seo_score, ai_readiness_score, technical_score, pages_crawled, failed_count, warning_count, passed_count, executive_summary, error_message, archived_at, started_at, completed_at, created_at'
+    )
     .not('archived_at', 'is', null)
     .order('created_at', { ascending: false })
 
