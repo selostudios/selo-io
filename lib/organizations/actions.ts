@@ -65,6 +65,7 @@ export async function getCurrentUser(): Promise<{
 /**
  * Get all organizations visible to the current user
  * RLS handles filtering: internal users see all, external users see only their own
+ * Excludes inactive organizations from the list
  */
 export async function getOrganizations(): Promise<Organization[]> {
   const supabase = await createClient()
@@ -72,6 +73,7 @@ export async function getOrganizations(): Promise<Organization[]> {
   const { data, error } = await supabase
     .from('organizations')
     .select('*')
+    .neq('status', 'inactive')
     .order('name', { ascending: true })
 
   if (error) {
