@@ -185,8 +185,8 @@ export function PerformanceDashboard({
             <Button onClick={handleRunAudit} disabled={isPending}>
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Starting...
+                  <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" />
+                  Starting…
                 </>
               ) : (
                 'Run Audit'
@@ -294,7 +294,7 @@ export function PerformanceDashboard({
                     )}
                     {isInProgress(audit.status) ? (
                       <div className="flex items-center gap-2">
-                        <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                        <Loader2 className="text-muted-foreground h-4 w-4 motion-safe:animate-spin" />
                         <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
                           In Progress
                         </span>

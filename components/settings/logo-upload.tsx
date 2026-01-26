@@ -249,13 +249,16 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
               </div>
             </div>
 
+            <label htmlFor="logo-file-input" className="sr-only">
+              Choose logo file
+            </label>
             <input
               ref={fileInputRef}
+              id="logo-file-input"
               type="file"
               accept=".png,.jpg,.jpeg,.svg"
               onChange={handleInputChange}
               className="hidden"
-              aria-label="Choose logo file"
             />
           </div>
         </DialogContent>

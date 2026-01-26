@@ -150,7 +150,7 @@ export function ChildSidebar({
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
                     <span className="flex-1">{item.name}</span>
-                    {showSpinner && <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />}
+                    {showSpinner && <Loader2 className="h-4 w-4 motion-safe:animate-spin text-neutral-400" />}
                   </Link>
                 )
               })}

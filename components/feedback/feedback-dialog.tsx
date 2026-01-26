@@ -35,7 +35,7 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" disabled={disabled || pending}>
-      {pending ? 'Submitting...' : 'Submit'}
+      {pending ? 'Submitting…' : 'Submit'}
     </Button>
   )
 }
@@ -193,6 +193,7 @@ export function FeedbackDialog() {
                   size="icon"
                   className="absolute top-1 right-1 h-6 w-6"
                   onClick={removeScreenshot}
+                  aria-label="Remove screenshot"
                 >
                   <X className="h-4 w-4" />
                 </Button>

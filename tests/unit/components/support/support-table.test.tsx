@@ -28,7 +28,7 @@ describe('SupportTable', () => {
   it('renders empty state when no feedback', () => {
     render(<SupportTable feedback={[]} onRowClick={vi.fn()} />)
 
-    expect(screen.getByText('No feedback items found.')).toBeInTheDocument()
+    expect(screen.getByText('No feedback items found')).toBeInTheDocument()
   })
 
   it('renders feedback items', () => {

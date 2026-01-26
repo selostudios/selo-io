@@ -84,8 +84,8 @@ export function AuditDashboard({
               <Button onClick={handleRunAudit} disabled={isPending}>
                 {isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Starting...
+                    <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" />
+                    Starting…
                   </>
                 ) : (
                   'Run New Audit'
