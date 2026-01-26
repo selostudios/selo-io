@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Sparkles, ChevronDown, ExternalLink, FileText } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
@@ -95,10 +96,19 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
       <div className="flex items-start gap-3">
         <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">GEO Audit Results</h1>
-          <p className="text-muted-foreground">{getDomain(audit.url)}</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">GEO Audit</h1>
+            {audit.status === 'failed' ? (
+              <Badge variant="destructive" className="text-xs">
+                Failed
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">
+                Completed
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground text-sm mt-1">
-            {audit.status === 'failed' ? 'Failed' : 'Audited'}{' '}
             {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
             {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} analyzed
             {audit.execution_time_ms !== null
@@ -113,6 +123,23 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
           </p>
         </div>
       </div>
+
+      {/* Domain URL Section */}
+      <Card className="py-4">
+        <CardContent className="py-0">
+          <a
+            href={audit.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-base font-medium hover:underline"
+          >
+            <FileText className="text-muted-foreground size-4 shrink-0" />
+            {getDomain(audit.url)}
+            <ExternalLink className="text-muted-foreground size-3.5" />
+            <span className="sr-only"> (opens in new tab)</span>
+          </a>
+        </CardContent>
+      </Card>
 
       {/* Score Cards */}
       <div className="flex gap-4">

@@ -82,24 +82,6 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Device Toggle */}
-      <Tabs
-        value={device}
-        onValueChange={(v) => setDevice(v as DeviceType)}
-        aria-label="Select device type"
-      >
-        <TabsList>
-          <TabsTrigger value="mobile" className="gap-2">
-            <Smartphone className="size-4" />
-            Mobile
-          </TabsTrigger>
-          <TabsTrigger value="desktop" className="gap-2">
-            <Monitor className="size-4" />
-            Desktop
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {/* Results by URL */}
       {urls.map((url) => {
         const result = resultsByUrl[url][device]
@@ -107,9 +89,9 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
 
         return (
           <div key={url} className="space-y-6">
-            {/* Page URL Header */}
+            {/* Page URL Header with Device Toggle */}
             <Card className="py-4">
-              <CardContent className="py-0">
+              <CardContent className="flex items-center justify-between py-0">
                 <a
                   href={url}
                   target="_blank"
@@ -121,6 +103,22 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
                   <ExternalLink className="text-muted-foreground size-3.5" />
                   <span className="sr-only"> (opens in new tab)</span>
                 </a>
+                <Tabs
+                  value={device}
+                  onValueChange={(v) => setDevice(v as DeviceType)}
+                  aria-label="Select device type"
+                >
+                  <TabsList>
+                    <TabsTrigger value="mobile" className="gap-2">
+                      <Smartphone className="size-4" />
+                      Mobile
+                    </TabsTrigger>
+                    <TabsTrigger value="desktop" className="gap-2">
+                      <Monitor className="size-4" />
+                      Desktop
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </CardContent>
             </Card>
 
