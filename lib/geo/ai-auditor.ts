@@ -141,6 +141,15 @@ Return ONLY the JSON object, no explanation text before or after.`
       throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`)
     }
 
+    // Claude sometimes returns a bare array instead of wrapping it in an object
+    // If we get an array, wrap it in the expected structure
+    if (Array.isArray(parsedResponse)) {
+      console.log('[AI Auditor] Received bare array, wrapping in object structure')
+      parsedResponse = {
+        analyses: parsedResponse,
+      }
+    }
+
     // Validate with Zod schema
     const validated = GEOBatchAnalysisSchema.parse(parsedResponse)
 
