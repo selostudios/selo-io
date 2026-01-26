@@ -118,7 +118,7 @@ export function AuditDashboard({
           )}
         </CardHeader>
         <CardContent>
-          <AuditHistoryList audits={audits} showUrl={isOneTimeHistory} />
+          <AuditHistoryList audits={audits} showUrl={isOneTimeHistory || !organizationId} />
         </CardContent>
       </Card>
 

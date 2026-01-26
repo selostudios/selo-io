@@ -287,6 +287,11 @@ export function PerformanceDashboard({
                     <span className="text-muted-foreground w-28 text-sm">
                       {formatAuditDate(audit.created_at)}
                     </span>
+                    {audit.organization_id === null && audit.first_url && (
+                      <span className="text-muted-foreground max-w-[300px] truncate text-sm">
+                        {audit.first_url}
+                      </span>
+                    )}
                     {isInProgress(audit.status) ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />

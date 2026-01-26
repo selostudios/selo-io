@@ -18,6 +18,8 @@ export interface PerformanceAudit {
   current_device: DeviceType | null
   total_urls: number
   completed_count: number
+  // First URL (for one-time audits display)
+  first_url?: string
 }
 
 export interface PerformanceAuditResult {

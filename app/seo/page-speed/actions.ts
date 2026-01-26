@@ -48,6 +48,46 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
     })
   }
 
+  // For one-time audits (organization_id = null), fetch the first URL from results
+  const oneTimeAuditIds = (audits ?? [])
+    .filter((audit) => audit.organization_id === null)
+    .map((audit) => audit.id)
+
+  let firstUrlsMap: Record<string, string> = {}
+
+  if (oneTimeAuditIds.length > 0) {
+    // Fetch first URL for each one-time audit in a single query
+    const { data: firstUrls } = await supabase
+      .from('performance_audit_results')
+      .select('audit_id, url')
+      .in('audit_id', oneTimeAuditIds)
+      .order('created_at', { ascending: true })
+
+    // Create a map of audit_id to first URL
+    if (firstUrls) {
+      firstUrlsMap = firstUrls.reduce(
+        (acc, result) => {
+          if (!acc[result.audit_id]) {
+            acc[result.audit_id] = result.url
+          }
+          return acc
+        },
+        {} as Record<string, string>
+      )
+    }
+  }
+
+  // Add first_url to one-time audits
+  const auditsWithUrls = (audits ?? []).map((audit) => {
+    if (audit.organization_id === null && firstUrlsMap[audit.id]) {
+      return {
+        ...audit,
+        first_url: firstUrlsMap[audit.id],
+      }
+    }
+    return audit
+  })
+
   // Build monitored pages query
   let pagesQuery = supabase
     .from('monitored_pages')
@@ -79,7 +119,7 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
   }))
 
   return {
-    audits: (audits ?? []) as PerformanceAudit[],
+    audits: auditsWithUrls as PerformanceAudit[],
     monitoredPages: (monitoredPages ?? []) as MonitoredPage[],
     organizations,
     isInternal,
