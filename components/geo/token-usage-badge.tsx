@@ -7,7 +7,7 @@ interface TokenUsageBadgeProps {
   inputTokens: number
   outputTokens: number
   totalTokens: number
-  cost: number
+  cost?: number
   model?: string
 }
 
@@ -18,7 +18,7 @@ export function TokenUsageBadge({
   cost,
   model = 'claude-opus-4-20250514',
 }: TokenUsageBadgeProps) {
-  const formattedCost = cost.toFixed(4)
+  const formattedCost = cost?.toFixed(4) ?? '0.0000'
   const formattedTokens = totalTokens.toLocaleString()
 
   return (

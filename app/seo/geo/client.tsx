@@ -130,7 +130,23 @@ export function GEOAuditClient({
       }
     }
 
-    await geoAudit.startAudit(organizationId, url, sampleSize)
+    try {
+      const response = await fetch('/api/geo/audit/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId, url, sampleSize }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to start audit')
+        return
+      }
+
+      const data = await response.json()
+      router.push(`/seo/geo/${data.auditId}`)
+    } catch (error) {
+      console.error('Failed to start audit:', error)
+    }
   }
 
   const isRunning = geoAudit.status === 'running_programmatic' || geoAudit.status === 'running_ai'
