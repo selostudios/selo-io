@@ -19,7 +19,9 @@
     "test:e2e": "playwright test",
     "test:watch": "vitest watch",
     "test:seed": "tsx tests/helpers/seed.ts",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "sync:metrics": "node scripts/sync-metrics.js",
+    "sync:metrics:prod": "node scripts/sync-metrics.js --prod"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.23",

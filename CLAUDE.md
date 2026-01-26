@@ -39,6 +39,10 @@ npm run email            # Start React Email preview server
 # Utility Scripts
 npm run add-user         # CLI: Add test user
 npm run reset-password   # CLI: Reset user password
+
+# Metrics Sync (Manual)
+npm run sync:metrics         # Sync metrics from all platforms (local dev)
+npm run sync:metrics:prod    # Sync metrics from all platforms (production)
 ```
 
 ## Architecture
