@@ -167,13 +167,13 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
 
       {/* AI Recommendations */}
       {formattedAnalyses.length > 0 && (
-        <Card className="border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+        <Card className="border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
           <AIAnalysisCard analyses={formattedAnalyses} />
         </Card>
       )}
 
       {/* Technical Checks */}
-      <Card className="border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+      <Card className="border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
         <Collapsible defaultOpen className="group/technical">
           <div className="bg-background flex w-full items-center justify-between rounded-md px-4 py-3">
             <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
