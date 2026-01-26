@@ -41,8 +41,10 @@ npm run add-user         # CLI: Add test user
 npm run reset-password   # CLI: Reset user password
 
 # Metrics Sync (Manual)
-npm run sync:metrics         # Sync metrics from all platforms (local dev)
-npm run sync:metrics:prod    # Sync metrics from all platforms (production)
+npm run sync:metrics              # Sync metrics from all platforms (local dev)
+npm run sync:metrics:prod         # Sync metrics from all platforms (production)
+npm run backfill:metrics -- 2026-01-24        # Backfill from specific date (local)
+npm run backfill:metrics -- 2026-01-24 --prod # Backfill from specific date (prod)
 ```
 
 ## Architecture

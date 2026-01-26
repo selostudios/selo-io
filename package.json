@@ -21,7 +21,8 @@
     "test:seed": "tsx tests/helpers/seed.ts",
     "test:coverage": "vitest run --coverage",
     "sync:metrics": "node scripts/sync-metrics.js",
-    "sync:metrics:prod": "node scripts/sync-metrics.js --prod"
+    "sync:metrics:prod": "node scripts/sync-metrics.js --prod",
+    "backfill:metrics": "node scripts/backfill-metrics.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.23",
