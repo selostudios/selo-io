@@ -100,7 +100,7 @@ export async function crawlBatch(
   // Only select fields needed by checks (exclude id, audit_id, crawled_at which aren't used)
   const { data: existingPages } = await supabase
     .from('site_audit_pages')
-    .select('url, title, status_code, last_modified, is_resource, resource_type')
+    .select('url, title, meta_description, status_code, last_modified, is_resource, resource_type')
     .eq('audit_id', auditId)
 
   const allPages: SiteAuditPage[] = (existingPages as SiteAuditPage[]) || []
@@ -169,11 +169,27 @@ export async function crawlBatch(
     // Determine if resource
     const { isResource, resourceType } = getResourceType(url)
 
-    // Extract title
+    // Extract title and meta description
     let title: string | null = null
+    let metaDescription: string | null = null
+
     if (!isResource) {
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
       title = titleMatch ? titleMatch[1].trim() : null
+
+      // Extract meta description
+      const metaDescMatch = html.match(
+        /<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i
+      )
+      if (!metaDescMatch) {
+        // Try reversed order (content before name)
+        const metaDescMatch2 = html.match(
+          /<meta\s+content=["']([^"']+)["']\s+name=["']description["']/i
+        )
+        metaDescription = metaDescMatch2 ? metaDescMatch2[1].trim() : null
+      } else {
+        metaDescription = metaDescMatch[1].trim()
+      }
     } else {
       try {
         const pathname = new URL(url).pathname
@@ -190,6 +206,7 @@ export async function crawlBatch(
       audit_id: auditId,
       url,
       title,
+      meta_description: metaDescription,
       status_code: statusCode,
       last_modified: lastModified,
       crawled_at: new Date().toISOString(),

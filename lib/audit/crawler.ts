@@ -87,11 +87,27 @@ export async function crawlSite(
     // Check if this is a resource file (PDF, DOC, etc.)
     const { isResource, resourceType } = getResourceType(url)
 
-    // Extract title from HTML (only for non-resources)
+    // Extract title and meta description from HTML (only for non-resources)
     let title: string | null = null
+    let metaDescription: string | null = null
+
     if (!isResource) {
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
       title = titleMatch ? titleMatch[1].trim() : null
+
+      // Extract meta description
+      const metaDescMatch = html.match(
+        /<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i
+      )
+      if (!metaDescMatch) {
+        // Try reversed order (content before name)
+        const metaDescMatch2 = html.match(
+          /<meta\s+content=["']([^"']+)["']\s+name=["']description["']/i
+        )
+        metaDescription = metaDescMatch2 ? metaDescMatch2[1].trim() : null
+      } else {
+        metaDescription = metaDescMatch[1].trim()
+      }
     } else {
       // For resources, extract filename as title
       try {
@@ -108,6 +124,7 @@ export async function crawlSite(
       audit_id: auditId,
       url,
       title,
+      meta_description: metaDescription,
       status_code: statusCode,
       last_modified: lastModified,
       crawled_at: new Date().toISOString(),

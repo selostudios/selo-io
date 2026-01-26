@@ -131,9 +131,9 @@ Located in `app/api/cron/`. All cron jobs require `CRON_SECRET` environment vari
 
 ### Site Audit Checks
 
-Located in `lib/audit/checks/`. The site audit runs **35 comprehensive checks** across 3 categories:
+Located in `lib/audit/checks/`. The site audit runs **36 comprehensive checks** across 3 categories:
 
-#### SEO Checks (20 total)
+#### SEO Checks (21 total)
 
 **Critical (9 checks):**
 - `missing-meta-description` - Every page needs a meta description
@@ -146,9 +146,10 @@ Located in `lib/audit/checks/`. The site audit runs **35 comprehensive checks** 
 - `noindex-on-important-pages` - Detects noindex tags preventing indexation
 - `http-to-https-redirect` - Verifies HTTP redirects to HTTPS properly
 
-**Recommended (9 checks):**
+**Recommended (10 checks):**
 - `meta-description-length` - 150-160 characters optimal
 - `title-length` - 50-60 characters optimal
+- `duplicate-meta-descriptions` - Finds duplicate meta descriptions across site
 - `multiple-h1` - Only one H1 per page
 - `heading-hierarchy` - Proper H1→H2→H3 structure
 - `images-missing-alt` - Alt text for accessibility and SEO

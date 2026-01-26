@@ -16,6 +16,7 @@ import { oversizedImages } from './seo/oversized-images'
 import { brokenInternalLinks } from './seo/broken-internal-links'
 import { missingRobotsTxt } from './seo/missing-robots-txt'
 import { duplicateTitles } from './seo/duplicate-titles'
+import { duplicateMetaDescriptions } from './seo/duplicate-meta-descriptions'
 import { noindexOnImportantPages } from './seo/noindex-on-important-pages'
 import { httpToHttpsRedirect } from './seo/http-to-https-redirect'
 import { canonicalValidation } from './seo/canonical-validation'
@@ -52,6 +53,7 @@ export const allChecks: AuditCheckDefinition[] = [
   // SEO - Recommended
   metaDescriptionLength,
   titleLength,
+  duplicateMetaDescriptions,
   multipleH1,
   headingHierarchy,
   imagesMissingAlt,

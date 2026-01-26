@@ -40,6 +40,7 @@ export interface SiteAuditPage {
   audit_id: string
   url: string
   title: string | null
+  meta_description: string | null
   status_code: number | null
   last_modified: string | null
   crawled_at: string
