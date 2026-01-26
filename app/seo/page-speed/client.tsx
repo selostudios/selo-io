@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Gauge, Search } from 'lucide-react'
+import { Gauge, Search, Clock, Loader2, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-ta
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
+import { formatDuration, calculateDuration } from '@/lib/utils'
 
 interface PageSpeedClientProps {
   audits: PerformanceAudit[]
@@ -22,6 +23,19 @@ interface PageSpeedClientProps {
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
 const LAST_VIEW_KEY = 'selo-last-view-type'
+
+function formatAuditDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function isInProgress(status: PerformanceAudit['status']): boolean {
+  return status === 'pending' || status === 'running'
+}
 
 function getInitialTarget(
   selectedOrganizationId: string | null,
@@ -132,6 +146,17 @@ export function PageSpeedClient({
       router.push(`/seo/page-speed/${data.auditId}`)
     } catch (error) {
       console.error('Failed to start audit:', error)
+    }
+  }
+
+  const handleDeleteAudit = async (auditId: string) => {
+    try {
+      const response = await fetch(`/api/performance/${auditId}`, { method: 'DELETE' })
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (err) {
+      console.error('[PageSpeed Client] Failed to delete audit:', err)
     }
   }
 
@@ -308,41 +333,76 @@ export function PageSpeedClient({
                     >
                       <div className="flex items-center gap-6">
                         <span className="text-muted-foreground w-28 text-sm">
-                          {new Date(audit.created_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+                          {formatAuditDate(audit.created_at)}
                         </span>
                         {(audit.first_url || audit.current_url) && (
                           <span className="max-w-[300px] truncate text-sm font-medium">
                             {audit.first_url || audit.current_url}
                           </span>
                         )}
-                        <span className="text-muted-foreground text-sm">
-                          {audit.total_urls
-                            ? `${audit.total_urls} ${audit.total_urls === 1 ? 'page' : 'pages'}`
-                            : '-'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        {audit.status === 'completed' && (
-                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
-                            Completed
-                          </span>
-                        )}
-                        {audit.status === 'failed' && (
+                        {isInProgress(audit.status) ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                            <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
+                              In Progress
+                            </span>
+                          </div>
+                        ) : audit.status === 'failed' ? (
                           <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
                             Failed
                           </span>
-                        )}
-                        {(audit.status === 'pending' || audit.status === 'running') && (
-                          <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700">
-                            In Progress
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            {audit.total_urls
+                              ? `${audit.total_urls} ${audit.total_urls === 1 ? 'page' : 'pages'}`
+                              : '-'}
                           </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {audit.status === 'completed' && (
+                          <>
+                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                              Completed
+                            </span>
+                            {(() => {
+                              const duration = calculateDuration(audit.started_at, audit.completed_at)
+                              return duration ? (
+                                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                                  <Clock className="size-3" />
+                                  {formatDuration(duration)}
+                                </span>
+                              ) : null
+                            })()}
+                          </>
+                        )}
+                        {audit.status === 'stopped' && (
+                          <>
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                              Stopped
+                            </span>
+                            {(() => {
+                              const duration = calculateDuration(audit.started_at, audit.completed_at)
+                              return duration ? (
+                                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                                  <Clock className="size-3" />
+                                  {formatDuration(duration)}
+                                </span>
+                              ) : null
+                            })()}
+                          </>
                         )}
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/seo/page-speed/${audit.id}`}>View</Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAudit(audit.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Delete audit"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
