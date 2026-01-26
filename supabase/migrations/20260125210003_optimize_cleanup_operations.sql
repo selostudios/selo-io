@@ -68,7 +68,4 @@ $$;
 -- Grant execute permission to service role
 GRANT EXECUTE ON FUNCTION public.cleanup_old_audit_data() TO service_role;
 
-COMMENT ON FUNCTION public.cleanup_old_audit_data() IS
-  'Performs periodic cleanup of old audit data. Deletes checks/pages from audits older than 6 months, ' ||
-  'deletes one-time audits older than 30 days, and cleans up orphaned crawl queue entries. ' ||
-  'Designed to be called by the audit-cleanup cron job.';
+COMMENT ON FUNCTION public.cleanup_old_audit_data() IS 'Performs periodic cleanup of old audit data. Deletes checks/pages from audits older than 6 months, deletes one-time audits older than 30 days, and cleans up orphaned crawl queue entries. Designed to be called by the audit-cleanup cron job.';
