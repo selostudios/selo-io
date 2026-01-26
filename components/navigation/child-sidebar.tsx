@@ -12,6 +12,7 @@ import {
   Loader2,
   Building2,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
@@ -43,6 +44,12 @@ const seoNavigation: NavigationGroup[] = [
     items: [
       { name: 'Site Audit', href: '/seo/site-audit', icon: FileSearch },
       { name: 'Page Speed', href: '/seo/page-speed', icon: Gauge },
+    ],
+  },
+  {
+    header: 'On-Page AIO',
+    items: [
+      { name: 'AI Audit', href: '/geo', icon: Sparkles },
     ],
   },
 ]
