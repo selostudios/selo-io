@@ -13,16 +13,19 @@ import { SampleSizeSelector } from '@/components/geo/sample-size-selector'
 import { TokenUsageBadge } from '@/components/geo/token-usage-badge'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
 import { GEOInfoDialog } from '@/components/geo/geo-info-dialog'
+import { GEOAuditHistoryList } from '@/components/geo/geo-audit-history-list'
 import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
 import { useGEOAuditStream } from '@/hooks/use-geo-audit-stream'
 import type { ProgrammaticCheck } from '@/hooks/use-geo-audit-stream'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
+import type { GEOAudit } from '@/lib/geo/types'
 
 interface GEOAuditClientProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
+  audits: GEOAudit[]
 }
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
@@ -84,6 +87,7 @@ export function GEOAuditClient({
   organizations,
   isInternal,
   selectedOrganizationId,
+  audits,
 }: GEOAuditClientProps) {
   const router = useRouter()
   const [sampleSize, setSampleSize] = useState(5)
@@ -442,6 +446,27 @@ export function GEOAuditClient({
         </>
       )}
 
+      {/* Audit History */}
+      {audits.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {selectedOrganizationId ? 'Audit History' : 'One-time Audit History'}
+            </CardTitle>
+            {!selectedOrganizationId && (
+              <CardDescription>
+                Audits run on URLs not associated with an organization
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <GEOAuditHistoryList
+              audits={audits}
+              showUrl={!selectedOrganizationId || isInternal}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

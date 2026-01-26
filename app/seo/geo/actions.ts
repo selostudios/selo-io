@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { canAccessAllAudits } from '@/lib/permissions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
+import type { GEOAudit } from '@/lib/geo/types'
 
 export async function getGEOAuditData(organizationId?: string) {
   const supabase = await createClient()
@@ -58,9 +59,35 @@ export async function getGEOAuditData(organizationId?: string) {
     selectedOrganizationId = userRecord.organization_id
   }
 
+  // Fetch audit history for selected organization or one-time audits
+  let audits: GEOAudit[] = []
+  if (selectedOrganizationId) {
+    // Organization audits
+    const { data: orgAudits } = await supabase
+      .from('geo_audits')
+      .select('*')
+      .eq('organization_id', selectedOrganizationId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    audits = orgAudits ?? []
+  } else if (isInternal || (!selectedOrganizationId && !userRecord.organization_id)) {
+    // One-time audits (for internal users or users without org)
+    const { data: oneTimeAudits } = await supabase
+      .from('geo_audits')
+      .select('*')
+      .is('organization_id', null)
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    audits = oneTimeAudits ?? []
+  }
+
   return {
     organizations,
     isInternal,
     selectedOrganizationId,
+    audits,
   }
 }

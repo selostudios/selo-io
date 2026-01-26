@@ -1,6 +1,7 @@
 'use client'
 
-import { Sparkles, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, Sparkles, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScoreCard } from '@/components/audit/score-cards'
@@ -8,6 +9,7 @@ import { CheckItem } from '@/components/audit/check-item'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
 import { TokenUsageBadge } from '@/components/geo/token-usage-badge'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import type { GEOAudit, GEOCheck, GEOAIAnalysis } from '@/lib/geo/types'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { GEOPageAnalysis } from '@/lib/geo/types'
@@ -81,6 +83,15 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <Link
+        href="/seo/geo"
+        className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to GEO Audits
+      </Link>
+
       {/* Header */}
       <div className="flex items-start gap-3">
         <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
@@ -89,6 +100,32 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
           <p className="text-muted-foreground">{getDomain(audit.url)}</p>
         </div>
       </div>
+
+      {/* Audit Complete Info - Above score cards */}
+      {audit.total_input_tokens && audit.total_output_tokens && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Audit Complete</p>
+                <p className="text-xs text-muted-foreground">
+                  {audit.completed_at ? formatDate(audit.completed_at, false) : 'N/A'} &middot;{' '}
+                  Analyzed {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} in{' '}
+                  {audit.execution_time_ms !== null
+                    ? `${(audit.execution_time_ms / 1000).toFixed(1)}s`
+                    : 'N/A'}
+                </p>
+              </div>
+              <TokenUsageBadge
+                inputTokens={audit.total_input_tokens ?? 0}
+                outputTokens={audit.total_output_tokens ?? 0}
+                totalTokens={(audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)}
+                cost={audit.total_cost ?? undefined}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Score Cards */}
       <div className="flex gap-4">
@@ -112,34 +149,6 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
       {/* AI Analysis at Top */}
       {formattedAnalyses.length > 0 && strategicScore !== null && (
         <AIAnalysisCard analyses={formattedAnalyses} strategicScore={strategicScore} />
-      )}
-
-      {/* Token Usage and Cost */}
-      {audit.total_input_tokens && audit.total_output_tokens && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Analysis Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Audit Complete</p>
-                <p className="text-xs text-muted-foreground">
-                  Analyzed {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} in{' '}
-                  {audit.execution_time_ms !== null
-                    ? `${(audit.execution_time_ms / 1000).toFixed(1)}s`
-                    : 'N/A'}
-                </p>
-              </div>
-              <TokenUsageBadge
-                inputTokens={audit.total_input_tokens ?? 0}
-                outputTokens={audit.total_output_tokens ?? 0}
-                totalTokens={(audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)}
-                cost={audit.total_cost ?? undefined}
-              />
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Programmatic Checks in Collapsible Sections */}
