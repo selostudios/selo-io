@@ -121,6 +121,14 @@ Analyze each page and provide structured output with scores, findings, and recom
     }
   } catch (error) {
     console.error('[AI Auditor] Batch analysis failed:', error)
+    // Log the full error details for debugging
+    if (error instanceof Error) {
+      console.error('[AI Auditor] Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      })
+    }
     throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }

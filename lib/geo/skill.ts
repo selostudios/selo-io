@@ -135,13 +135,54 @@ Analyze the provided web page content and score it across these dimensions:
 
 ## Output Format
 
-For each page analyzed, provide:
+Return a JSON object with this structure:
 
-1. **Scores** (0-100 for each dimension + overall weighted score)
-2. **Findings** (structured analysis with specific examples)
-3. **Recommendations** (prioritized, actionable improvements)
-
-Be specific in findings - cite actual text from the page when possible. In recommendations, suggest concrete actions with expected impact.
+{
+  "analyses": [
+    {
+      "url": "page URL",
+      "scores": {
+        "dataQuality": 75,
+        "expertCredibility": 60,
+        "comprehensiveness": 80,
+        "citability": 70,
+        "authority": 65,
+        "overall": 70
+      },
+      "findings": {
+        "originalData": {
+          "present": true,
+          "count": 3,
+          "quality": "good",
+          "examples": ["Example stat 1", "Example stat 2"],
+          "issues": ["Missing source for X"]
+        },
+        "expertQuotes": {
+          "present": false,
+          "count": 0,
+          "credibility": "none",
+          "examples": [],
+          "issues": ["No expert quotes found"]
+        },
+        "comprehensiveness": {
+          "topicsCovered": ["Topic A", "Topic B"],
+          "gapsIdentified": ["Missing Topic C"],
+          "depth": "adequate"
+        },
+        "citableElements": ["Clear statement 1", "Unique insight 2"]
+      },
+      "recommendations": [
+        {
+          "priority": "high",
+          "category": "Data Quality",
+          "issue": "Statistics lack sources",
+          "recommendation": "Add links to original research",
+          "expectedImpact": "Improved trust and citability"
+        }
+      ]
+    }
+  ]
+}
 
 ## Important Guidelines
 
@@ -150,4 +191,5 @@ Be specific in findings - cite actual text from the page when possible. In recom
 - **Be actionable:** Recommendations should be implementable
 - **Focus on quality:** Don't penalize brevity if content is high-quality
 - **Consider context:** Technical docs differ from blog posts - judge appropriately
+- **Return valid JSON:** Ensure all strings are properly escaped
 `

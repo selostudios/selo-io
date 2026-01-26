@@ -98,66 +98,58 @@ export interface GEOAIAnalysis {
 //============================================================================
 
 export const GEOPageAnalysisSchema = z.object({
-  url: z.string().url(),
+  url: z.string(),
   scores: z.object({
-    dataQuality: z.number().min(0).max(100).describe('Are statistics meaningful and sourced?'),
-    expertCredibility: z
-      .number()
-      .min(0)
-      .max(100)
-      .describe('Are quotes from actual authorities?'),
-    comprehensiveness: z
-      .number()
-      .min(0)
-      .max(100)
-      .describe('Does it thoroughly cover the topic?'),
-    citability: z.number().min(0).max(100).describe('Would AI engines actually cite this?'),
-    authority: z.number().min(0).max(100).describe('E-E-A-T signals and trust factors'),
-    overall: z.number().min(0).max(100).describe('Weighted overall strategic score'),
+    dataQuality: z.number().min(0).max(100),
+    expertCredibility: z.number().min(0).max(100),
+    comprehensiveness: z.number().min(0).max(100),
+    citability: z.number().min(0).max(100),
+    authority: z.number().min(0).max(100),
+    overall: z.number().min(0).max(100),
   }),
   findings: z.object({
     originalData: z.object({
       present: z.boolean(),
       count: z.number(),
-      quality: z.enum(['excellent', 'good', 'poor', 'none']),
-      examples: z.array(z.string()).max(3),
+      quality: z.string(), // Changed from enum to string
+      examples: z.array(z.string()),
       issues: z.array(z.string()),
     }),
     expertQuotes: z.object({
       present: z.boolean(),
       count: z.number(),
-      credibility: z.enum(['high', 'medium', 'low', 'none']),
-      examples: z.array(z.string()).max(3),
+      credibility: z.string(), // Changed from enum to string
+      examples: z.array(z.string()),
       issues: z.array(z.string()),
     }),
     comprehensiveness: z.object({
       topicsCovered: z.array(z.string()),
       gapsIdentified: z.array(z.string()),
-      depth: z.enum(['comprehensive', 'adequate', 'shallow']),
+      depth: z.string(), // Changed from enum to string
     }),
-    citableElements: z.array(z.string()).describe('Specific quotes/data AI would cite'),
+    citableElements: z.array(z.string()),
   }),
-  recommendations: z
-    .array(
-      z.object({
-        priority: z.enum(['critical', 'high', 'medium', 'low']),
-        category: z.string(),
-        issue: z.string(),
-        recommendation: z.string(),
-        expectedImpact: z.string(),
-        learnMoreUrl: z.string().url().optional(),
-      })
-    )
-    .max(10),
+  recommendations: z.array(
+    z.object({
+      priority: z.string(), // Changed from enum to string
+      category: z.string(),
+      issue: z.string(),
+      recommendation: z.string(),
+      expectedImpact: z.string().optional(),
+      learnMoreUrl: z.string().optional(),
+    })
+  ),
 })
 
 export const GEOBatchAnalysisSchema = z.object({
   analyses: z.array(GEOPageAnalysisSchema),
-  batchMetadata: z.object({
-    pagesAnalyzed: z.number(),
-    averageScore: z.number(),
-    commonIssues: z.array(z.string()),
-  }),
+  batchMetadata: z
+    .object({
+      pagesAnalyzed: z.number().optional(),
+      averageScore: z.number().optional(),
+      commonIssues: z.array(z.string()).optional(),
+    })
+    .optional(),
 })
 
 //============================================================================

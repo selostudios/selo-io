@@ -24,7 +24,8 @@ function getScoreBadgeVariant(score: number): 'default' | 'secondary' | 'destruc
 }
 
 function getPriorityColor(priority: string): string {
-  switch (priority) {
+  const p = priority.toLowerCase()
+  switch (p) {
     case 'critical':
       return 'bg-red-100 text-red-800 border-red-200'
     case 'high':
@@ -59,8 +60,10 @@ export function AIAnalysisCard({ analyses, strategicScore }: AIAnalysisCardProps
   // Collect all recommendations and sort by priority
   const allRecommendations = analyses.flatMap((a) => a.recommendations)
   const sortedRecommendations = allRecommendations.sort((a, b) => {
-    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
-    return priorityOrder[a.priority] - priorityOrder[b.priority]
+    const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+    const aPriority = priorityOrder[a.priority.toLowerCase()] ?? 99
+    const bPriority = priorityOrder[b.priority.toLowerCase()] ?? 99
+    return aPriority - bPriority
   })
 
   // Take top 10 recommendations
