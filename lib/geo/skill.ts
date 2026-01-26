@@ -133,56 +133,23 @@ Analyze the provided web page content and score it across these dimensions:
 - 20-39: Weak authority signals
 - 0-19: No clear authority
 
-## Output Format
+## Output Structure
 
-Return a JSON object with this structure:
+For each page, provide:
 
-{
-  "analyses": [
-    {
-      "url": "page URL",
-      "scores": {
-        "dataQuality": 75,
-        "expertCredibility": 60,
-        "comprehensiveness": 80,
-        "citability": 70,
-        "authority": 65,
-        "overall": 70
-      },
-      "findings": {
-        "originalData": {
-          "present": true,
-          "count": 3,
-          "quality": "good",
-          "examples": ["Example stat 1", "Example stat 2"],
-          "issues": ["Missing source for X"]
-        },
-        "expertQuotes": {
-          "present": false,
-          "count": 0,
-          "credibility": "none",
-          "examples": [],
-          "issues": ["No expert quotes found"]
-        },
-        "comprehensiveness": {
-          "topicsCovered": ["Topic A", "Topic B"],
-          "gapsIdentified": ["Missing Topic C"],
-          "depth": "adequate"
-        },
-        "citableElements": ["Clear statement 1", "Unique insight 2"]
-      },
-      "recommendations": [
-        {
-          "priority": "high",
-          "category": "Data Quality",
-          "issue": "Statistics lack sources",
-          "recommendation": "Add links to original research",
-          "expectedImpact": "Improved trust and citability"
-        }
-      ]
-    }
-  ]
-}
+1. **url**: The page URL being analyzed
+2. **scores**: Numeric scores (0-100) for each quality dimension plus overall
+3. **findings**: Detailed analysis with specific examples:
+   - originalData: presence, count, quality, examples, and issues
+   - expertQuotes: presence, count, credibility, examples, and issues
+   - comprehensiveness: topics covered, gaps, and depth assessment
+   - citableElements: specific quotes or facts AI would cite
+4. **recommendations**: Array of actionable improvements with:
+   - priority (critical/high/medium/low)
+   - category
+   - issue
+   - recommendation
+   - expectedImpact (optional)
 
 ## Important Guidelines
 
@@ -191,5 +158,4 @@ Return a JSON object with this structure:
 - **Be actionable:** Recommendations should be implementable
 - **Focus on quality:** Don't penalize brevity if content is high-quality
 - **Consider context:** Technical docs differ from blog posts - judge appropriately
-- **Return valid JSON:** Ensure all strings are properly escaped
 `
