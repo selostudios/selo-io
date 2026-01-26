@@ -73,7 +73,7 @@ export function AIAnalysisCard({ analyses }: AIAnalysisCardProps) {
       </div>
       <CollapsibleContent className="mt-2 space-y-2 pl-4">
         {topRecommendations.map((rec, idx) => (
-          <div key={idx} className="rounded-md border bg-muted/30 p-3">
+          <div key={idx} className="rounded-md bg-muted/30 p-3">
             <div className="flex items-start gap-3">
               <span
                 className={`mt-0.5 rounded px-1.5 py-0.5 text-xs font-medium ${getPriorityColor(rec.priority)}`}
