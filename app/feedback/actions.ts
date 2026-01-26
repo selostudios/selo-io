@@ -14,8 +14,8 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
   const title = formData.get('title') as string
   const description = formData.get('description') as string
   const category = formData.get('category') as FeedbackCategory
-  const pageUrl = formData.get('pageUrl') as string | null
-  const userAgent = formData.get('userAgent') as string | null
+  const pageUrl = formData.get('page_url') as string | null
+  const userAgent = formData.get('user_agent') as string | null
   const screenshot = formData.get('screenshot') as File | null
 
   // Validation
