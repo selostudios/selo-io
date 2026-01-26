@@ -49,7 +49,7 @@ const seoNavigation: NavigationGroup[] = [
   {
     header: 'On-Page AIO',
     items: [
-      { name: 'AI Audit', href: '/geo', icon: Sparkles },
+      { name: 'AI Audit', href: '/seo/geo', icon: Sparkles },
     ],
   },
 ]
