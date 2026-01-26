@@ -86,6 +86,7 @@ interface ChildSidebarProps {
   onToggleCollapse: () => void
   hasSiteAudit?: boolean
   hasPerformanceAudit?: boolean
+  hasGeoAudit?: boolean
 }
 
 export function ChildSidebar({
@@ -94,6 +95,7 @@ export function ChildSidebar({
   onToggleCollapse,
   hasSiteAudit,
   hasPerformanceAudit,
+  hasGeoAudit,
 }: ChildSidebarProps) {
   const pathname = usePathname()
   const navigation = navigationConfig[activeSection]
@@ -139,10 +141,11 @@ export function ChildSidebar({
                   isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 }
 
-                // Show spinner for Site Audit or Page Speed based on active audit type
+                // Show spinner for Site Audit, Page Speed, or AI Audit based on active audit type
                 const showSpinner =
                   (item.href === '/seo/site-audit' && hasSiteAudit) ||
-                  (item.href === '/seo/page-speed' && hasPerformanceAudit)
+                  (item.href === '/seo/page-speed' && hasPerformanceAudit) ||
+                  (item.href === '/seo/geo' && hasGeoAudit)
 
                 return (
                   <Link

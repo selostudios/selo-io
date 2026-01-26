@@ -5,12 +5,14 @@ import { useState, useEffect } from 'react'
 interface ActiveAuditStatus {
   hasSiteAudit: boolean
   hasPerformanceAudit: boolean
+  hasGeoAudit: boolean
 }
 
 export function useActiveAudit() {
   const [status, setStatus] = useState<ActiveAuditStatus>({
     hasSiteAudit: false,
     hasPerformanceAudit: false,
+    hasGeoAudit: false,
   })
   const [isLoading, setIsLoading] = useState(true)
 
