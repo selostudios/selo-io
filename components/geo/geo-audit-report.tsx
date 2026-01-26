@@ -98,15 +98,17 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">GEO Audit</h1>
-            {audit.status === 'failed' ? (
-              <Badge variant="destructive" className="text-xs">
-                Failed
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-xs">
-                Completed
-              </Badge>
-            )}
+            <Badge
+              variant={
+                audit.status === 'completed'
+                  ? 'success'
+                  : audit.status === 'failed'
+                    ? 'destructive'
+                    : 'secondary'
+              }
+            >
+              {audit.status}
+            </Badge>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
             {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
