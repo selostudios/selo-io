@@ -126,7 +126,7 @@ export async function crawlBatch(
     // Get next URL from queue
     const { data: queueItem } = await supabase
       .from('site_audit_crawl_queue')
-      .select('*')
+      .select('id, url')
       .eq('audit_id', auditId)
       .is('crawled_at', null)
       .order('depth', { ascending: true })
