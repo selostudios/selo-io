@@ -36,7 +36,7 @@ export function GEOLiveProgress({ auditId, initialStatus }: GEOLiveProgressProps
   const currentStatus = audit?.status ?? initialStatus
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Sparkles className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />

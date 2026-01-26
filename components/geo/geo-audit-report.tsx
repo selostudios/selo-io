@@ -7,7 +7,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
 import { AIAnalysisCard } from '@/components/geo/ai-analysis-card'
-import { TokenUsageBadge } from '@/components/geo/token-usage-badge'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import type { GEOAudit, GEOCheck, GEOAIAnalysis } from '@/lib/geo/types'
@@ -82,7 +81,7 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
   const strategicScore = calculateStrategicScore(aiAnalyses)
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Back Button */}
       <Link
         href="/seo/geo"
@@ -98,34 +97,22 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
         <div className="flex-1">
           <h1 className="text-3xl font-bold">GEO Audit Results</h1>
           <p className="text-muted-foreground">{getDomain(audit.url)}</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {audit.status === 'failed' ? 'Failed' : 'Audited'}{' '}
+            {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
+            {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} analyzed
+            {audit.execution_time_ms !== null
+              ? ` · ${(audit.execution_time_ms / 1000).toFixed(1)}s`
+              : ''}
+            {audit.total_input_tokens && audit.total_output_tokens
+              ? ` · ${((audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)).toLocaleString()} tokens`
+              : ''}
+            {audit.total_cost !== null && audit.total_cost !== undefined
+              ? ` · $${audit.total_cost.toFixed(4)}`
+              : ''}
+          </p>
         </div>
       </div>
-
-      {/* Audit Complete Info - Above score cards */}
-      {audit.total_input_tokens && audit.total_output_tokens && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Audit Complete</p>
-                <p className="text-xs text-muted-foreground">
-                  {audit.completed_at ? formatDate(audit.completed_at, false) : 'N/A'} &middot;{' '}
-                  Analyzed {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} in{' '}
-                  {audit.execution_time_ms !== null
-                    ? `${(audit.execution_time_ms / 1000).toFixed(1)}s`
-                    : 'N/A'}
-                </p>
-              </div>
-              <TokenUsageBadge
-                inputTokens={audit.total_input_tokens ?? 0}
-                outputTokens={audit.total_output_tokens ?? 0}
-                totalTokens={(audit.total_input_tokens ?? 0) + (audit.total_output_tokens ?? 0)}
-                cost={audit.total_cost ?? undefined}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Score Cards */}
       <div className="flex gap-4">
