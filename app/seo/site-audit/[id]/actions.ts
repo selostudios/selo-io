@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
 import type { SiteAudit, SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
 
 export interface AuditReportData {
@@ -9,7 +10,7 @@ export interface AuditReportData {
   pages: SiteAuditPage[]
 }
 
-export async function getAuditReport(id: string): Promise<AuditReportData | null> {
+export async function getAuditReport(id: string): Promise<AuditReportData> {
   const supabase = await createClient()
 
   // Fetch audit - RLS ensures user can only access audits from their organization
@@ -25,7 +26,7 @@ export async function getAuditReport(id: string): Promise<AuditReportData | null
       auditId: id,
       timestamp: new Date().toISOString(),
     })
-    return null
+    notFound()
   }
 
   // Fetch all checks for this audit (paginate to overcome 1000 row limit)
@@ -49,7 +50,7 @@ export async function getAuditReport(id: string): Promise<AuditReportData | null
         error: checksError,
         timestamp: new Date().toISOString(),
       })
-      return null
+      notFound()
     }
 
     if (checksPage && checksPage.length > 0) {
@@ -82,7 +83,7 @@ export async function getAuditReport(id: string): Promise<AuditReportData | null
         auditId: id,
         timestamp: new Date().toISOString(),
       })
-      return null
+      notFound()
     }
 
     if (pagesPage && pagesPage.length > 0) {

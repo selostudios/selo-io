@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation'
 import { getAuditReport } from './actions'
 import { AuditReport } from '@/components/audit/audit-report'
 import { LiveProgress } from '@/components/audit/live-progress'
@@ -9,13 +8,7 @@ interface AuditReportPageProps {
 
 export default async function AuditReportPage({ params }: AuditReportPageProps) {
   const { id } = await params
-  const data = await getAuditReport(id)
-
-  if (!data) {
-    notFound()
-  }
-
-  const { audit, checks, pages } = data
+  const { audit, checks, pages } = await getAuditReport(id)
 
   // Show progress view for in-progress audits (including batch_complete which needs continuation)
   if (

@@ -22,8 +22,17 @@ const LAST_ORG_KEY = 'selo-last-organization-id'
 
 function getInitialTarget(
   selectedOrganizationId: string | null,
+  initialUrl: string | undefined,
   organizations: OrganizationForSelector[]
 ): AuditTarget {
+  // If a URL is provided (one-time audit), use it
+  if (initialUrl) {
+    return {
+      type: 'one-time',
+      url: initialUrl,
+    }
+  }
+
   // If an organization is selected via URL param
   if (selectedOrganizationId) {
     const org = organizations.find((o) => o.id === selectedOrganizationId)
@@ -76,7 +85,7 @@ export function PageSpeedClient({
 
   // Initialize selectedTarget based on URL param, localStorage, or first org
   const [selectedTarget, setSelectedTarget] = useState<AuditTarget>(() =>
-    getInitialTarget(selectedOrganizationId, organizations)
+    getInitialTarget(selectedOrganizationId, initialUrl, organizations)
   )
 
   const handleTargetChange = (target: AuditTarget) => {
@@ -87,21 +96,29 @@ export function PageSpeedClient({
       localStorage.setItem(LAST_ORG_KEY, target.organizationId)
       router.push(`/seo/page-speed?org=${target.organizationId}`)
     } else if (target?.type === 'one-time') {
-      // For one-time URLs, clear the org param
+      // For one-time URLs, persist the URL in the query param
+      router.push(`/seo/page-speed?url=${encodeURIComponent(target.url)}`)
+    } else if (target?.type === 'one-time-history') {
+      // For one-time history, clear params
       router.push('/seo/page-speed')
     }
   }
 
   // Filter audits to match the selected target
   // - For organization targets: only show audits for that organization
-  // - For one-time/one-time-history targets: only show audits with no organization (null)
+  // - For one-time targets: only show audits for the specific URL
+  // - For one-time-history targets: show all audits with no organization
   const filteredAudits = useMemo(() => {
     if (!selectedTarget) return []
 
     if (selectedTarget.type === 'organization') {
       return audits.filter((audit) => audit.organization_id === selectedTarget.organizationId)
+    } else if (selectedTarget.type === 'one-time') {
+      // For one-time URLs, show all one-time audits
+      // TODO: In the future, we could filter by specific URL by querying audit results
+      return audits.filter((audit) => audit.organization_id === null)
     } else {
-      // One-time and one-time-history audits have no organization_id
+      // One-time-history: show all audits with no organization_id
       return audits.filter((audit) => audit.organization_id === null)
     }
   }, [audits, selectedTarget])

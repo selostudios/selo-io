@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Download } from 'lucide-react'
 import { getPerformanceAuditData } from './actions'
@@ -15,10 +14,6 @@ interface Props {
 export default async function PerformanceAuditResultsPage({ params }: Props) {
   const { id } = await params
   const { audit, results } = await getPerformanceAuditData(id)
-
-  if (!audit) {
-    notFound()
-  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

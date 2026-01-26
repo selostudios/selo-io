@@ -67,6 +67,13 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 - `lib/supabase/server.ts` - Server-side (RSC, server actions)
 - `lib/supabase/client.ts` - Browser-side
 
+**Auth Methods** (`getUser()` vs `getSession()`):
+
+- **Use `getUser()`** for sensitive operations (mutations, data writes, protected actions) - validates user with Supabase Auth API
+- **Use `getSession()`** for frequently-called read operations (polling endpoints, status checks) - reads from JWT cookie, no API call
+- **Rate Limiting**: Supabase Auth API has rate limits. Frequent `getUser()` calls (e.g., polling every 10s) can exhaust limits and cause 429 errors, redirecting users to login
+- **Example**: `/api/audit/active` uses `getSession()` since it's polled every 30 seconds
+
 **Empty States**: Always use the `EmptyState` component from `components/ui/empty-state.tsx` when displaying empty results (e.g., no data, no search results, no items in a list). Pass an appropriate icon, title, and optional description. This provides consistent UI with an icon and dashed border.
 
 ### Platform Integration Architecture

@@ -45,11 +45,17 @@ export function PerformanceDashboard({
   const [monitoredPages, setMonitoredPages] = useState(initialPages)
   const [newUrl, setNewUrl] = useState(initialUrl ?? '')
 
+  // Determine if this is a one-time audit (no organization)
+  const isOneTimeAudit = !organizationId
+
   const handleRunAudit = () => {
     setError(null)
 
-    // Collect URLs: homepage + monitored pages
-    const urls = [websiteUrl, ...monitoredPages.map((p) => p.url)]
+    // For one-time audits, only test the single URL
+    // For organization audits, collect homepage + monitored pages
+    const urls = isOneTimeAudit
+      ? [websiteUrl]
+      : [websiteUrl, ...monitoredPages.map((p) => p.url)]
     const uniqueUrls = [...new Set(urls)]
 
     startTransition(async () => {
@@ -161,11 +167,20 @@ export function PerformanceDashboard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Run Performance Audit</CardTitle>
-              <CardDescription>
-                Test {1 + monitoredPages.length} page{monitoredPages.length !== 0 ? 's' : ''} with
-                PageSpeed Insights
-              </CardDescription>
+              {isOneTimeAudit ? (
+                <>
+                  <CardTitle className="break-all">{websiteUrl}</CardTitle>
+                  <CardDescription>One-time url • Test 1 page with PageSpeed Insights</CardDescription>
+                </>
+              ) : (
+                <>
+                  <CardTitle>Run Performance Audit</CardTitle>
+                  <CardDescription>
+                    Test {1 + monitoredPages.length} page{monitoredPages.length !== 0 ? 's' : ''}{' '}
+                    with PageSpeed Insights
+                  </CardDescription>
+                </>
+              )}
             </div>
             <Button onClick={handleRunAudit} disabled={isPending}>
               {isPending ? (
@@ -186,64 +201,68 @@ export function PerformanceDashboard({
         </CardHeader>
       </Card>
 
-      {/* Monitored Pages */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Monitored Pages</CardTitle>
-          <CardDescription>
-            Pages to include in performance audits. Homepage is always included.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Add new page */}
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <label htmlFor="new-page-url" className="sr-only">
-                Page URL to monitor
-              </label>
-              <Input
-                id="new-page-url"
-                placeholder="https://example.com/page"
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && canAddPage && handleAddPage()}
-              />
-              <Button onClick={handleAddPage} variant="outline" disabled={!canAddPage}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add
-              </Button>
+      {/* Monitored Pages - only show for organization audits */}
+      {!isOneTimeAudit && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Monitored Pages</CardTitle>
+            <CardDescription>
+              Pages to include in performance audits. Homepage is always included.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Add new page */}
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <label htmlFor="new-page-url" className="sr-only">
+                  Page URL to monitor
+                </label>
+                <Input
+                  id="new-page-url"
+                  placeholder="https://example.com/page"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && canAddPage && handleAddPage()}
+                />
+                <Button onClick={handleAddPage} variant="outline" disabled={!canAddPage}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add
+                </Button>
+              </div>
+              {isValidUrl(newUrl) && isDuplicateUrl(newUrl) && (
+                <p className="text-muted-foreground text-sm">
+                  This page is already being monitored.
+                </p>
+              )}
             </div>
-            {isValidUrl(newUrl) && isDuplicateUrl(newUrl) && (
-              <p className="text-muted-foreground text-sm">This page is already being monitored.</p>
-            )}
-          </div>
 
-          {/* Homepage (always included) */}
-          <div className="bg-muted/50 flex items-center justify-between rounded-md px-3 py-2">
-            <span className="text-sm">{websiteUrl}</span>
-            <span className="text-muted-foreground text-xs">Homepage (always included)</span>
-          </div>
+            {/* Homepage (always included) */}
+            <div className="bg-muted/50 flex items-center justify-between rounded-md px-3 py-2">
+              <span className="text-sm">{websiteUrl}</span>
+              <span className="text-muted-foreground text-xs">Homepage (always included)</span>
+            </div>
 
-          {/* Monitored pages list */}
-          {monitoredPages.map((page) => (
-            <div
-              key={page.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
-            >
-              <span className="truncate text-sm">{page.url}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemovePage(page.id)}
-                className="text-muted-foreground hover:text-destructive"
-                aria-label={`Remove ${page.url} from monitoring`}
+            {/* Monitored pages list */}
+            {monitoredPages.map((page) => (
+              <div
+                key={page.id}
+                className="flex items-center justify-between rounded-md border px-3 py-2"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+                <span className="truncate text-sm">{page.url}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemovePage(page.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={`Remove ${page.url} from monitoring`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Audit History */}
       <Card>

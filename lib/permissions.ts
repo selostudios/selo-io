@@ -121,3 +121,14 @@ export function canManageFeedback(role: string | undefined): boolean {
 export function isInternalUser(isInternal: boolean | null | undefined): boolean {
   return isInternal === true
 }
+
+/**
+ * Check if user can access all audits regardless of organization.
+ * Internal users (Selo employees) and admins/developers have this privilege.
+ */
+export function canAccessAllAudits(
+  isInternal: boolean | null | undefined,
+  role: string | undefined
+): boolean {
+  return isInternalUser(isInternal) || role === 'admin' || role === 'developer'
+}

@@ -32,8 +32,9 @@ export function useActiveAudit() {
         }
         setIsLoading(false)
 
-        // Poll every 10 seconds to check for active audits
-        timeoutId = setTimeout(poll, 10000)
+        // Poll every 30 seconds to check for active audits
+        // Reduced from 10s to avoid Supabase auth rate limits
+        timeoutId = setTimeout(poll, 30000)
       } catch (error) {
         console.error('[Active Audit Polling Error]', {
           type: 'fetch_error',
@@ -41,7 +42,7 @@ export function useActiveAudit() {
           timestamp: new Date().toISOString(),
         })
         setIsLoading(false)
-        timeoutId = setTimeout(poll, 10000) // Retry after 10s on error
+        timeoutId = setTimeout(poll, 30000) // Retry after 30s on error
       }
     }
 
