@@ -165,30 +165,15 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
         </div>
       )}
 
-      {/* AI Recommendations */}
+      {/* AI Recommendations & Technical Checks */}
       {formattedAnalyses.length > 0 && (
         <Card className="border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <AIAnalysisCard analyses={formattedAnalyses} />
-        </Card>
-      )}
+          <div className="space-y-3">
+            <AIAnalysisCard analyses={formattedAnalyses} />
 
-      {/* Technical Checks */}
-      <Card className="border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-        <Collapsible defaultOpen className="group/technical">
-          <div className="bg-background flex w-full items-center justify-between rounded-md px-4 py-3">
-            <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-3">
-              <ChevronDown
-                className={cn(
-                  'text-muted-foreground size-5 transition-transform duration-200',
-                  'group-data-[state=closed]/technical:-rotate-90'
-                )}
-              />
-              <span className="text-lg font-semibold">Technical</span>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="mt-2 space-y-3 pl-4">
-          {checksByCategory['technical_foundation'] && (
-            <Collapsible defaultOpen className="group/category">
+            {/* Technical Foundation */}
+            {checksByCategory['technical_foundation'] && (
+              <Collapsible defaultOpen className="group/category">
               <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/30 transition-colors">
                 <ChevronDown
                   className={cn(
@@ -227,8 +212,9 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
             </Collapsible>
           )}
 
-          {checksByCategory['content_structure'] && (
-            <Collapsible defaultOpen={false} className="group/category">
+            {/* Content Structure */}
+            {checksByCategory['content_structure'] && (
+              <Collapsible defaultOpen={false} className="group/category">
               <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/30 transition-colors">
                 <ChevronDown
                   className={cn(
@@ -306,9 +292,9 @@ export function GEOAuditReport({ audit, checks, aiAnalyses }: GEOAuditReportProp
               </CollapsibleContent>
             </Collapsible>
           )}
-        </CollapsibleContent>
-      </Collapsible>
-      </Card>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
