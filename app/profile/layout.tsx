@@ -29,7 +29,7 @@ export default async function ProfileLayout({ children }: { children: React.Reac
     redirect('/onboarding')
   }
 
-  const isInternal = isInternalUser(userRecord.is_internal)
+  const isInternal = isInternalUser(userRecord)
 
   return (
     <FeedbackProvider>

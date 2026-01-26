@@ -26,7 +26,7 @@ export default async function OrganizationsLayout({ children }: { children: Reac
     .single()
 
   // Only internal users can access organizations management
-  if (!isInternalUser(userRecord?.is_internal)) {
+  if (!userRecord || !isInternalUser(userRecord)) {
     redirect('/dashboard')
   }
 

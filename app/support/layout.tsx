@@ -29,7 +29,7 @@ export default async function SupportLayout({ children }: { children: React.Reac
     redirect('/dashboard')
   }
 
-  const isInternal = isInternalUser(userRecord.is_internal)
+  const isInternal = isInternalUser(userRecord)
 
   return (
     <FeedbackProvider>

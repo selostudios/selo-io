@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
-  const isInternal = isInternalUser(userRecord.is_internal)
+  const isInternal = isInternalUser(userRecord)
 
   return (
     <FeedbackProvider>

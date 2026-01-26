@@ -30,7 +30,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     redirect('/onboarding')
   }
 
-  const isInternal = isInternalUser(userRecord.is_internal)
+  const isInternal = isInternalUser(userRecord)
 
   return (
     <FeedbackProvider>
