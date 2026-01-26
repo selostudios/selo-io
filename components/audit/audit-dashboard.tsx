@@ -16,6 +16,7 @@ interface AuditDashboardProps {
   archivedAudits: SiteAudit[]
   organizationId?: string | null
   isOneTimeHistory?: boolean
+  searchInput?: React.ReactNode
 }
 
 export function AuditDashboard({
@@ -24,6 +25,7 @@ export function AuditDashboard({
   archivedAudits,
   organizationId,
   isOneTimeHistory = false,
+  searchInput,
 }: AuditDashboardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -110,11 +112,27 @@ export function AuditDashboard({
       {/* Audit History */}
       <Card>
         <CardHeader>
-          <CardTitle>{isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}</CardTitle>
-          {isOneTimeHistory && (
-            <CardDescription>
-              Audits run on URLs not associated with an organization
-            </CardDescription>
+          {searchInput ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>{isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}</CardTitle>
+                {isOneTimeHistory && (
+                  <CardDescription>
+                    Audits run on URLs not associated with an organization
+                  </CardDescription>
+                )}
+              </div>
+              {searchInput}
+            </div>
+          ) : (
+            <>
+              <CardTitle>{isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}</CardTitle>
+              {isOneTimeHistory && (
+                <CardDescription>
+                  Audits run on URLs not associated with an organization
+                </CardDescription>
+              )}
+            </>
           )}
         </CardHeader>
         <CardContent>
