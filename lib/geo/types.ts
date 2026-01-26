@@ -102,7 +102,7 @@ export interface GEOAIAnalysis {
 //============================================================================
 
 export const GEOPageAnalysisSchema = z.object({
-  url: z.string(),
+  url: z.string().url(),
   scores: z.object({
     dataQuality: z.number().min(0).max(100),
     expertCredibility: z.number().min(0).max(100),
@@ -112,16 +112,18 @@ export const GEOPageAnalysisSchema = z.object({
     overall: z.number().min(0).max(100),
   }),
   findings: z.any().optional(), // Flexible structure, not used in UI display
-  recommendations: z.array(
-    z.object({
-      priority: z.string(), // Changed from enum to string
-      category: z.string(),
-      issue: z.string(),
-      recommendation: z.string(),
-      expectedImpact: z.string().optional(),
-      learnMoreUrl: z.string().optional(),
-    })
-  ),
+  recommendations: z
+    .array(
+      z.object({
+        priority: z.string(), // Changed from enum to string
+        category: z.string(),
+        issue: z.string(),
+        recommendation: z.string(),
+        expectedImpact: z.string().optional(),
+        learnMoreUrl: z.string().optional(),
+      })
+    )
+    .max(10),
 })
 
 export const GEOBatchAnalysisSchema = z.object({

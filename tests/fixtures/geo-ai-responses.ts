@@ -152,3 +152,17 @@ export function createMockGenerateObjectResponse(analysis: GEOBatchAnalysis) {
     },
   }
 }
+
+/**
+ * Mock response for AI SDK generateText
+ */
+export function createMockGenerateTextResponse(analysis: GEOBatchAnalysis) {
+  return {
+    text: JSON.stringify(analysis),
+    usage: {
+      inputTokens: 5234,
+      outputTokens: 1842,
+      totalTokens: 7076,
+    },
+  }
+}

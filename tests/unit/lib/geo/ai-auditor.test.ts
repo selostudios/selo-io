@@ -5,13 +5,13 @@ import {
   mockBatchAnalysis,
   mockGEOPageAnalysis,
   mockGEOPageAnalysisThin,
-  createMockGenerateObjectResponse,
+  createMockGenerateTextResponse,
 } from '../../../fixtures/geo-ai-responses'
 import * as ai from 'ai'
 
 // Mock the AI SDK
 vi.mock('ai', () => ({
-  generateObject: vi.fn(),
+  generateText: vi.fn(),
 }))
 
 vi.mock('@ai-sdk/anthropic', () => ({
@@ -25,8 +25,8 @@ describe('AI Auditor', () => {
 
   describe('runAIAnalysis', () => {
     it('should analyze pages and return results', async () => {
-      const mockResponse = createMockGenerateObjectResponse(mockBatchAnalysis)
-      vi.mocked(ai.generateObject).mockResolvedValue(mockResponse as never)
+      const mockResponse = createMockGenerateTextResponse(mockBatchAnalysis)
+      vi.mocked(ai.generateText).mockResolvedValue(mockResponse as never)
 
       const pages: PageContent[] = [
         {
@@ -48,8 +48,8 @@ describe('AI Auditor', () => {
     })
 
     it('should call onBatchComplete callback', async () => {
-      const mockResponse = createMockGenerateObjectResponse(mockBatchAnalysis)
-      vi.mocked(ai.generateObject).mockResolvedValue(mockResponse as never)
+      const mockResponse = createMockGenerateTextResponse(mockBatchAnalysis)
+      vi.mocked(ai.generateText).mockResolvedValue(mockResponse as never)
 
       const onBatchComplete = vi.fn()
       const pages: PageContent[] = [
@@ -79,15 +79,15 @@ describe('AI Auditor', () => {
       expect(result.totalInputTokens).toBe(0)
       expect(result.totalOutputTokens).toBe(0)
       expect(result.totalCost).toBe(0)
-      expect(ai.generateObject).not.toHaveBeenCalled()
+      expect(ai.generateText).not.toHaveBeenCalled()
     })
 
     it('should chunk pages into batches of 3', async () => {
-      const mockResponse = createMockGenerateObjectResponse({
+      const mockResponse = createMockGenerateTextResponse({
         ...mockBatchAnalysis,
         analyses: [mockGEOPageAnalysis, mockGEOPageAnalysis, mockGEOPageAnalysis],
       })
-      vi.mocked(ai.generateObject).mockResolvedValue(mockResponse as never)
+      vi.mocked(ai.generateText).mockResolvedValue(mockResponse as never)
 
       const pages: PageContent[] = Array.from({ length: 7 }, (_, i) => ({
         url: `https://example.com/page-${i}`,
@@ -97,11 +97,11 @@ describe('AI Auditor', () => {
       await runAIAnalysis(pages)
 
       // Should make 3 API calls: [3 pages], [3 pages], [1 page]
-      expect(ai.generateObject).toHaveBeenCalledTimes(3)
+      expect(ai.generateText).toHaveBeenCalledTimes(3)
     })
 
     it('should handle API errors gracefully', async () => {
-      vi.mocked(ai.generateObject).mockRejectedValue(new Error('API rate limit exceeded'))
+      vi.mocked(ai.generateText).mockRejectedValue(new Error('API rate limit exceeded'))
 
       const pages: PageContent[] = [
         {
@@ -114,8 +114,8 @@ describe('AI Auditor', () => {
     })
 
     it('should calculate cost correctly', async () => {
-      const mockResponse = createMockGenerateObjectResponse(mockBatchAnalysis)
-      vi.mocked(ai.generateObject).mockResolvedValue(mockResponse as never)
+      const mockResponse = createMockGenerateTextResponse(mockBatchAnalysis)
+      vi.mocked(ai.generateText).mockResolvedValue(mockResponse as never)
 
       const pages: PageContent[] = [
         {
