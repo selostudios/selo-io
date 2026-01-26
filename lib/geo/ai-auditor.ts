@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateObject } from 'ai'
+import { generateText } from 'ai'
 import * as cheerio from 'cheerio'
 import { GEOBatchAnalysisSchema } from './types'
 import type { GEOPageAnalysis } from './types'
@@ -100,12 +100,14 @@ ${p.content.slice(0, 6000)}
 ${p.content.length > 6000 ? '...[truncated for brevity]' : ''}
 `).join('\n\n')}
 
-Analyze each page and provide structured output with scores, findings, and recommendations.`
+Analyze each page and provide structured output with scores, findings, and recommendations.
+
+CRITICAL: Return ONLY valid JSON matching this structure. Do not wrap the response in markdown code blocks or add any explanation text.`
 
   try {
-    const result = await generateObject({
+    // Use generateText with JSON mode for better control over parsing
+    const result = await generateText({
       model: anthropic(MODEL),
-      schema: GEOBatchAnalysisSchema,
       prompt,
       temperature: 0.3, // Lower temperature for more consistent scoring
     })
@@ -114,8 +116,28 @@ Analyze each page and provide structured output with scores, findings, and recom
       `[AI Auditor] Analyzed ${batch.length} pages, tokens: ${result.usage.inputTokens ?? 0}/${result.usage.outputTokens ?? 0}`
     )
 
+    // Parse and validate the JSON response
+    let parsedResponse: unknown
+    try {
+      // Clean up potential markdown code blocks
+      let cleanedText = result.text.trim()
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\n/, '').replace(/\n```$/, '')
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\n/, '').replace(/\n```$/, '')
+      }
+
+      parsedResponse = JSON.parse(cleanedText)
+    } catch (parseError) {
+      console.error('[AI Auditor] Failed to parse JSON response:', result.text.slice(0, 500))
+      throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`)
+    }
+
+    // Validate with Zod schema
+    const validated = GEOBatchAnalysisSchema.parse(parsedResponse)
+
     return {
-      analyses: result.object.analyses,
+      analyses: validated.analyses,
       inputTokens: result.usage.inputTokens ?? 0,
       outputTokens: result.usage.outputTokens ?? 0,
     }
