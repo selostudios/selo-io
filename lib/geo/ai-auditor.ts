@@ -102,7 +102,15 @@ ${p.content.length > 6000 ? '...[truncated for brevity]' : ''}
 
 Analyze each page and provide structured output with scores, findings, and recommendations.
 
-CRITICAL: Return ONLY valid JSON matching this structure. Do not wrap the response in markdown code blocks or add any explanation text.`
+CRITICAL: Your response must be a JSON object with this exact structure:
+{
+  "analyses": [ array of page analysis objects ],
+  "batchMetadata": { optional metadata object }
+}
+
+Do NOT return just an array. You MUST wrap the analyses array in an object with an "analyses" key.
+Do NOT wrap the response in markdown code blocks.
+Return ONLY the JSON object, no explanation text before or after.`
 
   try {
     // Use generateText with JSON mode for better control over parsing
