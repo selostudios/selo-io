@@ -1,12 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { formatDate, displayName, CampaignStatus, type CampaignStatusType } from '@/lib/utils'
+import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 
 type Campaign = {
   id: string
   name: string
-  status: CampaignStatusType
+  status: CampaignStatus
   start_date: string | null
   end_date: string | null
   created_at: string
@@ -27,19 +27,19 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
             <Badge
               style={{
                 backgroundColor:
-                  campaign.status === CampaignStatus.DRAFT
+                  campaign.status === CampaignStatus.Draft
                     ? '#fef9c3'
-                    : campaign.status === CampaignStatus.ACTIVE
+                    : campaign.status === CampaignStatus.Active
                       ? '#dcfce7'
-                      : campaign.status === CampaignStatus.COMPLETED
+                      : campaign.status === CampaignStatus.Completed
                         ? '#dbeafe'
                         : '#fee2e2',
                 color:
-                  campaign.status === CampaignStatus.DRAFT
+                  campaign.status === CampaignStatus.Draft
                     ? '#854d0e'
-                    : campaign.status === CampaignStatus.ACTIVE
+                    : campaign.status === CampaignStatus.Active
                       ? '#166534'
-                      : campaign.status === CampaignStatus.COMPLETED
+                      : campaign.status === CampaignStatus.Completed
                         ? '#1e40af'
                         : '#991b1b',
               }}
