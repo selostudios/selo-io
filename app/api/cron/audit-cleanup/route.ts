@@ -9,6 +9,14 @@ import { runPeriodicCleanup } from '@/lib/audit/cleanup'
  *
  * Schedule: Weekly (recommended)
  */
+export async function GET() {
+  return NextResponse.json({
+    name: 'audit-cleanup',
+    schedule: '0 4 * * 0 (Sundays at 4 AM UTC)',
+    description: 'Cleans up old audit data to reduce storage usage',
+  })
+}
+
 export async function POST(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get('authorization')
