@@ -7,8 +7,10 @@
  * Note: RLS policies are the security boundary; these checks are for UX.
  */
 
-// Role types matching the database enum
-export type UserRole = 'admin' | 'developer' | 'team_member' | 'client_viewer'
+import { UserRole } from '@/lib/enums'
+
+// Re-export UserRole for consumers that import from permissions
+export { UserRole }
 
 // Permission types for all protected operations
 export type Permission =
@@ -24,7 +26,7 @@ export type Permission =
 
 // Role-permission mapping - single source of truth
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  admin: [
+  [UserRole.Admin]: [
     'org:update',
     'org:view',
     'team:invite',
@@ -35,15 +37,15 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'campaigns:delete',
     'feedback:manage',
   ],
-  developer: ['org:update', 'org:view', 'team:view', 'feedback:manage'],
-  team_member: [
+  [UserRole.Developer]: ['org:update', 'org:view', 'team:view', 'feedback:manage'],
+  [UserRole.TeamMember]: [
     'org:view',
     'team:view',
     'campaigns:create',
     'campaigns:update',
     'campaigns:delete',
   ],
-  client_viewer: ['org:view', 'team:view'],
+  [UserRole.ClientViewer]: ['org:view', 'team:view'],
 }
 
 /**
@@ -132,5 +134,9 @@ export function canAccessAllAudits(userRecord: {
   is_internal?: boolean | null
   role?: string | null
 }): boolean {
-  return isInternalUser(userRecord) || userRecord.role === 'admin' || userRecord.role === 'developer'
+  return (
+    isInternalUser(userRecord) ||
+    userRecord.role === UserRole.Admin ||
+    userRecord.role === UserRole.Developer
+  )
 }
