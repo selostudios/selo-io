@@ -1,5 +1,5 @@
--- Create aio_audits table
-CREATE TABLE aio_audits (
+-- Create geo_audits table
+CREATE TABLE geo_audits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
   created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -9,7 +9,7 @@ CREATE TABLE aio_audits (
   -- Scores
   technical_score integer CHECK (technical_score BETWEEN 0 AND 100),
   strategic_score integer CHECK (strategic_score BETWEEN 0 AND 100),
-  overall_aio_score integer CHECK (overall_aio_score BETWEEN 0 AND 100),
+  overall_geo_score integer CHECK (overall_geo_score BETWEEN 0 AND 100),
 
   -- Execution metadata
   pages_analyzed integer DEFAULT 0,
@@ -32,20 +32,20 @@ CREATE TABLE aio_audits (
 );
 
 -- Add check constraint for status
-ALTER TABLE aio_audits
-ADD CONSTRAINT aio_audits_status_check
+ALTER TABLE geo_audits
+ADD CONSTRAINT geo_audits_status_check
 CHECK (status IN ('pending', 'running', 'completed', 'failed'));
 
--- Add indexes for aio_audits
-CREATE INDEX idx_aio_audits_org ON aio_audits(organization_id);
-CREATE INDEX idx_aio_audits_created_by ON aio_audits(created_by);
-CREATE INDEX idx_aio_audits_status ON aio_audits(status);
-CREATE INDEX idx_aio_audits_created_at ON aio_audits(created_at DESC);
+-- Add indexes for geo_audits
+CREATE INDEX idx_geo_audits_org ON geo_audits(organization_id);
+CREATE INDEX idx_geo_audits_created_by ON geo_audits(created_by);
+CREATE INDEX idx_geo_audits_status ON geo_audits(status);
+CREATE INDEX idx_geo_audits_created_at ON geo_audits(created_at DESC);
 
--- Create aio_checks table (programmatic results)
-CREATE TABLE aio_checks (
+-- Create geo_checks table (programmatic results)
+CREATE TABLE geo_checks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  audit_id uuid NOT NULL REFERENCES aio_audits(id) ON DELETE CASCADE,
+  audit_id uuid NOT NULL REFERENCES geo_audits(id) ON DELETE CASCADE,
   category text NOT NULL,
   check_name text NOT NULL,
   priority text NOT NULL,
@@ -62,28 +62,28 @@ CREATE TABLE aio_checks (
   created_at timestamptz DEFAULT now()
 );
 
--- Add check constraints for aio_checks
-ALTER TABLE aio_checks
-ADD CONSTRAINT aio_checks_category_check
+-- Add check constraints for geo_checks
+ALTER TABLE geo_checks
+ADD CONSTRAINT geo_checks_category_check
 CHECK (category IN ('technical_foundation', 'content_structure', 'content_quality'));
 
-ALTER TABLE aio_checks
-ADD CONSTRAINT aio_checks_priority_check
+ALTER TABLE geo_checks
+ADD CONSTRAINT geo_checks_priority_check
 CHECK (priority IN ('critical', 'recommended', 'optional'));
 
-ALTER TABLE aio_checks
-ADD CONSTRAINT aio_checks_status_check
+ALTER TABLE geo_checks
+ADD CONSTRAINT geo_checks_status_check
 CHECK (status IN ('passed', 'failed', 'warning'));
 
--- Add indexes for aio_checks
-CREATE INDEX idx_aio_checks_audit ON aio_checks(audit_id);
-CREATE INDEX idx_aio_checks_category ON aio_checks(audit_id, category);
-CREATE INDEX idx_aio_checks_status ON aio_checks(audit_id, status);
+-- Add indexes for geo_checks
+CREATE INDEX idx_geo_checks_audit ON geo_checks(audit_id);
+CREATE INDEX idx_geo_checks_category ON geo_checks(audit_id, category);
+CREATE INDEX idx_geo_checks_status ON geo_checks(audit_id, status);
 
--- Create aio_ai_analyses table
-CREATE TABLE aio_ai_analyses (
+-- Create geo_ai_analyses table
+CREATE TABLE geo_ai_analyses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  audit_id uuid NOT NULL REFERENCES aio_audits(id) ON DELETE CASCADE,
+  audit_id uuid NOT NULL REFERENCES geo_audits(id) ON DELETE CASCADE,
   page_url text NOT NULL,
   importance_score integer,
   importance_reasons text[],
@@ -111,19 +111,19 @@ CREATE TABLE aio_ai_analyses (
   created_at timestamptz DEFAULT now()
 );
 
--- Add indexes for aio_ai_analyses
-CREATE INDEX idx_aio_ai_analyses_audit ON aio_ai_analyses(audit_id);
-CREATE INDEX idx_aio_ai_analyses_url ON aio_ai_analyses(page_url);
-CREATE INDEX idx_aio_ai_analyses_overall_score ON aio_ai_analyses(audit_id, score_overall DESC);
+-- Add indexes for geo_ai_analyses
+CREATE INDEX idx_geo_ai_analyses_audit ON geo_ai_analyses(audit_id);
+CREATE INDEX idx_geo_ai_analyses_url ON geo_ai_analyses(page_url);
+CREATE INDEX idx_geo_ai_analyses_overall_score ON geo_ai_analyses(audit_id, score_overall DESC);
 
 -- Enable RLS
-ALTER TABLE aio_audits ENABLE ROW LEVEL SECURITY;
-ALTER TABLE aio_checks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE aio_ai_analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE geo_audits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE geo_checks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE geo_ai_analyses ENABLE ROW LEVEL SECURITY;
 
--- RLS policies for aio_audits
-CREATE POLICY "Users can view their org's AIO audits"
-ON aio_audits FOR SELECT
+-- RLS policies for geo_audits
+CREATE POLICY "Users can view their org's GEO audits"
+ON geo_audits FOR SELECT
 USING (
   organization_id IN (
     SELECT organization_id FROM users WHERE id = auth.uid()
@@ -132,8 +132,8 @@ USING (
   OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
 );
 
-CREATE POLICY "Users can insert AIO audits for their org"
-ON aio_audits FOR INSERT
+CREATE POLICY "Users can insert GEO audits for their org"
+ON geo_audits FOR INSERT
 WITH CHECK (
   organization_id IN (
     SELECT organization_id FROM users WHERE id = auth.uid()
@@ -143,8 +143,8 @@ WITH CHECK (
   ))
 );
 
-CREATE POLICY "Users can update their AIO audits"
-ON aio_audits FOR UPDATE
+CREATE POLICY "Users can update their GEO audits"
+ON geo_audits FOR UPDATE
 USING (
   organization_id IN (
     SELECT organization_id FROM users WHERE id = auth.uid()
@@ -153,8 +153,8 @@ USING (
   OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
 );
 
-CREATE POLICY "Users can delete their AIO audits"
-ON aio_audits FOR DELETE
+CREATE POLICY "Users can delete their GEO audits"
+ON geo_audits FOR DELETE
 USING (
   organization_id IN (
     SELECT organization_id FROM users WHERE id = auth.uid()
@@ -163,36 +163,36 @@ USING (
   OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
 );
 
--- RLS policies for aio_checks
+-- RLS policies for geo_checks
 CREATE POLICY "Users can view checks from their audits"
-ON aio_checks FOR SELECT
+ON geo_checks FOR SELECT
 USING (
   audit_id IN (
-    SELECT id FROM aio_audits WHERE
+    SELECT id FROM geo_audits WHERE
       organization_id IN (SELECT organization_id FROM users WHERE id = auth.uid())
       OR created_by = auth.uid()
       OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
   )
 );
 
-CREATE POLICY "Service role can insert AIO checks"
-ON aio_checks FOR INSERT
+CREATE POLICY "Service role can insert GEO checks"
+ON geo_checks FOR INSERT
 WITH CHECK (true); -- Service role bypasses RLS
 
-CREATE POLICY "Service role can update AIO checks"
-ON aio_checks FOR UPDATE
+CREATE POLICY "Service role can update GEO checks"
+ON geo_checks FOR UPDATE
 USING (true);
 
-CREATE POLICY "Service role can delete AIO checks"
-ON aio_checks FOR DELETE
+CREATE POLICY "Service role can delete GEO checks"
+ON geo_checks FOR DELETE
 USING (true);
 
--- RLS policies for aio_ai_analyses
+-- RLS policies for geo_ai_analyses
 CREATE POLICY "Users can view AI analyses from their audits"
-ON aio_ai_analyses FOR SELECT
+ON geo_ai_analyses FOR SELECT
 USING (
   audit_id IN (
-    SELECT id FROM aio_audits WHERE
+    SELECT id FROM geo_audits WHERE
       organization_id IN (SELECT organization_id FROM users WHERE id = auth.uid())
       OR created_by = auth.uid()
       OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
@@ -200,24 +200,24 @@ USING (
 );
 
 CREATE POLICY "Service role can insert AI analyses"
-ON aio_ai_analyses FOR INSERT
+ON geo_ai_analyses FOR INSERT
 WITH CHECK (true); -- Service role bypasses RLS
 
 CREATE POLICY "Service role can update AI analyses"
-ON aio_ai_analyses FOR UPDATE
+ON geo_ai_analyses FOR UPDATE
 USING (true);
 
 CREATE POLICY "Service role can delete AI analyses"
-ON aio_ai_analyses FOR DELETE
+ON geo_ai_analyses FOR DELETE
 USING (true);
 
 -- Add comments for documentation
-COMMENT ON TABLE aio_audits IS 'AIO (Generative Engine Optimization) audit records with programmatic and AI analysis results';
-COMMENT ON TABLE aio_checks IS 'Programmatic check results for AIO audits (technical, structure, content quality checks)';
-COMMENT ON TABLE aio_ai_analyses IS 'AI-powered content quality analysis from Claude Opus 4.5 using structured Zod schemas';
+COMMENT ON TABLE geo_audits IS 'GEO (Generative Engine Optimization) audit records with programmatic and AI analysis results';
+COMMENT ON TABLE geo_checks IS 'Programmatic check results for GEO audits (technical, structure, content quality checks)';
+COMMENT ON TABLE geo_ai_analyses IS 'AI-powered content quality analysis from Claude Opus 4.5 using structured Zod schemas';
 
-COMMENT ON COLUMN aio_audits.sample_size IS 'Number of pages analyzed by AI (1-10, user configurable)';
-COMMENT ON COLUMN aio_audits.total_cost IS 'Total API cost in USD for AI analysis';
-COMMENT ON COLUMN aio_checks.category IS 'AIO framework category: technical_foundation, content_structure, or content_quality';
-COMMENT ON COLUMN aio_ai_analyses.findings IS 'Structured JSONB from AIOPageAnalysisSchema validation';
-COMMENT ON COLUMN aio_ai_analyses.recommendations IS 'Array of prioritized recommendations with learn more URLs';
+COMMENT ON COLUMN geo_audits.sample_size IS 'Number of pages analyzed by AI (1-10, user configurable)';
+COMMENT ON COLUMN geo_audits.total_cost IS 'Total API cost in USD for AI analysis';
+COMMENT ON COLUMN geo_checks.category IS 'GEO framework category: technical_foundation, content_structure, or content_quality';
+COMMENT ON COLUMN geo_ai_analyses.findings IS 'Structured JSONB from GEOPageAnalysisSchema validation';
+COMMENT ON COLUMN geo_ai_analyses.recommendations IS 'Array of prioritized recommendations with learn more URLs';
