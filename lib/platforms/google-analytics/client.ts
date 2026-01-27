@@ -2,6 +2,7 @@ import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics, GoogleAnalytic
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
+import { GAChannel } from '@/lib/enums'
 
 const GA_DATA_API_BASE = 'https://analyticsdata.googleapis.com/v1beta'
 
@@ -212,15 +213,15 @@ export class GoogleAnalyticsClient {
           const channel = row.dimensionValues[0]?.value?.toLowerCase() || ''
           const sessions = Number(row.metricValues[0]?.value) || 0
 
-          if (channel === 'direct') {
+          if (channel === GAChannel.Direct) {
             metrics.trafficAcquisition.direct = sessions
-          } else if (channel === 'organic search') {
+          } else if (channel === GAChannel.OrganicSearch) {
             metrics.trafficAcquisition.organicSearch = sessions
-          } else if (channel === 'email') {
+          } else if (channel === GAChannel.Email) {
             metrics.trafficAcquisition.email = sessions
-          } else if (channel === 'organic social') {
+          } else if (channel === GAChannel.OrganicSocial) {
             metrics.trafficAcquisition.organicSocial = sessions
-          } else if (channel === 'referral') {
+          } else if (channel === GAChannel.Referral) {
             metrics.trafficAcquisition.referral = sessions
           }
         }
@@ -323,15 +324,15 @@ export class GoogleAnalyticsClient {
 
           const dayMetrics = dailyMetricsMap.get(formattedDate)
           if (dayMetrics) {
-            if (channel === 'direct') {
+            if (channel === GAChannel.Direct) {
               dayMetrics.trafficAcquisition.direct = sessions
-            } else if (channel === 'organic search') {
+            } else if (channel === GAChannel.OrganicSearch) {
               dayMetrics.trafficAcquisition.organicSearch = sessions
-            } else if (channel === 'email') {
+            } else if (channel === GAChannel.Email) {
               dayMetrics.trafficAcquisition.email = sessions
-            } else if (channel === 'organic social') {
+            } else if (channel === GAChannel.OrganicSocial) {
               dayMetrics.trafficAcquisition.organicSocial = sessions
-            } else if (channel === 'referral') {
+            } else if (channel === GAChannel.Referral) {
               dayMetrics.trafficAcquisition.referral = sessions
             }
           }
