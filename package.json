@@ -13,6 +13,7 @@
     "add-user": "tsx scripts/add-user.ts",
     "reset-password": "tsx scripts/reset-password.ts",
     "check-user": "tsx scripts/check-user.ts",
+    "fix-ga-metrics": "tsx scripts/fix-ga-metrics.ts",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
