@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink } from 'lucide-react'
 import { getPerformanceAuditData } from './actions'
 import { PerformanceResults } from '@/components/performance/performance-results'
 import { PerformanceLiveProgress } from '@/components/performance/performance-live-progress'
@@ -14,6 +14,12 @@ interface Props {
 export default async function PerformanceAuditResultsPage({ params }: Props) {
   const { id } = await params
   const { audit, results } = await getPerformanceAuditData(id)
+
+  // Extract domain from first URL
+  const firstUrl = audit.first_url || audit.current_url || results[0]?.url
+  const displayUrl = firstUrl
+    ? firstUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    : 'Unknown'
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -43,8 +49,19 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
         <>
           {/* Audit Info */}
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-balance">Performance Audit</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">PageSpeed Audit:</h1>
+              {firstUrl && (
+                <a
+                  href={firstUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+                >
+                  {displayUrl}
+                  <ExternalLink className="size-5" />
+                </a>
+              )}
               <Badge
                 variant={
                   audit.status === 'completed'

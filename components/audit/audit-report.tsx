@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Download, Search, X } from 'lucide-react'
+import { ArrowLeft, Download, Search, X, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -122,8 +122,17 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
       {/* Site Info */}
       <div>
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">SEO Site Audit:</h1>
+            <a
+              href={audit.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+            >
+              {displayUrl}
+              <ExternalLink className="size-5" />
+            </a>
             {audit.status === 'stopped' && (
               <Badge variant="secondary" className="text-xs">
                 Partial Report

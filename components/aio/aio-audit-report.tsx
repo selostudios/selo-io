@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, ChevronDown, ExternalLink, FileText } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { ArrowLeft, ChevronDown, ExternalLink } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScoreCard } from '@/components/audit/score-cards'
@@ -68,8 +68,17 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">AIO Audit</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">AIO Audit:</h1>
+          <a
+            href={audit.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+          >
+            {getDomain(audit.url)}
+            <ExternalLink className="size-5" />
+          </a>
           <Badge
             variant={
               audit.status === 'completed'
@@ -96,23 +105,6 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
             : ''}
         </p>
       </div>
-
-      {/* Domain URL Section */}
-      <Card className="py-4">
-        <CardContent className="py-0">
-          <a
-            href={audit.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-base font-medium hover:underline"
-          >
-            <FileText className="text-muted-foreground size-4 shrink-0" />
-            {getDomain(audit.url)}
-            <ExternalLink className="text-muted-foreground size-3.5" />
-            <span className="sr-only"> (opens in new tab)</span>
-          </a>
-        </CardContent>
-      </Card>
 
       {/* Score Cards */}
       <div>
