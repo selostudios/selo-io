@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
 import { SampleSizeSelector } from '@/components/aio/sample-size-selector'
@@ -123,20 +122,17 @@ export function AIOAuditClient({
       {/* Audit Configuration Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Run AIO Audit</CardTitle>
-          <CardDescription>
-            Analyze customer website readiness for AI-powered search engines
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* One-time URL input (only shown for one-time audits) */}
-          {selectedTarget?.type === 'one-time' && (
-            <div className="space-y-2">
-              <Label htmlFor="url">Website URL</Label>
+          {selectedTarget?.type === 'one-time' ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>One-Time AIO Audit</CardTitle>
+                <CardDescription>Add URL to begin AIO audit</CardDescription>
+              </div>
               <Input
-                id="url"
                 type="url"
                 placeholder="https://example.com"
+                className="w-64"
+                id="url"
                 value={oneTimeUrl}
                 onChange={(e) => setOneTimeUrl(e.target.value)}
                 disabled={isRunning}
@@ -149,8 +145,16 @@ export function AIOAuditClient({
                 name="website-url"
               />
             </div>
+          ) : (
+            <>
+              <CardTitle>Run AIO Audit</CardTitle>
+              <CardDescription>
+                Analyze customer website readiness for AI-powered search engines
+              </CardDescription>
+            </>
           )}
-
+        </CardHeader>
+        <CardContent className="space-y-4">
           <SampleSizeSelector
             value={sampleSize}
             onChange={setSampleSize}
@@ -169,7 +173,7 @@ export function AIOAuditClient({
                 Running…
               </>
             ) : (
-              'Start Audit'
+              'Run Audit'
             )}
           </Button>
 
