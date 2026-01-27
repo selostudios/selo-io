@@ -114,8 +114,7 @@ export function AIOAuditClient({
           <AIOInfoDialog />
         </div>
         <p className="text-muted-foreground mt-1">
-          Analyze customer content for Artificial Intelligence Optimization - how well AI systems like
-          ChatGPT, Claude, and Perplexity can discover and cite their content
+          Analyze customer content for Artificial Intelligence Optimization
         </p>
       </div>
 
@@ -128,22 +127,37 @@ export function AIOAuditClient({
                 <CardTitle>One-Time AIO Audit</CardTitle>
                 <CardDescription>Add URL to begin AIO audit</CardDescription>
               </div>
-              <Input
-                type="url"
-                placeholder="https://example.com"
-                className="w-64"
-                id="url"
-                value={oneTimeUrl}
-                onChange={(e) => setOneTimeUrl(e.target.value)}
-                disabled={isRunning}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && oneTimeUrl.trim() && !isRunning) {
-                    handleStartAudit()
-                  }
-                }}
-                autoComplete="url"
-                name="website-url"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  type="url"
+                  placeholder="https://example.com"
+                  className="w-64"
+                  id="url"
+                  value={oneTimeUrl}
+                  onChange={(e) => setOneTimeUrl(e.target.value)}
+                  disabled={isRunning}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && oneTimeUrl.trim() && !isRunning) {
+                      handleStartAudit()
+                    }
+                  }}
+                  autoComplete="url"
+                  name="website-url"
+                />
+                <Button
+                  onClick={handleStartAudit}
+                  disabled={!oneTimeUrl.trim() || isRunning}
+                >
+                  {isRunning ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                      Running…
+                    </>
+                  ) : (
+                    'Run Audit'
+                  )}
+                </Button>
+              </div>
             </div>
           ) : (
             <>
@@ -162,20 +176,22 @@ export function AIOAuditClient({
             disabled={isRunning}
           />
 
-          <Button
-            onClick={handleStartAudit}
-            disabled={!selectedTarget || (selectedTarget.type === 'one-time' && !oneTimeUrl.trim()) || isRunning}
-            className="w-full"
-          >
-            {isRunning ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                Running…
-              </>
-            ) : (
-              'Run Audit'
-            )}
-          </Button>
+          {selectedTarget?.type !== 'one-time' && (
+            <Button
+              onClick={handleStartAudit}
+              disabled={!selectedTarget || isRunning}
+              className="w-full"
+            >
+              {isRunning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  Running…
+                </>
+              ) : (
+                'Run Audit'
+              )}
+            </Button>
+          )}
 
           {hasError && (
             <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
