@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UserMenu } from '@/components/dashboard/user-menu'
-import { OrgLogo } from '@/components/dashboard/org-logo'
-import { OrganizationSelector } from './organization-selector'
+import { OrgSelector } from '@/components/shared/org-selector'
 import { getOrganizations } from '@/lib/organizations/actions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
@@ -23,7 +22,7 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
   const { data: userRecord, error } = await supabase
     .from('users')
     .select(
-      'organization:organizations(name, logo_url, primary_color), first_name, last_name, role, is_internal'
+      'organization:organizations(id, name, logo_url, website_url, status), first_name, last_name, role, is_internal, organization_id'
     )
     .eq('id', user.id)
     .single()
@@ -32,21 +31,13 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
     redirect('/login')
   }
 
-  const org = userRecord?.organization as unknown as {
-    name: string
-    logo_url: string | null
-    primary_color: string | null
-  } | null
-  const orgName = org?.name || 'Organization'
-  const logoUrl = org?.logo_url || null
-  const primaryColor = org?.primary_color || null
   const userEmail = user?.email || ''
   const firstName = userRecord?.first_name || userEmail.split('@')[0]
   const lastName = userRecord?.last_name || ''
   const role = userRecord?.role || 'team_member'
   const isInternal = userRecord?.is_internal === true
 
-  // Fetch all organizations for internal users
+  // Fetch all organizations for internal users, or just user's org for external users
   let organizations: OrganizationForSelector[] = []
   if (isInternal) {
     const allOrgs = await getOrganizations()
@@ -57,22 +48,37 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
       status: org.status,
       logo_url: org.logo_url,
     }))
+  } else {
+    // External users: use their organization data
+    const userOrg = userRecord?.organization as unknown as {
+      id: string
+      name: string
+      logo_url: string | null
+      website_url: string | null
+      status: string
+    } | null
+
+    if (userOrg) {
+      organizations = [
+        {
+          id: userOrg.id,
+          name: userOrg.name,
+          website_url: userOrg.website_url,
+          status: userOrg.status,
+          logo_url: userOrg.logo_url,
+        },
+      ]
+    }
   }
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
       <div className="flex items-center gap-4">
-        {isInternal ? (
-          <OrganizationSelector
-            organizations={organizations}
-            selectedOrganizationId={selectedOrgId}
-          />
-        ) : (
-          <>
-            <OrgLogo logoUrl={logoUrl} orgName={orgName} primaryColor={primaryColor} size={40} />
-            <h2 className="text-lg font-semibold">{orgName}</h2>
-          </>
-        )}
+        <OrgSelector
+          organizations={organizations}
+          isInternal={isInternal}
+          selectedOrganizationId={selectedOrgId}
+        />
       </div>
       <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />
     </header>

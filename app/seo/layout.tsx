@@ -8,7 +8,13 @@ import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 import { isInternalUser } from '@/lib/permissions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
-export default async function SeoLayout({ children }: { children: React.ReactNode }) {
+interface SeoLayoutProps {
+  children: React.ReactNode
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function SeoLayout({ children, searchParams }: SeoLayoutProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -64,6 +70,7 @@ export default async function SeoLayout({ children }: { children: React.ReactNod
             role={role}
             organizations={organizations}
             isInternal={isInternal}
+            selectedOrganizationId={selectedOrgId || null}
           />
           <main className="flex-1">
             <div className="space-y-6 p-8">{children}</div>
