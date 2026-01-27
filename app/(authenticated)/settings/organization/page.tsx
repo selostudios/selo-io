@@ -86,6 +86,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
       </div>
 
       <OrganizationForm
+        key={org.id}
         organizationId={org.id}
         name={org.name}
         industryId={org.industry || ''}
