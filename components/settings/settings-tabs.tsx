@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const settingsTabs = [
@@ -13,16 +13,20 @@ const settingsTabs = [
 
 export function SettingsTabs() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const orgParam = searchParams.get('org')
 
   return (
     <div className="border-b">
       <nav className="flex gap-6">
         {settingsTabs.map((tab) => {
           const isActive = pathname === tab.href
+          const href = orgParam ? `${tab.href}?org=${orgParam}` : tab.href
+
           return (
             <Link
               key={tab.href}
-              href={tab.href}
+              href={href}
               className={cn(
                 'border-b-2 pb-3 text-sm font-medium transition-colors',
                 isActive
