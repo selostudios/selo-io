@@ -65,14 +65,12 @@ export function OrgSelector({
     localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
     window.dispatchEvent(new Event('sidebar-expand'))
 
-    // Update URL and refresh to re-fetch server data
+    // Update URL - Next.js will automatically re-render Server Components with new searchParams
     const url = new URL(window.location.href)
     url.searchParams.set('org', orgId)
     const newUrl = pathname + url.search
 
-    // Push URL and refresh to re-fetch server component data
     router.push(newUrl)
-    router.refresh()
   }
 
   const handleSelectOneTime = () => {
