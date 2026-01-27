@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const duplicateTitles: AuditCheckDefinition = {
   name: 'duplicate_titles',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'Duplicate page titles confuse search engines and reduce click-through rates',
   displayName: 'Duplicate Page Titles',
   displayNamePassed: 'Unique Page Titles',
@@ -34,7 +35,7 @@ export const duplicateTitles: AuditCheckDefinition = {
 
     if (duplicates.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'All page titles are unique',
           uniqueTitles: Object.keys(titleToUrls).length,
@@ -49,7 +50,7 @@ export const duplicateTitles: AuditCheckDefinition = {
       .join(', ')
 
     return {
-      status: 'failed',
+      status: CheckStatus.Failed,
       details: {
         message: `Found ${duplicates.length} duplicate title${duplicates.length > 1 ? 's' : ''} affecting ${totalDuplicatePages} pages. Examples: ${summary}. Each page should have a unique, descriptive title.`,
         duplicateCount: duplicates.length,

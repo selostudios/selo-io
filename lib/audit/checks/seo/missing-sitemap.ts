@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingSitemap: AuditCheckDefinition = {
   name: 'missing_sitemap',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'XML sitemap helps search engines discover and index pages',
   displayName: 'Missing XML Sitemap',
   displayNamePassed: 'XML Sitemap',
@@ -77,7 +78,7 @@ export const missingSitemap: AuditCheckDefinition = {
 
     if (sitemapFound) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `XML sitemap found at ${sitemapUrl}`,
           sitemap_url: sitemapUrl,
@@ -87,7 +88,7 @@ export const missingSitemap: AuditCheckDefinition = {
 
     if (sitemapError) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: sitemapError,
         },
@@ -95,7 +96,7 @@ export const missingSitemap: AuditCheckDefinition = {
     }
 
     return {
-      status: 'failed',
+      status: CheckStatus.Failed,
       details: {
         message:
           'No XML sitemap found. Create a sitemap.xml file listing all important pages to help search engines discover your content. Most CMS platforms can generate this automatically.',

@@ -1,9 +1,10 @@
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const aiCrawlersBlocked: AuditCheckDefinition = {
   name: 'ai_crawlers_blocked',
-  type: 'ai_readiness',
-  priority: 'critical',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Critical,
   description: 'Check if robots.txt blocks AI crawlers like GPTBot, ClaudeBot',
   displayName: 'AI Crawlers Blocked',
   displayNamePassed: 'AI Crawlers Allowed',
@@ -14,7 +15,7 @@ export const aiCrawlersBlocked: AuditCheckDefinition = {
     // This is a site-wide check - only meaningful on homepage
     const baseUrl = new URL(context.url)
     if (baseUrl.pathname !== '/' && baseUrl.pathname !== '') {
-      return { status: 'passed' }
+      return { status: CheckStatus.Passed }
     }
 
     try {
@@ -22,7 +23,7 @@ export const aiCrawlersBlocked: AuditCheckDefinition = {
       const response = await fetch(robotsTxtUrl)
       if (!response.ok) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: { message: 'No robots.txt found (AI crawlers allowed by default)' },
         }
       }
@@ -36,7 +37,7 @@ export const aiCrawlersBlocked: AuditCheckDefinition = {
 
       if (blocked.length > 0) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `Your robots.txt blocks these AI crawlers: ${blocked.join(', ')}. This prevents AI assistants like ChatGPT and Claude from citing your content.`,
             blocked,
@@ -44,11 +45,11 @@ export const aiCrawlersBlocked: AuditCheckDefinition = {
         }
       }
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: { message: 'AI crawlers are allowed in robots.txt' },
       }
     } catch {
-      return { status: 'passed' }
+      return { status: CheckStatus.Passed }
     }
   },
 }

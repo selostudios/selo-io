@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const missingStructuredData: AuditCheckDefinition = {
   name: 'missing_structured_data',
-  type: 'ai_readiness',
-  priority: 'critical',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Critical,
   description: 'Check for JSON-LD structured data',
   displayName: 'Missing Structured Data',
   displayNamePassed: 'Structured Data (JSON-LD)',
@@ -18,7 +19,7 @@ export const missingStructuredData: AuditCheckDefinition = {
 
     if (jsonLdScripts.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Add JSON-LD structured data to help search engines and AI understand your content. Common types include Organization, Article, Product, and FAQ.',
@@ -40,7 +41,7 @@ export const missingStructuredData: AuditCheckDefinition = {
     })
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: types.length > 0 ? `Found: ${types.join(', ')}` : 'JSON-LD structured data found',
       },

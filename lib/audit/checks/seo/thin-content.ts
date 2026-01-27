@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const thinContent: AuditCheckDefinition = {
   name: 'thin_content',
-  type: 'seo',
-  priority: 'optional',
+  type: CheckType.SEO,
+  priority: CheckPriority.Optional,
   description: 'Pages should have at least 300 words of content',
   displayName: 'Thin Content',
   displayNamePassed: 'Content Length',
@@ -21,7 +22,7 @@ export const thinContent: AuditCheckDefinition = {
 
     if (wordCount < 300) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Page has only ${wordCount} words. Search engines prefer pages with 300+ words of meaningful content. Consider adding more descriptive text, FAQs, or explanations.`,
           wordCount,
@@ -30,7 +31,7 @@ export const thinContent: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `${wordCount} words`,
       },

@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const headingHierarchy: AuditCheckDefinition = {
   name: 'heading_hierarchy',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Heading levels should not be skipped',
   displayName: 'Skipped Heading Levels',
   displayNamePassed: 'Heading Hierarchy',
@@ -18,7 +19,7 @@ export const headingHierarchy: AuditCheckDefinition = {
       .get()
 
     if (headings.length === 0) {
-      return { status: 'passed' }
+      return { status: CheckStatus.Passed }
     }
 
     const skippedLevels: string[] = []
@@ -33,7 +34,7 @@ export const headingHierarchy: AuditCheckDefinition = {
 
     if (skippedLevels.length > 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Headings should follow a logical order (H1 → H2 → H3). Skipped: ${skippedLevels.join(', ')}. This helps screen readers and search engines understand content structure.`,
           skippedLevels,
@@ -42,7 +43,7 @@ export const headingHierarchy: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: 'Headings follow correct hierarchy',
       },

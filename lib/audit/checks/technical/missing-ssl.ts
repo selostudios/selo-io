@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingSsl: AuditCheckDefinition = {
   name: 'missing_ssl',
-  type: 'technical',
-  priority: 'critical',
+  type: CheckType.Technical,
+  priority: CheckPriority.Critical,
   description: 'Sites not using HTTPS encryption',
   displayName: 'Missing HTTPS',
   displayNamePassed: 'HTTPS Enabled',
@@ -15,7 +16,7 @@ export const missingSsl: AuditCheckDefinition = {
 
     if (url.protocol !== 'https:') {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Site is served over HTTP instead of HTTPS. HTTPS is required for security and is a Google ranking factor. Enable SSL/TLS encryption on your server.',
@@ -24,7 +25,7 @@ export const missingSsl: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: { message: 'Site is served over HTTPS' },
     }
   },

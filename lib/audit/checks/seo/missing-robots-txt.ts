@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingRobotsTxt: AuditCheckDefinition = {
   name: 'missing_robots_txt',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'robots.txt helps control how search engines crawl your site',
   displayName: 'Missing robots.txt',
   displayNamePassed: 'robots.txt',
@@ -22,7 +23,7 @@ export const missingRobotsTxt: AuditCheckDefinition = {
 
       if (!response.ok) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `No robots.txt found (HTTP ${response.status}). Create a robots.txt file to control search engine crawling behavior and point to your sitemap.`,
             statusCode: response.status,
@@ -40,7 +41,7 @@ export const missingRobotsTxt: AuditCheckDefinition = {
 
       if (!hasUserAgent) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message:
               'robots.txt exists but appears to be empty or malformed. Add User-agent directives to properly configure crawler behavior.',
@@ -54,7 +55,7 @@ export const missingRobotsTxt: AuditCheckDefinition = {
       if (hasSitemap) features.push('sitemap reference')
 
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `robots.txt is properly configured${features.length > 0 ? ` with ${features.join(' and ')}` : ''}`,
           url: robotsUrl,
@@ -64,7 +65,7 @@ export const missingRobotsTxt: AuditCheckDefinition = {
       }
     } catch {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Could not access robots.txt (connection error). Ensure the file exists and is accessible.',

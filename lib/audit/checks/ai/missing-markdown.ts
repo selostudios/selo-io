@@ -1,9 +1,10 @@
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const missingMarkdown: AuditCheckDefinition = {
   name: 'missing_markdown',
-  type: 'ai_readiness',
-  priority: 'optional',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Optional,
   description: 'Markdown versions of pages improve AI crawler accessibility',
   displayName: 'Missing Markdown Alternatives',
   displayNamePassed: 'Markdown Alternatives',
@@ -73,7 +74,7 @@ export const missingMarkdown: AuditCheckDefinition = {
 
     if (!hasMarkdown) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'No markdown alternatives found. Consider providing /llms-full.txt or .md versions of key pages to improve accessibility for AI crawlers and LLMs.',
@@ -83,7 +84,7 @@ export const missingMarkdown: AuditCheckDefinition = {
 
     const foundItems = [...markdownEndpoints, ...pagesWithMarkdown.map((p) => `${p} → .md`)]
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `Found ${foundItems.length} markdown endpoint${foundItems.length === 1 ? '' : 's'}: ${foundItems.slice(0, 3).join(', ')}${foundItems.length > 3 ? '...' : ''}`,
         endpoints: foundItems,

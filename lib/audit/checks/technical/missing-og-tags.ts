@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingOgTags: AuditCheckDefinition = {
   name: 'missing_og_tags',
-  type: 'technical',
-  priority: 'optional',
+  type: CheckType.Technical,
+  priority: CheckPriority.Optional,
   description: 'Pages missing Open Graph meta tags for social sharing',
   displayName: 'Missing Open Graph Tags',
   displayNamePassed: 'Open Graph Tags',
@@ -23,7 +24,7 @@ export const missingOgTags: AuditCheckDefinition = {
 
     if (missing.length > 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Add ${missing.join(', ')} meta tags for better social media previews when your pages are shared on Facebook, LinkedIn, and other platforms.`,
           missing,
@@ -32,7 +33,7 @@ export const missingOgTags: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: { message: 'og:title, og:description, og:image all present' },
     }
   },

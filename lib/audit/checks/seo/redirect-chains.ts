@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const redirectChains: AuditCheckDefinition = {
   name: 'redirect_chains',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description:
     'Redirect chains waste crawl budget and dilute PageRank. Redirects should go directly to the final URL.',
   displayName: 'Redirect Chains Detected',
@@ -21,7 +22,7 @@ export const redirectChains: AuditCheckDefinition = {
 
     if (redirectPages.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'No redirects found in crawled pages',
         },
@@ -101,7 +102,7 @@ export const redirectChains: AuditCheckDefinition = {
 
     if (chains.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Checked ${samplesToCheck.length} redirect${samplesToCheck.length > 1 ? 's' : ''}, no chains detected`,
           redirectsChecked: samplesToCheck.length,
@@ -119,7 +120,7 @@ export const redirectChains: AuditCheckDefinition = {
       .join(', ')
 
     return {
-      status: maxHops >= 3 ? 'failed' : 'warning',
+      status: maxHops >= 3 ? CheckStatus.Failed : CheckStatus.Warning,
       details: {
         message: `Found ${chains.length} redirect chain${chains.length > 1 ? 's' : ''} with up to ${maxHops} hops. Examples: ${summary}. Update internal links to point directly to the final URL.`,
         chainCount: chains.length,

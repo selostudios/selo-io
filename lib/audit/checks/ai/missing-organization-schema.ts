@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const missingOrganizationSchema: AuditCheckDefinition = {
   name: 'missing_organization_schema',
-  type: 'ai_readiness',
-  priority: 'recommended',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Recommended,
   description: 'Organization schema helps AI understand your business identity',
   displayName: 'Missing Organization Schema',
   displayNamePassed: 'Organization Schema',
@@ -56,7 +57,7 @@ export const missingOrganizationSchema: AuditCheckDefinition = {
       const displayName = orgName || 'Unknown'
       if (missingFields.length === 0) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: {
             message: `Organization schema found with name "${displayName}". AI assistants can identify your business.`,
             organization_name: displayName,
@@ -65,7 +66,7 @@ export const missingOrganizationSchema: AuditCheckDefinition = {
       }
 
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Organization schema found but missing recommended fields: ${missingFields.join(', ')}. Add these for better AI understanding.`,
           missing_fields: missingFields,
@@ -75,7 +76,7 @@ export const missingOrganizationSchema: AuditCheckDefinition = {
     }
 
     return {
-      status: 'failed',
+      status: CheckStatus.Failed,
       details: {
         message:
           'No Organization schema found on homepage. Add JSON-LD structured data to help search engines and AI assistants understand your business identity, location, and contact information.',

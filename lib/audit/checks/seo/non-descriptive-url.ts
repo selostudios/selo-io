@@ -1,4 +1,5 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 // Common stop words to ignore when comparing
 const STOP_WORDS = new Set([
@@ -112,8 +113,8 @@ function getUrlSegments(url: string): string[] {
 
 export const nonDescriptiveUrl: AuditCheckDefinition = {
   name: 'non_descriptive_url',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'URL slugs should be descriptive and relate to page content',
   displayName: 'Non-Descriptive URL',
   displayNamePassed: 'Descriptive URL',
@@ -125,7 +126,7 @@ export const nonDescriptiveUrl: AuditCheckDefinition = {
     // Skip homepage - it has no slug to check
     if (segments.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: { message: 'Homepage - no URL slug to check' },
       }
     }
@@ -136,7 +137,7 @@ export const nonDescriptiveUrl: AuditCheckDefinition = {
     // Check 1: Is the slug just an ID or random string?
     if (isLikelyId(slug)) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `URL contains ID-like slug "${slug}" instead of descriptive words. Use keyword-rich URLs like /services/web-design instead of /page/12345`,
           slug,
@@ -185,7 +186,7 @@ export const nonDescriptiveUrl: AuditCheckDefinition = {
 
     if (issues.length > 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: issues.join('. '),
           slug,
@@ -195,7 +196,7 @@ export const nonDescriptiveUrl: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `URL "${slug}" is descriptive and well-formatted`,
       },

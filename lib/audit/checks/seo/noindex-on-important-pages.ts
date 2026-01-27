@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const noindexOnImportantPages: AuditCheckDefinition = {
   name: 'noindex_on_important_pages',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description:
     'Noindex meta tags prevent search engines from indexing pages. Critical pages should not have noindex.',
   displayName: 'Noindex Tag on Important Pages',
@@ -34,7 +35,7 @@ export const noindexOnImportantPages: AuditCheckDefinition = {
 
       if (isImportant) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `This important page has a noindex directive (${metaRobots || metaGooglebot}), preventing search engines from indexing it. Remove the noindex tag unless this is intentional.`,
             metaContent: metaRobots || metaGooglebot,
@@ -45,7 +46,7 @@ export const noindexOnImportantPages: AuditCheckDefinition = {
 
       // Not an important page, but still worth noting
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Page has noindex directive (${metaRobots || metaGooglebot}). Verify this is intentional.`,
           metaContent: metaRobots || metaGooglebot,
@@ -54,7 +55,7 @@ export const noindexOnImportantPages: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: 'No noindex directives found on this page',
       },

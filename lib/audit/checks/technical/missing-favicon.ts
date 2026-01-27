@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingFavicon: AuditCheckDefinition = {
   name: 'missing_favicon',
-  type: 'technical',
-  priority: 'optional',
+  type: CheckType.Technical,
+  priority: CheckPriority.Optional,
   description: 'Pages without a favicon link',
   displayName: 'Missing Favicon',
   displayNamePassed: 'Favicon',
@@ -17,7 +18,7 @@ export const missingFavicon: AuditCheckDefinition = {
 
     if (!favicon) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message:
             'Add a favicon with <link rel="icon" href="/favicon.ico">. Favicons appear in browser tabs, bookmarks, and Google search results.',
@@ -26,7 +27,7 @@ export const missingFavicon: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: { message: favicon },
     }
   },

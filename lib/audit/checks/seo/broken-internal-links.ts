@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const brokenInternalLinks: AuditCheckDefinition = {
   name: 'broken_internal_links',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'Internal links returning 4xx/5xx errors hurt SEO and user experience',
   displayName: 'Broken Internal Links',
   displayNamePassed: 'Internal Links',
@@ -18,7 +19,7 @@ export const brokenInternalLinks: AuditCheckDefinition = {
 
     if (brokenPages.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `All ${context.allPages.length} internal pages returned successful status codes`,
           totalPages: context.allPages.length,
@@ -41,7 +42,7 @@ export const brokenInternalLinks: AuditCheckDefinition = {
       .join(', ')
 
     return {
-      status: 'failed',
+      status: CheckStatus.Failed,
       details: {
         message: `Found ${brokenPages.length} broken internal link${brokenPages.length > 1 ? 's' : ''} (${statusSummary}). Fix or remove these links to improve SEO and user experience.`,
         brokenCount: brokenPages.length,

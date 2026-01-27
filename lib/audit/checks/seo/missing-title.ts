@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingTitle: AuditCheckDefinition = {
   name: 'missing_title',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'Pages must have a title tag',
   displayName: 'Missing Page Title',
   displayNamePassed: 'Page Title',
@@ -16,7 +17,7 @@ export const missingTitle: AuditCheckDefinition = {
 
     if (!title) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Add a <title> tag to the <head> section. This appears as the clickable headline in search results.',
@@ -25,7 +26,7 @@ export const missingTitle: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `"${title.slice(0, 50)}${title.length > 50 ? '...' : ''}"`,
       },

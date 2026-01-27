@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const missingMetaDescription: AuditCheckDefinition = {
   name: 'missing_meta_description',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'Pages without meta description tags',
   displayName: 'Missing Meta Description',
   displayNamePassed: 'Meta Description',
@@ -16,7 +17,7 @@ export const missingMetaDescription: AuditCheckDefinition = {
 
     if (!metaDescription || metaDescription.trim() === '') {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Add a <meta name="description" content="..."> tag to the <head> section. This 150-160 character summary appears in search results.',
@@ -25,7 +26,7 @@ export const missingMetaDescription: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `Found: "${metaDescription.slice(0, 60)}${metaDescription.length > 60 ? '...' : ''}"`,
       },

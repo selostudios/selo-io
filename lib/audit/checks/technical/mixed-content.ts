@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const mixedContent: AuditCheckDefinition = {
   name: 'mixed_content',
-  type: 'technical',
-  priority: 'recommended',
+  type: CheckType.Technical,
+  priority: CheckPriority.Recommended,
   description: 'HTTP resources on HTTPS pages cause security warnings',
   displayName: 'Mixed Content',
   displayNamePassed: 'Secure Resources',
@@ -16,7 +17,7 @@ export const mixedContent: AuditCheckDefinition = {
     // Only check HTTPS pages - HTTP pages can't have mixed content issues
     if (pageUrl.protocol !== 'https:') {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'Page is served over HTTP (mixed content check not applicable)',
         },
@@ -72,7 +73,7 @@ export const mixedContent: AuditCheckDefinition = {
         .join(', ')
 
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `${insecureResources.length} insecure HTTP resource${insecureResources.length === 1 ? '' : 's'} on HTTPS page (${summary}). Update URLs to HTTPS to prevent browser warnings and blocked content.`,
           count: insecureResources.length,
@@ -82,7 +83,7 @@ export const mixedContent: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: 'All resources loaded securely over HTTPS',
       },

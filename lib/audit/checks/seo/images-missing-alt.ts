@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const imagesMissingAlt: AuditCheckDefinition = {
   name: 'images_missing_alt',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'All images should have alt attributes',
   displayName: 'Images Missing Alt Text',
   displayNamePassed: 'Image Alt Text',
@@ -25,7 +26,7 @@ export const imagesMissingAlt: AuditCheckDefinition = {
 
     if (imagesWithoutAlt.length > 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `${imagesWithoutAlt.length} image${imagesWithoutAlt.length === 1 ? '' : 's'} missing alt attribute. Add alt="description" to each <img> for accessibility and SEO.`,
           count: imagesWithoutAlt.length,
@@ -35,7 +36,7 @@ export const imagesMissingAlt: AuditCheckDefinition = {
 
     const totalImages = $('img').length
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: totalImages > 0 ? `All ${totalImages} images have alt text` : 'No images found',
       },

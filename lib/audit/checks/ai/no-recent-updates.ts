@@ -1,11 +1,12 @@
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 const STALE_THRESHOLD_DAYS = 90
 
 export const noRecentUpdates: AuditCheckDefinition = {
   name: 'no_recent_updates',
-  type: 'ai_readiness',
-  priority: 'recommended',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Recommended,
   description: 'Sites without recent updates may be deprioritized in search',
   displayName: 'No Recent Updates',
   displayNamePassed: 'Content Freshness',
@@ -60,7 +61,7 @@ export const noRecentUpdates: AuditCheckDefinition = {
 
     if (!mostRecentDate) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message:
             'Unable to determine content freshness. No Last-Modified headers or sitemap lastmod dates found. Consider adding timestamps to help search engines assess content relevance.',
@@ -74,7 +75,7 @@ export const noRecentUpdates: AuditCheckDefinition = {
 
     if (mostRecentDate < thresholdDate) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `No content updates in ${daysSinceUpdate} days (threshold: ${STALE_THRESHOLD_DAYS} days). Fresh content signals relevance to search engines and AI systems. Consider updating existing content or publishing new material.`,
           daysSinceUpdate,
@@ -84,7 +85,7 @@ export const noRecentUpdates: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `Content updated ${daysSinceUpdate} day${daysSinceUpdate === 1 ? '' : 's'} ago`,
         daysSinceUpdate,

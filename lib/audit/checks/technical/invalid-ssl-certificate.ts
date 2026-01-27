@@ -1,4 +1,5 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import * as tls from 'tls'
 
 interface CertificateInfo {
@@ -73,8 +74,8 @@ async function getCertificateInfo(hostname: string): Promise<CertificateInfo> {
 
 export const invalidSslCertificate: AuditCheckDefinition = {
   name: 'invalid_ssl_certificate',
-  type: 'technical',
-  priority: 'critical',
+  type: CheckType.Technical,
+  priority: CheckPriority.Critical,
   description: 'SSL certificate is invalid, expired, or has issues',
   displayName: 'Invalid SSL Certificate',
   displayNamePassed: 'Valid SSL Certificate',
@@ -87,7 +88,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Only check HTTPS sites
     if (url.protocol !== 'https:') {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: { message: 'Site uses HTTP, SSL check not applicable' },
       }
     }
@@ -97,7 +98,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Certificate retrieval failed
     if (certInfo.error && !certInfo.validTo) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Unable to verify SSL certificate: ${certInfo.error}`,
           error: certInfo.error,
@@ -108,7 +109,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Certificate is expired
     if (certInfo.daysUntilExpiry !== undefined && certInfo.daysUntilExpiry <= 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `SSL certificate expired on ${certInfo.validTo?.toLocaleDateString()}. Visitors will see security warnings and browsers may block access to your site.`,
           expiredOn: certInfo.validTo?.toISOString(),
@@ -120,7 +121,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Certificate is self-signed
     if (certInfo.selfSigned) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             "SSL certificate is self-signed. Browsers will show security warnings. Use a certificate from a trusted Certificate Authority (e.g., Let's Encrypt).",
@@ -133,7 +134,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Certificate has chain/validation issues
     if (certInfo.error) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `SSL certificate validation failed: ${certInfo.error}. This may cause browser warnings or connection failures.`,
           error: certInfo.error,
@@ -146,7 +147,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
     // Certificate expiring soon (within 30 days) - warning
     if (certInfo.daysUntilExpiry !== undefined && certInfo.daysUntilExpiry <= 30) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `SSL certificate expires in ${certInfo.daysUntilExpiry} days (${certInfo.validTo?.toLocaleDateString()}). Renew soon to avoid security warnings.`,
           daysUntilExpiry: certInfo.daysUntilExpiry,
@@ -158,7 +159,7 @@ export const invalidSslCertificate: AuditCheckDefinition = {
 
     // All good
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `SSL certificate is valid and expires in ${certInfo.daysUntilExpiry} days`,
         issuer: certInfo.issuer,

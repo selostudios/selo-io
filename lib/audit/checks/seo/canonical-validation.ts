@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const canonicalValidation: AuditCheckDefinition = {
   name: 'canonical_validation',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Canonical URLs should be valid, accessible, and self-referencing on unique pages',
   displayName: 'Invalid Canonical URL',
   displayNamePassed: 'Valid Canonical URLs',
@@ -17,7 +18,7 @@ export const canonicalValidation: AuditCheckDefinition = {
     // If no canonical, this is handled by missing-canonical check
     if (!canonical || canonical.trim() === '') {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'No canonical tag (handled by separate check)',
         },
@@ -49,7 +50,7 @@ export const canonicalValidation: AuditCheckDefinition = {
       canonicalUrl = new URL(canonical, pageUrl).href
     } catch {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Canonical URL is malformed: "${canonical}". Use absolute URLs for canonical tags.`,
           canonical,
@@ -82,7 +83,7 @@ export const canonicalValidation: AuditCheckDefinition = {
 
       if (status >= 400) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `Canonical URL returns ${status} error. Canonical must point to an accessible page.`,
             canonical: canonicalUrl,
@@ -93,7 +94,7 @@ export const canonicalValidation: AuditCheckDefinition = {
 
       if (status >= 300 && status < 400) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message: `Canonical URL redirects (${status}). Canonical should point directly to the final URL, not a redirect.`,
             canonical: canonicalUrl,
@@ -116,7 +117,7 @@ export const canonicalValidation: AuditCheckDefinition = {
 
         if (normalizedTargetCanonical !== normalizedCanonical) {
           return {
-            status: 'failed',
+            status: CheckStatus.Failed,
             details: {
               message: `Canonical chain detected: Page points to ${canonicalUrl}, which points to ${targetCanonicalUrl}. Canonical should point directly to the final URL.`,
               canonical: canonicalUrl,
@@ -127,7 +128,7 @@ export const canonicalValidation: AuditCheckDefinition = {
       }
     } catch (error) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Could not verify canonical URL (${canonicalUrl}). Ensure it is accessible.`,
           canonical: canonicalUrl,
@@ -139,7 +140,7 @@ export const canonicalValidation: AuditCheckDefinition = {
     // If we found issues but nothing critical
     if (issues.length > 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: issues.join(' '),
           canonical: canonicalUrl,
@@ -148,7 +149,7 @@ export const canonicalValidation: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `Canonical URL is valid and accessible: ${canonicalUrl}`,
         canonical: canonicalUrl,

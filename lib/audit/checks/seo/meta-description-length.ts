@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const metaDescriptionLength: AuditCheckDefinition = {
   name: 'meta_description_length',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Meta description should be between 150-160 characters',
   displayName: 'Meta Description Length',
   displayNamePassed: 'Meta Description Length',
@@ -16,14 +17,14 @@ export const metaDescriptionLength: AuditCheckDefinition = {
     const metaDescription = $('meta[name="description"]').attr('content')
 
     if (!metaDescription || metaDescription.trim() === '') {
-      return { status: 'passed' } // Missing meta description is handled by missing_meta_description check
+      return { status: CheckStatus.Passed } // Missing meta description is handled by missing_meta_description check
     }
 
     const length = metaDescription.trim().length
 
     if (length < 120) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Meta description is only ${length} characters. Aim for 150-160 characters to maximize space in search results without truncation.`,
           length,
@@ -33,7 +34,7 @@ export const metaDescriptionLength: AuditCheckDefinition = {
 
     if (length > 160) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Meta description is ${length} characters and may be truncated. Aim for 150-160 characters for optimal display in search results.`,
           length,
@@ -42,7 +43,7 @@ export const metaDescriptionLength: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `${length} characters (optimal)`,
       },

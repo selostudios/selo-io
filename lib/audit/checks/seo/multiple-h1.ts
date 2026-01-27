@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const multipleH1: AuditCheckDefinition = {
   name: 'multiple_h1',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Pages should have only one H1 tag',
   displayName: 'Multiple H1 Headings',
   displayNamePassed: 'Single H1 Heading',
@@ -23,7 +24,7 @@ export const multipleH1: AuditCheckDefinition = {
         .join('", "')
 
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Found ${h1Count} H1 tags: "${h1Texts}". Use only one H1 per page for the main heading. Use H2-H6 for subheadings.`,
           count: h1Count,
@@ -31,6 +32,6 @@ export const multipleH1: AuditCheckDefinition = {
       }
     }
 
-    return { status: 'passed' }
+    return { status: CheckStatus.Passed }
   },
 }

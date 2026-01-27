@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const noFaqContent: AuditCheckDefinition = {
   name: 'no_faq_content',
-  type: 'ai_readiness',
-  priority: 'recommended',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Recommended,
   description: 'Check for FAQ schema or FAQ-style content',
   displayName: 'No FAQ Content',
   displayNamePassed: 'FAQ Content',
@@ -24,14 +25,14 @@ export const noFaqContent: AuditCheckDefinition = {
 
     if (hasFaqSchema) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: { message: 'FAQ schema found' },
       }
     }
 
     if (hasFaqSection) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'FAQ section detected (consider adding FAQPage schema for rich results)',
         },
@@ -39,7 +40,7 @@ export const noFaqContent: AuditCheckDefinition = {
     }
 
     return {
-      status: 'warning',
+      status: CheckStatus.Warning,
       details: {
         message:
           'Consider adding FAQ content with FAQPage schema. FAQ sections help AI assistants answer questions about your product/service directly.',

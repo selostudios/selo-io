@@ -1,13 +1,14 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 const MAX_IMAGE_SIZE_KB = 500
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_KB * 1024
 
 export const oversizedImages: AuditCheckDefinition = {
   name: 'oversized_images',
-  type: 'seo',
-  priority: 'optional',
+  type: CheckType.SEO,
+  priority: CheckPriority.Optional,
   description: 'Images over 500KB affect page load speed',
   displayName: 'Oversized Images',
   displayNamePassed: 'Image Sizes',
@@ -63,7 +64,7 @@ export const oversizedImages: AuditCheckDefinition = {
     if (oversizedImages.length > 0) {
       const largestImage = oversizedImages.reduce((a, b) => (a.sizeKb > b.sizeKb ? a : b))
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `${oversizedImages.length} image${oversizedImages.length === 1 ? '' : 's'} over ${MAX_IMAGE_SIZE_KB}KB. Largest: ${largestImage.sizeKb}KB. Compress images or use modern formats (WebP, AVIF) for faster load times.`,
           count: oversizedImages.length,
@@ -73,7 +74,7 @@ export const oversizedImages: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message:
           checkedImages.length > 0

@@ -1,9 +1,10 @@
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const missingLlmsTxt: AuditCheckDefinition = {
   name: 'missing_llms_txt',
-  type: 'ai_readiness',
-  priority: 'critical',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Critical,
   description: 'Check if /llms.txt exists for AI crawlers',
   displayName: 'Missing llms.txt File',
   displayNamePassed: 'llms.txt File',
@@ -14,7 +15,7 @@ export const missingLlmsTxt: AuditCheckDefinition = {
     // This is a site-wide check - only meaningful on homepage
     const baseUrl = new URL(context.url)
     if (baseUrl.pathname !== '/' && baseUrl.pathname !== '') {
-      return { status: 'passed' } // Skip for non-homepage
+      return { status: CheckStatus.Passed } // Skip for non-homepage
     }
 
     try {
@@ -22,12 +23,12 @@ export const missingLlmsTxt: AuditCheckDefinition = {
       const response = await fetch(llmsTxtUrl, { method: 'HEAD' })
       if (response.ok) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: { message: 'Found at /llms.txt' },
         }
       }
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Create a /llms.txt file to help AI assistants understand your site. This file describes your content in a format optimized for language models.',
@@ -35,7 +36,7 @@ export const missingLlmsTxt: AuditCheckDefinition = {
       }
     } catch {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message:
             'Create a /llms.txt file to help AI assistants understand your site. This file describes your content in a format optimized for language models.',

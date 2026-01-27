@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const titleLength: AuditCheckDefinition = {
   name: 'title_length',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Title should be 60 characters or less',
   displayName: 'Title Too Long',
   displayNamePassed: 'Title Length',
@@ -15,12 +16,12 @@ export const titleLength: AuditCheckDefinition = {
     const title = $('title').text().trim()
 
     if (!title) {
-      return { status: 'passed' } // Missing title is handled by missing_title check
+      return { status: CheckStatus.Passed } // Missing title is handled by missing_title check
     }
 
     if (title.length > 60) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Title is ${title.length} characters. Google typically displays 50-60 characters. Consider shortening to prevent truncation in search results.`,
           length: title.length,
@@ -29,7 +30,7 @@ export const titleLength: AuditCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `${title.length} characters (good)`,
       },

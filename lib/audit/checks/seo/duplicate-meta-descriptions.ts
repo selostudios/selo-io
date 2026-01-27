@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const duplicateMetaDescriptions: AuditCheckDefinition = {
   name: 'duplicate_meta_descriptions',
-  type: 'seo',
-  priority: 'recommended',
+  type: CheckType.SEO,
+  priority: CheckPriority.Recommended,
   description: 'Duplicate meta descriptions reduce click-through rates from search results',
   displayName: 'Duplicate Meta Descriptions',
   displayNamePassed: 'Unique Meta Descriptions',
@@ -37,7 +38,7 @@ export const duplicateMetaDescriptions: AuditCheckDefinition = {
 
     if (duplicates.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'All meta descriptions are unique',
           uniqueDescriptions: Object.keys(descriptionToUrls).length,
@@ -55,7 +56,7 @@ export const duplicateMetaDescriptions: AuditCheckDefinition = {
       .join(', ')
 
     return {
-      status: 'warning',
+      status: CheckStatus.Warning,
       details: {
         message: `Found ${duplicates.length} duplicate meta description${duplicates.length > 1 ? 's' : ''} affecting ${totalDuplicatePages} pages. Examples: ${summary}. Each page should have a unique meta description to improve click-through rates.`,
         duplicateCount: duplicates.length,

@@ -1,9 +1,10 @@
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
 
 export const slowPageResponse: AuditCheckDefinition = {
   name: 'slow_page_response',
-  type: 'ai_readiness',
-  priority: 'critical',
+  type: CheckType.AIReadiness,
+  priority: CheckPriority.Critical,
   description: 'AI crawlers timeout on slow pages (1-5 seconds)',
   displayName: 'Slow Page Response',
   displayNamePassed: 'Fast Page Response',
@@ -34,7 +35,7 @@ export const slowPageResponse: AuditCheckDefinition = {
       // We use 2 seconds as good, 5 seconds as warning threshold
       if (responseTimeMs <= 2000) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: {
             message: `Homepage responds in ${responseTimeSeconds}s. AI crawlers can access your content quickly.`,
             response_time_ms: responseTimeMs,
@@ -44,7 +45,7 @@ export const slowPageResponse: AuditCheckDefinition = {
 
       if (responseTimeMs <= 5000) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message: `Homepage responds in ${responseTimeSeconds}s. This is within limits but AI crawlers like GPTBot prefer faster responses (<2s). Consider optimizing server response time.`,
             response_time_ms: responseTimeMs,
@@ -53,7 +54,7 @@ export const slowPageResponse: AuditCheckDefinition = {
       }
 
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Homepage takes ${responseTimeSeconds}s to respond. AI crawlers typically timeout at 5 seconds and may skip your content. Optimize server response time, enable caching, or use a CDN.`,
           response_time_ms: responseTimeMs,
@@ -64,7 +65,7 @@ export const slowPageResponse: AuditCheckDefinition = {
 
       if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message:
               'Homepage took over 10 seconds to respond (timed out). AI crawlers will skip your site. This is a critical performance issue.',
@@ -73,7 +74,7 @@ export const slowPageResponse: AuditCheckDefinition = {
       }
 
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Could not measure response time: ${errorMessage}`,
         },

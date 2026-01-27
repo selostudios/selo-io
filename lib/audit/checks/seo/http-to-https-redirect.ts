@@ -1,9 +1,10 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const httpToHttpsRedirect: AuditCheckDefinition = {
   name: 'http_to_https_redirect',
-  type: 'seo',
-  priority: 'critical',
+  type: CheckType.SEO,
+  priority: CheckPriority.Critical,
   description: 'HTTP version should redirect to HTTPS to consolidate SEO signals and ensure security',
   displayName: 'Missing HTTP to HTTPS Redirect',
   displayNamePassed: 'HTTP to HTTPS Redirect',
@@ -16,7 +17,7 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
     // Skip if already HTTP (missing SSL - handled by other check)
     if (url.protocol === 'http:') {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'Site uses HTTP (SSL check handles this separately)',
         },
@@ -44,7 +45,7 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
 
           if (redirectUrl.protocol === 'https:') {
             return {
-              status: 'passed',
+              status: CheckStatus.Passed,
               details: {
                 message: `HTTP correctly redirects to HTTPS (${status} redirect)`,
                 redirectStatus: status,
@@ -53,7 +54,7 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
             }
           } else {
             return {
-              status: 'warning',
+              status: CheckStatus.Warning,
               details: {
                 message: `HTTP redirects but not to HTTPS. Location: ${location}`,
                 redirectStatus: status,
@@ -66,7 +67,7 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
 
       // No redirect - both HTTP and HTTPS versions accessible
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `HTTP version is accessible without redirecting to HTTPS (returned ${status}). Configure a 301 redirect from HTTP to HTTPS to consolidate SEO signals and ensure security.`,
           httpStatus: status,
@@ -75,7 +76,7 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
     } catch {
       // HTTP version not accessible - this is actually good
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'HTTP version is not accessible (likely server-level block)',
           note: 'This is fine as long as all links use HTTPS',
