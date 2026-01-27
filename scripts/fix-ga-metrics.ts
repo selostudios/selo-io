@@ -57,11 +57,21 @@ function parseArgs() {
 // Credentials Mapping
 // ============================================================================
 
+interface StoredCredentials {
+  access_token?: string
+  refresh_token?: string
+  expires_at?: string
+  property_id?: string
+  organization_id?: string
+  property_name?: string
+  organization_name?: string
+}
+
 /**
  * Map stored credentials to GoogleAnalyticsCredentials format
  * OAuth callback stores property_id as organization_id (generic field name)
  */
-function mapCredentials(stored: any): GoogleAnalyticsCredentials {
+function mapCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
   return {
     access_token: stored.access_token || '',
     refresh_token: stored.refresh_token || '',

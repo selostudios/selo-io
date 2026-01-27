@@ -45,13 +45,13 @@ export async function syncMetricsForLinkedInConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new LinkedInAdapter(credentials, connectionId)
 
-  // Fetch metrics for the last 90 days to cover all time ranges
+  // Fetch daily metrics for the last 90 days
   const endDate = new Date()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 90)
 
-  const metrics = await adapter.fetchMetrics(startDate, endDate)
-  const records = adapter.normalizeToDbRecords(metrics, organizationId, endDate)
+  const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+  const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
   const { error: insertError } = await supabase
@@ -107,13 +107,13 @@ export async function syncLinkedInMetrics() {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new LinkedInAdapter(credentials, connection.id)
 
-    // Fetch metrics for the last 90 days to cover all time ranges
+    // Fetch daily metrics for the last 90 days
     const endDate = new Date()
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - 90)
 
-    const metrics = await adapter.fetchMetrics(startDate, endDate)
-    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, endDate)
+    const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
 
     // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
     const { error: insertError } = await supabase

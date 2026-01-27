@@ -72,6 +72,17 @@ export interface LinkedInMetrics {
   reactions: number
 }
 
+// Single day's metrics from LinkedIn API
+export interface LinkedInDailyMetrics {
+  date: string // YYYY-MM-DD format
+  followers: number
+  followerGrowth: number
+  pageViews: number
+  uniqueVisitors: number
+  impressions: number
+  reactions: number
+}
+
 export type LinkedInMetricType =
   | 'linkedin_followers'
   | 'linkedin_follower_growth'

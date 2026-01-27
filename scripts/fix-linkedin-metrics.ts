@@ -289,7 +289,7 @@ async function fixLinkedInMetrics() {
     }> = []
 
     // Process each day individually
-    let currentDate = new Date(fetchStartDate)
+    const currentDate = new Date(fetchStartDate)
     while (currentDate <= fetchEndDate) {
       const dayStart = new Date(currentDate)
       dayStart.setHours(0, 0, 0, 0)

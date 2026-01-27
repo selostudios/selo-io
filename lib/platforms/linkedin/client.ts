@@ -1,4 +1,4 @@
-import type { LinkedInCredentials, LinkedInMetrics } from './types'
+import type { LinkedInCredentials, LinkedInMetrics, LinkedInDailyMetrics } from './types'
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
@@ -324,5 +324,32 @@ export class LinkedInClient {
       impressions: shareStats.impressions,
       reactions: shareStats.likes + shareStats.comments + shareStats.shares,
     }
+  }
+
+  /**
+   * Fetch daily metrics for a date range.
+   * Returns one LinkedInDailyMetrics per day.
+   */
+  async fetchDailyMetrics(startDate: Date, endDate: Date): Promise<LinkedInDailyMetrics[]> {
+    const dailyMetrics: LinkedInDailyMetrics[] = []
+
+    const currentDate = new Date(startDate)
+    while (currentDate <= endDate) {
+      const dayStart = new Date(currentDate)
+      dayStart.setHours(0, 0, 0, 0)
+      const dayEnd = new Date(currentDate)
+      dayEnd.setHours(23, 59, 59, 999)
+
+      const metrics = await this.getAllMetrics(dayStart, dayEnd)
+
+      dailyMetrics.push({
+        date: currentDate.toISOString().split('T')[0],
+        ...metrics,
+      })
+
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    return dailyMetrics
   }
 }

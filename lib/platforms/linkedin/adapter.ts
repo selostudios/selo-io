@@ -1,5 +1,10 @@
 import { LinkedInClient } from './client'
-import type { LinkedInCredentials, LinkedInMetrics, LinkedInMetricType } from './types'
+import type {
+  LinkedInCredentials,
+  LinkedInMetrics,
+  LinkedInDailyMetrics,
+  LinkedInMetricType,
+} from './types'
 
 interface MetricRecord {
   organization_id: string
@@ -19,6 +24,10 @@ export class LinkedInAdapter {
 
   async fetchMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {
     return this.client.getAllMetrics(startDate, endDate)
+  }
+
+  async fetchDailyMetrics(startDate: Date, endDate: Date): Promise<LinkedInDailyMetrics[]> {
+    return this.client.fetchDailyMetrics(startDate, endDate)
   }
 
   normalizeToDbRecords(
@@ -78,5 +87,67 @@ export class LinkedInAdapter {
         value: metrics.reactions,
       },
     ]
+  }
+
+  normalizeDailyMetricsToDbRecords(
+    dailyMetrics: LinkedInDailyMetrics[],
+    organizationId: string
+  ): MetricRecord[] {
+    const records: MetricRecord[] = []
+
+    for (const day of dailyMetrics) {
+      records.push(
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_followers',
+          value: day.followers,
+        },
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_follower_growth',
+          value: day.followerGrowth,
+        },
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_page_views',
+          value: day.pageViews,
+        },
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_unique_visitors',
+          value: day.uniqueVisitors,
+        },
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_impressions',
+          value: day.impressions,
+        },
+        {
+          organization_id: organizationId,
+          campaign_id: null,
+          platform_type: 'linkedin',
+          date: day.date,
+          metric_type: 'linkedin_reactions',
+          value: day.reactions,
+        }
+      )
+    }
+
+    return records
   }
 }
