@@ -156,7 +156,7 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
                 variant="ghost"
                 size="sm"
                 onClick={() => handleRefreshAudit(audit)}
-                disabled={refreshingAuditId === audit.id}
+                disabled={refreshingAuditId === audit.id || isInProgress(audit.status)}
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="Re-run audit"
               >
