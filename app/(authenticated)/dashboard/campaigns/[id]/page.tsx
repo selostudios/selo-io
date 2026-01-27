@@ -7,10 +7,16 @@ import { DeleteCampaignButton } from '@/components/campaigns/delete-campaign-but
 import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { EditableDescription } from '@/components/campaigns/editable-description'
 import { EditableUtmSection } from '@/components/campaigns/editable-utm-section'
-import { canManageCampaigns } from '@/lib/permissions'
+import { canManageCampaigns, isInternalUser } from '@/lib/permissions'
 
-export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
+interface CampaignDetailPageProps {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function CampaignDetailPage({ params, searchParams }: CampaignDetailPageProps) {
   const { id } = await params
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const { data: campaign } = await supabase.from('campaigns').select('*').eq('id', id).single()
@@ -19,16 +25,30 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     notFound()
   }
 
-  // Get user's role
+  // Get user's role and organization
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('role')
+    .select('role, organization_id, is_internal')
     .eq('id', user?.id)
     .single()
+
+  if (!userRecord) {
+    redirect('/login')
+  }
+
+  const isInternal = isInternalUser(userRecord)
+
+  // Determine which organization the user is viewing
+  const viewingOrgId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+
+  // Verify the campaign belongs to the organization being viewed
+  if (campaign.organization_id !== viewingOrgId) {
+    notFound()
+  }
 
   const canDelete = canManageCampaigns(userRecord?.role)
 

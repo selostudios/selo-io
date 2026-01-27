@@ -1,9 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { CreateCampaignDialog } from '@/components/campaigns/create-campaign-dialog'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
-import { canManageCampaigns } from '@/lib/permissions'
+import { canManageCampaigns, isInternalUser } from '@/lib/permissions'
 
-export default async function CampaignsPage() {
+interface CampaignsPageProps {
+  searchParams: Promise<{ org?: string }>
+}
+
+export default async function CampaignsPage({ searchParams }: CampaignsPageProps) {
+  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -12,14 +18,31 @@ export default async function CampaignsPage() {
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user!.id)
     .single()
+
+  if (!userRecord) {
+    redirect('/login')
+  }
+
+  const isInternal = isInternalUser(userRecord)
+
+  // Determine which organization to show campaigns for
+  let organizationId = userRecord.organization_id
+
+  if (isInternal && selectedOrgId) {
+    // Internal users can view any organization's campaigns
+    organizationId = selectedOrgId
+  } else if (isInternal && !selectedOrgId) {
+    // Internal user without org selected - redirect to dashboard to trigger org selection
+    redirect('/dashboard')
+  }
 
   const { data: campaigns } = await supabase
     .from('campaigns')
     .select('*')
-    .eq('organization_id', userRecord!.organization_id)
+    .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
 
   const canCreateCampaign = canManageCampaigns(userRecord!.role)
