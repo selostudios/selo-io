@@ -2,11 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { canManageOrg } from '@/lib/permissions'
+import { canManageOrg, isInternalUser } from '@/lib/permissions'
 
 export async function updateOrganization(
   formData: FormData
 ): Promise<{ error?: string; success?: boolean }> {
+  const organizationId = formData.get('organizationId') as string | null
   const name = formData.get('name') as string
   const industryId = formData.get('industry') as string
   const logoUrl = formData.get('logoUrl') as string
@@ -76,7 +77,7 @@ export async function updateOrganization(
   // Get user's organization and verify they're an admin
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -84,11 +85,20 @@ export async function updateOrganization(
     return { error: 'Only admins can update organization settings' }
   }
 
+  // Determine which organization to update
+  // Internal users can specify a different org, otherwise use their own
+  const isInternal = isInternalUser(userRecord)
+  const orgId = (isInternal && organizationId) ? organizationId : userRecord.organization_id
+
+  if (!orgId) {
+    return { error: 'No organization specified' }
+  }
+
   // Get current organization to check if website_url is changing
   const { data: currentOrg } = await supabase
     .from('organizations')
     .select('website_url')
-    .eq('id', userRecord.organization_id)
+    .eq('id', orgId)
     .single()
 
   const newWebsiteUrl = websiteUrl?.trim() || null
@@ -99,7 +109,7 @@ export async function updateOrganization(
     const { error: archiveError } = await supabase
       .from('site_audits')
       .update({ archived_at: new Date().toISOString() })
-      .eq('organization_id', userRecord.organization_id)
+      .eq('organization_id', orgId)
       .is('archived_at', null)
 
     if (archiveError) {
@@ -129,7 +139,7 @@ export async function updateOrganization(
       social_links: socialLinks,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', userRecord.organization_id)
+    .eq('id', orgId)
 
   if (error) {
     console.error('[Organization Error]', {
@@ -143,6 +153,8 @@ export async function updateOrganization(
   revalidatePath('/settings/organization')
   revalidatePath('/dashboard')
   revalidatePath('/audit')
+  revalidatePath('/organizations')
+  revalidatePath('/', 'layout') // Revalidate the authenticated layout to refresh OrgSelector
 
   return { success: true }
 }

@@ -478,6 +478,7 @@ export function OrganizationForm({
           </CardContent>
         </Card>
 
+        <input type="hidden" name="organizationId" value={organizationId} />
         <input type="hidden" name="description" value={description} />
         <input type="hidden" name="city" value={city} />
         <input type="hidden" name="country" value={country} />
