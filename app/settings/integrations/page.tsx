@@ -4,6 +4,8 @@ import { isInternalUser } from '@/lib/permissions'
 import { OAuthToastHandler } from './oauth-toast-handler'
 import { IntegrationsPageContent } from './integrations-page-content'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: Promise<{ org?: string }>
 }

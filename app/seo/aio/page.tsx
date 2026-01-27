@@ -1,6 +1,8 @@
 import { getAIOAuditData } from './actions'
 import { AIOAuditClient } from './client'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: Promise<{ org?: string }>
 }

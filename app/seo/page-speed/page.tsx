@@ -1,6 +1,8 @@
 import { getPageSpeedData } from './actions'
 import { PageSpeedClient } from './client'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: Promise<{ org?: string }>
 }

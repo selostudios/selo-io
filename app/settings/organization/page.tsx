@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
 import { canManageOrg, isInternalUser } from '@/lib/permissions'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: Promise<{ org?: string }>
 }

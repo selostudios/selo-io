@@ -10,6 +10,8 @@ import { deleteInvite } from './actions'
 import { formatDate, displayName } from '@/lib/utils'
 import { canManageTeam, isInternalUser } from '@/lib/permissions'
 
+export const dynamic = 'force-dynamic'
+
 function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean)
   if (parts.length === 0) return '?'
