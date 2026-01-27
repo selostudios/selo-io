@@ -1,5 +1,6 @@
 import { siteWideChecks, pageSpecificChecks } from './checks'
 import { crawlSite } from '../audit/crawler'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type {
   AIOCheck,
   AIOCheckContext,
@@ -127,10 +128,16 @@ function calculateTechnicalScore(checks: AIOCheck[]): number {
     if (!check.status) continue
 
     // Determine weight based on priority
-    const weight = check.priority === 'critical' ? 3 : check.priority === 'recommended' ? 2 : 1
+    const weight =
+      check.priority === CheckPriority.Critical
+        ? 3
+        : check.priority === CheckPriority.Recommended
+          ? 2
+          : 1
 
     // Determine points based on status
-    const points = check.status === 'passed' ? 100 : check.status === 'warning' ? 50 : 0
+    const points =
+      check.status === CheckStatus.Passed ? 100 : check.status === CheckStatus.Warning ? 50 : 0
 
     totalWeight += weight
     weightedScore += points * weight
@@ -150,9 +157,11 @@ export function getCategoryScores(checks: AIOCheck[]): {
   contentQuality: number
 } {
   const categories = {
-    technical_foundation: checks.filter((c) => c.category === 'technical_foundation'),
-    content_structure: checks.filter((c) => c.category === 'content_structure'),
-    content_quality: checks.filter((c) => c.category === 'content_quality'),
+    technical_foundation: checks.filter(
+      (c) => c.category === AIOCheckCategory.TechnicalFoundation
+    ),
+    content_structure: checks.filter((c) => c.category === AIOCheckCategory.ContentStructure),
+    content_quality: checks.filter((c) => c.category === AIOCheckCategory.ContentQuality),
   }
 
   return {

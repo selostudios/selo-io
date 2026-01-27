@@ -1,16 +1,22 @@
 import { z } from 'zod'
 
+import {
+  AIOAuditStatus,
+  AIOCheckCategory,
+  CheckPriority,
+  CheckStatus,
+} from '@/lib/enums'
+
+//============================================================================
+// Re-exports for backwards compatibility
+//============================================================================
+
+export { AIOAuditStatus, AIOCheckCategory, CheckStatus }
+export { CheckPriority as AIOCheckPriority }
+
 //============================================================================
 // Database Types
 //============================================================================
-
-export type AIOAuditStatus = 'pending' | 'running' | 'completed' | 'failed'
-
-export type AIOCheckCategory = 'technical_foundation' | 'content_structure' | 'content_quality'
-
-export type AIOCheckPriority = 'critical' | 'recommended' | 'optional'
-
-export type CheckStatus = 'passed' | 'failed' | 'warning'
 
 export interface AIOAudit {
   id: string
