@@ -1,4 +1,7 @@
-export type Period = '7d' | '30d' | 'quarter'
+import { Period } from '@/lib/enums'
+
+// Re-export Period for consumers that import from this module
+export { Period }
 
 export interface TimeSeriesDataPoint {
   date: string // YYYY-MM-DD

@@ -1,25 +1,25 @@
-export type DateRangePeriod = '7d' | '30d' | 'quarter'
+import { Period } from '@/lib/enums'
 
 export interface DateRange {
   start: Date
   end: Date
 }
 
-export function getDateRange(period: DateRangePeriod): DateRange {
+export function getDateRange(period: Period): DateRange {
   const now = new Date()
   // Use UTC to avoid timezone issues
   const end = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)
   )
 
-  if (period === '7d') {
+  if (period === Period.SevenDays) {
     const start = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6, 0, 0, 0, 0)
     )
     return { start, end }
   }
 
-  if (period === '30d') {
+  if (period === Period.ThirtyDays) {
     const start = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29, 0, 0, 0, 0)
     )
@@ -33,9 +33,9 @@ export function getDateRange(period: DateRangePeriod): DateRange {
 
 export function getPreviousPeriodRange(
   currentRange: DateRange,
-  period: DateRangePeriod
+  period: Period
 ): DateRange {
-  if (period === 'quarter') {
+  if (period === Period.Quarter) {
     return getPreviousQuarterRange(currentRange.start)
   }
 

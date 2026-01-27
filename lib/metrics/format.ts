@@ -1,4 +1,4 @@
-import type { Period } from '@/components/dashboard/integrations-panel'
+import { Period } from '@/lib/enums'
 
 /**
  * Format a percentage change value for display.
@@ -15,11 +15,11 @@ export function formatChange(change: number | null): string {
  */
 export function getPeriodLabel(period: Period): string {
   switch (period) {
-    case '7d':
+    case Period.SevenDays:
       return 'Last 7 days'
-    case '30d':
+    case Period.ThirtyDays:
       return 'Last 30 days'
-    case 'quarter':
+    case Period.Quarter:
       return 'This quarter'
     default:
       return period
