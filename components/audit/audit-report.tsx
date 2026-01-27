@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { ArrowLeft, Download, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ScoreCards } from './score-cards'
 import { CheckList } from './check-list'
 import { ResourceList } from './resource-list'
+import { ExecutiveSummaryDialog } from './executive-summary-dialog'
 import type { SiteAudit, SiteAuditCheck, SiteAuditPage, DismissedCheck } from '@/lib/audit/types'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -121,17 +121,22 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
 
       {/* Site Info */}
       <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
-          {audit.status === 'stopped' && (
-            <Badge variant="secondary" className="text-xs">
-              Partial Report
-            </Badge>
-          )}
-          {audit.status === 'failed' && (
-            <Badge variant="destructive" className="text-xs">
-              Failed
-            </Badge>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-balance">{displayUrl}</h1>
+            {audit.status === 'stopped' && (
+              <Badge variant="secondary" className="text-xs">
+                Partial Report
+              </Badge>
+            )}
+            {audit.status === 'failed' && (
+              <Badge variant="destructive" className="text-xs">
+                Failed
+              </Badge>
+            )}
+          </div>
+          {audit.executive_summary && (
+            <ExecutiveSummaryDialog summary={audit.executive_summary} url={audit.url} />
           )}
         </div>
         <p className="text-muted-foreground text-sm">
@@ -149,20 +154,6 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
           </p>
         )}
       </div>
-
-      {/* Executive Summary */}
-      {audit.executive_summary && (
-        <Card>
-          <CardContent className="pt-6">
-            <h2 className="mb-3 text-lg font-semibold">Executive Summary</h2>
-            <div className="text-muted-foreground text-sm leading-relaxed space-y-3">
-              {audit.executive_summary.split('\n\n').map((paragraph, idx) => (
-                <p key={idx}>{paragraph}</p>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Score Cards */}
       <ScoreCards
