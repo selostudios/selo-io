@@ -1,17 +1,12 @@
-export type AuditStatus =
-  | 'pending'
-  | 'crawling'
-  | 'batch_complete'
-  | 'checking'
-  | 'completed'
-  | 'failed'
-  | 'stopped'
+import {
+  AuditStatus,
+  CheckType,
+  CheckPriority,
+  CheckStatus,
+} from '@/lib/enums'
 
-export type CheckType = 'seo' | 'ai_readiness' | 'technical'
-
-export type CheckPriority = 'critical' | 'recommended' | 'optional'
-
-export type CheckStatus = 'passed' | 'failed' | 'warning'
+// Re-export enums for convenience
+export { AuditStatus, CheckType, CheckPriority, CheckStatus }
 
 export interface SiteAudit {
   id: string
