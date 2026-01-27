@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -44,12 +44,19 @@ function getMostRecentSync(connections: Connection[]): string | null {
   )
 }
 
+const STORAGE_KEY = 'selo-dashboard-period'
+
 export function IntegrationsPanel({
   linkedInConnections,
   googleAnalyticsConnections,
   hubspotConnections,
 }: IntegrationsPanelProps) {
-  const [period, setPeriod] = useState<Period>('7d')
+  // Load period from localStorage on mount
+  const [period, setPeriod] = useState<Period>(() => {
+    if (typeof window === 'undefined') return '7d'
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return (stored as Period) || '7d'
+  })
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -61,6 +68,11 @@ export function IntegrationsPanel({
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(() =>
     getMostRecentSync(allConnections)
   )
+
+  // Persist period selection to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, period)
+  }, [period])
 
   // Count unique platform types that have at least one connection
   const connectedPlatforms = new Set(allConnections.map((c) => c.platform_type)).size
