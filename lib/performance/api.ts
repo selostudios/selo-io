@@ -1,4 +1,5 @@
-import type { PageSpeedResult, CWVRating, DeviceType, Opportunity, Diagnostic } from './types'
+import type { PageSpeedResult, DeviceType, Opportunity, Diagnostic } from './types'
+import { CWVRating } from './types'
 
 const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
@@ -40,9 +41,9 @@ export async function fetchPageSpeedInsights({
 export function mapCategoryToRating(category: string | undefined): CWVRating | null {
   if (!category) return null
   const mapping: Record<string, CWVRating> = {
-    FAST: 'good',
-    AVERAGE: 'needs_improvement',
-    SLOW: 'poor',
+    FAST: CWVRating.Good,
+    AVERAGE: CWVRating.NeedsImprovement,
+    SLOW: CWVRating.Poor,
   }
   return mapping[category] || null
 }
@@ -53,9 +54,9 @@ export function mapCategoryToRating(category: string | undefined): CWVRating | n
  */
 function getLcpRating(lcpMs: number | null): CWVRating | null {
   if (lcpMs === null) return null
-  if (lcpMs <= 2500) return 'good'
-  if (lcpMs <= 4000) return 'needs_improvement'
-  return 'poor'
+  if (lcpMs <= 2500) return CWVRating.Good
+  if (lcpMs <= 4000) return CWVRating.NeedsImprovement
+  return CWVRating.Poor
 }
 
 /**
@@ -64,9 +65,9 @@ function getLcpRating(lcpMs: number | null): CWVRating | null {
  */
 function getClsRating(clsScore: number | null): CWVRating | null {
   if (clsScore === null) return null
-  if (clsScore <= 0.1) return 'good'
-  if (clsScore <= 0.25) return 'needs_improvement'
-  return 'poor'
+  if (clsScore <= 0.1) return CWVRating.Good
+  if (clsScore <= 0.25) return CWVRating.NeedsImprovement
+  return CWVRating.Poor
 }
 
 /**
@@ -75,9 +76,9 @@ function getClsRating(clsScore: number | null): CWVRating | null {
  */
 function getInpRating(inpMs: number | null): CWVRating | null {
   if (inpMs === null) return null
-  if (inpMs <= 200) return 'good'
-  if (inpMs <= 500) return 'needs_improvement'
-  return 'poor'
+  if (inpMs <= 200) return CWVRating.Good
+  if (inpMs <= 500) return CWVRating.NeedsImprovement
+  return CWVRating.Poor
 }
 
 export function extractMetrics(result: PageSpeedResult) {

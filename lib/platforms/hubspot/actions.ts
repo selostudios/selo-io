@@ -13,7 +13,8 @@ import {
 import { HUBSPOT_METRICS } from '@/lib/metrics/types'
 import type { HubSpotCredentials } from './types'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Period, MetricTimeSeries } from '@/lib/metrics/types'
+import type { MetricTimeSeries } from '@/lib/metrics/types'
+import { Period } from '@/lib/metrics/types'
 
 interface StoredCredentials {
   access_token?: string
@@ -212,7 +213,7 @@ function formatHubSpotMetricsFromDb(
   }
 }
 
-export async function getHubSpotMetrics(period: Period = '30d', connectionId?: string) {
+export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, connectionId?: string) {
   const supabase = await createClient()
 
   const {

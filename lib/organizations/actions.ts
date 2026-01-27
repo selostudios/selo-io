@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { Organization, OrganizationStatus } from './types'
+import type { Organization } from './types'
+import { OrganizationStatus } from './types'
 
 /**
  * Check if the current user is an internal Selo employee
@@ -267,7 +268,11 @@ export async function updateOrganizationStatus(
   }
 
   // Validate status
-  const validStatuses: OrganizationStatus[] = ['prospect', 'customer', 'inactive']
+  const validStatuses: OrganizationStatus[] = [
+    OrganizationStatus.Prospect,
+    OrganizationStatus.Customer,
+    OrganizationStatus.Inactive,
+  ]
   if (!validStatuses.includes(status)) {
     return { success: false, error: 'Invalid status value' }
   }
@@ -335,7 +340,11 @@ export async function updateOrganization(
   }
 
   // Validate status
-  const validStatuses: OrganizationStatus[] = ['prospect', 'customer', 'inactive']
+  const validStatuses: OrganizationStatus[] = [
+    OrganizationStatus.Prospect,
+    OrganizationStatus.Customer,
+    OrganizationStatus.Inactive,
+  ]
   if (!validStatuses.includes(updates.status)) {
     return { success: false, error: 'Invalid status value' }
   }
