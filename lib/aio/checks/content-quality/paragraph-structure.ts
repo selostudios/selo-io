@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const paragraphStructure: AIOCheckDefinition = {
   name: 'paragraph_structure',
-  category: 'content_quality',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Recommended,
   description: 'Scannable paragraphs improve content extraction by AI engines',
   displayName: 'Poor Paragraph Structure',
   displayNamePassed: 'Scannable Paragraphs',
@@ -20,7 +21,7 @@ export const paragraphStructure: AIOCheckDefinition = {
 
     if (paragraphs.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: 'No paragraph elements found. Content should be broken into paragraphs.',
           fixGuidance: 'Structure content with <p> tags instead of line breaks or divs.',
@@ -68,7 +69,7 @@ export const paragraphStructure: AIOCheckDefinition = {
 
     if (issues.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Scannable paragraphs: ${strengths.join(', ')} (${paragraphs.length} paragraphs, avg ${Math.round(avgParagraphLength)} words)`,
           ...details,
@@ -76,7 +77,7 @@ export const paragraphStructure: AIOCheckDefinition = {
       }
     } else if (issues.length === 1) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Paragraph structure could be improved: ${issues.join('; ')}`,
           ...details,
@@ -85,7 +86,7 @@ export const paragraphStructure: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Poor paragraph structure: ${issues.join('; ')}`,
           ...details,

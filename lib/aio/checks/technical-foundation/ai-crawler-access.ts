@@ -1,9 +1,10 @@
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const aiCrawlerAccess: AIOCheckDefinition = {
   name: 'ai_crawler_access',
-  category: 'technical_foundation',
-  priority: 'critical',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Critical,
   description: 'Ensure AI crawlers like GPTBot, Claude-Web can access your site',
   displayName: 'AI Crawlers Blocked',
   displayNamePassed: 'AI Crawlers Allowed',
@@ -14,7 +15,7 @@ export const aiCrawlerAccess: AIOCheckDefinition = {
     // This is a site-wide check - only meaningful on homepage
     const baseUrl = new URL(context.url)
     if (baseUrl.pathname !== '/' && baseUrl.pathname !== '') {
-      return { status: 'passed' }
+      return { status: CheckStatus.Passed }
     }
 
     try {
@@ -22,7 +23,7 @@ export const aiCrawlerAccess: AIOCheckDefinition = {
       const response = await fetch(robotsTxtUrl)
       if (!response.ok) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: { message: 'No robots.txt found (AI crawlers allowed by default)' },
         }
       }
@@ -47,7 +48,7 @@ export const aiCrawlerAccess: AIOCheckDefinition = {
 
       if (blocked.length > 0) {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `Your robots.txt blocks these AI crawlers: ${blocked.join(', ')}. This prevents AI engines from indexing and citing your content.`,
             blocked,
@@ -57,14 +58,14 @@ export const aiCrawlerAccess: AIOCheckDefinition = {
       }
 
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `AI crawlers can access your site (${aiCrawlers.length} crawlers checked)`,
         },
       }
     } catch (error) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Could not verify robots.txt: ${error instanceof Error ? error.message : 'Unknown error'}`,
         },

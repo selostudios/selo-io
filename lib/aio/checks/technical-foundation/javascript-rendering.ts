@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const javascriptRendering: AIOCheckDefinition = {
   name: 'javascript_rendering',
-  category: 'technical_foundation',
-  priority: 'recommended',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Recommended,
   description: 'Content should be available in initial HTML for reliable AI crawler access',
   displayName: 'JavaScript-Dependent Content',
   displayNamePassed: 'Server-Rendered Content',
@@ -40,7 +41,7 @@ export const javascriptRendering: AIOCheckDefinition = {
     // Main content check
     if (wordCount < 50) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Very little content in initial HTML (${wordCount} words). AI crawlers may not see your content if it requires JavaScript execution.`,
           wordCount,
@@ -50,7 +51,7 @@ export const javascriptRendering: AIOCheckDefinition = {
       }
     } else if (wordCount < 200 && detectedFrameworks.length > 0 && !hasSSRIndicators) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Limited content in initial HTML (${wordCount} words). Framework detected (${detectedFrameworks.join(', ')}) but SSR not confirmed. AI crawlers may miss dynamically loaded content.`,
           wordCount,
@@ -61,7 +62,7 @@ export const javascriptRendering: AIOCheckDefinition = {
     } else {
       const renderingType = hasSSRIndicators ? 'Server-rendered' : 'Static HTML'
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `${renderingType} content available (${wordCount} words in initial HTML)`,
           wordCount,

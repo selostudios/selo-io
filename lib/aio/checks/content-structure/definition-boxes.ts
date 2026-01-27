@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const definitionBoxes: AIOCheckDefinition = {
   name: 'definition_boxes',
-  category: 'content_structure',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Recommended,
   description: '"What is X" sections help AI engines provide quick definitions',
   displayName: 'No Definition Sections',
   displayNamePassed: 'Definition Sections Present',
@@ -44,7 +45,7 @@ export const definitionBoxes: AIOCheckDefinition = {
 
     if (foundDefinitions.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: 'No clear definition sections found. AI engines prefer explicit "What is X" content for featured snippets.',
           fixGuidance: 'Add a "What is [topic]?" section near the top with a concise 2-3 sentence definition.',
@@ -52,7 +53,7 @@ export const definitionBoxes: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Definition content found: ${foundDefinitions.join(', ')}`,
           foundDefinitions,

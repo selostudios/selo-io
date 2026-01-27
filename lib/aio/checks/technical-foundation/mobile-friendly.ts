@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const mobileFriendly: AIOCheckDefinition = {
   name: 'mobile_friendly',
-  category: 'technical_foundation',
-  priority: 'recommended',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Recommended,
   description: 'Mobile optimization ensures AI engines can access content on all devices',
   displayName: 'Not Mobile-Friendly',
   displayNamePassed: 'Mobile-Friendly',
@@ -43,7 +44,7 @@ export const mobileFriendly: AIOCheckDefinition = {
       if (appleWebApp || mobileOptimized) mobileSignals.push('mobile meta tags')
 
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Mobile-friendly (${mobileSignals.join(', ')})`,
           viewport,
@@ -51,7 +52,7 @@ export const mobileFriendly: AIOCheckDefinition = {
       }
     } else if (issues.length === 1) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: issues[0],
           fixGuidance: 'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to the <head> section.',
@@ -59,7 +60,7 @@ export const mobileFriendly: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Mobile optimization issues: ${issues.join('; ')}`,
           issues,

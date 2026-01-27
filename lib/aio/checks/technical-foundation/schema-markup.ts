@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const schemaMarkup: AIOCheckDefinition = {
   name: 'schema_markup',
-  category: 'technical_foundation',
-  priority: 'critical',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Critical,
   description: 'Structured data helps AI engines understand and extract your content',
   displayName: 'Missing Structured Data',
   displayNamePassed: 'Structured Data Present',
@@ -39,7 +40,7 @@ export const schemaMarkup: AIOCheckDefinition = {
 
     if (schemas.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: 'No structured data found. AI engines rely on Schema.org markup to understand content type and extract key information.',
           fixGuidance: 'Add JSON-LD structured data for Article, FAQPage, or HowTo depending on your content type.',
@@ -49,7 +50,7 @@ export const schemaMarkup: AIOCheckDefinition = {
 
     if (foundRelevant.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Found structured data (${schemas.join(', ')}) but none are highly relevant for AIO. Consider adding Article, FAQPage, or HowTo schemas.`,
           foundSchemas: schemas,
@@ -58,7 +59,7 @@ export const schemaMarkup: AIOCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: `Found ${foundRelevant.length} AIO-relevant schema(s): ${foundRelevant.join(', ')}`,
         foundSchemas: schemas,

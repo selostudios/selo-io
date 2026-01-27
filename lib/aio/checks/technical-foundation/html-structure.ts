@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const htmlStructure: AIOCheckDefinition = {
   name: 'html_structure',
-  category: 'technical_foundation',
-  priority: 'recommended',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Recommended,
   description: 'Clean, semantic HTML helps AI engines parse and understand your content',
   displayName: 'Poor HTML Structure',
   displayNamePassed: 'Clean HTML Structure',
@@ -45,7 +46,7 @@ export const htmlStructure: AIOCheckDefinition = {
 
     if (issues.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Clean HTML structure with ${foundSemantic.length} semantic elements`,
           semanticElements: foundSemantic,
@@ -53,7 +54,7 @@ export const htmlStructure: AIOCheckDefinition = {
       }
     } else if (issues.length <= 2) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `HTML structure could be improved: ${issues.join('; ')}`,
           issues,
@@ -62,7 +63,7 @@ export const htmlStructure: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Poor HTML structure: ${issues.join('; ')}`,
           issues,

@@ -1,9 +1,10 @@
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const pageSpeed: AIOCheckDefinition = {
   name: 'page_speed',
-  category: 'technical_foundation',
-  priority: 'recommended',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Recommended,
   description: 'Fast page loads improve AI crawler efficiency and user experience',
   displayName: 'Slow Page Load',
   displayNamePassed: 'Fast Page Load',
@@ -28,7 +29,7 @@ export const pageSpeed: AIOCheckDefinition = {
 
       if (!response.ok) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: { message: 'Could not measure page speed (non-200 response)' },
         }
       }
@@ -37,7 +38,7 @@ export const pageSpeed: AIOCheckDefinition = {
       // Good: < 1s, Needs improvement: 1-2.5s, Poor: > 2.5s
       if (responseTime < 1000) {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: {
             message: `Excellent response time: ${responseTime}ms`,
             responseTime,
@@ -45,7 +46,7 @@ export const pageSpeed: AIOCheckDefinition = {
         }
       } else if (responseTime < 2500) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message: `Moderate response time: ${responseTime}ms. Consider optimization for better AI crawler performance.`,
             responseTime,
@@ -53,7 +54,7 @@ export const pageSpeed: AIOCheckDefinition = {
         }
       } else {
         return {
-          status: 'failed',
+          status: CheckStatus.Failed,
           details: {
             message: `Slow response time: ${responseTime}ms. This may impact AI crawler efficiency and content indexing.`,
             responseTime,
@@ -62,7 +63,7 @@ export const pageSpeed: AIOCheckDefinition = {
       }
     } catch (error) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Could not measure page speed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         },

@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const citationFormat: AIOCheckDefinition = {
   name: 'citation_format',
-  category: 'content_structure',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Recommended,
   description: 'Proper source attribution increases trustworthiness for AI engines',
   displayName: 'No Citation Format',
   displayNamePassed: 'Citations Present',
@@ -64,7 +65,7 @@ export const citationFormat: AIOCheckDefinition = {
 
     if (authoritativeLinks.length === 0 && citationElements === 0 && referenceHeadings.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: 'No citations or source links found. AI engines prioritize content with clear source attribution.',
           externalLinks: externalLinks.length,
@@ -73,7 +74,7 @@ export const citationFormat: AIOCheckDefinition = {
       }
     } else if (authoritativeLinks.length >= 3 || referenceHeadings.length > 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Strong citation format: ${indicators.join(', ')}`,
           indicators,
@@ -82,7 +83,7 @@ export const citationFormat: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Some citations found (${indicators.join(', ')}) but could be improved with more authoritative sources`,
           indicators,

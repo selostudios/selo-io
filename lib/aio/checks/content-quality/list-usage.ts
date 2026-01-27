@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const listUsage: AIOCheckDefinition = {
   name: 'list_usage',
-  category: 'content_quality',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Recommended,
   description: 'Bullet points and numbered lists help AI engines extract key information',
   displayName: 'No Lists',
   displayNamePassed: 'Lists Present',
@@ -32,7 +33,7 @@ export const listUsage: AIOCheckDefinition = {
     if (totalLists === 0) {
       if (wordCount > 500) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message: 'No lists found in substantial content. Lists help AI engines extract key points.',
             wordCount,
@@ -41,7 +42,7 @@ export const listUsage: AIOCheckDefinition = {
         }
       } else {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: {
             message: 'No lists found (acceptable for short content)',
             wordCount,
@@ -68,7 +69,7 @@ export const listUsage: AIOCheckDefinition = {
 
     if (listsWithMultipleItems < totalLists * 0.5) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Found ${totalLists} list(s) but many have few items. Use lists for 3+ related points.`,
           ...details,
@@ -79,7 +80,7 @@ export const listUsage: AIOCheckDefinition = {
 
     if (totalLists >= 2 && totalItems >= 6) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Good list usage: ${totalLists} list(s) with ${totalItems} total items`,
           ...details,
@@ -87,7 +88,7 @@ export const listUsage: AIOCheckDefinition = {
       }
     } else if (totalLists >= 1) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Moderate list usage: ${totalLists} list(s) with ${totalItems} items`,
           ...details,
@@ -95,7 +96,7 @@ export const listUsage: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Limited list usage: ${totalLists} list(s). Consider adding more lists for key points.`,
           ...details,

@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const comparisonTables: AIOCheckDefinition = {
   name: 'comparison_tables',
-  category: 'content_structure',
-  priority: 'optional',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Optional,
   description: 'Structured data tables help AI engines extract comparative information',
   displayName: 'No Comparison Tables',
   displayNamePassed: 'Comparison Tables Present',
@@ -19,7 +20,7 @@ export const comparisonTables: AIOCheckDefinition = {
 
     if (tables.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'No tables found (not applicable for this page type)',
         },
@@ -44,7 +45,7 @@ export const comparisonTables: AIOCheckDefinition = {
 
     if (tablesWithHeaders.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Found ${tables.length} table(s) but none have header rows (<th>). AI engines need structured tables to extract data.`,
           totalTables: tables.length,
@@ -62,7 +63,7 @@ export const comparisonTables: AIOCheckDefinition = {
       }
 
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Structured tables found: ${features.join(', ')}`,
           totalTables: tables.length,

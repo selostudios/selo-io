@@ -1,9 +1,10 @@
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const sslCertificate: AIOCheckDefinition = {
   name: 'ssl_certificate',
-  category: 'technical_foundation',
-  priority: 'critical',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Critical,
   description: 'HTTPS is required for AI crawlers to trust and index your content',
   displayName: 'Missing HTTPS',
   displayNamePassed: 'HTTPS Enabled',
@@ -15,7 +16,7 @@ export const sslCertificate: AIOCheckDefinition = {
 
     if (url.protocol !== 'https:') {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: 'Site is not using HTTPS. AI engines require secure connections for content indexing.',
           protocol: url.protocol,
@@ -25,7 +26,7 @@ export const sslCertificate: AIOCheckDefinition = {
     }
 
     return {
-      status: 'passed',
+      status: CheckStatus.Passed,
       details: {
         message: 'Site uses HTTPS with valid SSL certificate',
         protocol: url.protocol,

@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const faqSection: AIOCheckDefinition = {
   name: 'faq_section',
-  category: 'content_structure',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Recommended,
   description: 'FAQ sections help AI engines extract Q&A pairs for direct answers',
   displayName: 'No FAQ Section',
   displayNamePassed: 'FAQ Section Present',
@@ -38,7 +39,7 @@ export const faqSection: AIOCheckDefinition = {
 
     if (faqIndicators.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: 'No FAQ section detected. AI engines prioritize sites with Q&A content for direct answer citations.',
           fixGuidance: 'Add a FAQ section with common questions and detailed answers. Use FAQPage schema markup for best results.',
@@ -46,7 +47,7 @@ export const faqSection: AIOCheckDefinition = {
       }
     } else if (hasFAQSchema) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `FAQ section with structured data: ${faqIndicators.join(', ')}`,
           indicators: faqIndicators,
@@ -54,7 +55,7 @@ export const faqSection: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `FAQ content detected (${faqIndicators.join(', ')}) but missing FAQPage schema markup`,
           indicators: faqIndicators,

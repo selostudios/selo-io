@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const contentAccessibility: AIOCheckDefinition = {
   name: 'content_accessibility',
-  category: 'technical_foundation',
-  priority: 'recommended',
+  category: AIOCheckCategory.TechnicalFoundation,
+  priority: CheckPriority.Recommended,
   description: 'Alt text and semantic HTML help AI engines understand non-text content',
   displayName: 'Poor Accessibility',
   displayNamePassed: 'Good Accessibility',
@@ -71,7 +72,7 @@ export const contentAccessibility: AIOCheckDefinition = {
 
     if (issues.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Excellent accessibility: ${goodPractices.join(', ')}`,
           goodPractices,
@@ -79,7 +80,7 @@ export const contentAccessibility: AIOCheckDefinition = {
       }
     } else if (issues.length <= 2) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Accessibility could be improved: ${issues.join('; ')}`,
           issues,
@@ -89,7 +90,7 @@ export const contentAccessibility: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Multiple accessibility issues: ${issues.join('; ')}`,
           issues,

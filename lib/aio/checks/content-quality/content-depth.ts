@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const contentDepth: AIOCheckDefinition = {
   name: 'content_depth',
-  category: 'content_quality',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Recommended,
   description: 'Sufficient content depth demonstrates expertise and comprehensive coverage',
   displayName: 'Thin Content',
   displayNamePassed: 'Substantial Content',
@@ -28,7 +29,7 @@ export const contentDepth: AIOCheckDefinition = {
 
     if (wordCount < 300) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Very thin content (${wordCount} words). AI engines prioritize comprehensive content with depth and detail.`,
           wordCount,
@@ -37,7 +38,7 @@ export const contentDepth: AIOCheckDefinition = {
       }
     } else if (wordCount < 800) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Moderate content depth (${wordCount} words). Consider adding more detail for better AI engine visibility.`,
           wordCount,
@@ -46,7 +47,7 @@ export const contentDepth: AIOCheckDefinition = {
       }
     } else if (wordCount < 1500) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Good content depth (${wordCount} words)`,
           wordCount,
@@ -54,7 +55,7 @@ export const contentDepth: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Excellent content depth (${wordCount} words)`,
           wordCount,

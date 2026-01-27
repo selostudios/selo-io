@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const summarySections: AIOCheckDefinition = {
   name: 'summary_sections',
-  category: 'content_structure',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Recommended,
   description: 'TL;DR and summary sections help AI engines extract key takeaways',
   displayName: 'No Summary Section',
   displayNamePassed: 'Summary Section Present',
@@ -52,7 +53,7 @@ export const summarySections: AIOCheckDefinition = {
 
     if (indicators.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: 'No summary section found. AI engines prioritize content with clear TL;DR or key takeaways for quick extraction.',
           fixGuidance: 'Add a "Summary" or "Key Takeaways" section with 3-5 bullet points of main insights.',
@@ -60,7 +61,7 @@ export const summarySections: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Summary content found: ${indicators.join(', ')}`,
           indicators,

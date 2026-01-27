@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const readability: AIOCheckDefinition = {
   name: 'readability',
-  category: 'content_quality',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Recommended,
   description: 'Clear, readable content is easier for AI engines to parse and cite',
   displayName: 'Poor Readability',
   displayNamePassed: 'Good Readability',
@@ -23,7 +24,7 @@ export const readability: AIOCheckDefinition = {
 
     if (sentences.length === 0 || words.length === 0) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: { message: 'No readable content found' },
       }
     }
@@ -64,7 +65,7 @@ export const readability: AIOCheckDefinition = {
 
     if (fleschScore >= 60) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Good readability (Flesch score: ${Math.round(fleschScore)}, avg sentence length: ${Math.round(avgSentenceLength)} words)`,
           ...details,
@@ -72,7 +73,7 @@ export const readability: AIOCheckDefinition = {
       }
     } else if (fleschScore >= 40) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Moderate readability (Flesch score: ${Math.round(fleschScore)}). Consider simplifying sentence structure.`,
           ...details,
@@ -81,7 +82,7 @@ export const readability: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Poor readability (Flesch score: ${Math.round(fleschScore)}). Content is too complex for optimal AI extraction.`,
           ...details,

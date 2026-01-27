@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const stepByStepGuides: AIOCheckDefinition = {
   name: 'step_by_step_guides',
-  category: 'content_structure',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentStructure,
+  priority: CheckPriority.Recommended,
   description: 'How-to content with clear steps is highly citable by AI engines',
   displayName: 'No Step-by-Step Content',
   displayNamePassed: 'Step-by-Step Content Present',
@@ -44,14 +45,14 @@ export const stepByStepGuides: AIOCheckDefinition = {
 
     if (indicators.length === 0) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: 'No procedural content detected (not applicable for this page type)',
         },
       }
     } else if (hasHowToSchema) {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `How-to content with structured data: ${indicators.join(', ')}`,
           indicators,
@@ -60,7 +61,7 @@ export const stepByStepGuides: AIOCheckDefinition = {
       }
     } else if (orderedListItems >= 3 || stepHeadings >= 3) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Step-by-step content detected (${indicators.join(', ')}) but missing HowTo schema markup`,
           indicators,
@@ -69,7 +70,7 @@ export const stepByStepGuides: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Some procedural content: ${indicators.join(', ')}`,
           indicators,

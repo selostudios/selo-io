@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const mediaRichness: AIOCheckDefinition = {
   name: 'media_richness',
-  category: 'content_quality',
-  priority: 'optional',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Optional,
   description: 'Images with descriptive alt text help AI engines understand visual content',
   displayName: 'No Media',
   displayNamePassed: 'Media-Rich Content',
@@ -28,7 +29,7 @@ export const mediaRichness: AIOCheckDefinition = {
     if (totalMedia === 0) {
       if (wordCount > 800) {
         return {
-          status: 'warning',
+          status: CheckStatus.Warning,
           details: {
             message: 'No images or videos found in long-form content. Visual aids improve engagement and understanding.',
             wordCount,
@@ -37,7 +38,7 @@ export const mediaRichness: AIOCheckDefinition = {
         }
       } else {
         return {
-          status: 'passed',
+          status: CheckStatus.Passed,
           details: {
             message: 'No media (acceptable for short content)',
             wordCount,
@@ -78,7 +79,7 @@ export const mediaRichness: AIOCheckDefinition = {
 
     if (altTextCoverage < 50) {
       return {
-        status: 'failed',
+        status: CheckStatus.Failed,
         details: {
           message: `Found ${images.length} image(s) but only ${Math.round(altTextCoverage)}% have alt text. AI engines need descriptions to understand visual content.`,
           ...details,
@@ -87,7 +88,7 @@ export const mediaRichness: AIOCheckDefinition = {
       }
     } else if (goodAltCoverage < 50) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Media present (${totalMedia} items) but alt text could be more descriptive (only ${Math.round(goodAltCoverage)}% have detailed descriptions)`,
           ...details,
@@ -96,7 +97,7 @@ export const mediaRichness: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Media-rich content: ${totalMedia} item(s) with ${Math.round(goodAltCoverage)}% having descriptive alt text`,
           ...details,

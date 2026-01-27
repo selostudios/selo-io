@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio'
+import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 import type { AIOCheckDefinition, AIOCheckContext, CheckResult } from '@/lib/aio/types'
 
 export const internalLinking: AIOCheckDefinition = {
   name: 'internal_linking',
-  category: 'content_quality',
-  priority: 'recommended',
+  category: AIOCheckCategory.ContentQuality,
+  priority: CheckPriority.Recommended,
   description: 'Internal links help AI engines discover and understand content relationships',
   displayName: 'Poor Internal Linking',
   displayNamePassed: 'Good Internal Linking',
@@ -81,7 +82,7 @@ export const internalLinking: AIOCheckDefinition = {
 
     if (internalLinks.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: 'No internal links found. Internal linking helps AI engines discover related content.',
           ...details,
@@ -90,7 +91,7 @@ export const internalLinking: AIOCheckDefinition = {
       }
     } else if (contextualInternalLinks.length === 0) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Found ${internalLinks.length} internal link(s) but none are contextual (within content). Add links within paragraphs.`,
           ...details,
@@ -99,7 +100,7 @@ export const internalLinking: AIOCheckDefinition = {
       }
     } else if (contextualInternalLinks.length < 2 && wordCount > 500) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `Limited internal linking (${contextualInternalLinks.length} contextual links in ${wordCount} words). Add more links to related content.`,
           ...details,
@@ -108,7 +109,7 @@ export const internalLinking: AIOCheckDefinition = {
       }
     } else if (internalLinkDensity > 3) {
       return {
-        status: 'warning',
+        status: CheckStatus.Warning,
         details: {
           message: `High internal link density (${Math.round(internalLinkDensity)}%). Avoid over-linking.`,
           ...details,
@@ -117,7 +118,7 @@ export const internalLinking: AIOCheckDefinition = {
       }
     } else {
       return {
-        status: 'passed',
+        status: CheckStatus.Passed,
         details: {
           message: `Good internal linking: ${contextualInternalLinks.length} contextual link(s) (${Math.round(internalLinkDensity)}% density)`,
           ...details,
