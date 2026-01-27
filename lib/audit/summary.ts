@@ -1,5 +1,6 @@
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
+import { CheckPriority, CheckStatus } from '@/lib/enums'
 import type { SiteAuditCheck } from './types'
 
 function formatCheckName(check: SiteAuditCheck): string {
@@ -17,11 +18,15 @@ export async function generateExecutiveSummary(
   },
   checks: SiteAuditCheck[]
 ): Promise<string> {
-  const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
-  const warnings = checks.filter(
-    (c) => c.status === 'warning' || (c.priority === 'recommended' && c.status === 'failed')
+  const criticalFails = checks.filter(
+    (c) => c.priority === CheckPriority.Critical && c.status === CheckStatus.Failed
   )
-  const passed = checks.filter((c) => c.status === 'passed')
+  const warnings = checks.filter(
+    (c) =>
+      c.status === CheckStatus.Warning ||
+      (c.priority === CheckPriority.Recommended && c.status === CheckStatus.Failed)
+  )
+  const passed = checks.filter((c) => c.status === CheckStatus.Passed)
 
   const criticalList =
     criticalFails.length > 0
@@ -79,9 +84,11 @@ export function generateFallbackSummary(
   scores: { overall_score: number },
   checks: SiteAuditCheck[]
 ): string {
-  const criticalFails = checks.filter((c) => c.priority === 'critical' && c.status === 'failed')
-  const warnings = checks.filter((c) => c.status === 'warning')
-  const passed = checks.filter((c) => c.status === 'passed')
+  const criticalFails = checks.filter(
+    (c) => c.priority === CheckPriority.Critical && c.status === CheckStatus.Failed
+  )
+  const warnings = checks.filter((c) => c.status === CheckStatus.Warning)
+  const passed = checks.filter((c) => c.status === CheckStatus.Passed)
 
   const healthStatus =
     scores.overall_score >= 80

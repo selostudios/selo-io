@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from '@react-pdf/renderer'
+import { CheckPriority, CheckStatus } from '@/lib/enums'
 import type { SiteAudit, SiteAuditCheck } from './types'
 import { getLogoDataUri } from '@/lib/pdf/logo'
 import {
@@ -49,7 +50,7 @@ function groupChecksByType(
 
   for (const check of checks) {
     const type = check.check_type
-    if (check.status === 'passed') {
+    if (check.status === CheckStatus.Passed) {
       groups[type].passed.push(check)
     } else {
       groups[type].failed.push(check)
@@ -152,16 +153,16 @@ export function AuditPDF({ audit, checks }: AuditPDFProps) {
 
   // Calculate stats
   const criticalFailed = checks.filter(
-    (c) => c.priority === 'critical' && c.status === 'failed'
+    (c) => c.priority === CheckPriority.Critical && c.status === CheckStatus.Failed
   ).length
-  const totalFailed = checks.filter((c) => c.status !== 'passed').length
-  const totalPassed = checks.filter((c) => c.status === 'passed').length
+  const totalFailed = checks.filter((c) => c.status !== CheckStatus.Passed).length
+  const totalPassed = checks.filter((c) => c.status === CheckStatus.Passed).length
 
   // Group checks
   const groupedChecks = groupChecksByType(checks)
 
   // Get all failed checks for action plan, sorted by priority
-  const allFailedChecks = sortByPriority(checks.filter((c) => c.status !== 'passed'))
+  const allFailedChecks = sortByPriority(checks.filter((c) => c.status !== CheckStatus.Passed))
 
   // Top actions - critical first, then highest priority recommended
   const topActions = allFailedChecks.slice(0, 5)

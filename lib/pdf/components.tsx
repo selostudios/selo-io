@@ -1,4 +1,5 @@
 import { Page, Text, View, Image } from '@react-pdf/renderer'
+import { CheckPriority } from '@/lib/enums'
 import { baseStyles, colors, getScoreColor } from './styles'
 
 // Re-export styles for convenience
@@ -112,12 +113,12 @@ interface IssueCardProps {
 
 export function IssueCard({ name, priority, description, fixGuidance }: IssueCardProps) {
   const cardStyle =
-    priority === 'critical' ? baseStyles.issueCardCritical : baseStyles.issueCardWarning
+    priority === CheckPriority.Critical ? baseStyles.issueCardCritical : baseStyles.issueCardWarning
 
   const priorityColor =
-    priority === 'critical'
+    priority === CheckPriority.Critical
       ? colors.error
-      : priority === 'recommended'
+      : priority === CheckPriority.Recommended
         ? colors.warning
         : colors.textLight
 
@@ -250,16 +251,16 @@ export function IssueTable({ issues }: IssueTableProps) {
       {/* Table Rows */}
       {issues.map((issue, index) => {
         const rowStyle =
-          issue.priority === 'critical'
+          issue.priority === CheckPriority.Critical
             ? baseStyles.tableRowCritical
-            : issue.priority === 'recommended'
+            : issue.priority === CheckPriority.Recommended
               ? baseStyles.tableRowWarning
               : baseStyles.tableRowOptional
 
         const priorityColor =
-          issue.priority === 'critical'
+          issue.priority === CheckPriority.Critical
             ? colors.error
-            : issue.priority === 'recommended'
+            : issue.priority === CheckPriority.Recommended
               ? colors.warning
               : colors.textLight
 
