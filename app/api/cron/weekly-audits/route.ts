@@ -3,14 +3,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { runAudit } from '@/lib/audit/runner'
 import { runPerformanceAudit } from '@/lib/performance/runner'
 
-export async function GET() {
-  return NextResponse.json({
-    name: 'weekly-audits',
-    schedule: '0 2 * * 0 (Sundays at 2 AM UTC)',
-    description: 'Runs scheduled site and performance audits for monitored sites',
-  })
-}
-
 export async function POST(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get('authorization')

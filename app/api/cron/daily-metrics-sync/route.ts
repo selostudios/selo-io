@@ -4,14 +4,6 @@ import { syncMetricsForLinkedInConnection } from '@/lib/platforms/linkedin/actio
 import { syncMetricsForGoogleAnalyticsConnection } from '@/lib/platforms/google-analytics/actions'
 import { syncMetricsForHubSpotConnection } from '@/lib/platforms/hubspot/actions'
 
-export async function GET() {
-  return NextResponse.json({
-    name: 'daily-metrics-sync',
-    schedule: '0 3 * * * (Daily at 3 AM UTC)',
-    description: 'Syncs metrics from all active platform connections',
-  })
-}
-
 export async function POST(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get('authorization')
