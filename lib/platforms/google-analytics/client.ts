@@ -1,4 +1,4 @@
-import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics, GoogleAnalyticsDailyMetrics, TrafficAcquisition } from './types'
+import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics, GoogleAnalyticsDailyMetrics } from './types'
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
