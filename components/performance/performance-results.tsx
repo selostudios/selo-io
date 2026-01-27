@@ -1,31 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CoreWebVitals } from './core-web-vitals'
 import { OpportunitiesList } from './opportunities-list'
 import { DiagnosticsList } from './diagnostics-list'
 import type { PerformanceAuditResult, DeviceType, PageSpeedResult } from '@/lib/performance/types'
 import { extractOpportunities, extractDiagnostics } from '@/lib/performance/api'
-import { Smartphone, Monitor, ExternalLink, FileText } from 'lucide-react'
-
-function formatUrlDisplay(url: string): string {
-  try {
-    const parsed = new URL(url)
-    const domain = parsed.hostname.replace(/^www\./, '')
-    const pathname = parsed.pathname
-    // If home page, just show domain
-    if (pathname === '/' || pathname === '') {
-      return domain
-    }
-    // Otherwise show domain + path
-    return `${domain}${pathname}`
-  } catch {
-    return url
-  }
-}
 
 const METRIC_DESCRIPTIONS = {
   Performance:
@@ -39,10 +21,10 @@ const METRIC_DESCRIPTIONS = {
 
 interface PerformanceResultsProps {
   results: PerformanceAuditResult[]
+  device: DeviceType
 }
 
-export function PerformanceResults({ results }: PerformanceResultsProps) {
-  const [device, setDevice] = useState<DeviceType>('mobile')
+export function PerformanceResults({ results, device }: PerformanceResultsProps) {
 
   // Log full PageSpeed API response data
   useEffect(() => {
@@ -89,38 +71,6 @@ export function PerformanceResults({ results }: PerformanceResultsProps) {
 
         return (
           <div key={url} className="space-y-6">
-            {/* Page URL Header with Device Toggle */}
-            <Card className="py-4">
-              <CardContent className="flex items-center justify-between py-0">
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-base font-medium hover:underline"
-                >
-                  <FileText className="text-muted-foreground size-4 shrink-0" />
-                  {formatUrlDisplay(url)}
-                  <ExternalLink className="text-muted-foreground size-3.5" />
-                  <span className="sr-only"> (opens in new tab)</span>
-                </a>
-                <Tabs
-                  value={device}
-                  onValueChange={(v) => setDevice(v as DeviceType)}
-                  aria-label="Select device type"
-                >
-                  <TabsList>
-                    <TabsTrigger value="mobile" className="gap-2">
-                      <Smartphone className="size-4" />
-                      Mobile
-                    </TabsTrigger>
-                    <TabsTrigger value="desktop" className="gap-2">
-                      <Monitor className="size-4" />
-                      Desktop
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </CardContent>
-            </Card>
 
             {/* Lighthouse Scores */}
             <div>

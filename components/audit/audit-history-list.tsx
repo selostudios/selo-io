@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Clock, FileSearch, Loader2, Trash2 } from 'lucide-react'
+import { Clock, FileSearch, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { SiteAudit } from '@/lib/audit/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
+import { useState } from 'react'
 
 interface AuditHistoryListProps {
   audits: SiteAudit[]
@@ -37,6 +38,7 @@ function getDomain(url: string): string {
 
 export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListProps) {
   const router = useRouter()
+  const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   const handleDeleteAudit = async (auditId: string) => {
     try {
@@ -46,6 +48,29 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
       }
     } catch (err) {
       console.error('[Audit History] Failed to delete audit:', err)
+    }
+  }
+
+  const handleRefreshAudit = async (audit: SiteAudit) => {
+    setRefreshingAuditId(audit.id)
+    try {
+      const response = await fetch('/api/audit/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: audit.url }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to start audit')
+        return
+      }
+
+      const data = await response.json()
+      router.push(`/seo/site-audit/${data.auditId}`)
+    } catch (error) {
+      console.error('Failed to start audit:', error)
+    } finally {
+      setRefreshingAuditId(null)
     }
   }
 
@@ -126,6 +151,18 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
             <Button asChild variant="outline" size="sm">
               <Link href={`/seo/site-audit/${audit.id}`}>View</Link>
             </Button>
+            {showUrl && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRefreshAudit(audit)}
+                disabled={refreshingAuditId === audit.id}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Re-run audit"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

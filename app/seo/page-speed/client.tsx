@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, Clock, Loader2, Trash2, Gauge } from 'lucide-react'
+import { Search, Clock, Loader2, Trash2, Gauge, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,7 @@ export function PageSpeedClient({
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [oneTimeUrl, setOneTimeUrl] = useState('')
+  const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   // Determine audit target from URL params (managed by header selector)
   const selectedTarget = useMemo(() => {
@@ -94,6 +95,32 @@ export function PageSpeedClient({
       }
     } catch (err) {
       console.error('[PageSpeed Client] Failed to delete audit:', err)
+    }
+  }
+
+  const handleRefreshAudit = async (audit: PerformanceAudit) => {
+    setRefreshingAuditId(audit.id)
+    const url = audit.first_url || audit.current_url
+    if (!url) return
+
+    try {
+      const response = await fetch('/api/performance/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: [url] }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to start audit')
+        return
+      }
+
+      const data = await response.json()
+      router.push(`/seo/page-speed/${data.auditId}`)
+    } catch (error) {
+      console.error('Failed to start audit:', error)
+    } finally {
+      setRefreshingAuditId(null)
     }
   }
 
@@ -318,6 +345,16 @@ export function PageSpeedClient({
                         )}
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/seo/page-speed/${audit.id}`}>View</Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRefreshAudit(audit)}
+                          disabled={refreshingAuditId === audit.id}
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Re-run audit"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
                         </Button>
                         <Button
                           variant="ghost"

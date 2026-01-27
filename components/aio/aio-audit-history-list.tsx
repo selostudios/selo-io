@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Clock, Sparkles, Loader2, Trash2 } from 'lucide-react'
+import { Clock, Sparkles, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { AIOAudit } from '@/lib/aio/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
+import { useState } from 'react'
 
 interface AIOAuditHistoryListProps {
   audits: AIOAudit[]
@@ -37,6 +38,7 @@ function getDomain(url: string): string {
 
 export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistoryListProps) {
   const router = useRouter()
+  const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   const handleDeleteAudit = async (auditId: string) => {
     try {
@@ -46,6 +48,33 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
       }
     } catch (err) {
       console.error('[AIO Audit History] Failed to delete audit:', err)
+    }
+  }
+
+  const handleRefreshAudit = async (audit: AIOAudit) => {
+    setRefreshingAuditId(audit.id)
+    try {
+      const response = await fetch('/api/aio/audit/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationId: null,
+          url: audit.url,
+          sampleSize: audit.sample_size || 5,
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to start audit')
+        return
+      }
+
+      const data = await response.json()
+      router.push(`/seo/aio/${data.auditId}`)
+    } catch (error) {
+      console.error('Failed to start audit:', error)
+    } finally {
+      setRefreshingAuditId(null)
     }
   }
 
@@ -117,6 +146,18 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
             <Button asChild variant="outline" size="sm">
               <Link href={`/seo/aio/${audit.id}`}>View</Link>
             </Button>
+            {showUrl && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRefreshAudit(audit)}
+                disabled={refreshingAuditId === audit.id}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Re-run audit"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
