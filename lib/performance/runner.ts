@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPageSpeedInsights, extractMetrics } from './api'
-import type { DeviceType, PerformanceAuditStatus } from './types'
+import { PerformanceAuditStatus, DeviceType } from '@/lib/enums'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 async function checkIfStopped(supabase: SupabaseClient, auditId: string): Promise<boolean> {
@@ -9,7 +9,7 @@ async function checkIfStopped(supabase: SupabaseClient, auditId: string): Promis
     .select('status')
     .eq('id', auditId)
     .single()
-  return data?.status === 'stopped'
+  return data?.status === PerformanceAuditStatus.Stopped
 }
 
 export async function runPerformanceAudit(auditId: string, urls: string[]): Promise<void> {
@@ -21,7 +21,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
   await supabase
     .from('performance_audits')
     .update({
-      status: 'running' as PerformanceAuditStatus,
+      status: PerformanceAuditStatus.Running,
       started_at: new Date().toISOString(),
       total_urls: totalUrls,
       completed_count: 0,
@@ -29,7 +29,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
     .eq('id', auditId)
 
   try {
-    const devices: DeviceType[] = ['mobile', 'desktop']
+    const devices: DeviceType[] = [DeviceType.Mobile, DeviceType.Desktop]
     let successCount = 0
     let failureCount = 0
     let lastError: string | null = null
@@ -111,7 +111,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
       await supabase
         .from('performance_audits')
         .update({
-          status: 'failed' as PerformanceAuditStatus,
+          status: PerformanceAuditStatus.Failed,
           error_message: lastError || 'All page audits failed',
           completed_at: new Date().toISOString(),
           current_url: null,
@@ -123,7 +123,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
       await supabase
         .from('performance_audits')
         .update({
-          status: 'completed' as PerformanceAuditStatus,
+          status: PerformanceAuditStatus.Completed,
           completed_at: new Date().toISOString(),
           current_url: null,
           current_device: null,
@@ -142,7 +142,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
     await supabase
       .from('performance_audits')
       .update({
-        status: 'failed' as PerformanceAuditStatus,
+        status: PerformanceAuditStatus.Failed,
         error_message: errorMessage,
         completed_at: new Date().toISOString(),
       })

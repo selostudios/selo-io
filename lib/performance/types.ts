@@ -1,8 +1,10 @@
-export type PerformanceAuditStatus = 'pending' | 'running' | 'completed' | 'failed' | 'stopped'
+import {
+  PerformanceAuditStatus,
+  CWVRating,
+  DeviceType,
+} from '@/lib/enums'
 
-export type CWVRating = 'good' | 'needs_improvement' | 'poor'
-
-export type DeviceType = 'mobile' | 'desktop'
+export { PerformanceAuditStatus, CWVRating, DeviceType }
 
 export interface PerformanceAudit {
   id: string

@@ -3,6 +3,7 @@ import type { PerformanceAudit, PerformanceAuditResult, PageSpeedResult } from '
 import { extractOpportunities, extractAdditionalMetrics } from './api'
 import { getLogoDataUri } from '@/lib/pdf/logo'
 import { StyleSheet } from '@react-pdf/renderer'
+import { DeviceType } from '@/lib/enums'
 
 // ============================================================================
 // SELO STUDIOS - PERFORMANCE AUDIT REPORT
@@ -627,8 +628,8 @@ export function PerformancePDF({ audit, results }: PerformancePDFProps) {
   })
 
   // Calculate aggregate scores from mobile results (primary focus)
-  const mobileResults = results.filter((r) => r.device === 'mobile')
-  const desktopResults = results.filter((r) => r.device === 'desktop')
+  const mobileResults = results.filter((r) => r.device === DeviceType.Mobile)
+  const desktopResults = results.filter((r) => r.device === DeviceType.Desktop)
 
   const avgMobileScores = {
     performance:
