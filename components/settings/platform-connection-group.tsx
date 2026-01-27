@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { displayName } from '@/lib/utils'
 import { EditDisplayNameDialog } from './edit-display-name-dialog'
 import { DisconnectConfirmDialog } from './disconnect-confirm-dialog'
+import { LinkedInIcon, HubSpotIcon, GoogleAnalyticsIcon } from '@/components/icons/platform-icons'
 
 type Connection = {
   id: string
@@ -18,18 +19,24 @@ type Connection = {
   last_sync_at: string | null
 }
 
-const platformInfo: Record<string, { name: string; description: string }> = {
+const platformInfo: Record<string, { name: string; description: string; icon: React.ComponentType<{ className?: string }>; iconColor: string }> = {
   hubspot: {
     name: 'HubSpot',
     description: 'Email campaigns, leads, deals, events',
+    icon: HubSpotIcon,
+    iconColor: 'text-[#FF7A59]',
   },
   google_analytics: {
     name: 'Google Analytics',
     description: 'Website traffic, conversions, UTM tracking',
+    icon: GoogleAnalyticsIcon,
+    iconColor: 'text-[#E37400]',
   },
   linkedin: {
     name: 'LinkedIn',
     description: 'Post impressions, engagement, followers',
+    icon: LinkedInIcon,
+    iconColor: 'text-[#0A66C2]',
   },
 }
 
@@ -54,16 +61,20 @@ export function PlatformConnectionGroup({
   platformType,
   connections,
 }: PlatformConnectionGroupProps) {
-  const info = platformInfo[platformType] || { name: 'Unknown', description: '' }
+  const info = platformInfo[platformType] || { name: 'Unknown', description: '', icon: () => null, iconColor: '' }
+  const Icon = info.icon
 
   if (connections.length === 0) {
     return (
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
-            <div>
-              <CardTitle>{info.name}</CardTitle>
-              <CardDescription className="mt-1">{info.description}</CardDescription>
+            <div className="flex items-center gap-3">
+              <Icon className={`size-5 ${info.iconColor}`} />
+              <div>
+                <CardTitle>{info.name}</CardTitle>
+                <CardDescription className="mt-1">{info.description}</CardDescription>
+              </div>
             </div>
             <Badge variant="warning">Not connected</Badge>
           </div>
@@ -85,9 +96,12 @@ export function PlatformConnectionGroup({
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div>
-            <CardTitle>{info.name}</CardTitle>
-            <CardDescription className="mt-1">{info.description}</CardDescription>
+          <div className="flex items-center gap-3">
+            <Icon className={`size-5 ${info.iconColor}`} />
+            <div>
+              <CardTitle>{info.name}</CardTitle>
+              <CardDescription className="mt-1">{info.description}</CardDescription>
+            </div>
           </div>
           <Badge variant="success">{connections.length} connected</Badge>
         </div>
