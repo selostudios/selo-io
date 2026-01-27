@@ -65,18 +65,20 @@ export function OrgSelector({
     localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
     window.dispatchEvent(new Event('sidebar-expand'))
 
-    // Update URL
+    // Update URL and refresh to re-fetch server data
     const url = new URL(window.location.href)
     url.searchParams.set('org', orgId)
     router.push(pathname + url.search)
+    router.refresh()
   }
 
   const handleSelectOneTime = () => {
     localStorage.removeItem(LAST_ORG_KEY)
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
 
-    // Remove org param from URL
+    // Remove org param from URL and refresh to re-fetch server data
     router.push(pathname)
+    router.refresh()
   }
 
   const handleOrganizationCreated = (organization: OrganizationForSelector) => {
