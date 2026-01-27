@@ -45,7 +45,8 @@ function getCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
 
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
- * Fetches metrics from Google Analytics API and stores them in the database.
+ * Fetches daily metrics from Google Analytics API and stores them in the database.
+ * Syncs the last 90 days to ensure we have data for all period views (7d, 30d, 90d).
  */
 export async function syncMetricsForGoogleAnalyticsConnection(
   connectionId: string,
@@ -58,10 +59,13 @@ export async function syncMetricsForGoogleAnalyticsConnection(
 
   const endDate = new Date()
   const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 90)
+  startDate.setDate(startDate.getDate() - 90) // Sync last 90 days for quarterly view
 
-  const metrics = await adapter.fetchMetrics(startDate, endDate)
-  const records = adapter.normalizeToDbRecords(metrics, organizationId, endDate)
+  // Fetch daily breakdowns
+  const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+  const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
+
+  console.log('[GA Sync] Storing', records.length, 'metric records for', dailyMetrics.length, 'days')
 
   // Upsert to avoid duplicate entries
   const { error: insertError } = await supabase
@@ -115,10 +119,11 @@ export async function syncGoogleAnalyticsMetrics() {
 
     const endDate = new Date()
     const startDate = new Date()
-    startDate.setDate(startDate.getDate() - 90)
+    startDate.setDate(startDate.getDate() - 90) // Sync last 90 days
 
-    const metrics = await adapter.fetchMetrics(startDate, endDate)
-    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, endDate)
+    // Fetch daily breakdowns
+    const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
 
     // Upsert to avoid duplicate entries
     const { error: insertError } = await supabase

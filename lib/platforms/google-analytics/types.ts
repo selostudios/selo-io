@@ -16,7 +16,16 @@ export interface TrafficAcquisition {
   referral: number
 }
 
-// Metrics returned from GA4 Data API
+// Single day's metrics from GA4 Data API
+export interface GoogleAnalyticsDailyMetrics {
+  date: string // YYYY-MM-DD format
+  activeUsers: number
+  newUsers: number
+  sessions: number
+  trafficAcquisition: TrafficAcquisition
+}
+
+// Deprecated: Use GoogleAnalyticsDailyMetrics[] instead
 export interface GoogleAnalyticsMetrics {
   activeUsers: number
   newUsers: number

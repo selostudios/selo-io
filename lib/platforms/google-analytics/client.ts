@@ -1,4 +1,4 @@
-import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics } from './types'
+import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics, GoogleAnalyticsDailyMetrics, TrafficAcquisition } from './types'
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
@@ -125,9 +125,11 @@ export class GoogleAnalyticsClient {
     }
   }
 
-  async getMetrics(startDate: Date, endDate: Date): Promise<GoogleAnalyticsMetrics> {
-    const formatDate = (d: Date) => d.toISOString().split('T')[0]
+  private formatDate(d: Date): string {
+    return d.toISOString().split('T')[0]
+  }
 
+  async getMetrics(startDate: Date, endDate: Date): Promise<GoogleAnalyticsMetrics> {
     const emptyMetrics: GoogleAnalyticsMetrics = {
       activeUsers: 0,
       newUsers: 0,
@@ -150,8 +152,8 @@ export class GoogleAnalyticsClient {
       console.log('[GA Client] Fetching metrics:', {
         propertyId: this.propertyId,
         propertyPath,
-        startDate: formatDate(startDate),
-        endDate: formatDate(endDate),
+        startDate: this.formatDate(startDate),
+        endDate: this.formatDate(endDate),
       })
 
       const basicData = await this.fetch<{
@@ -161,8 +163,8 @@ export class GoogleAnalyticsClient {
       }>(`/${propertyPath}:runReport`, {
         dateRanges: [
           {
-            startDate: formatDate(startDate),
-            endDate: formatDate(endDate),
+            startDate: this.formatDate(startDate),
+            endDate: this.formatDate(endDate),
           },
         ],
         metrics: [{ name: 'activeUsers' }, { name: 'newUsers' }, { name: 'sessions' }],
@@ -179,8 +181,8 @@ export class GoogleAnalyticsClient {
       }>(`/${propertyPath}:runReport`, {
         dateRanges: [
           {
-            startDate: formatDate(startDate),
-            endDate: formatDate(endDate),
+            startDate: this.formatDate(startDate),
+            endDate: this.formatDate(endDate),
           },
         ],
         dimensions: [{ name: 'sessionDefaultChannelGroup' }],
@@ -229,6 +231,119 @@ export class GoogleAnalyticsClient {
     } catch (error) {
       console.error('[GA Client] Metrics error:', error)
       return emptyMetrics
+    }
+  }
+
+  /**
+   * Fetch daily metrics breakdown for a date range.
+   * Returns one record per day with that day's metrics.
+   */
+  async fetchDailyMetrics(
+    startDate: Date,
+    endDate: Date
+  ): Promise<GoogleAnalyticsDailyMetrics[]> {
+    try {
+      const propertyPath = this.propertyId.startsWith('properties/')
+        ? this.propertyId
+        : `properties/${this.propertyId}`
+
+      console.log('[GA Client] Fetching daily metrics:', {
+        propertyId: this.propertyId,
+        startDate: this.formatDate(startDate),
+        endDate: this.formatDate(endDate),
+      })
+
+      // Fetch basic metrics by date
+      const basicData = await this.fetch<{
+        rows?: Array<{
+          dimensionValues: Array<{ value: string }>
+          metricValues: Array<{ value: string }>
+        }>
+      }>(`/${propertyPath}:runReport`, {
+        dateRanges: [
+          {
+            startDate: this.formatDate(startDate),
+            endDate: this.formatDate(endDate),
+          },
+        ],
+        dimensions: [{ name: 'date' }],
+        metrics: [{ name: 'activeUsers' }, { name: 'newUsers' }, { name: 'sessions' }],
+      })
+
+      // Fetch traffic acquisition by date and channel
+      const trafficData = await this.fetch<{
+        rows?: Array<{
+          dimensionValues: Array<{ value: string }>
+          metricValues: Array<{ value: string }>
+        }>
+      }>(`/${propertyPath}:runReport`, {
+        dateRanges: [
+          {
+            startDate: this.formatDate(startDate),
+            endDate: this.formatDate(endDate),
+          },
+        ],
+        dimensions: [{ name: 'date' }, { name: 'sessionDefaultChannelGroup' }],
+        metrics: [{ name: 'sessions' }],
+      })
+
+      // Build a map of daily metrics
+      const dailyMetricsMap = new Map<string, GoogleAnalyticsDailyMetrics>()
+
+      // Parse basic metrics by date
+      if (basicData.rows) {
+        for (const row of basicData.rows) {
+          const dateStr = row.dimensionValues[0]?.value || ''
+          // Convert GA4 date format (YYYYMMDD) to YYYY-MM-DD
+          const formattedDate = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+
+          dailyMetricsMap.set(formattedDate, {
+            date: formattedDate,
+            activeUsers: Number(row.metricValues[0]?.value) || 0,
+            newUsers: Number(row.metricValues[1]?.value) || 0,
+            sessions: Number(row.metricValues[2]?.value) || 0,
+            trafficAcquisition: {
+              direct: 0,
+              organicSearch: 0,
+              email: 0,
+              organicSocial: 0,
+              referral: 0,
+            },
+          })
+        }
+      }
+
+      // Parse traffic acquisition by date
+      if (trafficData.rows) {
+        for (const row of trafficData.rows) {
+          const dateStr = row.dimensionValues[0]?.value || ''
+          const formattedDate = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+          const channel = row.dimensionValues[1]?.value?.toLowerCase() || ''
+          const sessions = Number(row.metricValues[0]?.value) || 0
+
+          const dayMetrics = dailyMetricsMap.get(formattedDate)
+          if (dayMetrics) {
+            if (channel === 'direct') {
+              dayMetrics.trafficAcquisition.direct = sessions
+            } else if (channel === 'organic search') {
+              dayMetrics.trafficAcquisition.organicSearch = sessions
+            } else if (channel === 'email') {
+              dayMetrics.trafficAcquisition.email = sessions
+            } else if (channel === 'organic social') {
+              dayMetrics.trafficAcquisition.organicSocial = sessions
+            } else if (channel === 'referral') {
+              dayMetrics.trafficAcquisition.referral = sessions
+            }
+          }
+        }
+      }
+
+      const result = Array.from(dailyMetricsMap.values()).sort((a, b) => a.date.localeCompare(b.date))
+      console.log('[GA Client] Parsed daily metrics:', result.length, 'days')
+      return result
+    } catch (error) {
+      console.error('[GA Client] Daily metrics error:', error)
+      return []
     }
   }
 }
