@@ -268,7 +268,7 @@ export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsS
               </div>
             </div>
             <Button asChild size="sm">
-              <Link href="/settings/integrations">Connect</Link>
+              <Link href="/api/auth/oauth/google_analytics">Connect</Link>
             </Button>
           </div>
         </CardHeader>

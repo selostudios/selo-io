@@ -89,7 +89,7 @@ export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
               </div>
             </div>
             <Button asChild size="sm">
-              <Link href="/settings/integrations">Connect</Link>
+              <Link href="/api/auth/oauth/linkedin">Connect</Link>
             </Button>
           </div>
         </CardHeader>

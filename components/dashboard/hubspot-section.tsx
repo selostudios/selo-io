@@ -279,7 +279,7 @@ export function HubSpotSection({ connections, period }: HubSpotSectionProps) {
               </div>
             </div>
             <Button asChild size="sm">
-              <Link href="/settings/integrations">Connect</Link>
+              <Link href="/api/auth/oauth/hubspot">Connect</Link>
             </Button>
           </div>
         </CardHeader>
