@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { resendInvite } from '@/app/settings/team/actions'
+import { resendInvite } from '@/app/(authenticated)/settings/team/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
 
 interface ResendInviteButtonProps {

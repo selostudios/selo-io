@@ -7,7 +7,11 @@ import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 import { isInternalUser } from '@/lib/permissions'
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthenticatedLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const supabase = await createClient()
 
   const {

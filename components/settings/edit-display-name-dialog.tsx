@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { updateConnectionDisplayName } from '@/app/settings/integrations/actions'
+import { updateConnectionDisplayName } from '@/app/(authenticated)/settings/integrations/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
 
 interface EditDisplayNameDialogProps {

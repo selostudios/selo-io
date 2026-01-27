@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { disconnectPlatform } from '@/app/settings/integrations/actions'
+import { disconnectPlatform } from '@/app/(authenticated)/settings/integrations/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
 
 interface DisconnectConfirmDialogProps {

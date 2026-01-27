@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createCampaign } from '@/app/dashboard/campaigns/actions'
+import { createCampaign } from '@/app/(authenticated)/dashboard/campaigns/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

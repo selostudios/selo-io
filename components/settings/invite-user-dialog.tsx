@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { sendInvite } from '@/app/settings/team/actions'
+import { sendInvite } from '@/app/(authenticated)/settings/team/actions'
 import { useRouter } from 'next/navigation'
 
 export function InviteUserDialog() {

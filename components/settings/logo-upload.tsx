@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { uploadLogo, removeLogo } from '@/app/settings/organization/actions'
+import { uploadLogo, removeLogo } from '@/app/(authenticated)/settings/organization/actions'
 import { Button } from '@/components/ui/button'
 import { showSuccess, showError } from '@/components/ui/sonner'
 import { useRouter } from 'next/navigation'

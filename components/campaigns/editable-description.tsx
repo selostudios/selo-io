@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Pencil, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { showSuccess, showError } from '@/components/ui/sonner'
-import { updateCampaignDescription } from '@/app/dashboard/campaigns/actions'
+import { updateCampaignDescription } from '@/app/(authenticated)/dashboard/campaigns/actions'
 
 interface EditableDescriptionProps {
   campaignId: string
