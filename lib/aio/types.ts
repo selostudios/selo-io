@@ -91,8 +91,8 @@ export interface AIOAIAnalysis {
   score_overall: number | null
 
   // Structured findings
-  findings: GEOFindings
-  recommendations: GEORecommendation[]
+  findings: AIOFindings
+  recommendations: AIORecommendation[]
 
   created_at: string
 }
@@ -101,7 +101,7 @@ export interface AIOAIAnalysis {
 // Zod Schemas for AI Analysis
 //============================================================================
 
-export const GEOPageAnalysisSchema = z.object({
+export const AIOPageAnalysisSchema = z.object({
   url: z.string().url(),
   scores: z.object({
     dataQuality: z.number().min(0).max(100),
@@ -126,8 +126,8 @@ export const GEOPageAnalysisSchema = z.object({
     .max(10),
 })
 
-export const GEOBatchAnalysisSchema = z.object({
-  analyses: z.array(GEOPageAnalysisSchema),
+export const AIOBatchAnalysisSchema = z.object({
+  analyses: z.array(AIOPageAnalysisSchema),
   batchMetadata: z
     .object({
       pagesAnalyzed: z.number().optional(),
@@ -141,11 +141,11 @@ export const GEOBatchAnalysisSchema = z.object({
 // Inferred Types from Zod Schemas
 //============================================================================
 
-export type GEOPageAnalysis = z.infer<typeof GEOPageAnalysisSchema>
-export type GEOBatchAnalysis = z.infer<typeof GEOBatchAnalysisSchema>
-export type GEOFindings = z.infer<typeof GEOPageAnalysisSchema>['findings']
-export type GEORecommendation = z.infer<typeof GEOPageAnalysisSchema>['recommendations'][number]
-export type GEOScores = z.infer<typeof GEOPageAnalysisSchema>['scores']
+export type AIOPageAnalysis = z.infer<typeof AIOPageAnalysisSchema>
+export type AIOBatchAnalysis = z.infer<typeof AIOBatchAnalysisSchema>
+export type AIOFindings = z.infer<typeof AIOPageAnalysisSchema>['findings']
+export type AIORecommendation = z.infer<typeof AIOPageAnalysisSchema>['recommendations'][number]
+export type AIOScores = z.infer<typeof AIOPageAnalysisSchema>['scores']
 
 //============================================================================
 // Page Importance Types
@@ -189,22 +189,22 @@ export interface AIOCheckDefinition {
 // Runner Types
 //============================================================================
 
-export interface GEORunnerOptions {
+export interface AIORunnerOptions {
   auditId: string
   url: string
   sampleSize: number
   onCheckComplete?: (check: AIOCheck) => void
   onAIBatchComplete?: (
-    analyses: GEOPageAnalysis[],
+    analyses: AIOPageAnalysis[],
     tokens: { promptTokens: number; completionTokens: number },
     cost: number
   ) => void
 }
 
-export interface GEORunnerResult {
+export interface AIORunnerResult {
   checks: AIOCheck[]
   technicalScore: number
-  aiAnalyses: GEOPageAnalysis[]
+  aiAnalyses: AIOPageAnalysis[]
   strategicScore: number | null
   overallScore: number
   tokenUsage: {

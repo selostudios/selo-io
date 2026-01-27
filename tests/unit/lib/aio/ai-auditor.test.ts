@@ -3,10 +3,10 @@ import { runAIAnalysis, calculateStrategicScore } from '@/lib/aio/ai-auditor'
 import type { PageContent } from '@/lib/aio/ai-auditor'
 import {
   mockBatchAnalysis,
-  mockGEOPageAnalysis,
-  mockGEOPageAnalysisThin,
+  mockAIOPageAnalysis,
+  mockAIOPageAnalysisThin,
   createMockGenerateTextResponse,
-} from '../../../fixtures/geo-ai-responses'
+} from '../../../fixtures/aio-ai-responses'
 import * as ai from 'ai'
 
 // Mock the AI SDK
@@ -85,7 +85,7 @@ describe('AI Auditor', () => {
     it('should chunk pages into batches of 3', async () => {
       const mockResponse = createMockGenerateTextResponse({
         ...mockBatchAnalysis,
-        analyses: [mockGEOPageAnalysis, mockGEOPageAnalysis, mockGEOPageAnalysis],
+        analyses: [mockAIOPageAnalysis, mockAIOPageAnalysis, mockAIOPageAnalysis],
       })
       vi.mocked(ai.generateText).mockResolvedValue(mockResponse as never)
 
@@ -134,7 +134,7 @@ describe('AI Auditor', () => {
 
   describe('calculateStrategicScore', () => {
     it('should calculate weighted average score', () => {
-      const analyses = [mockGEOPageAnalysis, mockGEOPageAnalysisThin]
+      const analyses = [mockAIOPageAnalysis, mockAIOPageAnalysisThin]
 
       const score = calculateStrategicScore(analyses)
 
@@ -146,7 +146,7 @@ describe('AI Auditor', () => {
     })
 
     it('should handle single page', () => {
-      const score = calculateStrategicScore([mockGEOPageAnalysis])
+      const score = calculateStrategicScore([mockAIOPageAnalysis])
 
       // Should match the page's overall score closely
       expect(score).toBeCloseTo(80, 0)
@@ -160,7 +160,7 @@ describe('AI Auditor', () => {
 
     it('should use correct weights', () => {
       const perfectPage = {
-        ...mockGEOPageAnalysis,
+        ...mockAIOPageAnalysis,
         scores: {
           dataQuality: 100,
           expertCredibility: 100,

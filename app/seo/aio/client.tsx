@@ -85,7 +85,7 @@ export function AIOAuditClient({
       }
 
       const data = await response.json()
-      router.push(`/seo/geo/${data.auditId}`)
+      router.push(`/seo/aio/${data.auditId}`)
     } catch (error) {
       console.error('Failed to start audit:', error)
     }
@@ -416,7 +416,7 @@ export function AIOAuditClient({
   )
 }
 
-// Helper to determine category from check (maps to GEO categories)
+// Helper to determine category from check (maps to AIO categories)
 function getCategoryFromCheck(check: ProgrammaticCheck): string {
   // Map check categories to display categories
   return check.category

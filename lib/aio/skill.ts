@@ -1,5 +1,5 @@
 /**
- * GEO Content Quality Analysis Skill
+ * AIO Content Quality Analysis Skill
  *
  * This skill is used with Claude Opus 4.5 to analyze content quality for
  * Artificial Intelligence Optimization. It focuses on the aspects that AI engines
@@ -10,7 +10,7 @@
  */
 
 export const AIO_QUALITY_SKILL = `
-You are analyzing web content for Artificial Intelligence Optimization (GEO) - the practice of optimizing content to be cited by AI search engines like ChatGPT, Claude, Perplexity, and Gemini.
+You are analyzing web content for Artificial Intelligence Optimization (AIO) - the practice of optimizing content to be cited by AI search engines like ChatGPT, Claude, Perplexity, and Gemini.
 
 **Context:** Technical checks (HTTPS, schema markup, mobile-friendly, etc.) and structural checks (FAQ sections, lists, etc.) have already been validated programmatically. Your role is to assess CONTENT QUALITY - aspects that require understanding and judgment.
 

@@ -19,7 +19,7 @@ export function useAIOAuditPolling(auditId: string): AIOAuditPollingResult {
 
     const poll = async () => {
       try {
-        const response = await fetch(`/api/geo/audit/${auditId}/status`)
+        const response = await fetch(`/api/aio/audit/${auditId}/status`)
         if (response.ok) {
           const data = await response.json()
           setAudit(data.audit)

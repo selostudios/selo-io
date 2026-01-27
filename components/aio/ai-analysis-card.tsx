@@ -3,10 +3,10 @@
 import { ChevronDown } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
-import type { GEOPageAnalysis } from '@/lib/aio/types'
+import type { AIOPageAnalysis } from '@/lib/aio/types'
 
 interface AIAnalysisCardProps {
-  analyses: GEOPageAnalysis[]
+  analyses: AIOPageAnalysis[]
 }
 
 function getPriorityColor(priority: string): string {

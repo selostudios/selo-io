@@ -8,7 +8,7 @@ vi.mock('@/lib/audit/crawler', () => ({
   crawlSite: vi.fn(),
 }))
 
-describe('GEO Runner', () => {
+describe('AIO Runner', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
     vi.mocked(crawler.crawlSite).mockClear()

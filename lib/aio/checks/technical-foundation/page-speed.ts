@@ -20,7 +20,7 @@ export const pageSpeed: AIOCheckDefinition = {
       const response = await fetch(context.url, {
         method: 'HEAD',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; SeloGEOBot/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; SeloAIOBot/1.0)',
         },
       })
 

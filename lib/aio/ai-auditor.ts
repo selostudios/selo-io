@@ -1,8 +1,8 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { generateText } from 'ai'
 import * as cheerio from 'cheerio'
-import { GEOBatchAnalysisSchema } from './types'
-import type { GEOPageAnalysis } from './types'
+import { AIOBatchAnalysisSchema } from './types'
+import type { AIOPageAnalysis } from './types'
 import { AIO_QUALITY_SKILL } from './skill'
 
 const MODEL = 'claude-opus-4-20250514'
@@ -18,7 +18,7 @@ export interface PageContent {
 }
 
 export interface BatchAnalysisResult {
-  analyses: GEOPageAnalysis[]
+  analyses: AIOPageAnalysis[]
   totalInputTokens: number
   totalOutputTokens: number
   totalCost: number
@@ -26,7 +26,7 @@ export interface BatchAnalysisResult {
 
 export interface AIAuditorOptions {
   onBatchComplete?: (
-    analyses: GEOPageAnalysis[],
+    analyses: AIOPageAnalysis[],
     tokens: { promptTokens: number; completionTokens: number },
     cost: number
   ) => void
@@ -76,10 +76,10 @@ function chunkPages(pages: PageContent[], batchSize: number = 3): PageContent[][
 
 /**
  * Analyze a batch of pages with Claude Opus 4.5
- * Returns validated GEO analysis for each page
+ * Returns validated AIO analysis for each page
  */
 async function analyzeBatch(batch: PageContent[]): Promise<{
-  analyses: GEOPageAnalysis[]
+  analyses: AIOPageAnalysis[]
   inputTokens: number
   outputTokens: number
 }> {
@@ -151,7 +151,7 @@ Return ONLY the JSON object, no explanation text before or after.`
     }
 
     // Validate with Zod schema
-    const validated = GEOBatchAnalysisSchema.parse(parsedResponse)
+    const validated = AIOBatchAnalysisSchema.parse(parsedResponse)
 
     return {
       analyses: validated.analyses,
@@ -173,7 +173,7 @@ Return ONLY the JSON object, no explanation text before or after.`
 }
 
 /**
- * Run AI-powered GEO analysis on multiple pages
+ * Run AI-powered AIO analysis on multiple pages
  * Processes pages in batches and streams results via callback
  */
 export async function runAIAnalysis(
@@ -193,7 +193,7 @@ export async function runAIAnalysis(
 
   console.log(`[AI Auditor] Starting analysis of ${pages.length} pages`)
 
-  const allAnalyses: GEOPageAnalysis[] = []
+  const allAnalyses: AIOPageAnalysis[] = []
   let totalInputTokens = 0
   let totalOutputTokens = 0
 
@@ -244,7 +244,7 @@ export async function runAIAnalysis(
  * Calculate strategic score from AI analyses
  * Weighted average of the 5 quality dimensions
  */
-export function calculateStrategicScore(analyses: GEOPageAnalysis[]): number {
+export function calculateStrategicScore(analyses: AIOPageAnalysis[]): number {
   if (analyses.length === 0) return 0
 
   // Weights for each dimension (sum to 1.0)

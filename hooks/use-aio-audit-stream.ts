@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { GEOPageAnalysis } from '@/lib/aio/types'
+import type { AIOPageAnalysis } from '@/lib/aio/types'
 
 export interface ProgrammaticCheck {
   category: string
@@ -21,7 +21,7 @@ export interface AIOAuditState {
   programmaticChecks: ProgrammaticCheck[]
   technicalScore: number | null
   selectedPages: PageSelection[]
-  aiAnalyses: GEOPageAnalysis[]
+  aiAnalyses: AIOPageAnalysis[]
   strategicScore: number | null
   overallScore: number | null
   tokenUsage: {
@@ -95,7 +95,7 @@ export function useAIOAuditStream() {
       case 'ai_batch_complete':
         setState((prev) => ({
           ...prev,
-          aiAnalyses: [...prev.aiAnalyses, ...(event.analyses as GEOPageAnalysis[])],
+          aiAnalyses: [...prev.aiAnalyses, ...(event.analyses as AIOPageAnalysis[])],
           tokenUsage: {
             input: prev.tokenUsage.input + ((event.tokens as { promptTokens: number }).promptTokens || 0),
             output: prev.tokenUsage.output + ((event.tokens as { completionTokens: number }).completionTokens || 0),

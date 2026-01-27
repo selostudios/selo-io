@@ -12,7 +12,7 @@ interface StartAuditRequest {
 }
 
 /**
- * POST /api/geo/audit/start
+ * POST /api/aio/audit/start
  * Creates a AIO audit and returns the audit ID for navigation
  */
 export async function POST(req: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (createError || !audit) {
-      console.error('[GEO API] Failed to create audit:', createError)
+      console.error('[AIO API] Failed to create audit:', createError)
       return NextResponse.json({ error: 'Failed to create audit' }, { status: 500 })
     }
 
@@ -67,14 +67,14 @@ export async function POST(req: NextRequest) {
       try {
         await runAIOAuditBackground(audit.id, url)
       } catch (err) {
-        console.error('[GEO API] Background audit failed:', err)
+        console.error('[AIO API] Background audit failed:', err)
       }
     })
 
     // Return audit ID for navigation
     return NextResponse.json({ auditId: audit.id })
   } catch (error) {
-    console.error('[GEO API] Error starting audit:', error)
+    console.error('[AIO API] Error starting audit:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

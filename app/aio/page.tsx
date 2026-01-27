@@ -315,9 +315,9 @@ export default function AIOAuditPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <div className="space-y-2">
-              <p className="font-medium text-foreground">What is GEO?</p>
+              <p className="font-medium text-foreground">What is AIO?</p>
               <p>
-                Artificial Intelligence Optimization (GEO) is the practice of optimizing content for AI
+                Artificial Intelligence Optimization (AIO) is the practice of optimizing content for AI
                 systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need
                 different signals than traditional search engines.
               </p>
@@ -346,7 +346,7 @@ export default function AIOAuditPage() {
   )
 }
 
-// Helper to determine category from check (maps to GEO categories)
+// Helper to determine category from check (maps to AIO categories)
 function getCategoryFromCheck(check: ProgrammaticCheck): string {
   // Map check categories to display categories
   return check.category

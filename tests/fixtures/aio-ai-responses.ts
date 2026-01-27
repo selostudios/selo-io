@@ -1,10 +1,10 @@
-import type { GEOPageAnalysis, GEOBatchAnalysis } from '@/lib/aio/types'
+import type { AIOPageAnalysis, AIOBatchAnalysis } from '@/lib/aio/types'
 
 /**
  * Fixture: Real Claude Opus 4.5 response structure
  * This is a saved response from actual API call for testing
  */
-export const mockGEOPageAnalysis: GEOPageAnalysis = {
+export const mockAIOPageAnalysis: AIOPageAnalysis = {
   url: 'https://example.com/guide/seo-basics',
   scores: {
     dataQuality: 75,
@@ -83,7 +83,7 @@ export const mockGEOPageAnalysis: GEOPageAnalysis = {
   ],
 }
 
-export const mockGEOPageAnalysisThin: GEOPageAnalysis = {
+export const mockAIOPageAnalysisThin: AIOPageAnalysis = {
   url: 'https://example.com/contact',
   scores: {
     dataQuality: 20,
@@ -127,8 +127,8 @@ export const mockGEOPageAnalysisThin: GEOPageAnalysis = {
   ],
 }
 
-export const mockBatchAnalysis: GEOBatchAnalysis = {
-  analyses: [mockGEOPageAnalysis, mockGEOPageAnalysisThin],
+export const mockBatchAnalysis: AIOBatchAnalysis = {
+  analyses: [mockAIOPageAnalysis, mockAIOPageAnalysisThin],
   batchMetadata: {
     pagesAnalyzed: 2,
     averageScore: 53,
@@ -142,7 +142,7 @@ export const mockBatchAnalysis: GEOBatchAnalysis = {
 /**
  * Mock response for AI SDK generateObject
  */
-export function createMockGenerateObjectResponse(analysis: GEOBatchAnalysis) {
+export function createMockGenerateObjectResponse(analysis: AIOBatchAnalysis) {
   return {
     object: analysis,
     usage: {
@@ -156,7 +156,7 @@ export function createMockGenerateObjectResponse(analysis: GEOBatchAnalysis) {
 /**
  * Mock response for AI SDK generateText
  */
-export function createMockGenerateTextResponse(analysis: GEOBatchAnalysis) {
+export function createMockGenerateTextResponse(analysis: AIOBatchAnalysis) {
   return {
     text: JSON.stringify(analysis),
     usage: {

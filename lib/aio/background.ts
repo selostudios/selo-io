@@ -14,7 +14,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
   const supabase = createServiceClient()
 
   try {
-    console.log(`[GEO Background] Starting audit ${auditId} for ${url}`)
+    console.log(`[AIO Background] Starting audit ${auditId} for ${url}`)
 
     // Update status to 'running'
     await supabase
@@ -58,7 +58,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
       },
     })
 
-    console.log(`[GEO Background] Programmatic checks complete: ${technicalScore}/100`)
+    console.log(`[AIO Background] Programmatic checks complete: ${technicalScore}/100`)
 
     // Step 2: Crawl additional pages for AI analysis (if enabled)
     let strategicScore: number | null = null
@@ -68,7 +68,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
     let totalCost = 0
 
     if (audit.ai_analysis_enabled && audit.sample_size > 0) {
-      console.log(`[GEO Background] Crawling site for AI analysis (sample size: ${audit.sample_size})`)
+      console.log(`[AIO Background] Crawling site for AI analysis (sample size: ${audit.sample_size})`)
 
       const pages: SiteAuditPage[] = []
 
@@ -81,7 +81,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
 
       // Step 3: Select top N most important pages
       const selectedPages = selectTopPages(pages, url, audit.sample_size)
-      console.log(`[GEO Background] Selected ${selectedPages.length} pages for AI analysis`)
+      console.log(`[AIO Background] Selected ${selectedPages.length} pages for AI analysis`)
 
       // Step 4: Run AI analysis
       if (selectedPages.length > 0) {
@@ -129,7 +129,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
             }
 
             console.log(
-              `[GEO Background] AI batch complete: ${analyses.length} pages, ${tokens.promptTokens}/${tokens.completionTokens} tokens, $${cost.toFixed(4)}`
+              `[AIO Background] AI batch complete: ${analyses.length} pages, ${tokens.promptTokens}/${tokens.completionTokens} tokens, $${cost.toFixed(4)}`
             )
           },
         })
@@ -144,7 +144,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
         // Calculate overall score (weighted average of technical and strategic)
         overallScore = Math.round((technicalScore * 0.4) + (strategicScore * 0.6))
 
-        console.log(`[GEO Background] AI analysis complete: strategic=${strategicScore}, overall=${overallScore}`)
+        console.log(`[AIO Background] AI analysis complete: strategic=${strategicScore}, overall=${overallScore}`)
       }
     }
 
@@ -157,7 +157,7 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
         status: 'completed',
         technical_score: technicalScore,
         strategic_score: strategicScore,
-        overall_geo_score: overallScore,
+        overall_aio_score: overallScore,
         pages_analyzed: checks.length > 0 ? 1 : 0, // Will be updated when we track crawled pages
         total_input_tokens: totalInputTokens,
         total_output_tokens: totalOutputTokens,
@@ -168,10 +168,10 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
       })
       .eq('id', auditId)
 
-    console.log(`[GEO Background] Audit ${auditId} completed in ${(executionTime / 1000).toFixed(1)}s`)
+    console.log(`[AIO Background] Audit ${auditId} completed in ${(executionTime / 1000).toFixed(1)}s`)
 
   } catch (error) {
-    console.error(`[GEO Background] Audit ${auditId} failed:`, error)
+    console.error(`[AIO Background] Audit ${auditId} failed:`, error)
 
     // Update audit status to failed
     await supabase

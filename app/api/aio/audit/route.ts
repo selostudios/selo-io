@@ -13,7 +13,7 @@ interface CreateAuditRequest {
 }
 
 /**
- * POST /api/geo/audit
+ * POST /api/aio/audit
  * Creates and runs a AIO audit with Server-Sent Events (SSE) streaming
  */
 export async function POST(req: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (createError || !audit) {
-      console.error('[GEO API] Failed to create audit:', createError)
+      console.error('[AIO API] Failed to create audit:', createError)
       return NextResponse.json({ error: 'Failed to create audit' }, { status: 500 })
     }
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     // Start processing in background
     processAudit(audit.id, url, sampleSize, writer, encoder).catch((error) => {
-      console.error('[GEO API] Audit processing failed:', error)
+      console.error('[AIO API] Audit processing failed:', error)
     })
 
     // Return SSE response
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[GEO API] Request error:', error)
+    console.error('[AIO API] Request error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -236,7 +236,7 @@ async function processAudit(
         status: 'completed',
         technical_score: programmaticResult.technicalScore,
         strategic_score: strategicScore,
-        overall_geo_score: overallScore,
+        overall_aio_score: overallScore,
         pages_analyzed: aiResult.analyses.length,
         total_input_tokens: aiResult.totalInputTokens,
         total_output_tokens: aiResult.totalOutputTokens,
@@ -264,7 +264,7 @@ async function processAudit(
 
     await writer.close()
   } catch (error) {
-    console.error('[GEO API] Processing error:', error)
+    console.error('[AIO API] Processing error:', error)
 
     // Update audit status to failed
     await supabase

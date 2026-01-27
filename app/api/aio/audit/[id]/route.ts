@@ -52,7 +52,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const { error: deleteError } = await supabase.from('aio_audits').delete().eq('id', id)
 
   if (deleteError) {
-    console.error('[GEO API] Failed to delete audit:', deleteError)
+    console.error('[AIO API] Failed to delete audit:', deleteError)
     return NextResponse.json({ error: 'Failed to delete audit' }, { status: 500 })
   }
 

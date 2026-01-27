@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
-  GEOPageAnalysisSchema,
-  GEOBatchAnalysisSchema,
-  type GEOPageAnalysis,
-  type GEOBatchAnalysis,
+  AIOPageAnalysisSchema,
+  AIOBatchAnalysisSchema,
+  type AIOPageAnalysis,
+  type AIOBatchAnalysis,
 } from '@/lib/aio/types'
 
-describe('GEO Types', () => {
-  describe('GEOPageAnalysisSchema', () => {
-    it('should validate a complete, valid GEO page analysis', () => {
-      const validAnalysis: GEOPageAnalysis = {
+describe('AIO Types', () => {
+  describe('AIOPageAnalysisSchema', () => {
+    it('should validate a complete, valid AIO page analysis', () => {
+      const validAnalysis: AIOPageAnalysis = {
         url: 'https://example.com/page',
         scores: {
           dataQuality: 75,
@@ -56,7 +56,7 @@ describe('GEO Types', () => {
         ],
       }
 
-      const result = GEOPageAnalysisSchema.safeParse(validAnalysis)
+      const result = AIOPageAnalysisSchema.safeParse(validAnalysis)
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.url).toBe('https://example.com/page')
@@ -101,7 +101,7 @@ describe('GEO Types', () => {
         recommendations: [],
       }
 
-      const result = GEOPageAnalysisSchema.safeParse(invalid)
+      const result = AIOPageAnalysisSchema.safeParse(invalid)
       expect(result.success).toBe(false)
     })
 
@@ -141,7 +141,7 @@ describe('GEO Types', () => {
         recommendations: [],
       }
 
-      const result = GEOPageAnalysisSchema.safeParse(invalid)
+      const result = AIOPageAnalysisSchema.safeParse(invalid)
       expect(result.success).toBe(false)
     })
 
@@ -194,7 +194,7 @@ describe('GEO Types', () => {
         recommendations, // 11 recommendations (too many)
       }
 
-      const result = GEOPageAnalysisSchema.safeParse(invalid)
+      const result = AIOPageAnalysisSchema.safeParse(invalid)
       expect(result.success).toBe(false)
     })
 
@@ -255,7 +255,7 @@ describe('GEO Types', () => {
               recommendations: [],
             }
 
-            const result = GEOPageAnalysisSchema.safeParse(analysis)
+            const result = AIOPageAnalysisSchema.safeParse(analysis)
             expect(result.success).toBe(true)
           }
         }
@@ -321,14 +321,14 @@ describe('GEO Types', () => {
         ],
       }
 
-      expect(GEOPageAnalysisSchema.safeParse(withUrl).success).toBe(true)
-      expect(GEOPageAnalysisSchema.safeParse(withoutUrl).success).toBe(true)
+      expect(AIOPageAnalysisSchema.safeParse(withUrl).success).toBe(true)
+      expect(AIOPageAnalysisSchema.safeParse(withoutUrl).success).toBe(true)
     })
   })
 
-  describe('GEOBatchAnalysisSchema', () => {
+  describe('AIOBatchAnalysisSchema', () => {
     it('should validate a complete batch analysis', () => {
-      const validBatch: GEOBatchAnalysis = {
+      const validBatch: AIOBatchAnalysis = {
         analyses: [
           {
             url: 'https://example.com/page1',
@@ -406,7 +406,7 @@ describe('GEO Types', () => {
         },
       }
 
-      const result = GEOBatchAnalysisSchema.safeParse(validBatch)
+      const result = AIOBatchAnalysisSchema.safeParse(validBatch)
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.analyses).toHaveLength(2)
@@ -425,7 +425,7 @@ describe('GEO Types', () => {
         },
       }
 
-      const result = GEOBatchAnalysisSchema.safeParse(emptyBatch)
+      const result = AIOBatchAnalysisSchema.safeParse(emptyBatch)
       expect(result.success).toBe(true)
     })
 
@@ -474,7 +474,7 @@ describe('GEO Types', () => {
         },
       }
 
-      const result = GEOBatchAnalysisSchema.safeParse(invalidBatch)
+      const result = AIOBatchAnalysisSchema.safeParse(invalidBatch)
       expect(result.success).toBe(false)
     })
   })

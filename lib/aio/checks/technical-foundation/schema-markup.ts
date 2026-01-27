@@ -31,10 +31,10 @@ export const schemaMarkup: AIOCheckDefinition = {
       }
     })
 
-    // Prioritize schema types most valuable for GEO
-    const geoRelevantSchemas = ['Article', 'FAQPage', 'HowTo', 'Organization', 'Person', 'Product', 'Review']
+    // Prioritize schema types most valuable for AIO
+    const aioRelevantSchemas = ['Article', 'FAQPage', 'HowTo', 'Organization', 'Person', 'Product', 'Review']
     const foundRelevant = schemas.filter(schema =>
-      geoRelevantSchemas.some(relevant => schema.includes(relevant))
+      aioRelevantSchemas.some(relevant => schema.includes(relevant))
     )
 
     if (schemas.length === 0) {
@@ -51,7 +51,7 @@ export const schemaMarkup: AIOCheckDefinition = {
       return {
         status: 'warning',
         details: {
-          message: `Found structured data (${schemas.join(', ')}) but none are highly relevant for GEO. Consider adding Article, FAQPage, or HowTo schemas.`,
+          message: `Found structured data (${schemas.join(', ')}) but none are highly relevant for AIO. Consider adding Article, FAQPage, or HowTo schemas.`,
           foundSchemas: schemas,
         },
       }
@@ -60,7 +60,7 @@ export const schemaMarkup: AIOCheckDefinition = {
     return {
       status: 'passed',
       details: {
-        message: `Found ${foundRelevant.length} GEO-relevant schema(s): ${foundRelevant.join(', ')}`,
+        message: `Found ${foundRelevant.length} AIO-relevant schema(s): ${foundRelevant.join(', ')}`,
         foundSchemas: schemas,
       },
     }

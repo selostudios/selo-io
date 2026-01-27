@@ -14,7 +14,7 @@ describe('faqSection check', () => {
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "What is GEO?",
+                "name": "What is AIO?",
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Artificial Intelligence Optimization"
@@ -47,7 +47,7 @@ describe('faqSection check', () => {
         <body>
           <h2>Frequently Asked Questions</h2>
           <dl>
-            <dt>What is GEO?</dt>
+            <dt>What is AIO?</dt>
             <dd>Artificial Intelligence Optimization</dd>
           </dl>
         </body>
@@ -92,11 +92,11 @@ describe('faqSection check', () => {
         <body>
           <h2>FAQ</h2>
           <details>
-            <summary>What is GEO?</summary>
+            <summary>What is AIO?</summary>
             <p>Artificial Intelligence Optimization</p>
           </details>
           <details>
-            <summary>Why is GEO important?</summary>
+            <summary>Why is AIO important?</summary>
             <p>It helps AI engines cite your content</p>
           </details>
         </body>

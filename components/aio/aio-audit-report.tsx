@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import type { AIOAudit, AIOCheck, AIOAIAnalysis } from '@/lib/aio/types'
 import type { SiteAuditCheck } from '@/lib/audit/types'
-import type { GEOPageAnalysis } from '@/lib/aio/types'
+import type { AIOPageAnalysis } from '@/lib/aio/types'
 
 interface AIOAuditReportProps {
   audit: AIOAudit
@@ -41,7 +41,7 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
   )
 
   // Convert AI analyses to the format expected by AIAnalysisCard
-  const formattedAnalyses: GEOPageAnalysis[] = aiAnalyses.map((analysis) => ({
+  const formattedAnalyses: AIOPageAnalysis[] = aiAnalyses.map((analysis) => ({
     url: analysis.page_url,
     scores: {
       dataQuality: analysis.score_data_quality ?? 0,
@@ -59,7 +59,7 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Back Button */}
       <Link
-        href="/seo/geo"
+        href="/seo/aio"
         className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
