@@ -89,17 +89,6 @@ export function GEOAuditHistoryList({ audits, showUrl = false }: GEOAuditHistory
             </span>
           </div>
           <div className="flex items-center gap-4">
-            {/* Show duration for completed audits */}
-            {audit.status === 'completed' &&
-            (() => {
-              const duration = calculateDuration(audit.started_at, audit.completed_at)
-              return duration ? (
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <Clock className="size-3" />
-                  {formatDuration(duration)}
-                </span>
-              ) : null
-            })()}
             {audit.status === 'completed' && (
               <div className="flex items-center gap-2">
                 {audit.critical_recommendations && audit.critical_recommendations > 0 ? (
@@ -114,6 +103,17 @@ export function GEOAuditHistoryList({ audits, showUrl = false }: GEOAuditHistory
                 ) : null}
               </div>
             )}
+            {/* Show duration for completed audits */}
+            {audit.status === 'completed' &&
+            (() => {
+              const duration = calculateDuration(audit.started_at, audit.completed_at)
+              return duration ? (
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <Clock className="size-3" />
+                  {formatDuration(duration)}
+                </span>
+              ) : null
+            })()}
             <Button asChild variant="outline" size="sm">
               <Link href={`/seo/geo/${audit.id}`}>View</Link>
             </Button>

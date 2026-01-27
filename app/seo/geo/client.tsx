@@ -184,14 +184,16 @@ export function GEOAuditClient({
       </div>
 
       {/* Audit Target Selector */}
-      <div className="flex items-center justify-between">
-        <AuditTargetSelector
-          organizations={organizations}
-          selectedTarget={selectedTarget}
-          onTargetChange={handleTargetChange}
-          isInternal={isInternal}
-        />
-      </div>
+      <Card>
+        <CardContent className="py-3">
+          <AuditTargetSelector
+            organizations={organizations}
+            selectedTarget={selectedTarget}
+            onTargetChange={handleTargetChange}
+            isInternal={isInternal}
+          />
+        </CardContent>
+      </Card>
 
       {/* Audit Configuration Card */}
       <Card>

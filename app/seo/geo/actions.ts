@@ -1,62 +1,37 @@
 import { createClient } from '@/lib/supabase/server'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { getCurrentUser, getOrganizations } from '@/lib/organizations/actions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type { GEOAudit } from '@/lib/geo/types'
 
 export async function getGEOAuditData(organizationId?: string) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     throw new Error('Unauthorized')
   }
 
-  // Get user's organization, internal status, and role
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id, is_internal, role')
-    .eq('id', user.id)
-    .single()
+  const { isInternal, organizationId: userOrgId } = currentUser
 
-  if (!userRecord) {
-    throw new Error('User not found')
-  }
-
-  const isInternal = userRecord.is_internal === true
-
-  // Fetch organizations for selector (internal users only)
-  let organizations: OrganizationForSelector[] = []
-  if (isInternal && canAccessAllAudits({ is_internal: isInternal, role: userRecord.role })) {
-    const { data: orgs } = await supabase
-      .from('organizations')
-      .select('id, name, website_url, status, logo_url')
-      .order('name')
-
-    organizations = orgs ?? []
-  } else if (userRecord.organization_id) {
-    // External users see only their organization
-    const { data: org } = await supabase
-      .from('organizations')
-      .select('id, name, website_url, status, logo_url')
-      .eq('id', userRecord.organization_id)
-      .single()
-
-    if (org) {
-      organizations = [org]
-    }
-  }
+  // Get organizations for selector (already filtered to exclude inactive)
+  const orgs = await getOrganizations()
+  const organizations: OrganizationForSelector[] = orgs.map((org) => ({
+    id: org.id,
+    name: org.name,
+    website_url: org.website_url,
+    status: org.status,
+    logo_url: org.logo_url,
+  }))
 
   // Determine selected organization
   let selectedOrganizationId: string | null = null
   if (organizationId) {
     // URL param takes precedence
     selectedOrganizationId = organizationId
-  } else if (!isInternal && userRecord.organization_id) {
+  } else if (!isInternal && userOrgId) {
     // External users always use their organization
-    selectedOrganizationId = userRecord.organization_id
+    selectedOrganizationId = userOrgId
   }
 
   // Fetch audit history for selected organization or one-time audits
@@ -71,13 +46,13 @@ export async function getGEOAuditData(organizationId?: string) {
       .limit(20)
 
     audits = orgAudits ?? []
-  } else if (isInternal || (!selectedOrganizationId && !userRecord.organization_id)) {
+  } else if (isInternal || (!selectedOrganizationId && !userOrgId)) {
     // One-time audits (for internal users or users without org)
     const { data: oneTimeAudits } = await supabase
       .from('geo_audits')
       .select('*')
       .is('organization_id', null)
-      .eq('created_by', user.id)
+      .eq('created_by', currentUser.id)
       .order('created_at', { ascending: false })
       .limit(20)
 

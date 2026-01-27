@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
+import { ChevronDown, Building2, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { CreateOrganizationDialog } from '@/components/dashboard/create-organization-dialog'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 export type AuditTarget =
@@ -39,7 +37,8 @@ export function AuditTargetSelector({
   onTargetChange,
   isInternal,
 }: AuditTargetSelectorProps) {
-  const [dialogOpen, setDialogOpen] = useState(false)
+  // Filter out inactive organizations
+  const activeOrganizations = organizations.filter((org) => org.status !== 'inactive')
 
   const getDomain = (url: string | null): string => {
     if (!url) return ''
@@ -64,7 +63,7 @@ export function AuditTargetSelector({
       )
     }
 
-    const org = organizations.find((o) => o.id === selectedTarget.organizationId)
+    const org = activeOrganizations.find((o) => o.id === selectedTarget.organizationId)
     if (!org) {
       return <span className="text-neutral-500">Select audit target</span>
     }
@@ -89,17 +88,6 @@ export function AuditTargetSelector({
     })
   }
 
-  const handleOrganizationCreated = (organization: OrganizationForSelector) => {
-    setDialogOpen(false)
-    if (organization.website_url) {
-      onTargetChange({
-        type: 'organization',
-        organizationId: organization.id,
-        url: organization.website_url,
-      })
-    }
-  }
-
   const handleSelectOneTime = () => {
     onTargetChange({
       type: 'one-time',
@@ -108,7 +96,7 @@ export function AuditTargetSelector({
 
   // For external users, show simple display of their org
   if (!isInternal) {
-    const org = organizations[0]
+    const org = activeOrganizations[0]
     if (!org) {
       return (
         <div className="flex items-center gap-2 px-3 py-2">
@@ -147,15 +135,10 @@ export function AuditTargetSelector({
               <Check className="ml-auto h-4 w-4 text-green-600" aria-hidden="true" />
             )}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            Create new organization…
-          </DropdownMenuItem>
-          {organizations.length > 0 && (
+          {activeOrganizations.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              {organizations.map((org) => (
+              {activeOrganizations.map((org) => (
                 <DropdownMenuItem
                   key={org.id}
                   onClick={() => handleSelectOrganization(org)}
@@ -190,12 +173,6 @@ export function AuditTargetSelector({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <CreateOrganizationDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSuccess={handleOrganizationCreated}
-      />
     </>
   )
 }
