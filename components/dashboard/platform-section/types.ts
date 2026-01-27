@@ -42,8 +42,5 @@ export function getConnectionLabel(connection: PlatformConnection): string {
   return connection.display_name || connection.account_name || 'Unknown Account'
 }
 
-export function formatChange(change: number | null): string {
-  if (change === null) return ''
-  const sign = change >= 0 ? '+' : ''
-  return ` (${sign}${change.toFixed(1)}%)`
-}
+// Re-export shared utilities
+export { formatChange, getPeriodLabel, formatNumber } from '@/lib/metrics/format'
