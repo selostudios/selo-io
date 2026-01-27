@@ -185,21 +185,19 @@ export function SiteAuditClient({
     <div className="space-y-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold">Site Audit</h1>
-        <p className="text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Site Audit</h1>
+          <AuditTargetSelector
+            organizations={organizations}
+            selectedTarget={selectedTarget}
+            onTargetChange={handleTargetChange}
+            isInternal={isInternal}
+          />
+        </div>
+        <p className="text-muted-foreground mt-1">
           Crawl and analyze websites for SEO issues, missing meta tags, broken links, and
           technical problems
         </p>
-      </div>
-
-      {/* Audit Target Selector */}
-      <div className="flex items-center justify-between">
-        <AuditTargetSelector
-          organizations={organizations}
-          selectedTarget={selectedTarget}
-          onTargetChange={handleTargetChange}
-          isInternal={isInternal}
-        />
       </div>
 
       {/* If no organizations exist, show setup message */}

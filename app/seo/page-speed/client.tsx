@@ -189,21 +189,19 @@ export function PageSpeedClient({
     <div className="space-y-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold">Page Speed</h1>
-        <p className="text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Page Speed</h1>
+          <AuditTargetSelector
+            organizations={organizations}
+            selectedTarget={selectedTarget}
+            onTargetChange={handleTargetChange}
+            isInternal={isInternal}
+          />
+        </div>
+        <p className="text-muted-foreground mt-1">
           Measure Core Web Vitals, load times, and performance scores using Google PageSpeed
           Insights
         </p>
-      </div>
-
-      {/* Audit Target Selector */}
-      <div className="flex items-center justify-between">
-        <AuditTargetSelector
-          organizations={organizations}
-          selectedTarget={selectedTarget}
-          onTargetChange={handleTargetChange}
-          isInternal={isInternal}
-        />
       </div>
 
       {/* If no organizations exist, show setup message */}

@@ -171,23 +171,21 @@ export function GEOAuditClient({
 
   return (
     <div className="space-y-6">
-      {/* Audit Target Selector */}
-      <div>
-        <AuditTargetSelector
-          organizations={organizations}
-          selectedTarget={selectedTarget}
-          onTargetChange={handleTargetChange}
-          isInternal={isInternal}
-        />
-      </div>
-
       {/* Page Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold">GEO Audit</h1>
-          <GEOInfoDialog />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">GEO Audit</h1>
+            <GEOInfoDialog />
+          </div>
+          <AuditTargetSelector
+            organizations={organizations}
+            selectedTarget={selectedTarget}
+            onTargetChange={handleTargetChange}
+            isInternal={isInternal}
+          />
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1">
           Analyze your content for Generative Engine Optimization - how well AI systems like
           ChatGPT, Claude, and Perplexity can discover and cite your content
         </p>
