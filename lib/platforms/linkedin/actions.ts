@@ -35,6 +35,7 @@ function getCredentials(stored: StoredCredentials): LinkedInCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches metrics from LinkedIn API and stores them in the database.
+ * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
  */
 export async function syncMetricsForLinkedInConnection(
   connectionId: string,
@@ -45,12 +46,14 @@ export async function syncMetricsForLinkedInConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new LinkedInAdapter(credentials, connectionId)
 
-  // Fetch daily metrics for the last 90 days
-  const endDate = new Date()
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 90)
+  // Fetch only yesterday's metrics (cron runs daily)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(0, 0, 0, 0)
+  const endDate = new Date(yesterday)
+  endDate.setHours(23, 59, 59, 999)
 
-  const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+  const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
@@ -107,12 +110,14 @@ export async function syncLinkedInMetrics() {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new LinkedInAdapter(credentials, connection.id)
 
-    // Fetch daily metrics for the last 90 days
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - 90)
+    // Fetch only yesterday's metrics (use backfill script for historical data)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    const endDate = new Date(yesterday)
+    endDate.setHours(23, 59, 59, 999)
 
-    const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+    const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
 
     // Store daily snapshots for time-series tracking (upsert to avoid duplicates)

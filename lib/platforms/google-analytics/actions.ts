@@ -46,7 +46,7 @@ function getCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches daily metrics from Google Analytics API and stores them in the database.
- * Syncs the last 90 days to ensure we have data for all period views (7d, 30d, 90d).
+ * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
  */
 export async function syncMetricsForGoogleAnalyticsConnection(
   connectionId: string,
@@ -57,12 +57,15 @@ export async function syncMetricsForGoogleAnalyticsConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new GoogleAnalyticsAdapter(credentials, connectionId)
 
-  const endDate = new Date()
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 90) // Sync last 90 days for quarterly view
+  // Fetch only yesterday's metrics (cron runs daily)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(0, 0, 0, 0)
+  const endDate = new Date(yesterday)
+  endDate.setHours(23, 59, 59, 999)
 
   // Fetch daily breakdowns
-  const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+  const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   console.log('[GA Sync] Storing', records.length, 'metric records for', dailyMetrics.length, 'days')
@@ -117,12 +120,15 @@ export async function syncGoogleAnalyticsMetrics() {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
 
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - 90) // Sync last 90 days
+    // Fetch only yesterday's metrics (use backfill script for historical data)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    const endDate = new Date(yesterday)
+    endDate.setHours(23, 59, 59, 999)
 
     // Fetch daily breakdowns
-    const dailyMetrics = await adapter.fetchDailyMetrics(startDate, endDate)
+    const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
 
     // Upsert to avoid duplicate entries
