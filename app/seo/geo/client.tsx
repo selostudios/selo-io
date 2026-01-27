@@ -184,16 +184,14 @@ export function GEOAuditClient({
       </div>
 
       {/* Audit Target Selector */}
-      <Card>
-        <CardContent className="py-3">
-          <AuditTargetSelector
-            organizations={organizations}
-            selectedTarget={selectedTarget}
-            onTargetChange={handleTargetChange}
-            isInternal={isInternal}
-          />
-        </CardContent>
-      </Card>
+      <div>
+        <AuditTargetSelector
+          organizations={organizations}
+          selectedTarget={selectedTarget}
+          onTargetChange={handleTargetChange}
+          isInternal={isInternal}
+        />
+      </div>
 
       {/* Audit Configuration Card */}
       <Card>

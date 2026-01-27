@@ -122,7 +122,7 @@ export function AuditTargetSelector({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-auto min-h-11 gap-2 px-3 py-2 hover:bg-neutral-100">
+          <Button variant="ghost" className="h-auto min-h-11 gap-2 bg-white px-3 py-2 hover:bg-neutral-100">
             {getDisplayLabel()}
             <ChevronDown className="h-4 w-4 text-neutral-400" aria-hidden="true" />
           </Button>
