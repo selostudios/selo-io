@@ -59,6 +59,48 @@ npm run test:seed
 
 For more details, see [docs/testing.md](docs/testing.md).
 
+## Permissions & Access Control
+
+Selo uses a role-based access control (RBAC) system to manage what users can see and do. This section helps you understand the permission model for onboarding and feature development.
+
+### User Roles
+
+- **Admin** - Full administrative access to their organization
+- **Developer** - Internal Selo employee with support/debugging access
+- **Team Member** - Standard team member who can manage campaigns
+- **Client Viewer** - Read-only access for clients
+
+### What Each Role Can Do
+
+| Feature | Admin | Developer | Team Member | Client Viewer |
+|---------|-------|-----------|-------------|---------------|
+| **Dashboard** | ✓ Full Access | ✗ No Access | ✓ Full Access | ✓ Limited View |
+| **Campaigns** | ✓ Create/Edit/Delete | ✗ No Access | ✓ Create/Edit/Delete | ✗ View Only |
+| **Organization Settings** | ✓ Full Management | ✓ View/Update | ✗ No Access | ✗ No Access |
+| **Team Management** | ✓ View + Invite | ✓ View Only | ✓ View Only | ✓ View Only |
+| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access | ✗ No Access | ✗ No Access |
+| **Support/Feedback** | ✓ Manage Tickets | ✓ Manage Tickets | ✗ No Access | ✗ No Access |
+| **Site Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| **Page Speed Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| **GEO Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+
+### Special Notes
+
+**Internal Users (Selo Employees):**
+- Developer role + `is_internal` flag = access to all organizations
+- Can view and manage data across customer organizations
+- Used for customer support and debugging
+
+**Security:**
+- Permissions are enforced at multiple levels (UI, server actions, API routes, database)
+- Row-Level Security (RLS) policies provide the final security boundary
+- Users can only access data from their own organization (except internal users)
+
+**For Developers:**
+- All permission checks use `lib/permissions.ts` helpers
+- See `CLAUDE.md` for detailed implementation guidance
+- Update this matrix when adding new roles/permissions/features
+
 ## LinkedIn OAuth Setup
 
 ### Development

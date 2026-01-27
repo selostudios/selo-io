@@ -249,15 +249,91 @@ Always run lint and tests before pushing to remote:
 npm run lint && npm run test:unit && npm run build
 ```
 
-### Permissions Service
+### Permissions & Access Control
 
-Use `lib/permissions.ts` for all permission-based logic:
+The application uses a comprehensive role-based access control (RBAC) system defined in `lib/permissions.ts`. All permission checks should use this centralized service rather than inline role comparisons.
 
-- **Role-based permissions**: `hasPermission(role, permission)`, `canManageOrg(role)`, `canManageTeam(role)`, etc.
-- **Internal user checks**: `isInternalUser(is_internal)` for Selo employee access
-- RLS policies are the security boundary; these helpers are for UX decisions
+#### User Roles
 
-Always import from `@/lib/permissions` rather than duplicating permission checks inline.
+- **`admin`** - Full administrative access to organization
+- **`developer`** - Internal Selo employee with support/debugging access
+- **`team_member`** - Standard team member with campaign management
+- **`client_viewer`** - Read-only client access
+
+#### Permission Types
+
+```typescript
+'org:update'          // Manage organization settings
+'org:view'            // View organization (all roles)
+'team:invite'         // Invite new team members
+'team:view'           // View team members (all roles)
+'integrations:manage' // Connect/disconnect platforms
+'campaigns:create'    // Create campaigns
+'campaigns:update'    // Update campaigns
+'campaigns:delete'    // Delete campaigns
+'feedback:manage'     // Manage feedback/support tickets
+```
+
+#### Permission Helpers
+
+**Core Functions:**
+- `hasPermission(role, permission)` - Check specific permission
+- `requirePermission(role, permission)` - Throws error if denied
+- `getPermissions(role)` - Returns all permissions for role
+
+**Convenience Helpers:**
+- `canManageOrg(role)` - Organization management
+- `canManageTeam(role)` - Team invitation/management
+- `canManageIntegrations(role)` - Platform connections
+- `canManageCampaigns(role)` - Campaign CRUD operations
+- `canManageFeedback(role)` - Support ticket access
+- `isInternalUser(userRecord)` - Selo employee check
+- `canAccessAllAudits(userRecord)` - Cross-org audit access
+
+#### Role-Based Access Matrix
+
+| Feature | Admin | Developer | Team Member | Client Viewer |
+|---------|-------|-----------|-------------|---------------|
+| **Dashboard** | ✓ Full Access | ✗ No Access | ✓ Full Access | ✓ Limited View |
+| **Campaigns** | ✓ Create/Edit/Delete | ✗ No Access | ✓ Create/Edit/Delete | ✗ View Only (via RLS) |
+| **Organization Settings** | ✓ Full Management | ✓ View/Update | ✗ No Access | ✗ No Access |
+| **Team Management** | ✓ View + Invite | ✓ View Only | ✓ View Only | ✓ View Only |
+| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access | ✗ No Access | ✗ No Access |
+| **Support/Feedback** | ✓ Manage Tickets | ✓ Manage Tickets | ✗ No Access | ✗ No Access |
+| **Site Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| **Page Speed Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| **GEO Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+
+#### Special Access: Internal Users
+
+Users with `is_internal: true` flag (Selo employees) have elevated privileges:
+- Can view and manage any organization (not just their own)
+- Can access all audits across organizations
+- Can perform support/debugging operations
+- Bypasses some organization-scoped restrictions
+
+#### Security Architecture
+
+**Defense in Depth:**
+1. **Layout-level guards** - Prevent unauthorized page navigation
+2. **Page-level checks** - Secondary verification before rendering
+3. **Server action guards** - Protect all mutations at the action level
+4. **API route protection** - HTTP endpoints verify permissions
+5. **RLS policies** - Database-level security boundary (final enforcement)
+
+**Organization Isolation:**
+- All queries include explicit `organization_id` filters
+- Prevents cross-organization data access even with valid session
+- Internal users can bypass via `canAccessAllAudits()` helper
+
+**Important Notes:**
+- RLS policies are the **security boundary** - never rely solely on UI checks
+- Permission helpers are for **UX decisions** (showing/hiding UI elements)
+- Always import from `@/lib/permissions` - never duplicate permission logic inline
+- Use `isInternalUser(userRecord)` instead of `userRecord.is_internal === true`
+
+**Maintenance Reminder:**
+> ⚠️ **When adding new roles, permissions, or features:** Update the Role-Based Access Matrix in both `CLAUDE.md` and `README.md` to keep documentation accurate for team onboarding.
 
 ### Error Logging Convention
 
