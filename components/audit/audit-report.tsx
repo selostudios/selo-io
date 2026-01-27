@@ -155,9 +155,11 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
         <Card>
           <CardContent className="pt-6">
             <h2 className="mb-3 text-lg font-semibold">Executive Summary</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
-              {audit.executive_summary}
-            </p>
+            <div className="text-muted-foreground text-sm leading-relaxed space-y-3">
+              {audit.executive_summary.split('\n\n').map((paragraph, idx) => (
+                <p key={idx}>{paragraph}</p>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

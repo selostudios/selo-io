@@ -39,28 +39,27 @@ export async function generateExecutiveSummary(
           .join('\n')
       : '- None'
 
-  const prompt = `Analyze this website audit and write a brief executive summary for the site owner.
+  const prompt = `Write a concise executive summary for this website audit. The reader is a Selo employee reviewing this audit for a customer.
 
 Site: ${url}
-Score: ${scores.overall_score}/100
+Overall Score: ${scores.overall_score}/100 (SEO: ${scores.seo_score}, AI Readiness: ${scores.ai_readiness_score}, Technical: ${scores.technical_score})
 Pages analyzed: ${pagesCrawled}
+Critical issues: ${criticalFails.length}
+Warnings: ${warnings.length}
+Passed: ${passed.length} checks
 
-Critical issues (${criticalFails.length}):
-${criticalList}
+Top issues:
+${criticalFails.length > 0 ? criticalList : warningList}
 
-Warnings (${warnings.length}):
-${warningList}
+Write 2-3 short paragraphs in plain text (NO markdown, NO bullet points, NO special formatting):
 
-Passed (${passed.length} checks)
+1. Opening: Diagnose the site's overall health in one clear sentence. Be specific about what's working and what's not.
 
-Write 2-3 short paragraphs that:
-- Assess overall site health in plain language
-- Explain the business impact of the top 2-3 issues (e.g., "missing meta descriptions means search engines can't properly display your pages")
-- Identify one quick win they could address today
+2. Impact: Explain the business consequences of the main issues in plain English. Focus on what the customer is losing (traffic, conversions, visibility) rather than listing technical details.
 
-Tone: Direct, helpful, professional. Write for someone who isn't technical but makes business decisions.
+3. Next Steps: Provide 1-2 clear, actionable recommendations. If the score is high (80+), keep this brief and congratulatory.
 
-Maximum 120 words.`
+Maximum 100 words. Direct, professional tone. Plain text only - no asterisks, no hashes, no formatting symbols.`
 
   const { text } = await generateText({
     model: anthropic('claude-opus-4-5-20251101'),
@@ -88,23 +87,23 @@ export function generateFallbackSummary(
     scores.overall_score >= 80
       ? 'is in good health'
       : scores.overall_score >= 60
-        ? 'needs some attention'
+        ? 'needs attention'
         : 'requires immediate attention'
 
   const domain = url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
-  let summary = `Your website ${domain} ${healthStatus} with an overall score of ${scores.overall_score}/100. `
-  summary += `We analyzed ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} and found `
+  let summary = `The customer's website ${domain} ${healthStatus} with an overall score of ${scores.overall_score}/100. `
+  summary += `Analysis of ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} found `
   summary += `${criticalFails.length} critical issue${criticalFails.length !== 1 ? 's' : ''}, `
   summary += `${warnings.length} warning${warnings.length !== 1 ? 's' : ''}, `
-  summary += `and ${passed.length} check${passed.length !== 1 ? 's' : ''} passed.`
+  summary += `and ${passed.length} passing check${passed.length !== 1 ? 's' : ''}.\n\n`
 
   if (criticalFails.length > 0) {
-    summary += ` We recommend addressing the critical issues first to improve your site's performance and visibility.`
+    summary += `Priority: Address critical issues first to improve search visibility and site performance.`
   } else if (warnings.length > 0) {
-    summary += ` Consider addressing the recommended improvements to further optimize your site.`
+    summary += `Priority: Implement recommended improvements to optimize search performance.`
   } else {
-    summary += ` Your site is performing well across all our checks.`
+    summary += `The site is performing well across all checks.`
   }
 
   return summary
