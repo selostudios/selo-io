@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
 import Image from 'next/image'
@@ -68,7 +68,10 @@ export function OrgSelector({
     // Update URL and refresh to re-fetch server data
     const url = new URL(window.location.href)
     url.searchParams.set('org', orgId)
-    router.push(pathname + url.search)
+    const newUrl = pathname + url.search
+
+    // Push URL and refresh to re-fetch server component data
+    router.push(newUrl)
     router.refresh()
   }
 
@@ -77,8 +80,10 @@ export function OrgSelector({
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
 
     // Remove org param from URL and refresh to re-fetch server data
-    router.push(pathname)
-    router.refresh()
+    startTransition(() => {
+      router.push(pathname)
+      router.refresh()
+    })
   }
 
   const handleOrganizationCreated = (organization: OrganizationForSelector) => {
