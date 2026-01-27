@@ -165,6 +165,7 @@ function ConnectionMetrics({
               period={period}
               timeSeries={getTimeSeriesForMetric('Active Users')}
               color={GA_COLOR}
+              tooltip="The number of distinct users who engaged with your site during this period. Users are counted once per period, even if they visit multiple times."
             />
             <MetricCard
               label="New Users"
