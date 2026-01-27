@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isInternalUser } from '@/lib/permissions'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
@@ -25,7 +26,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     .single()
 
   // Internal users can view any org, external users only their own
-  const isInternal = userRecord?.is_internal === true
+  const isInternal = userRecord ? isInternalUser(userRecord) : false
   const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord?.organization_id
 
   if (userError || !userRecord || !organizationId) {

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isInternalUser } from '@/lib/permissions'
 import { OAuthToastHandler } from './oauth-toast-handler'
 import { IntegrationsPageContent } from './integrations-page-content'
 
@@ -29,7 +30,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps) {
   }
 
   // Internal users can view any org, external users only their own
-  const isInternal = userRecord.is_internal === true
+  const isInternal = isInternalUser(userRecord)
   const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
 
   // For internal users without an org_id, require org selection

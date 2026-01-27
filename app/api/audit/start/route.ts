@@ -1,5 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isInternalUser } from '@/lib/permissions'
 import { runAuditBatch } from '@/lib/audit/runner'
 
 // Extend function timeout for long-running audits (max 300s on Pro plan)
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  const isInternal = userRecord.is_internal === true
+  const isInternal = isInternalUser(userRecord)
 
   let websiteUrl: string
   let auditOrganizationId: string | null = null

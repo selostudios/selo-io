@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
 import { formatDate, displayName } from '@/lib/utils'
-import { canManageTeam } from '@/lib/permissions'
+import { canManageTeam, isInternalUser } from '@/lib/permissions'
 
 function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean)
@@ -45,7 +45,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
   }
 
   // Internal users can view any org, external users only their own
-  const isInternal = userRecord.is_internal === true
+  const isInternal = isInternalUser(userRecord)
   const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
 
   // For internal users without an org_id, require org selection

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
-import { canManageOrg } from '@/lib/permissions'
+import { canManageOrg, isInternalUser } from '@/lib/permissions'
 
 interface PageProps {
   searchParams: Promise<{ org?: string }>
@@ -31,7 +31,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
   }
 
   // Internal users can view any org, external users only their own
-  const isInternal = userRecord.is_internal === true
+  const isInternal = isInternalUser(userRecord)
   const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
 
   // For internal users without an org_id, require org selection
