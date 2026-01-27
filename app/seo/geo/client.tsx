@@ -171,6 +171,16 @@ export function GEOAuditClient({
 
   return (
     <div className="space-y-6">
+      {/* Audit Target Selector */}
+      <div>
+        <AuditTargetSelector
+          organizations={organizations}
+          selectedTarget={selectedTarget}
+          onTargetChange={handleTargetChange}
+          isInternal={isInternal}
+        />
+      </div>
+
       {/* Page Header */}
       <div>
         <div className="flex items-center gap-2">
@@ -181,16 +191,6 @@ export function GEOAuditClient({
           Analyze your content for Generative Engine Optimization - how well AI systems like
           ChatGPT, Claude, and Perplexity can discover and cite your content
         </p>
-      </div>
-
-      {/* Audit Target Selector */}
-      <div>
-        <AuditTargetSelector
-          organizations={organizations}
-          selectedTarget={selectedTarget}
-          onTargetChange={handleTargetChange}
-          isInternal={isInternal}
-        />
       </div>
 
       {/* Audit Configuration Card */}
