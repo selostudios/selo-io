@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { InviteUserDialog } from '@/components/settings/invite-user-dialog'
 import { ResendInviteButton } from '@/components/settings/resend-invite-button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -8,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
 import { formatDate, displayName } from '@/lib/utils'
-import { canManageTeam, isInternalUser } from '@/lib/permissions'
+import { canManageTeam } from '@/lib/permissions'
+import { withSettingsAuth, NoOrgSelected } from '@/lib/auth/settings-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,105 +24,79 @@ interface PageProps {
 }
 
 export default async function TeamSettingsPage({ searchParams }: PageProps) {
-  const { org: selectedOrgId } = await searchParams
-  const supabase = await createClient()
+  const result = await withSettingsAuth(
+    searchParams,
+    async (organizationId, { isInternal, userRecord }) => {
+      const supabase = await createClient()
+      const isAdmin = isInternal || canManageTeam(userRecord.role)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+      // Get organization name
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', organizationId)
+        .single()
 
-  if (!user) {
-    redirect('/login')
-  }
+      // Get team members with emails using security definer function
+      const { data: userEmails } = await supabase.rpc('get_organization_user_emails', {
+        org_id: organizationId,
+      })
 
-  // Get user's organization and role
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id, role, is_internal')
-    .eq('id', user.id)
-    .single()
+      const { data: teamMembers } = await supabase
+        .from('users')
+        .select('id, role, created_at')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
 
-  if (!userRecord) {
-    redirect('/onboarding')
-  }
+      // Map emails and names to team members
+      const userDataMap = new Map<string, { email: string; first_name: string; last_name: string }>(
+        userEmails?.map(
+          (u: { user_id: string; email: string; first_name: string; last_name: string }) => [
+            u.user_id,
+            { email: u.email, first_name: u.first_name, last_name: u.last_name },
+          ]
+        ) || []
+      )
+      const teamMembersWithEmails = (teamMembers || []).map((member) => {
+        const userData = userDataMap.get(member.id)
+        const fullName = userData
+          ? `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`.trim()
+          : 'Unknown'
+        return {
+          ...member,
+          name: fullName,
+          email: userData?.email || 'Unknown',
+        }
+      })
 
-  // Internal users can view any org, external users only their own
-  const isInternal = isInternalUser(userRecord)
-  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+      // Get pending invites (only if admin)
+      let pendingInvites: Array<{
+        id: string
+        email: string
+        role: string
+        expires_at: string
+      }> = []
+      if (isAdmin) {
+        const { data: invites } = await supabase
+          .from('invites')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .is('accepted_at', null)
+          .order('created_at', { ascending: false })
 
-  // For internal users without an org_id, require org selection
-  if (!organizationId) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Select an organization to view team members.</p>
-      </div>
-    )
-  }
+        pendingInvites = invites || []
+      }
 
-  const isAdmin = isInternal || canManageTeam(userRecord.role)
-
-  // Get organization name
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('name')
-    .eq('id', organizationId)
-    .single()
-
-  // Get team members with emails using security definer function
-  const { data: userEmails } = await supabase.rpc('get_organization_user_emails', {
-    org_id: organizationId,
-  })
-
-  const { data: teamMembers } = await supabase
-    .from('users')
-    .select(
-      `
-      id,
-      role,
-      created_at
-    `
-    )
-    .eq('organization_id', organizationId)
-    .order('created_at', { ascending: false })
-
-  // Map emails and names to team members
-  const userDataMap = new Map<string, { email: string; first_name: string; last_name: string }>(
-    userEmails?.map(
-      (u: { user_id: string; email: string; first_name: string; last_name: string }) => [
-        u.user_id,
-        { email: u.email, first_name: u.first_name, last_name: u.last_name },
-      ]
-    ) || []
+      return { org, teamMembersWithEmails, pendingInvites, isAdmin }
+    },
+    'Select an organization to view team members.'
   )
-  const teamMembersWithEmails = (teamMembers || []).map((member) => {
-    const userData = userDataMap.get(member.id)
-    const fullName = userData
-      ? `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`.trim()
-      : 'Unknown'
-    return {
-      ...member,
-      name: fullName,
-      email: userData?.email || 'Unknown',
-    }
-  })
 
-  // Get pending invites (only if admin)
-  let pendingInvites: Array<{
-    id: string
-    email: string
-    role: string
-    expires_at: string
-  }> = []
-  if (isAdmin) {
-    const { data: invites } = await supabase
-      .from('invites')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .is('accepted_at', null)
-      .order('created_at', { ascending: false })
-
-    pendingInvites = invites || []
+  if (result.type === 'no-org') {
+    return <NoOrgSelected message={result.message} />
   }
+
+  const { org, teamMembersWithEmails, pendingInvites, isAdmin } = result.data
 
   async function handleDeleteInvite(formData: FormData) {
     'use server'
