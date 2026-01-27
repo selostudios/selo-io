@@ -116,7 +116,7 @@ export async function GET() {
   }
 
   // Check for active AIO audits
-  const { data: activeGeoAudit } = await supabase
+  const { data: activeAioAudit } = await supabase
     .from('aio_audits')
     .select('id, status, updated_at, created_at')
     .eq('organization_id', userRecord.organization_id)
@@ -125,15 +125,15 @@ export async function GET() {
     .limit(1)
     .maybeSingle()
 
-  if (activeGeoAudit) {
+  if (activeAioAudit) {
     // AIO audits are relatively quick (< 2 minutes typically)
     // Only mark as stale if stuck for 5 minutes
-    const timestamp = activeGeoAudit.updated_at || activeGeoAudit.created_at
+    const timestamp = activeAioAudit.updated_at || activeAioAudit.created_at
     const updatedAt = new Date(timestamp).getTime()
     const now = Date.now()
     const isStale = !isNaN(updatedAt) && now - updatedAt > 5 * 60 * 1000
 
-    if (isStale && activeGeoAudit.status === 'running') {
+    if (isStale && activeAioAudit.status === 'running') {
       // Mark stale AIO audit as failed using service client
       const serviceClient = createServiceClient()
       await serviceClient
@@ -143,12 +143,12 @@ export async function GET() {
           error_message: 'Audit timed out - the server function was terminated before completion. Please try again.',
           completed_at: new Date().toISOString(),
         })
-        .eq('id', activeGeoAudit.id)
+        .eq('id', activeAioAudit.id)
 
       console.log('[AIO Audit Active Check] Marked stale audit as failed', {
-        auditId: activeGeoAudit.id,
-        status: activeGeoAudit.status,
-        updatedAt: activeGeoAudit.updated_at,
+        auditId: activeAioAudit.id,
+        status: activeAioAudit.status,
+        updatedAt: activeAioAudit.updated_at,
         timestamp: new Date().toISOString(),
       })
     } else {
