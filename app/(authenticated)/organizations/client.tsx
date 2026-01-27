@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Building2, Plus, Pencil, Trash2, RotateCcw, ExternalLink, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ interface Organization {
   status: OrganizationStatus
   industry: string | null
   contact_email: string | null
+  logo_url: string | null
   created_at: string
   updated_at: string
 }
@@ -190,19 +192,35 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                 filteredOrgs.map((org) => (
                   <TableRow key={org.id}>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">{org.name}</span>
-                        {org.website_url && (
-                          <a
-                            href={org.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground flex items-center gap-1 text-sm hover:underline"
-                          >
-                            {getDomain(org.website_url)}
-                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                          </a>
+                      <div className="flex items-center gap-3">
+                        {org.logo_url ? (
+                          <Image
+                            src={org.logo_url}
+                            alt=""
+                            width={0}
+                            height={0}
+                            sizes="100px"
+                            className="h-8 w-auto max-w-16 rounded object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded bg-neutral-100">
+                            <Building2 className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+                          </div>
                         )}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium">{org.name}</span>
+                          {org.website_url && (
+                            <a
+                              href={org.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground flex items-center gap-1 text-sm hover:underline"
+                            >
+                              {getDomain(org.website_url)}
+                              <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

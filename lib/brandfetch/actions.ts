@@ -65,7 +65,8 @@ export interface UploadBrandLogoResult {
 
 export async function uploadBrandLogo(
   imageUrl: string,
-  format: string
+  format: string,
+  organizationId?: string // Optional: for internal users editing other orgs
 ): Promise<UploadBrandLogoResult> {
   const supabase = await createClient()
 
@@ -79,12 +80,21 @@ export async function uploadBrandLogo(
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
   if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can upload logos' }
+  }
+
+  // Determine which organization to update
+  // Internal users can specify a different org, otherwise use their own
+  const isInternal = userRecord.is_internal === true
+  const orgId = (isInternal && organizationId) ? organizationId : userRecord.organization_id
+
+  if (!orgId) {
+    return { error: 'No organization specified' }
   }
 
   try {
@@ -95,7 +105,6 @@ export async function uploadBrandLogo(
     }
 
     const blob = await response.blob()
-    const orgId = userRecord.organization_id
     const fileExt = format === 'svg' ? 'svg' : format === 'png' ? 'png' : 'jpg'
     const filePath = `${orgId}/logo.${fileExt}`
     const contentType =
@@ -142,6 +151,8 @@ export async function uploadBrandLogo(
 
     revalidatePath('/settings/organization')
     revalidatePath('/dashboard')
+    revalidatePath('/organizations')
+    revalidatePath('/', 'layout') // Revalidate the authenticated layout to refresh OrgSelector
 
     return { logoUrl: publicUrl }
   } catch (error) {

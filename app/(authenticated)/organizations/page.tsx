@@ -24,6 +24,7 @@ export default async function OrganizationsPage() {
       status,
       industry,
       contact_email,
+      logo_url,
       created_at,
       updated_at
     `
