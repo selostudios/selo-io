@@ -1,4 +1,5 @@
 import type { BrandfetchResponse, BrandData } from './types'
+import { LogoType, ImageFormat } from '@/lib/enums'
 
 const BRANDFETCH_API_URL = 'https://api.brandfetch.io/v2/brands'
 
@@ -69,9 +70,9 @@ function selectBestLogo(logos: BrandfetchResponse['logos']): BrandData['logo'] {
       logo.theme === 'light' ? 2 : logo.theme === null ? 1 : 0
     // Prefer logo type
     const typeScore = (logo: typeof a) => {
-      if (logo.type === 'logo') return 3
-      if (logo.type === 'icon') return 2
-      if (logo.type === 'symbol') return 1
+      if (logo.type === LogoType.Logo) return 3
+      if (logo.type === LogoType.Icon) return 2
+      if (logo.type === LogoType.Symbol) return 1
       return 0
     }
     return themeScore(b) + typeScore(b) - (themeScore(a) + typeScore(a))
@@ -83,8 +84,8 @@ function selectBestLogo(logos: BrandfetchResponse['logos']): BrandData['logo'] {
   // Sort formats by preference: SVG > PNG > others
   const sortedFormats = [...best.formats].sort((a, b) => {
     const formatScore = (f: typeof a) => {
-      if (f.format === 'svg') return 3
-      if (f.format === 'png') return 2
+      if (f.format === ImageFormat.SVG) return 3
+      if (f.format === ImageFormat.PNG) return 2
       return 1
     }
     return formatScore(b) - formatScore(a)
