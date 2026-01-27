@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { House, LineChart, Building2, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -46,14 +47,20 @@ export function ParentSidebar({
   onSectionChange,
   isInternal = false,
 }: ParentSidebarProps) {
+  const searchParams = useSearchParams()
+  const orgParam = searchParams.get('org')
+
   // Filter sections based on internal status
   const visibleSections = sections.filter((section) => !section.internalOnly || isInternal)
+
+  // Preserve org parameter in logo link
+  const logoHref = orgParam ? `/dashboard?org=${orgParam}` : '/dashboard'
 
   return (
     <div className="flex h-screen w-16 flex-col border-r bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b">
-        <Link href="/dashboard">
+        <Link href={logoHref}>
           <Image
             src="/selo-logo.jpg.webp"
             alt="Selo"

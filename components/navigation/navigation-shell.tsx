@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { PanelLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -39,6 +39,7 @@ interface NavigationShellProps {
 export function NavigationShell({ isInternal = false }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit()
 
   // Derive active section from current pathname
@@ -68,10 +69,18 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
     (section: ParentSection) => {
       // Only navigate if we're changing to a different section
       if (section !== activeSection) {
-        router.push(sectionDefaultRoutes[section])
+        const baseRoute = sectionDefaultRoutes[section]
+        const orgParam = searchParams.get('org')
+
+        // Preserve org parameter for home and seo sections
+        const href = orgParam && (section === 'home' || section === 'seo')
+          ? `${baseRoute}?org=${orgParam}`
+          : baseRoute
+
+        router.push(href)
       }
     },
-    [activeSection, router]
+    [activeSection, router, searchParams]
   )
 
   // Toggle child sidebar collapsed state

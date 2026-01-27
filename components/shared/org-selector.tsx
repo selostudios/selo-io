@@ -84,7 +84,7 @@ export function OrgSelector({
     handleSelectOrganization(organization.id)
   }
 
-  // Initialize from localStorage on mount (only if no org selected)
+  // Initialize from localStorage when no org is selected
   useEffect(() => {
     if (!selectedOrganizationId && activeOrganizations.length > 0) {
       // For non-SEO routes, always select an org
@@ -114,7 +114,7 @@ export function OrgSelector({
         }
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedOrganizationId, activeOrganizations.length, isSeoRoute]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const getDomain = (url: string | null): string => {
     if (!url) return ''
