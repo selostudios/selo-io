@@ -4,7 +4,7 @@ import { MetricCard } from './metric-card'
 import { LinkedInIcon } from '@/components/icons/platform-icons'
 import { getLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
 import { PlatformSection, formatChange } from './platform-section'
-import type { Period } from './integrations-panel'
+import { Period } from '@/lib/enums'
 import type { MetricTimeSeries } from '@/lib/metrics/types'
 
 interface Metric {

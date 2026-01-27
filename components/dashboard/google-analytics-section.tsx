@@ -5,7 +5,7 @@ import { GoogleAnalyticsIcon } from '@/components/icons/platform-icons'
 import { getGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import { PlatformSection, formatChange } from './platform-section'
 import type { TrafficAcquisition } from '@/lib/platforms/google-analytics/types'
-import type { Period } from './integrations-panel'
+import { Period } from '@/lib/enums'
 import type { MetricTimeSeries } from '@/lib/metrics/types'
 
 interface GAMetrics {

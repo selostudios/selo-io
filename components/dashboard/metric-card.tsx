@@ -11,7 +11,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import type { Period } from './integrations-panel'
+import { Period } from '@/lib/enums'
 import type { TimeSeriesDataPoint } from '@/lib/metrics/types'
 
 interface MetricCardProps {

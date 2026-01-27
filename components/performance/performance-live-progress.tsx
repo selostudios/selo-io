@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { formatDuration } from '@/lib/utils'
-import type { PerformanceAuditStatus, DeviceType } from '@/lib/performance/types'
+import { PerformanceAuditStatus } from '@/lib/enums'
+import type { DeviceType } from '@/lib/performance/types'
 
 interface PerformanceLiveProgressProps {
   auditId: string
@@ -33,7 +34,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   const [elapsedMs, setElapsedMs] = useState(0)
   const [isCancelling, setIsCancelling] = useState(false)
 
-  const shouldPoll = initialStatus === 'pending' || initialStatus === 'running'
+  const shouldPoll = initialStatus === PerformanceAuditStatus.Pending || initialStatus === PerformanceAuditStatus.Running
 
   const handleCancel = async () => {
     setIsCancelling(true)
@@ -97,7 +98,11 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
     const prevStatus = prevStatusRef.current
     prevStatusRef.current = progress.status
 
-    const terminalStatuses: PerformanceAuditStatus[] = ['completed', 'failed', 'stopped']
+    const terminalStatuses: PerformanceAuditStatus[] = [
+      PerformanceAuditStatus.Completed,
+      PerformanceAuditStatus.Failed,
+      PerformanceAuditStatus.Stopped,
+    ]
     if (terminalStatuses.includes(progress.status) && !terminalStatuses.includes(prevStatus)) {
       router.refresh()
     }
@@ -117,7 +122,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   }
 
   // Show failed state
-  if (progress?.status === 'failed') {
+  if (progress?.status === PerformanceAuditStatus.Failed) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center py-12">
@@ -142,7 +147,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   }
 
   // Show stopped state
-  if (progress?.status === 'stopped') {
+  if (progress?.status === PerformanceAuditStatus.Stopped) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center py-12">
@@ -181,7 +186,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
           <Loader2 className="text-primary size-12 animate-spin" />
         </div>
         <CardTitle className="text-xl text-balance">
-          {progress?.status === 'pending' ? 'Starting Audit...' : 'Analyzing Pages...'}
+          {progress?.status === PerformanceAuditStatus.Pending ? 'Starting Audit...' : 'Analyzing Pages...'}
         </CardTitle>
         <p className="text-muted-foreground text-sm text-pretty">
           Testing {totalUrls} page{totalUrls !== 1 ? 's' : ''} with PageSpeed Insights

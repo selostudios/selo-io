@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PerformanceResults } from './performance-results'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
-import type { PerformanceAudit, PerformanceAuditResult, DeviceType } from '@/lib/performance/types'
+import { PerformanceAuditStatus } from '@/lib/enums'
+import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
+import { DeviceType } from '@/lib/enums'
 
 interface PerformanceAuditPageProps {
   id: string
@@ -17,7 +19,7 @@ interface PerformanceAuditPageProps {
 }
 
 export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPageProps) {
-  const [device, setDevice] = useState<DeviceType>('mobile')
+  const [device, setDevice] = useState<DeviceType>(DeviceType.Mobile)
 
   // Extract domain from first URL
   const firstUrl = audit.first_url || audit.current_url || results[0]?.url
@@ -36,7 +38,7 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
           <ArrowLeft className="h-4 w-4" />
           Back to Page Speed
         </Link>
-        {audit.status === 'completed' && (
+        {audit.status === PerformanceAuditStatus.Completed && (
           <Button variant="outline" asChild>
             <a href={`/api/performance/${id}/export`} download>
               <Download className="mr-2 h-4 w-4" />
@@ -64,9 +66,9 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
             )}
             <Badge
               variant={
-                audit.status === 'completed'
+                audit.status === PerformanceAuditStatus.Completed
                   ? 'success'
-                  : audit.status === 'failed'
+                  : audit.status === PerformanceAuditStatus.Failed
                     ? 'destructive'
                     : 'secondary'
               }
@@ -92,7 +94,7 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
           </Tabs>
         </div>
         <p className="text-muted-foreground text-sm">
-          {audit.status === 'failed' ? 'Failed' : 'Audited'}{' '}
+          {audit.status === PerformanceAuditStatus.Failed ? 'Failed' : 'Audited'}{' '}
           {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
           {audit.total_urls} page{audit.total_urls !== 1 ? 's' : ''} tested
           {(() => {

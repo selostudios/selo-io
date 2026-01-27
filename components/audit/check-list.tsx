@@ -17,6 +17,7 @@ import {
   Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CheckStatus } from '@/lib/enums'
 
 interface CheckListProps {
   title: string
@@ -63,9 +64,9 @@ function formatLastModified(lastModified: string | null): string | null {
 }
 
 export function CheckList({ title, checks, pages, onDismissCheck }: CheckListProps) {
-  const failedCount = checks.filter((c) => c.status === 'failed').length
-  const warningCount = checks.filter((c) => c.status === 'warning').length
-  const passedCount = checks.filter((c) => c.status === 'passed').length
+  const failedCount = checks.filter((c) => c.status === CheckStatus.Failed).length
+  const warningCount = checks.filter((c) => c.status === CheckStatus.Warning).length
+  const passedCount = checks.filter((c) => c.status === CheckStatus.Passed).length
 
   // Create a map of page_id to page for quick lookup
   const pageMap = useMemo(() => new Map(pages.map((p) => [p.id, p])), [pages])
@@ -94,7 +95,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
     return map
   }, [pageSpecificChecks])
 
-  const siteWideFailedCount = uniqueSiteWideChecks.filter((c) => c.status === 'failed').length
+  const siteWideFailedCount = uniqueSiteWideChecks.filter((c) => c.status === CheckStatus.Failed).length
 
   // Sort page groups: pages with failed checks first, then by URL
   // Memoize to satisfy React Compiler
@@ -102,8 +103,8 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
     return Array.from(checksByPage.keys()).sort((a, b) => {
       const aChecks = checksByPage.get(a) || []
       const bChecks = checksByPage.get(b) || []
-      const aHasFailed = aChecks.some((c) => c.status === 'failed')
-      const bHasFailed = bChecks.some((c) => c.status === 'failed')
+      const aHasFailed = aChecks.some((c) => c.status === CheckStatus.Failed)
+      const bHasFailed = bChecks.some((c) => c.status === CheckStatus.Failed)
 
       if (aHasFailed && !bHasFailed) return -1
       if (!aHasFailed && bHasFailed) return 1
@@ -135,7 +136,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
     }
     for (const pageId of sortedPageIds) {
       const pageChecks = checksByPage.get(pageId) || []
-      const hasFailed = pageChecks.some((c) => c.status === 'failed')
+      const hasFailed = pageChecks.some((c) => c.status === CheckStatus.Failed)
       initial[pageId || 'general'] = hasFailed
     }
     return initial
@@ -244,7 +245,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
           const pageChecks = sortChecks(checksByPage.get(pageId) || [])
           const page = pageId ? pageMap.get(pageId) : null
           const pagePath = page ? formatPagePath(page.url) : 'General'
-          const pageFailedCount = pageChecks.filter((c) => c.status === 'failed').length
+          const pageFailedCount = pageChecks.filter((c) => c.status === CheckStatus.Failed).length
 
           const collapsibleId = pageId || 'general'
 

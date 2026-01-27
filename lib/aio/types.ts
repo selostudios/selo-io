@@ -14,6 +14,9 @@ import {
 export { AIOAuditStatus, AIOCheckCategory, CheckStatus }
 export { CheckPriority as AIOCheckPriority }
 
+// Alias for use within this file
+type AIOCheckPriority = CheckPriority
+
 //============================================================================
 // Database Types
 //============================================================================

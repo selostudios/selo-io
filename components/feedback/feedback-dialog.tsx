@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import { useFeedback } from './feedback-provider'
 import { submitFeedback } from '@/app/feedback/actions'
-import { CATEGORY_OPTIONS, type FeedbackCategory } from '@/lib/types/feedback'
+import { CATEGORY_OPTIONS, FeedbackCategory } from '@/lib/types/feedback'
 import { X, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -45,7 +45,7 @@ export function FeedbackDialog() {
   const { toast } = useToast()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [category, setCategory] = useState<FeedbackCategory>('bug')
+  const [category, setCategory] = useState<FeedbackCategory>(FeedbackCategory.Bug)
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -101,7 +101,7 @@ export function FeedbackDialog() {
       formRef.current?.reset()
       setTitle('')
       setDescription('')
-      setCategory('bug')
+      setCategory(FeedbackCategory.Bug)
       removeScreenshot()
     }
   }

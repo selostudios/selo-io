@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import type { PlatformSectionProps, PlatformConnection } from './types'
 import { getConnectionLabel } from './types'
-import type { Period } from '../integrations-panel'
+import { Period } from '@/lib/enums'
 import type { MetricTimeSeries } from '@/lib/metrics/types'
 
 interface ConnectionMetricsProps<TMetrics> {

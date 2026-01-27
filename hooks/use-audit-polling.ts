@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { AuditStatus } from '@/lib/enums'
 import type { AuditProgress } from '@/lib/audit/types'
 
 export function useAuditPolling(auditId: string, enabled: boolean) {
@@ -57,7 +58,7 @@ export function useAuditPolling(auditId: string, enabled: boolean) {
         setIsLoading(false)
 
         // Handle batch_complete status - auto-trigger continuation
-        if (data.status === 'batch_complete' && !isContinuingRef.current) {
+        if (data.status === AuditStatus.BatchComplete && !isContinuingRef.current) {
           triggerContinue()
           // Continue polling while waiting for next batch to start
           timeoutId = setTimeout(poll, 2000)
@@ -66,10 +67,10 @@ export function useAuditPolling(auditId: string, enabled: boolean) {
 
         // Continue polling if not complete/failed/stopped
         if (
-          data.status === 'pending' ||
-          data.status === 'crawling' ||
-          data.status === 'checking' ||
-          data.status === 'batch_complete'
+          data.status === AuditStatus.Pending ||
+          data.status === AuditStatus.Crawling ||
+          data.status === AuditStatus.Checking ||
+          data.status === AuditStatus.BatchComplete
         ) {
           timeoutId = setTimeout(poll, 2000) // 2 seconds
         }

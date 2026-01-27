@@ -1,8 +1,6 @@
-export type FeedbackCategory = 'bug' | 'feature_request' | 'performance' | 'usability' | 'other'
+import { FeedbackCategory, FeedbackStatus, FeedbackPriority } from '@/lib/enums'
 
-export type FeedbackStatus = 'new' | 'under_review' | 'in_progress' | 'resolved' | 'closed'
-
-export type FeedbackPriority = 'critical' | 'high' | 'medium' | 'low'
+export { FeedbackCategory, FeedbackStatus, FeedbackPriority }
 
 export interface Feedback {
   id: string
@@ -35,70 +33,70 @@ export interface FeedbackWithRelations extends Feedback {
 }
 
 export const CATEGORY_LABELS: Record<FeedbackCategory, string> = {
-  bug: 'Bug',
-  feature_request: 'Feature Request',
-  performance: 'Performance',
-  usability: 'Usability',
-  other: 'Other',
+  [FeedbackCategory.Bug]: 'Bug',
+  [FeedbackCategory.FeatureRequest]: 'Feature Request',
+  [FeedbackCategory.Performance]: 'Performance',
+  [FeedbackCategory.Usability]: 'Usability',
+  [FeedbackCategory.Other]: 'Other',
 }
 
 export const STATUS_LABELS: Record<FeedbackStatus, string> = {
-  new: 'New',
-  under_review: 'Under Review',
-  in_progress: 'In Progress',
-  resolved: 'Resolved',
-  closed: 'Closed',
+  [FeedbackStatus.New]: 'New',
+  [FeedbackStatus.UnderReview]: 'Under Review',
+  [FeedbackStatus.InProgress]: 'In Progress',
+  [FeedbackStatus.Resolved]: 'Resolved',
+  [FeedbackStatus.Closed]: 'Closed',
 }
 
 export const PRIORITY_LABELS: Record<FeedbackPriority, string> = {
-  critical: 'Critical',
-  high: 'High',
-  medium: 'Medium',
-  low: 'Low',
+  [FeedbackPriority.Critical]: 'Critical',
+  [FeedbackPriority.High]: 'High',
+  [FeedbackPriority.Medium]: 'Medium',
+  [FeedbackPriority.Low]: 'Low',
 }
 
 export const STATUS_COLORS: Record<FeedbackStatus, string> = {
-  new: 'bg-neutral-100 text-neutral-700',
-  under_review: 'bg-blue-100 text-blue-700',
-  in_progress: 'bg-yellow-100 text-yellow-700',
-  resolved: 'bg-green-100 text-green-700',
-  closed: 'bg-red-100 text-red-700',
+  [FeedbackStatus.New]: 'bg-neutral-100 text-neutral-700',
+  [FeedbackStatus.UnderReview]: 'bg-blue-100 text-blue-700',
+  [FeedbackStatus.InProgress]: 'bg-yellow-100 text-yellow-700',
+  [FeedbackStatus.Resolved]: 'bg-green-100 text-green-700',
+  [FeedbackStatus.Closed]: 'bg-red-100 text-red-700',
 }
 
 export const CATEGORY_COLORS: Record<FeedbackCategory, string> = {
-  bug: 'bg-red-100 text-red-700',
-  feature_request: 'bg-yellow-100 text-yellow-700',
-  performance: 'bg-orange-100 text-orange-700',
-  usability: 'bg-blue-100 text-blue-700',
-  other: 'bg-neutral-100 text-neutral-700',
+  [FeedbackCategory.Bug]: 'bg-red-100 text-red-700',
+  [FeedbackCategory.FeatureRequest]: 'bg-yellow-100 text-yellow-700',
+  [FeedbackCategory.Performance]: 'bg-orange-100 text-orange-700',
+  [FeedbackCategory.Usability]: 'bg-blue-100 text-blue-700',
+  [FeedbackCategory.Other]: 'bg-neutral-100 text-neutral-700',
 }
 
 export const PRIORITY_COLORS: Record<FeedbackPriority, string> = {
-  critical: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low: 'bg-neutral-100 text-neutral-500',
+  [FeedbackPriority.Critical]: 'bg-red-100 text-red-700',
+  [FeedbackPriority.High]: 'bg-orange-100 text-orange-700',
+  [FeedbackPriority.Medium]: 'bg-yellow-100 text-yellow-700',
+  [FeedbackPriority.Low]: 'bg-neutral-100 text-neutral-500',
 }
 
 export const CATEGORY_OPTIONS: { value: FeedbackCategory; label: string }[] = [
-  { value: 'bug', label: 'Bug' },
-  { value: 'feature_request', label: 'Feature Request' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'usability', label: 'Usability' },
-  { value: 'other', label: 'Other' },
+  { value: FeedbackCategory.Bug, label: 'Bug' },
+  { value: FeedbackCategory.FeatureRequest, label: 'Feature Request' },
+  { value: FeedbackCategory.Performance, label: 'Performance' },
+  { value: FeedbackCategory.Usability, label: 'Usability' },
+  { value: FeedbackCategory.Other, label: 'Other' },
 ]
 
 export const STATUS_OPTIONS: { value: FeedbackStatus; label: string }[] = [
-  { value: 'new', label: 'New' },
-  { value: 'under_review', label: 'Under Review' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'closed', label: 'Closed' },
+  { value: FeedbackStatus.New, label: 'New' },
+  { value: FeedbackStatus.UnderReview, label: 'Under Review' },
+  { value: FeedbackStatus.InProgress, label: 'In Progress' },
+  { value: FeedbackStatus.Resolved, label: 'Resolved' },
+  { value: FeedbackStatus.Closed, label: 'Closed' },
 ]
 
 export const PRIORITY_OPTIONS: { value: FeedbackPriority; label: string }[] = [
-  { value: 'critical', label: 'Critical' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
+  { value: FeedbackPriority.Critical, label: 'Critical' },
+  { value: FeedbackPriority.High, label: 'High' },
+  { value: FeedbackPriority.Medium, label: 'Medium' },
+  { value: FeedbackPriority.Low, label: 'Low' },
 ]

@@ -12,6 +12,7 @@ import { ExecutiveSummaryDialog } from './executive-summary-dialog'
 import type { SiteAudit, SiteAuditCheck, SiteAuditPage, DismissedCheck } from '@/lib/audit/types'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { AuditStatus, CheckStatus } from '@/lib/enums'
 
 interface AuditReportProps {
   audit: SiteAudit
@@ -87,9 +88,9 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
   const resourcePages = pages.filter((p) => p.is_resource)
 
   // Count by status (using search-filtered checks)
-  const failedCount = searchFilteredChecks.filter((c) => c.status === 'failed').length
-  const warningCount = searchFilteredChecks.filter((c) => c.status === 'warning').length
-  const passedCount = searchFilteredChecks.filter((c) => c.status === 'passed').length
+  const failedCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Failed).length
+  const warningCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Warning).length
+  const passedCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Passed).length
 
   // Filter checks based on active filter
   const filterChecks = (checkList: SiteAuditCheck[]) => {
@@ -133,12 +134,12 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
               {displayUrl}
               <ExternalLink className="size-5 text-muted-foreground" />
             </a>
-            {audit.status === 'stopped' && (
+            {audit.status === AuditStatus.Stopped && (
               <Badge variant="secondary" className="text-xs">
                 Partial Report
               </Badge>
             )}
-            {audit.status === 'failed' && (
+            {audit.status === AuditStatus.Failed && (
               <Badge variant="destructive" className="text-xs">
                 Failed
               </Badge>
@@ -149,7 +150,7 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
           )}
         </div>
         <p className="text-muted-foreground text-sm">
-          {audit.status === 'stopped' ? 'Stopped' : 'Audited'}{' '}
+          {audit.status === AuditStatus.Stopped ? 'Stopped' : 'Audited'}{' '}
           {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
           {audit.pages_crawled} page{audit.pages_crawled !== 1 ? 's' : ''} crawled
           {(() => {
@@ -157,7 +158,7 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
             return duration ? ` · ${formatDuration(duration)}` : ''
           })()}
         </p>
-        {audit.status === 'stopped' && (
+        {audit.status === AuditStatus.Stopped && (
           <p className="mt-1 text-sm text-yellow-600">
             This audit was stopped early. Results are based on {audit.pages_crawled} pages analyzed.
           </p>

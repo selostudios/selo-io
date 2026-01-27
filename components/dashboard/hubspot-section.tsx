@@ -4,7 +4,7 @@ import { MetricCard } from './metric-card'
 import { HubSpotIcon } from '@/components/icons/platform-icons'
 import { getHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
 import { PlatformSection, formatChange } from './platform-section'
-import type { Period } from './integrations-panel'
+import { Period } from '@/lib/enums'
 import type { MetricTimeSeries } from '@/lib/metrics/types'
 
 interface HubSpotMetricsWithChanges {

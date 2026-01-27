@@ -18,8 +18,7 @@ import { syncLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
 import { syncGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import { syncHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
-
-export type Period = '7d' | '30d' | 'quarter'
+import { Period } from '@/lib/enums'
 
 type Connection = {
   id: string
@@ -53,9 +52,9 @@ export function IntegrationsPanel({
 }: IntegrationsPanelProps) {
   // Load period from localStorage on mount
   const [period, setPeriod] = useState<Period>(() => {
-    if (typeof window === 'undefined') return '7d'
+    if (typeof window === 'undefined') return Period.SevenDays
     const stored = localStorage.getItem(STORAGE_KEY)
-    return (stored as Period) || '7d'
+    return (stored as Period) || Period.SevenDays
   })
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -138,9 +137,9 @@ export function IntegrationsPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">7 days</SelectItem>
-              <SelectItem value="30d">30 days</SelectItem>
-              <SelectItem value="quarter">This quarter</SelectItem>
+              <SelectItem value={Period.SevenDays}>7 days</SelectItem>
+              <SelectItem value={Period.ThirtyDays}>30 days</SelectItem>
+              <SelectItem value={Period.Quarter}>This quarter</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={handleRefreshAll} disabled={isRefreshing}>

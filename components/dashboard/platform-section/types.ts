@@ -1,4 +1,4 @@
-import type { Period } from '../integrations-panel'
+import { Period } from '@/lib/enums'
 import type { MetricTimeSeries } from '@/lib/metrics/types'
 import type { ReactNode } from 'react'
 

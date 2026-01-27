@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AIOAuditStatus } from '@/lib/enums'
 import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
 
 interface AIOAuditPollingResult {
@@ -26,7 +27,7 @@ export function useAIOAuditPolling(auditId: string): AIOAuditPollingResult {
           setChecks(data.checks ?? [])
 
           // Stop polling if audit is complete or failed
-          if (data.audit?.status === 'completed' || data.audit?.status === 'failed') {
+          if (data.audit?.status === AIOAuditStatus.Completed || data.audit?.status === AIOAuditStatus.Failed) {
             setIsPolling(false)
             return
           }

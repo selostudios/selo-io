@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { FeedbackCategory } from '@/lib/types/feedback'
+import { FeedbackCategory } from '@/lib/types/feedback'
 
 interface SubmitFeedbackResult {
   success?: boolean
@@ -28,11 +28,11 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
   }
 
   const validCategories: FeedbackCategory[] = [
-    'bug',
-    'feature_request',
-    'performance',
-    'usability',
-    'other',
+    FeedbackCategory.Bug,
+    FeedbackCategory.FeatureRequest,
+    FeedbackCategory.Performance,
+    FeedbackCategory.Usability,
+    FeedbackCategory.Other,
   ]
   if (!validCategories.includes(category)) {
     console.error('[Submit Feedback Error]', {
