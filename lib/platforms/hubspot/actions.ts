@@ -36,6 +36,7 @@ function getCredentials(stored: StoredCredentials): HubSpotCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches metrics from HubSpot API and stores them in the database.
+ * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
  */
 export async function syncMetricsForHubSpotConnection(
   connectionId: string,
@@ -46,9 +47,17 @@ export async function syncMetricsForHubSpotConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new HubSpotAdapter(credentials, connectionId)
 
+  // Fetch only yesterday's metrics (cron runs daily)
+  // days: 1 = new deals/won/lost from yesterday only (not overlapping 30-day windows)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(0, 0, 0, 0)
+  const endDate = new Date(yesterday)
+  endDate.setHours(23, 59, 59, 999)
+
   // Include form submissions in cron sync (expensive but runs once daily)
-  const metrics = await adapter.fetchMetrics(undefined, undefined, 30, true)
-  const records = adapter.normalizeToDbRecords(metrics, organizationId, new Date())
+  const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
+  const records = adapter.normalizeToDbRecords(metrics, organizationId, yesterday)
 
   // Upsert to avoid duplicate entries
   const { error: insertError } = await supabase
@@ -100,9 +109,16 @@ export async function syncHubSpotMetrics() {
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
 
+    // Fetch only yesterday's metrics (use backfill script for historical data)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    const endDate = new Date(yesterday)
+    endDate.setHours(23, 59, 59, 999)
+
     // Include form submissions on manual refresh (user explicitly requested fresh data)
-    const metrics = await adapter.fetchMetrics(undefined, undefined, 30, true)
-    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, new Date())
+    const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
+    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, yesterday)
 
     // Upsert to avoid duplicate entries
     const { error: insertError } = await supabase
