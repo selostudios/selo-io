@@ -82,6 +82,16 @@ Organizations own all data (campaigns, platform connections, team members). RLS 
 
 **Empty States**: Always use the `EmptyState` component from `components/ui/empty-state.tsx` when displaying empty results (e.g., no data, no search results, no items in a list). Pass an appropriate icon, title, and optional description. This provides consistent UI with an icon and dashed border.
 
+**Component Design Principles**: Always optimize for reusability and consistency:
+
+- **Extract shared patterns** — When 2+ views share similar UI or logic, extract a generic component with props/render props for customization
+- **Composition over duplication** — Build complex UIs by composing smaller, reusable pieces rather than copy-pasting
+- **Generic base components** — Create `<ThingBase>` components that handle common logic, with specific variants for each use case
+- **Colocate shared components** — Place shared components in `components/{domain}/` (e.g., `components/audit/` for audit-related shared components)
+- **Hooks for shared logic** — Extract repeated stateful patterns into custom hooks (e.g., `useServerForm`, `useStreamingProgress`)
+- **Type parameters for flexibility** — Use TypeScript generics (`<T>`) to create type-safe reusable components
+- **Enums for type safety** — Use TypeScript enums (defined in `lib/enums.ts`) instead of string literals for statuses, types, and categories. This provides IDE autocomplete, compile-time checking, and a single source of truth. Example: `status === CheckStatus.Passed` instead of `status === 'passed'`
+
 ### Platform Integration Architecture
 
 Each platform (LinkedIn, HubSpot, Google Analytics) follows the **Adapter Pattern** in `lib/platforms/{platform}/`:
