@@ -82,7 +82,7 @@ Selo uses a role-based access control (RBAC) system to manage what users can see
 | **Support/Feedback** | ✓ Manage Tickets | ✓ Manage Tickets | ✗ No Access | ✗ No Access |
 | **Site Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
 | **Page Speed Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
-| **GEO Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| **AIO Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
 
 ### Special Notes
 

@@ -49,7 +49,7 @@ const seoNavigation: NavigationGroup[] = [
   {
     header: 'On-Page AIO',
     items: [
-      { name: 'AI Audit', href: '/seo/geo', icon: Sparkles },
+      { name: 'AI Audit', href: '/seo/aio', icon: Sparkles },
     ],
   },
 ]
@@ -86,7 +86,7 @@ interface ChildSidebarProps {
   onToggleCollapse: () => void
   hasSiteAudit?: boolean
   hasPerformanceAudit?: boolean
-  hasGeoAudit?: boolean
+  hasAioAudit?: boolean
 }
 
 export function ChildSidebar({
@@ -95,7 +95,7 @@ export function ChildSidebar({
   onToggleCollapse,
   hasSiteAudit,
   hasPerformanceAudit,
-  hasGeoAudit,
+  hasAioAudit,
 }: ChildSidebarProps) {
   const pathname = usePathname()
   const navigation = navigationConfig[activeSection]
@@ -145,7 +145,7 @@ export function ChildSidebar({
                 const showSpinner =
                   (item.href === '/seo/site-audit' && hasSiteAudit) ||
                   (item.href === '/seo/page-speed' && hasPerformanceAudit) ||
-                  (item.href === '/seo/geo' && hasGeoAudit)
+                  (item.href === '/seo/aio' && hasAioAudit)
 
                 return (
                   <Link

@@ -122,7 +122,7 @@ ALTER TABLE geo_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE geo_ai_analyses ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for geo_audits
-CREATE POLICY "Users can view their org's GEO audits"
+CREATE POLICY "Users can view their org's AIO audits"
 ON geo_audits FOR SELECT
 USING (
   organization_id IN (
@@ -132,7 +132,7 @@ USING (
   OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
 );
 
-CREATE POLICY "Users can insert GEO audits for their org"
+CREATE POLICY "Users can insert AIO audits for their org"
 ON geo_audits FOR INSERT
 WITH CHECK (
   organization_id IN (
@@ -143,7 +143,7 @@ WITH CHECK (
   ))
 );
 
-CREATE POLICY "Users can update their GEO audits"
+CREATE POLICY "Users can update their AIO audits"
 ON geo_audits FOR UPDATE
 USING (
   organization_id IN (
@@ -153,7 +153,7 @@ USING (
   OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_internal = true)
 );
 
-CREATE POLICY "Users can delete their GEO audits"
+CREATE POLICY "Users can delete their AIO audits"
 ON geo_audits FOR DELETE
 USING (
   organization_id IN (
@@ -213,7 +213,7 @@ USING (true);
 
 -- Add comments for documentation
 COMMENT ON TABLE geo_audits IS 'GEO (Generative Engine Optimization) audit records with programmatic and AI analysis results';
-COMMENT ON TABLE geo_checks IS 'Programmatic check results for GEO audits (technical, structure, content quality checks)';
+COMMENT ON TABLE geo_checks IS 'Programmatic check results for AIO audits (technical, structure, content quality checks)';
 COMMENT ON TABLE geo_ai_analyses IS 'AI-powered content quality analysis from Claude Opus 4.5 using structured Zod schemas';
 
 COMMENT ON COLUMN geo_audits.sample_size IS 'Number of pages analyzed by AI (1-10, user configurable)';

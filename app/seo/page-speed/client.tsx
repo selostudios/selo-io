@@ -3,11 +3,10 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Gauge, Search, Clock, Loader2, Trash2 } from 'lucide-react'
+import { Search, Clock, Loader2, Trash2, Gauge } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { AuditTargetSelector, type AuditTarget } from '@/components/seo/audit-target-selector'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
@@ -20,9 +19,6 @@ interface PageSpeedClientProps {
   isInternal: boolean
   selectedOrganizationId: string | null
 }
-
-const LAST_ORG_KEY = 'selo-last-organization-id'
-const LAST_VIEW_KEY = 'selo-last-view-type'
 
 function formatAuditDate(dateString: string): string {
   const date = new Date(dateString)
@@ -37,89 +33,30 @@ function isInProgress(status: PerformanceAudit['status']): boolean {
   return status === 'pending' || status === 'running'
 }
 
-function getInitialTarget(
-  selectedOrganizationId: string | null,
-  organizations: OrganizationForSelector[]
-): AuditTarget {
-  // If an organization is selected via URL param
-  if (selectedOrganizationId) {
-    const org = organizations.find((o) => o.id === selectedOrganizationId)
-    if (org?.website_url) {
-      return {
-        type: 'organization',
-        organizationId: org.id,
-        url: org.website_url,
-      }
-    }
-  }
-
-  // Check localStorage for last view type
-  if (typeof window !== 'undefined') {
-    const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
-    if (lastViewType === 'one-time') {
-      return { type: 'one-time' }
-    }
-  }
-
-  // Check localStorage for last selected org
-  if (typeof window !== 'undefined') {
-    const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-    if (lastOrgId) {
-      const org = organizations.find((o) => o.id === lastOrgId)
-      if (org?.website_url) {
-        return {
-          type: 'organization',
-          organizationId: org.id,
-          url: org.website_url,
-        }
-      }
-    }
-  }
-
-  // Fall back to first organization with a website URL
-  const firstOrgWithUrl = organizations.find((o) => o.website_url)
-  if (firstOrgWithUrl) {
-    return {
-      type: 'organization',
-      organizationId: firstOrgWithUrl.id,
-      url: firstOrgWithUrl.website_url!,
-    }
-  }
-
-  return null
-}
-
 export function PageSpeedClient({
   audits,
   monitoredPages,
   organizations,
-  isInternal,
   selectedOrganizationId,
 }: PageSpeedClientProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [oneTimeUrl, setOneTimeUrl] = useState('')
 
-  // Initialize selectedTarget based on URL param, localStorage, or first org
-  const [selectedTarget, setSelectedTarget] = useState<AuditTarget>(() =>
-    getInitialTarget(selectedOrganizationId, organizations)
-  )
-
-  const handleTargetChange = (target: AuditTarget) => {
-    setSelectedTarget(target)
-    setSearchQuery('')
-
-    // Update URL and localStorage when target changes
-    if (target?.type === 'organization') {
-      localStorage.setItem(LAST_ORG_KEY, target.organizationId)
-      localStorage.setItem(LAST_VIEW_KEY, 'organization')
-      router.push(`/seo/page-speed?org=${target.organizationId}`)
-    } else if (target?.type === 'one-time') {
-      localStorage.removeItem(LAST_ORG_KEY)
-      localStorage.setItem(LAST_VIEW_KEY, 'one-time')
-      router.push('/seo/page-speed')
+  // Determine audit target from URL params (managed by header selector)
+  const selectedTarget = useMemo(() => {
+    if (selectedOrganizationId) {
+      const org = organizations.find((o) => o.id === selectedOrganizationId)
+      if (org?.website_url) {
+        return {
+          type: 'organization' as const,
+          organizationId: org.id,
+          url: org.website_url,
+        }
+      }
     }
-  }
+    return { type: 'one-time' as const }
+  }, [selectedOrganizationId, organizations])
 
   const handleRunOneTimeAudit = async () => {
     if (!oneTimeUrl.trim()) return
@@ -189,15 +126,7 @@ export function PageSpeedClient({
     <div className="space-y-6">
       {/* Page Title */}
       <div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Page Speed</h1>
-          <AuditTargetSelector
-            organizations={organizations}
-            selectedTarget={selectedTarget}
-            onTargetChange={handleTargetChange}
-            isInternal={isInternal}
-          />
-        </div>
+        <h1 className="text-3xl font-bold">Page Speed</h1>
         <p className="text-muted-foreground mt-1">
           Measure Core Web Vitals, load times, and performance scores using Google PageSpeed
           Insights

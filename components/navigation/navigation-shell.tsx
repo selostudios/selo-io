@@ -39,7 +39,7 @@ interface NavigationShellProps {
 export function NavigationShell({ isInternal = false }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { hasSiteAudit, hasPerformanceAudit, hasGeoAudit } = useActiveAudit()
+  const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit()
 
   // Derive active section from current pathname
   const activeSection = getSectionFromPathname(pathname)
@@ -99,7 +99,7 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
         onToggleCollapse={handleToggleCollapse}
         hasSiteAudit={hasSiteAudit}
         hasPerformanceAudit={hasPerformanceAudit}
-        hasGeoAudit={hasGeoAudit}
+        hasAioAudit={hasAioAudit}
       />
       {/* Expand button when child sidebar is collapsed */}
       {collapsed && (

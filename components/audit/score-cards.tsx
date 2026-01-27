@@ -130,7 +130,7 @@ export function ScoreCards({ overall, seo, ai, technical }: ScoreCardsProps) {
       <ScoreCard
         label="Overall"
         score={overall}
-        description="A weighted average of SEO, AI Readiness, and Technical scores. Represents the overall health of your website."
+        description="A weighted average of SEO, AI Readiness, and Technical scores. Represents the overall health of the website."
       />
       <ScoreCard
         label="SEO"
@@ -140,7 +140,7 @@ export function ScoreCards({ overall, seo, ai, technical }: ScoreCardsProps) {
       <ScoreCard
         label="AI Readiness"
         score={ai}
-        description="Evaluates how well your content is structured for AI systems and LLMs, including schema markup, clear content hierarchy, and machine-readable data."
+        description="Evaluates how well content is structured for AI systems and LLMs, including schema markup, clear content hierarchy, and machine-readable data."
       />
       <ScoreCard
         label="Technical"

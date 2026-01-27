@@ -31,7 +31,7 @@ export async function GET() {
 
   let hasSiteAudit = false
   let hasPerformanceAudit = false
-  let hasGeoAudit = false
+  let hasAioAudit = false
 
   // Check for active site audits
   const { data: activeAudit } = await supabase
@@ -115,9 +115,9 @@ export async function GET() {
     }
   }
 
-  // Check for active GEO audits
+  // Check for active AIO audits
   const { data: activeGeoAudit } = await supabase
-    .from('geo_audits')
+    .from('aio_audits')
     .select('id, status, updated_at, created_at')
     .eq('organization_id', userRecord.organization_id)
     .in('status', ['pending', 'running'])
@@ -126,7 +126,7 @@ export async function GET() {
     .maybeSingle()
 
   if (activeGeoAudit) {
-    // GEO audits are relatively quick (< 2 minutes typically)
+    // AIO audits are relatively quick (< 2 minutes typically)
     // Only mark as stale if stuck for 5 minutes
     const timestamp = activeGeoAudit.updated_at || activeGeoAudit.created_at
     const updatedAt = new Date(timestamp).getTime()
@@ -134,10 +134,10 @@ export async function GET() {
     const isStale = !isNaN(updatedAt) && now - updatedAt > 5 * 60 * 1000
 
     if (isStale && activeGeoAudit.status === 'running') {
-      // Mark stale GEO audit as failed using service client
+      // Mark stale AIO audit as failed using service client
       const serviceClient = createServiceClient()
       await serviceClient
-        .from('geo_audits')
+        .from('aio_audits')
         .update({
           status: 'failed',
           error_message: 'Audit timed out - the server function was terminated before completion. Please try again.',
@@ -145,16 +145,16 @@ export async function GET() {
         })
         .eq('id', activeGeoAudit.id)
 
-      console.log('[GEO Audit Active Check] Marked stale audit as failed', {
+      console.log('[AIO Audit Active Check] Marked stale audit as failed', {
         auditId: activeGeoAudit.id,
         status: activeGeoAudit.status,
         updatedAt: activeGeoAudit.updated_at,
         timestamp: new Date().toISOString(),
       })
     } else {
-      hasGeoAudit = true
+      hasAioAudit = true
     }
   }
 
-  return NextResponse.json({ hasSiteAudit, hasPerformanceAudit, hasGeoAudit })
+  return NextResponse.json({ hasSiteAudit, hasPerformanceAudit, hasAioAudit })
 }

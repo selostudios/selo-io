@@ -23,7 +23,7 @@ export function WebsiteUrlToast({ websiteUrl }: WebsiteUrlToastProps) {
     sessionStorage.setItem(sessionKey, 'true')
 
     toast.warning('Website URL not configured', {
-      description: 'Add your website URL to enable SEO & AI auditing.',
+      description: 'Add customer website URL to enable SEO & AI auditing.',
       duration: 10000, // 10 seconds
       action: {
         label: 'Set Up',

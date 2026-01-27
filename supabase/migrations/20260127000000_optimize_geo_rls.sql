@@ -1,4 +1,4 @@
--- Optimize GEO audit RLS policies
+-- Optimize AIO audit RLS policies
 -- Addresses security-rls-subquery: Replace uncorrelated subqueries with security definer functions
 
 -- Create helper function for user's organization check
@@ -20,24 +20,24 @@ AS $$
 $$;
 
 -- Drop and recreate geo_audits policies with optimized logic
-DROP POLICY IF EXISTS "Users can view their org's GEO audits" ON geo_audits;
-CREATE POLICY "Users can view their org's GEO audits"
+DROP POLICY IF EXISTS "Users can view their org's AIO audits" ON geo_audits;
+CREATE POLICY "Users can view their org's AIO audits"
 ON geo_audits FOR SELECT
 USING (user_in_geo_audit_org(organization_id, created_by));
 
-DROP POLICY IF EXISTS "Users can update their GEO audits" ON geo_audits;
-CREATE POLICY "Users can update their GEO audits"
+DROP POLICY IF EXISTS "Users can update their AIO audits" ON geo_audits;
+CREATE POLICY "Users can update their AIO audits"
 ON geo_audits FOR UPDATE
 USING (user_in_geo_audit_org(organization_id, created_by));
 
-DROP POLICY IF EXISTS "Users can delete their GEO audits" ON geo_audits;
-CREATE POLICY "Users can delete their GEO audits"
+DROP POLICY IF EXISTS "Users can delete their AIO audits" ON geo_audits;
+CREATE POLICY "Users can delete their AIO audits"
 ON geo_audits FOR DELETE
 USING (user_in_geo_audit_org(organization_id, created_by));
 
 -- Optimize INSERT policy separately (different logic)
-DROP POLICY IF EXISTS "Users can insert GEO audits for their org" ON geo_audits;
-CREATE POLICY "Users can insert GEO audits for their org"
+DROP POLICY IF EXISTS "Users can insert AIO audits for their org" ON geo_audits;
+CREATE POLICY "Users can insert AIO audits for their org"
 ON geo_audits FOR INSERT
 WITH CHECK (
   EXISTS (
@@ -89,4 +89,4 @@ CREATE INDEX IF NOT EXISTS idx_geo_checks_details ON geo_checks USING gin(detail
 CREATE INDEX IF NOT EXISTS idx_geo_ai_analyses_findings ON geo_ai_analyses USING gin(findings);
 CREATE INDEX IF NOT EXISTS idx_geo_ai_analyses_recommendations ON geo_ai_analyses USING gin(recommendations);
 
-COMMENT ON FUNCTION user_in_geo_audit_org IS 'Helper function for GEO audit RLS - checks if user can access audit via org membership, ownership, or internal status';
+COMMENT ON FUNCTION user_in_geo_audit_org IS 'Helper function for AIO audit RLS - checks if user can access audit via org membership, ownership, or internal status';
