@@ -131,7 +131,7 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
               className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
             >
               {displayUrl}
-              <ExternalLink className="size-5" />
+              <ExternalLink className="size-5 text-muted-foreground" />
             </a>
             {audit.status === 'stopped' && (
               <Badge variant="secondary" className="text-xs">

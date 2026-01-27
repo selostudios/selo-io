@@ -59,7 +59,7 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
                   className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
                 >
                   {displayUrl}
-                  <ExternalLink className="size-5" />
+                  <ExternalLink className="size-5 text-muted-foreground" />
                 </a>
               )}
               <Badge
