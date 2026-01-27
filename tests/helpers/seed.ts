@@ -9,6 +9,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 export async function seedTestData() {
   console.log('🌱 Seeding test data...')
 
+  // Clean up first to ensure idempotency
+  await cleanupTestData()
+
   // Get Marketing industry
   const { data: industries } = await supabase.from('industries').select('id, name')
 
@@ -33,6 +36,28 @@ export async function seedTestData() {
     user_metadata: {
       first_name: testUsers.teamMember.firstName,
       last_name: testUsers.teamMember.lastName,
+    },
+  })
+
+  // Create viewer user
+  const viewerUser = await supabase.auth.admin.createUser({
+    email: testUsers.viewer.email,
+    password: testUsers.viewer.password,
+    email_confirm: true,
+    user_metadata: {
+      first_name: testUsers.viewer.firstName,
+      last_name: testUsers.viewer.lastName,
+    },
+  })
+
+  // Create developer user
+  const developerUser = await supabase.auth.admin.createUser({
+    email: testUsers.developer.email,
+    password: testUsers.developer.password,
+    email_confirm: true,
+    user_metadata: {
+      first_name: testUsers.developer.firstName,
+      last_name: testUsers.developer.lastName,
     },
   })
 
@@ -65,6 +90,20 @@ export async function seedTestData() {
       first_name: testUsers.teamMember.firstName,
       last_name: testUsers.teamMember.lastName,
     },
+    {
+      id: viewerUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'client_viewer',
+      first_name: testUsers.viewer.firstName,
+      last_name: testUsers.viewer.lastName,
+    },
+    {
+      id: developerUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'developer',
+      first_name: testUsers.developer.firstName,
+      last_name: testUsers.developer.lastName,
+    },
   ])
 
   // Create test campaign
@@ -82,19 +121,23 @@ export async function seedTestData() {
 export async function cleanupTestData() {
   console.log('🧹 Cleaning up test data...')
 
-  // Clean up in reverse order
-  await supabase.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-  await supabase.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-  await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-  await supabase.from('organizations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  try {
+    // Delete auth users first (this will cascade to users table via trigger)
+    const { data: users } = await supabase.auth.admin.listUsers()
+    for (const user of users.users) {
+      await supabase.auth.admin.deleteUser(user.id)
+    }
 
-  // Delete auth users
-  const { data: users } = await supabase.auth.admin.listUsers()
-  for (const user of users.users) {
-    await supabase.auth.admin.deleteUser(user.id)
+    // Clean up remaining data (in case of orphaned records)
+    await supabase.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('organizations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+    console.log('✅ Test data cleaned up')
+  } catch (error) {
+    console.error('⚠️  Cleanup warning:', error)
+    // Don't fail - cleanup may have partial success
   }
-
-  console.log('✅ Test data cleaned up')
 }
 
 // Run if called directly

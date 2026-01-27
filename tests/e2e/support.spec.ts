@@ -3,10 +3,10 @@ import { testUsers } from '../fixtures'
 
 test.describe('Support Section - Access Control', () => {
   test('non-developer is redirected to dashboard', async ({ page }) => {
-    // Login as admin (not developer)
+    // Login as team member (not developer or admin)
     await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.admin.email)
-    await page.fill('input[name="password"]', testUsers.admin.password)
+    await page.fill('input[name="email"]', testUsers.teamMember.email)
+    await page.fill('input[name="password"]', testUsers.teamMember.password)
     await page.click('button[type="submit"]')
     await expect(page).toHaveURL('/dashboard')
 
@@ -18,39 +18,48 @@ test.describe('Support Section - Access Control', () => {
   })
 })
 
-// These tests require a developer user to be seeded, which may not exist yet
-// They demonstrate the expected behavior
 test.describe('Support Section - Developer Access', () => {
-  test.skip('developer can view support section', async ({ page }) => {
-    // This test is skipped until developer seed data is configured
+  test('developer can view support section', async ({ page }) => {
     // Login as developer
     await page.goto('/login')
     await page.fill('input[name="email"]', testUsers.developer.email)
     await page.fill('input[name="password"]', testUsers.developer.password)
     await page.click('button[type="submit"]')
+
+    // Wait for navigation to dashboard after login
+    await expect(page).toHaveURL('/dashboard')
 
     // Navigate to support
     await page.goto('/support')
 
-    // Should see support page
-    await expect(page.getByRole('heading', { name: 'Support' })).toBeVisible()
+    // Should remain on support page (not redirected)
+    await expect(page).toHaveURL('/support')
+
+    // Should see support page heading
+    await expect(page.getByRole('heading', { name: 'Support', level: 1 })).toBeVisible()
   })
 
-  test.skip('developer can filter feedback', async ({ page }) => {
+  test('developer can filter feedback', async ({ page }) => {
     // Login as developer
     await page.goto('/login')
     await page.fill('input[name="email"]', testUsers.developer.email)
     await page.fill('input[name="password"]', testUsers.developer.password)
     await page.click('button[type="submit"]')
 
+    // Wait for navigation to dashboard after login
+    await expect(page).toHaveURL('/dashboard')
+
     await page.goto('/support')
 
-    // Click status filter
-    await page.click('text=All Statuses')
-    await page.click('text=New')
+    // Click status filter combobox
+    const statusFilter = page.locator('[role="combobox"]').filter({ hasText: 'All Statuses' })
+    await statusFilter.click()
 
-    // Filter should be applied
-    await expect(page.getByText('Clear')).toBeVisible()
+    // Select New status from dropdown
+    await page.locator('[role="option"]').filter({ hasText: /^New$/ }).first().click()
+
+    // Filter should be applied - Clear button becomes visible
+    await expect(page.getByRole('button', { name: 'Clear' })).toBeVisible()
   })
 
   test.skip('developer can open feedback slideout', async ({ page }) => {
