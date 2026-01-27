@@ -40,14 +40,14 @@ const homeNavigation: NavigationGroup[] = [
 
 const seoNavigation: NavigationGroup[] = [
   {
-    header: 'On-Page SEO & Performance',
+    header: 'SEO & Performance',
     items: [
       { name: 'SEO Site Audit', href: '/seo/site-audit', icon: FileSearch },
       { name: 'PageSpeed Audit', href: '/seo/page-speed', icon: Gauge },
     ],
   },
   {
-    header: 'On-Page AIO',
+    header: 'AIO',
     items: [
       { name: 'AI Audit', href: '/seo/aio', icon: Sparkles },
     ],
