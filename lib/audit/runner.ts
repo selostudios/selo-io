@@ -5,11 +5,12 @@ import { fetchPage } from './fetcher'
 import { generateExecutiveSummary } from './summary'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { cleanupOlderAuditDetails, cleanupCrawlQueue } from './cleanup'
+import { AuditStatus, CheckStatus } from '@/lib/enums'
 import type {
   SiteAuditCheck,
   SiteAuditPage,
   CheckContext,
-  AuditStatus,
+  AuditStatus as AuditStatusType,
   DismissedCheck,
 } from './types'
 
@@ -18,7 +19,7 @@ async function checkIfStopped(
   auditId: string
 ): Promise<boolean> {
   const { data } = await supabase.from('site_audits').select('status').eq('id', auditId).single()
-  return data?.status === 'stopped'
+  return data?.status === AuditStatus.Stopped
 }
 
 function isDismissed(dismissedChecks: DismissedCheck[], checkName: string, url: string): boolean {
@@ -154,7 +155,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
 
     // If we have no pages, fail the audit with an error message
     if (pages.length === 0) {
-      const finalStatus: AuditStatus = wasStopped ? 'stopped' : 'failed'
+      const finalStatus: AuditStatusType = wasStopped ? AuditStatus.Stopped : AuditStatus.Failed
       const errorMessage = wasStopped
         ? 'Audit was stopped before any pages were crawled'
         : crawlErrors.length > 0
@@ -279,7 +280,7 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     }
 
     // Update audit with status and summary - use 'stopped' status if was stopped
-    const finalStatus: AuditStatus = wasStopped ? 'stopped' : 'completed'
+    const finalStatus: AuditStatusType = wasStopped ? AuditStatus.Stopped : AuditStatus.Completed
     await supabase
       .from('site_audits')
       .update({
@@ -576,9 +577,9 @@ export function calculateScores(checks: SiteAuditCheck[]) {
     for (const check of typeChecks) {
       const weight = weights[check.priority as keyof typeof weights]
       totalWeight += weight
-      if (check.status === 'passed') {
+      if (check.status === CheckStatus.Passed) {
         earnedWeight += weight
-      } else if (check.status === 'warning') {
+      } else if (check.status === CheckStatus.Warning) {
         earnedWeight += weight * 0.5
       }
     }
@@ -592,9 +593,9 @@ export function calculateScores(checks: SiteAuditCheck[]) {
   const overall_score = Math.round((seo_score + ai_readiness_score + technical_score) / 3)
 
   // Count by status
-  const failed_count = checks.filter((c) => c.status === 'failed').length
-  const warning_count = checks.filter((c) => c.status === 'warning').length
-  const passed_count = checks.filter((c) => c.status === 'passed').length
+  const failed_count = checks.filter((c) => c.status === CheckStatus.Failed).length
+  const warning_count = checks.filter((c) => c.status === CheckStatus.Warning).length
+  const passed_count = checks.filter((c) => c.status === CheckStatus.Passed).length
 
   return {
     overall_score,
@@ -787,7 +788,7 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     await supabase
       .from('site_audits')
       .update({
-        status: 'completed' as AuditStatus,
+        status: AuditStatus.Completed as AuditStatusType,
         completed_at: new Date().toISOString(),
         executive_summary,
       })
@@ -942,7 +943,7 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
     await supabase
       .from('site_audits')
       .update({
-        status: 'completed' as AuditStatus,
+        status: AuditStatus.Completed as AuditStatusType,
         completed_at: new Date().toISOString(),
         executive_summary,
       })

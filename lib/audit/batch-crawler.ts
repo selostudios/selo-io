@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPage, extractLinks } from './fetcher'
 import { pageSpecificChecks } from './checks'
+import { AuditStatus } from '@/lib/enums'
 import type { SiteAuditPage, SiteAuditCheck, CheckContext, DismissedCheck } from './types'
 
 const BATCH_SIZE = 50
@@ -119,7 +120,7 @@ export async function crawlBatch(
       .eq('id', auditId)
       .single()
 
-    if (auditStatus?.status === 'stopped') {
+    if (auditStatus?.status === AuditStatus.Stopped) {
       stopped = true
       break
     }
