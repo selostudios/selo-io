@@ -21,7 +21,8 @@ import { EditOrganizationDialog } from './edit-organization-dialog'
 import { DeleteOrganizationDialog } from './delete-organization-dialog'
 import { RestoreOrganizationDialog } from './restore-organization-dialog'
 import { cn } from '@/lib/utils'
-import type { OrganizationStatus, Industry } from '@/lib/organizations/types'
+import { OrganizationStatus } from '@/lib/enums'
+import type { Industry } from '@/lib/organizations/types'
 
 interface Organization {
   id: string
@@ -41,9 +42,9 @@ interface OrganizationsClientProps {
 }
 
 const statusColors: Record<OrganizationStatus, string> = {
-  prospect: 'bg-amber-100 text-amber-700',
-  customer: 'bg-green-100 text-green-700',
-  inactive: 'bg-neutral-100 text-neutral-600',
+  [OrganizationStatus.Prospect]: 'bg-amber-100 text-amber-700',
+  [OrganizationStatus.Customer]: 'bg-green-100 text-green-700',
+  [OrganizationStatus.Inactive]: 'bg-neutral-100 text-neutral-600',
 }
 
 function getDomain(url: string | null): string {
@@ -100,9 +101,9 @@ export function OrganizationsClient({ organizations, industries }: Organizations
 
   const stats = {
     total: organizations.length,
-    prospects: organizations.filter((o) => o.status === 'prospect').length,
-    customers: organizations.filter((o) => o.status === 'customer').length,
-    inactive: organizations.filter((o) => o.status === 'inactive').length,
+    prospects: organizations.filter((o) => o.status === OrganizationStatus.Prospect).length,
+    customers: organizations.filter((o) => o.status === OrganizationStatus.Customer).length,
+    inactive: organizations.filter((o) => o.status === OrganizationStatus.Inactive).length,
   }
 
   return (
@@ -254,7 +255,7 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        {org.status === 'inactive' ? (
+                        {org.status === OrganizationStatus.Inactive ? (
                           <Button
                             variant="ghost"
                             size="icon"

@@ -1,4 +1,6 @@
-export type OrganizationStatus = 'prospect' | 'customer' | 'inactive'
+import { OrganizationStatus } from '@/lib/enums'
+
+export { OrganizationStatus }
 
 export interface Industry {
   id: string
