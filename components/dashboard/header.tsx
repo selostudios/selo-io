@@ -64,7 +64,7 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
           id: userOrg.id,
           name: userOrg.name,
           website_url: userOrg.website_url,
-          status: userOrg.status,
+          status: userOrg.status as OrganizationForSelector['status'],
           logo_url: userOrg.logo_url,
         },
       ]

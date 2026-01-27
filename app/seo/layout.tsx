@@ -10,11 +10,9 @@ import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 interface SeoLayoutProps {
   children: React.ReactNode
-  searchParams: Promise<{ org?: string }>
 }
 
-export default async function SeoLayout({ children, searchParams }: SeoLayoutProps) {
-  const { org: selectedOrgId } = await searchParams
+export default async function SeoLayout({ children }: SeoLayoutProps) {
   const supabase = await createClient()
 
   const {
@@ -70,7 +68,7 @@ export default async function SeoLayout({ children, searchParams }: SeoLayoutPro
             role={role}
             organizations={organizations}
             isInternal={isInternal}
-            selectedOrganizationId={selectedOrgId || null}
+            selectedOrganizationId={null}
           />
           <main className="flex-1">
             <div className="space-y-6 p-8">{children}</div>
