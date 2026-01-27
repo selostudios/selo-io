@@ -184,15 +184,12 @@ export function SiteAuditClient({
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div className="flex items-start gap-3">
-        <FileSearch className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div>
-          <h1 className="text-3xl font-bold">Site Audit</h1>
-          <p className="text-muted-foreground">
-            Crawl and analyze websites for SEO issues, missing meta tags, broken links, and
-            technical problems
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Site Audit</h1>
+        <p className="text-muted-foreground">
+          Crawl and analyze websites for SEO issues, missing meta tags, broken links, and
+          technical problems
+        </p>
       </div>
 
       {/* Audit Target Selector */}

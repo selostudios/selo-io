@@ -188,15 +188,12 @@ export function PageSpeedClient({
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div className="flex items-start gap-3">
-        <Gauge className="mt-1 h-8 w-8 text-neutral-700" aria-hidden="true" />
-        <div>
-          <h1 className="text-3xl font-bold">Page Speed</h1>
-          <p className="text-muted-foreground">
-            Measure Core Web Vitals, load times, and performance scores using Google PageSpeed
-            Insights
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Page Speed</h1>
+        <p className="text-muted-foreground">
+          Measure Core Web Vitals, load times, and performance scores using Google PageSpeed
+          Insights
+        </p>
       </div>
 
       {/* Audit Target Selector */}
