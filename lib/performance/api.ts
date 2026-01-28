@@ -8,6 +8,9 @@ interface FetchPageSpeedOptions {
   device: DeviceType
 }
 
+// Timeout for PageSpeed API requests (60 seconds)
+const PAGESPEED_TIMEOUT_MS = 60000
+
 export async function fetchPageSpeedInsights({
   url,
   device,
@@ -24,18 +27,33 @@ export async function fetchPageSpeedInsights({
 
   const fullUrl = `${PAGESPEED_API_URL}?url=${encodeURIComponent(url)}&key=${apiKey}&strategy=${device}&${categoryParams}`
 
-  const response = await fetch(fullUrl, {
-    headers: {
-      Accept: 'application/json',
-    },
-  })
+  // Add timeout to prevent hanging requests
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS)
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`PageSpeed API error (${response.status}): ${errorText}`)
+  try {
+    const response = await fetch(fullUrl, {
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`PageSpeed API error (${response.status}): ${errorText}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`PageSpeed API timeout after ${PAGESPEED_TIMEOUT_MS / 1000}s for ${url} (${device})`)
+    }
+    throw error
   }
-
-  return response.json()
 }
 
 export function mapCategoryToRating(category: string | undefined): CWVRating | null {
