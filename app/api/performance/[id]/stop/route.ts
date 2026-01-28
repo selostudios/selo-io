@@ -57,20 +57,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Service configuration error' }, { status: 500 })
   }
 
-  // Delete any partial results
-  const { error: deleteError } = await serviceClient
-    .from('performance_audit_results')
-    .delete()
-    .eq('audit_id', id)
-
-  if (deleteError) {
-    console.error('[Performance Stop Error]', {
-      type: 'delete_results_failed',
-      auditId: id,
-      error: deleteError.message,
-      timestamp: new Date().toISOString(),
-    })
-  }
+  // Keep any completed results - don't delete them
+  // Users should be able to see partial results if some devices finished
 
   // Set status to 'stopped'
   const { error: updateError } = await serviceClient
