@@ -42,18 +42,16 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
         return
       }
 
-      for (const device of devices) {
+      // Update current URL being processed
+      await supabase
+        .from('performance_audits')
+        .update({ current_url: url })
+        .eq('id', auditId)
+
+      // Run mobile and desktop audits in parallel
+      const devicePromises = devices.map(async (device) => {
         try {
           console.log(`[Performance] Auditing ${url} (${device})`)
-
-          // Update current progress
-          await supabase
-            .from('performance_audits')
-            .update({
-              current_url: url,
-              current_device: device,
-            })
-            .eq('id', auditId)
 
           const result = await fetchPageSpeedInsights({ url, device })
           const metrics = extractMetrics(result)
@@ -74,14 +72,10 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
               error: insertError.message,
               timestamp: new Date().toISOString(),
             })
-            failureCount++
-            lastError = insertError.message
-          } else {
-            successCount++
+            return { device, success: false, error: insertError.message }
           }
 
-          // Small delay to respect rate limits
-          await new Promise((resolve) => setTimeout(resolve, 1000))
+          return { device, success: true }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error'
           console.error('[Performance Error]', {
@@ -91,9 +85,20 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
             error: errorMessage,
             timestamp: new Date().toISOString(),
           })
+          return { device, success: false, error: errorMessage }
+        }
+      })
+
+      // Wait for both devices to complete
+      const results = await Promise.all(devicePromises)
+
+      // Count successes and failures
+      for (const result of results) {
+        if (result.success) {
+          successCount++
+        } else {
           failureCount++
-          lastError = errorMessage
-          // Continue with other URLs even if one fails
+          lastError = result.error ?? null
         }
       }
 

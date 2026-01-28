@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, XCircle, Clock, Globe, CheckCircle2, StopCircle } from 'lucide-react'
+import { Loader2, XCircle, Clock, CheckCircle2, StopCircle, Smartphone, Monitor } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { formatDuration } from '@/lib/utils'
 import { PerformanceAuditStatus } from '@/lib/enums'
@@ -24,6 +23,8 @@ interface ProgressData {
   started_at: string | null
   error_message: string | null
   results_count: number
+  mobile_results_count: number
+  desktop_results_count: number
 }
 
 export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceLiveProgressProps) {
@@ -164,19 +165,26 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   }
 
   const totalUrls = progress?.total_urls ?? 0
-  const completedCount = progress?.completed_count ?? 0
-  const currentUrl = progress?.current_url
-  const currentDevice = progress?.current_device
-  const progressPercent = totalUrls > 0 ? Math.round((completedCount / totalUrls) * 100) : 0
+  const mobileCount = progress?.mobile_results_count ?? 0
+  const desktopCount = progress?.desktop_results_count ?? 0
+  const mobileComplete = mobileCount >= totalUrls
+  const desktopComplete = desktopCount >= totalUrls
 
-  // Extract pathname from URL for display
-  const getPathname = (url: string): string => {
-    try {
-      const parsed = new URL(url)
-      return parsed.pathname || '/'
-    } catch {
-      return url
+  // Determine what to show in the subtitle
+  const getProgressSubtitle = () => {
+    if (progress?.status === PerformanceAuditStatus.Pending) {
+      return 'Initializing PageSpeed Insights...'
     }
+    if (mobileComplete && desktopComplete) {
+      return 'Finishing up...'
+    }
+    if (!mobileComplete && !desktopComplete) {
+      return 'Currently auditing mobile & desktop versions with PageSpeed Insights'
+    }
+    if (!mobileComplete) {
+      return 'Currently auditing mobile version with PageSpeed Insights'
+    }
+    return 'Currently auditing desktop version with PageSpeed Insights'
   }
 
   return (
@@ -186,60 +194,49 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
           <Loader2 className="text-primary size-12 animate-spin" />
         </div>
         <CardTitle className="text-xl text-balance">
-          {progress?.status === PerformanceAuditStatus.Pending ? 'Starting Audit...' : 'Analyzing Pages...'}
+          {progress?.status === PerformanceAuditStatus.Pending ? 'Starting Audit...' : 'Analyzing Pages'}
         </CardTitle>
-        <p className="text-muted-foreground text-sm text-pretty">
-          Testing {totalUrls} page{totalUrls !== 1 ? 's' : ''} with PageSpeed Insights
-        </p>
+        <p className="text-muted-foreground text-sm text-pretty">{getProgressSubtitle()}</p>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Progress bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium tabular-nums">
-              {completedCount} / {totalUrls} pages
-            </span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-        </div>
-
-        {/* Current URL being audited */}
-        {currentUrl && (
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-              Currently Auditing
-            </p>
-            <div className="flex items-center gap-2">
-              <Globe className="text-muted-foreground size-4 shrink-0" />
-              <span className="truncate font-medium">{getPathname(currentUrl)}</span>
-              {currentDevice && (
-                <span className="text-muted-foreground shrink-0 text-sm">({currentDevice})</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Stats row */}
+        {/* Device progress stats */}
         <div className="flex gap-3">
           <div className="bg-muted/50 flex flex-1 items-center justify-between rounded-lg p-4">
             <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
-              <CheckCircle2 className="size-4" />
-              Completed
+              <Smartphone className="size-4" />
+              Mobile
             </span>
-            <span className="text-2xl font-bold tabular-nums">{completedCount}</span>
-          </div>
-          {elapsedMs > 0 && (
-            <div className="bg-muted/50 flex flex-1 items-center justify-between rounded-lg p-4">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
-                <Clock className="size-4" />
-                Elapsed
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold tabular-nums">
+                {mobileCount}/{totalUrls}
               </span>
-              <span className="text-2xl font-bold tabular-nums">{formatDuration(elapsedMs)}</span>
+              {mobileComplete && <CheckCircle2 className="size-5 text-green-500" />}
             </div>
-          )}
+          </div>
+          <div className="bg-muted/50 flex flex-1 items-center justify-between rounded-lg p-4">
+            <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
+              <Monitor className="size-4" />
+              Desktop
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold tabular-nums">
+                {desktopCount}/{totalUrls}
+              </span>
+              {desktopComplete && <CheckCircle2 className="size-5 text-green-500" />}
+            </div>
+          </div>
         </div>
+
+        {/* Elapsed time */}
+        {elapsedMs > 0 && (
+          <div className="flex justify-center">
+            <span className="text-muted-foreground flex items-center gap-1.5 text-sm">
+              <Clock className="size-4" />
+              Elapsed: {formatDuration(elapsedMs)}
+            </span>
+          </div>
+        )}
 
         {/* Helpful text */}
         <p className="text-muted-foreground text-center text-xs">

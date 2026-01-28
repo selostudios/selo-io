@@ -48,14 +48,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
   }
 
-  // Get count of completed results
-  const { count: resultsCount } = await supabase
-    .from('performance_audit_results')
-    .select('*', { count: 'exact', head: true })
-    .eq('audit_id', id)
+  // Get count of completed results (total and per-device)
+  const [totalCountResult, mobileCountResult, desktopCountResult] = await Promise.all([
+    supabase
+      .from('performance_audit_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('audit_id', id),
+    supabase
+      .from('performance_audit_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('audit_id', id)
+      .eq('device', 'mobile'),
+    supabase
+      .from('performance_audit_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('audit_id', id)
+      .eq('device', 'desktop'),
+  ])
 
   return NextResponse.json({
     ...audit,
-    results_count: resultsCount ?? 0,
+    results_count: totalCountResult.count ?? 0,
+    mobile_results_count: mobileCountResult.count ?? 0,
+    desktop_results_count: desktopCountResult.count ?? 0,
   })
 }
