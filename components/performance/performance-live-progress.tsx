@@ -169,6 +169,28 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   const desktopCount = progress?.desktop_results_count ?? 0
   const mobileComplete = mobileCount >= totalUrls
   const desktopComplete = desktopCount >= totalUrls
+  const currentUrl = progress?.current_url
+
+  // Extract domain from URL for display
+  const getDomain = (url: string): string => {
+    try {
+      const parsed = new URL(url)
+      return parsed.hostname.replace(/^www\./, '')
+    } catch {
+      return url
+    }
+  }
+
+  // Get the title based on status and URL
+  const getTitle = () => {
+    if (progress?.status === PerformanceAuditStatus.Pending) {
+      return 'Starting Audit...'
+    }
+    if (currentUrl) {
+      return `Analyzing ${getDomain(currentUrl)}...`
+    }
+    return 'Analyzing Pages...'
+  }
 
   // Determine what to show in the subtitle
   const getProgressSubtitle = () => {
@@ -179,12 +201,12 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
       return 'Finishing up...'
     }
     if (!mobileComplete && !desktopComplete) {
-      return 'Currently auditing mobile & desktop versions with PageSpeed Insights'
+      return 'Auditing mobile & desktop versions'
     }
     if (!mobileComplete) {
-      return 'Currently auditing mobile version with PageSpeed Insights'
+      return 'Auditing mobile version'
     }
-    return 'Currently auditing desktop version with PageSpeed Insights'
+    return 'Auditing desktop version'
   }
 
   return (
@@ -193,9 +215,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
         <div className="mb-4 flex justify-center">
           <Loader2 className="text-primary size-12 animate-spin" />
         </div>
-        <CardTitle className="text-xl text-balance">
-          {progress?.status === PerformanceAuditStatus.Pending ? 'Starting Audit...' : 'Analyzing Pages'}
-        </CardTitle>
+        <CardTitle className="text-xl text-balance">{getTitle()}</CardTitle>
         <p className="text-muted-foreground text-sm text-pretty">{getProgressSubtitle()}</p>
       </CardHeader>
 
