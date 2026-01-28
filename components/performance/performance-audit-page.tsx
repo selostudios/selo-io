@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Download, ExternalLink, Smartphone, Monitor } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Smartphone, Monitor, AlertTriangle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -20,6 +20,10 @@ interface PerformanceAuditPageProps {
 
 export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPageProps) {
   const [device, setDevice] = useState<DeviceType>(DeviceType.Mobile)
+
+  // Check which devices have results
+  const hasMobileResults = results.some((r) => r.device === 'mobile')
+  const hasDesktopResults = results.some((r) => r.device === 'desktop')
 
   // Extract domain from first URL
   const firstUrl = audit.first_url || audit.current_url || results[0]?.url
@@ -85,10 +89,16 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
               <TabsTrigger value="mobile" className="gap-2">
                 <Smartphone className="size-4" />
                 Mobile
+                {!hasMobileResults && results.length > 0 && (
+                  <AlertTriangle className="size-3 text-amber-500" />
+                )}
               </TabsTrigger>
               <TabsTrigger value="desktop" className="gap-2">
                 <Monitor className="size-4" />
                 Desktop
+                {!hasDesktopResults && results.length > 0 && (
+                  <AlertTriangle className="size-3 text-amber-500" />
+                )}
               </TabsTrigger>
             </TabsList>
           </Tabs>

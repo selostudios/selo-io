@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CoreWebVitals } from './core-web-vitals'
@@ -57,6 +58,28 @@ export function PerformanceResults({ results, device }: PerformanceResultsProps)
       <Card>
         <CardContent className="py-8 text-center">
           <p className="text-muted-foreground">No results yet</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Check if selected device has any results
+  const hasResultsForDevice = urls.some((url) => resultsByUrl[url][device] !== null)
+  const otherDevice = device === 'mobile' ? 'desktop' : 'mobile'
+  const hasResultsForOtherDevice = urls.some((url) => resultsByUrl[url][otherDevice] !== null)
+
+  // Show message if no results for selected device but other device has results
+  if (!hasResultsForDevice && hasResultsForOtherDevice) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">
+          <AlertTriangle className="mx-auto mb-3 size-8 text-amber-500" />
+          <p className="font-medium">No {device} results available</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            The {device} audit may have timed out or encountered an error.
+            <br />
+            Try switching to {otherDevice} to see available results.
+          </p>
         </CardContent>
       </Card>
     )
