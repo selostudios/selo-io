@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
+import { AuditRunControl } from '@/components/audit/audit-run-control'
 import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
@@ -41,7 +42,6 @@ export function PageSpeedClient({
 }: PageSpeedClientProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [oneTimeUrl, setOneTimeUrl] = useState('')
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   // Determine audit target from URL params (managed by header selector)
@@ -58,34 +58,6 @@ export function PageSpeedClient({
     }
     return { type: 'one-time' as const }
   }, [selectedOrganizationId, organizations])
-
-  const handleRunOneTimeAudit = async () => {
-    if (!oneTimeUrl.trim()) return
-
-    let url = oneTimeUrl.trim()
-    // Add https:// if no protocol specified
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url
-    }
-
-    try {
-      const response = await fetch('/api/performance/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: [url] }),
-      })
-
-      if (!response.ok) {
-        console.error('Failed to start audit')
-        return
-      }
-
-      const data = await response.json()
-      router.push(`/seo/page-speed/${data.auditId}`)
-    } catch (error) {
-      console.error('Failed to start audit:', error)
-    }
-  }
 
   const handleDeleteAudit = async (auditId: string) => {
     try {
@@ -211,34 +183,21 @@ export function PageSpeedClient({
       {selectedTarget?.type === 'one-time' && (
         <>
           {/* Run One-Time Audit Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>One-Time PageSpeed Audit</CardTitle>
-                  <CardDescription>Add URL to begin PageSpeed audit</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="url"
-                    placeholder="https://example.com"
-                    className="w-64"
-                    id="one-time-url"
-                    value={oneTimeUrl}
-                    onChange={(e) => setOneTimeUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && oneTimeUrl.trim()) {
-                        handleRunOneTimeAudit()
-                      }
-                    }}
-                  />
-                  <Button onClick={handleRunOneTimeAudit} disabled={!oneTimeUrl.trim()}>
-                    Run Audit
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+          <AuditRunControl
+            title="One-Time PageSpeed Audit"
+            description="Add URL to begin PageSpeed audit"
+            organization={null}
+            onRunAudit={async (url) => {
+              const response = await fetch('/api/performance/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: [url] }),
+              })
+              if (!response.ok) throw new Error('Failed to start audit')
+              const data = await response.json()
+              router.push(`/seo/page-speed/${data.auditId}`)
+            }}
+          />
 
           {/* Audit History Section */}
           <Card>
