@@ -3,12 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser, getOrganizations } from '@/lib/organizations/actions'
 import { redirect } from 'next/navigation'
-import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
+import type { PerformanceAudit } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 export async function getPageSpeedData(organizationId?: string): Promise<{
   audits: PerformanceAudit[]
-  monitoredPages: MonitoredPage[]
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
@@ -90,26 +89,6 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
     return audit
   })
 
-  // Build monitored pages query
-  let pagesQuery = supabase
-    .from('monitored_pages')
-    .select('id, organization_id, url, added_by, created_at')
-    .order('created_at', { ascending: false })
-
-  if (filterOrgId) {
-    pagesQuery = pagesQuery.eq('organization_id', filterOrgId)
-  }
-
-  const { data: monitoredPages, error: pagesError } = await pagesQuery
-
-  if (pagesError) {
-    console.error('[Performance Error]', {
-      type: 'fetch_pages_failed',
-      timestamp: new Date().toISOString(),
-      error: pagesError.message,
-    })
-  }
-
   // Get organizations for selector
   const orgs = await getOrganizations()
   const organizations: OrganizationForSelector[] = orgs.map((org) => ({
@@ -122,7 +101,6 @@ export async function getPageSpeedData(organizationId?: string): Promise<{
 
   return {
     audits: auditsWithUrls as PerformanceAudit[],
-    monitoredPages: (monitoredPages ?? []) as MonitoredPage[],
     organizations,
     isInternal,
     selectedOrganizationId: filterOrgId,

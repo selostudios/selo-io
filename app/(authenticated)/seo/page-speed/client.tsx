@@ -9,13 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
-import type { PerformanceAudit, MonitoredPage } from '@/lib/performance/types'
+import type { PerformanceAudit } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
 
 interface PageSpeedClientProps {
   audits: PerformanceAudit[]
-  monitoredPages: MonitoredPage[]
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
@@ -36,7 +35,6 @@ function isInProgress(status: PerformanceAudit['status']): boolean {
 
 export function PageSpeedClient({
   audits,
-  monitoredPages,
   organizations,
   selectedOrganizationId,
 }: PageSpeedClientProps) {
@@ -173,7 +171,6 @@ export function PageSpeedClient({
       {selectedTarget?.type === 'organization' && (
         <PerformanceDashboard
           audits={filteredAudits}
-          monitoredPages={monitoredPages}
           websiteUrl={selectedTarget.url}
           organizationId={selectedTarget.organizationId}
         />
