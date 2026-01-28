@@ -195,7 +195,7 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   // Determine what to show in the subtitle
   const getProgressSubtitle = () => {
     if (progress?.status === PerformanceAuditStatus.Pending) {
-      return 'Initializing PageSpeed Insights...'
+      return 'Initializing...'
     }
     if (mobileComplete && desktopComplete) {
       return 'Finishing up...'
