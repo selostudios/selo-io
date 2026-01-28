@@ -335,26 +335,24 @@ export function AIOAuditClient({
       )}
 
       {/* Audit History */}
-      {audits.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {selectedOrganizationId ? 'Audit History' : 'One-time Audit History'}
-            </CardTitle>
-            {!selectedOrganizationId && (
-              <CardDescription>
-                Audits run on URLs not associated with an organization
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            <AIOAuditHistoryList
-              audits={audits}
-              showUrl={!selectedOrganizationId || isInternal}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {selectedOrganizationId ? 'Audit History' : 'One-time Audit History'}
+          </CardTitle>
+          {!selectedOrganizationId && (
+            <CardDescription>
+              Audits run on URLs not associated with an organization
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent>
+          <AIOAuditHistoryList
+            audits={audits}
+            showUrl={!selectedOrganizationId || isInternal}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }
