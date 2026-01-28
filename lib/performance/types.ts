@@ -46,14 +46,6 @@ export interface PerformanceAuditResult {
   created_at: string
 }
 
-export interface MonitoredPage {
-  id: string
-  organization_id: string
-  url: string
-  added_by: string | null
-  created_at: string
-}
-
 export interface MonitoredSite {
   id: string
   organization_id: string

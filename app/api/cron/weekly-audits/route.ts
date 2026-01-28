@@ -75,13 +75,8 @@ export async function POST(request: Request) {
     // Run Performance Audit if enabled
     if (site.run_performance_audit) {
       try {
-        // Get monitored pages for this org
-        const { data: pages } = await supabase
-          .from('monitored_pages')
-          .select('url')
-          .eq('organization_id', site.organization_id)
-
-        const urls = [site.url, ...(pages || []).map((p) => p.url)]
+        // Test single domain URL
+        const urls = [site.url]
 
         const { data: audit, error: insertError } = await supabase
           .from('performance_audits')
