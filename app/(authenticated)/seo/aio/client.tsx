@@ -4,10 +4,9 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
+import { AuditRunControl } from '@/components/audit/audit-run-control'
 import { SampleSizeSelector } from '@/components/aio/sample-size-selector'
 import { TokenUsageBadge } from '@/components/aio/token-usage-badge'
 import { AIAnalysisCard } from '@/components/aio/ai-analysis-card'
@@ -35,7 +34,6 @@ export function AIOAuditClient({
 }: AIOAuditClientProps) {
   const router = useRouter()
   const [sampleSize, setSampleSize] = useState(5)
-  const [oneTimeUrl, setOneTimeUrl] = useState('')
   const aioAudit = useAIOAuditStream()
 
   // Determine audit target from URL params (managed by header selector)
@@ -53,41 +51,19 @@ export function AIOAuditClient({
     return { type: 'one-time' as const }
   }, [selectedOrganizationId, organizations])
 
-  const handleStartAudit = async () => {
-    let url: string
-    let organizationId: string | null = null
+  const handleRunAudit = async (url: string, organizationId?: string) => {
+    const response = await fetch('/api/aio/audit/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizationId: organizationId || null, url, sampleSize }),
+    })
 
-    if (selectedTarget.type === 'organization') {
-      url = selectedTarget.url
-      organizationId = selectedTarget.organizationId
-    } else {
-      // One-time audit
-      if (!oneTimeUrl.trim()) return
-
-      url = oneTimeUrl.trim()
-      // Add https:// if no protocol specified
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url
-      }
+    if (!response.ok) {
+      throw new Error('Failed to start audit')
     }
 
-    try {
-      const response = await fetch('/api/aio/audit/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ organizationId, url, sampleSize }),
-      })
-
-      if (!response.ok) {
-        console.error('Failed to start audit')
-        return
-      }
-
-      const data = await response.json()
-      router.push(`/seo/aio/${data.auditId}`)
-    } catch (error) {
-      console.error('Failed to start audit:', error)
-    }
+    const data = await response.json()
+    router.push(`/seo/aio/${data.auditId}`)
   }
 
   const isRunning = aioAudit.status === 'running_programmatic' || aioAudit.status === 'running_ai'
@@ -119,88 +95,35 @@ export function AIOAuditClient({
       </div>
 
       {/* Audit Configuration Card */}
-      <Card>
-        <CardHeader>
-          {selectedTarget?.type === 'one-time' ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>One-Time AIO Audit</CardTitle>
-                <CardDescription>Add URL to begin AIO audit</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://example.com"
-                  className="w-64"
-                  id="url"
-                  value={oneTimeUrl}
-                  onChange={(e) => setOneTimeUrl(e.target.value)}
-                  disabled={isRunning}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && oneTimeUrl.trim() && !isRunning) {
-                      handleStartAudit()
-                    }
-                  }}
-                  autoComplete="url"
-                  name="website-url"
-                />
-                <Button
-                  onClick={handleStartAudit}
-                  disabled={!oneTimeUrl.trim() || isRunning}
-                >
-                  {isRunning ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                      Running…
-                    </>
-                  ) : (
-                    'Run Audit'
-                  )}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <CardTitle>Run AIO Audit</CardTitle>
-              <CardDescription>
-                Analyze customer website readiness for AI-powered search engines
-              </CardDescription>
-            </>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <SampleSizeSelector
-            value={sampleSize}
-            onChange={setSampleSize}
-            pagesFound={aioAudit.pagesFound}
-            disabled={isRunning}
-          />
+      <AuditRunControl
+        title="One-Time AIO Audit"
+        description="Add URL to begin AIO audit"
+        organization={
+          selectedTarget?.type === 'organization'
+            ? {
+                id: selectedTarget.organizationId,
+                websiteUrl: selectedTarget.url,
+              }
+            : null
+        }
+        onRunAudit={handleRunAudit}
+        isRunning={isRunning}
+      >
+        <SampleSizeSelector
+          value={sampleSize}
+          onChange={setSampleSize}
+          pagesFound={aioAudit.pagesFound}
+          disabled={isRunning}
+        />
+      </AuditRunControl>
 
-          {selectedTarget?.type !== 'one-time' && (
-            <Button
-              onClick={handleStartAudit}
-              disabled={!selectedTarget || isRunning}
-              className="w-full"
-            >
-              {isRunning ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                  Running…
-                </>
-              ) : (
-                'Run Audit'
-              )}
-            </Button>
-          )}
-
-          {hasError && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              <p className="font-medium">Error</p>
-              <p className="mt-1 text-xs">{aioAudit.error}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Stream Error Display */}
+      {hasError && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <p className="font-medium">Error</p>
+          <p className="mt-1 text-xs">{aioAudit.error}</p>
+        </div>
+      )}
 
       {/* Show progress/results when audit has started */}
       {(isRunning || isComplete) && (
