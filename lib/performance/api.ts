@@ -8,8 +8,8 @@ interface FetchPageSpeedOptions {
   device: DeviceType
 }
 
-// Timeout for PageSpeed API requests (60 seconds)
-const PAGESPEED_TIMEOUT_MS = 60000
+// Timeout for PageSpeed API requests (45 seconds - allows buffer before Vercel timeout)
+const PAGESPEED_TIMEOUT_MS = 45000
 
 export async function fetchPageSpeedInsights({
   url,

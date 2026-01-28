@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { canAccessAllAudits } from '@/lib/permissions'
+import { PerformanceAuditStatus } from '@/lib/enums'
+
+// Mark audits as timed out if running for more than 3 minutes
+const STALE_AUDIT_TIMEOUT_MS = 3 * 60 * 1000
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -46,6 +50,41 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
+  }
+
+  // Check for stale running audits and mark them as completed with partial results
+  if (
+    audit.status === PerformanceAuditStatus.Running &&
+    audit.started_at
+  ) {
+    const startedAt = new Date(audit.started_at).getTime()
+    const now = Date.now()
+    const elapsed = now - startedAt
+
+    if (elapsed > STALE_AUDIT_TIMEOUT_MS) {
+      console.log('[Performance] Marking stale audit as completed:', {
+        auditId: id,
+        elapsedMs: elapsed,
+        startedAt: audit.started_at,
+      })
+
+      // Use service client to update (bypass RLS)
+      const serviceClient = createServiceClient()
+      await serviceClient
+        .from('performance_audits')
+        .update({
+          status: PerformanceAuditStatus.Completed,
+          error_message: 'Audit timed out - partial results may be available',
+          completed_at: new Date().toISOString(),
+          current_url: null,
+        })
+        .eq('id', id)
+
+      // Update local audit object for response
+      audit.status = PerformanceAuditStatus.Completed
+      audit.error_message = 'Audit timed out - partial results may be available'
+      audit.completed_at = new Date().toISOString()
+    }
   }
 
   // Get count of completed results (total and per-device)

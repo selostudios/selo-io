@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runPerformanceAudit } from '@/lib/performance/runner'
 import { getCurrentUser } from '@/lib/organizations/actions'
+
+// Allow up to 10 minutes for the background audit to complete
+export const maxDuration = 600
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -77,9 +80,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create audit' }, { status: 500 })
   }
 
-  // Start audit in background
-  runPerformanceAudit(audit.id, urls).catch((err) => {
-    console.error('[Performance API] Background audit failed:', err)
+  // Start audit in background using after() to ensure it continues after response
+  after(async () => {
+    try {
+      await runPerformanceAudit(audit.id, urls)
+    } catch (err) {
+      console.error('[Performance API] Background audit failed:', err)
+    }
   })
 
   return NextResponse.json({ auditId: audit.id })
