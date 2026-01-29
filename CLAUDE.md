@@ -262,6 +262,30 @@ tests/
 
 Integration and E2E tests require local Supabase running via Docker.
 
+#### E2E Testing Conventions
+
+**Always add `data-testid` attributes** to components that will be targeted in E2E tests:
+
+```typescript
+// In component:
+<h1 data-testid="reports-page-title">Report History</h1>
+<Button data-testid="new-report-button">New Report</Button>
+<Card data-testid="reports-empty-state">...</Card>
+
+// In test:
+await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
+await page.locator('[data-testid="new-report-button"]').click()
+```
+
+**Naming convention**: Use kebab-case with descriptive names like `{feature}-{element}-{state}`:
+- `reports-page-title` - Page title
+- `new-report-button` - Action button
+- `reports-empty-state` - Empty state container
+- `seo-audit-card` - Selection card
+- `validate-selection-button` - Form action
+
+**Why**: Data-testid attributes are more reliable than text selectors (which can match multiple elements) or CSS classes (which may change with styling). They clearly indicate "this element is used in tests" and survive refactoring.
+
 ### Before Pushing
 
 Always run lint and tests before pushing to remote:

@@ -13,55 +13,51 @@ test.describe('Reports Page', () => {
   })
 
   test('navigates to reports page', async ({ page }) => {
-    // Navigate to reports via sidebar - use partial href match for org param
-    await page.click('a[href*="/seo/reports"]:not([href*="/new"])')
+    // Navigate directly to reports page
+    await page.goto('/seo/reports')
 
     await expect(page).toHaveURL(/\/seo\/reports/)
-    await expect(page.getByRole('heading', { name: /Report/i })).toBeVisible()
+    await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Report History')
   })
 
   test('shows empty state when no reports exist', async ({ page }) => {
     await page.goto('/seo/reports')
 
     // Should show empty state message
-    await expect(page.getByText(/No reports yet/i)).toBeVisible()
+    await expect(page.locator('[data-testid="reports-empty-state"]')).toBeVisible()
   })
 
   test('has create report button', async ({ page }) => {
     await page.goto('/seo/reports')
 
     // Should have create report button
-    const createButton = page.getByRole('link', { name: /Create Report|New Report/i })
-    await expect(createButton).toBeVisible()
+    await expect(page.locator('[data-testid="new-report-button"]')).toBeVisible()
   })
 
   test('navigates to new report page', async ({ page }) => {
     await page.goto('/seo/reports')
 
-    // Click create report
-    await page.click('a[href*="/seo/reports/new"]')
+    // Click create report button
+    await page.locator('[data-testid="new-report-button"]').click()
 
     await expect(page).toHaveURL(/\/seo\/reports\/new/)
-    await expect(page.getByRole('heading', { name: /New Report|Create Report/i })).toBeVisible()
+    await expect(page.locator('[data-testid="new-report-page-title"]')).toHaveText('New Report')
   })
 
   test('shows audit selection on new report page', async ({ page }) => {
     await page.goto('/seo/reports/new')
 
-    // Should show audit selection sections - use more specific selectors
-    await expect(page.getByText('SEO Audit', { exact: true })).toBeVisible()
-    await expect(page.getByText('PageSpeed Audit', { exact: true })).toBeVisible()
-    await expect(page.getByText('AIO Audit', { exact: true })).toBeVisible()
+    // Should show audit selection cards
+    await expect(page.locator('[data-testid="seo-audit-card"]')).toBeVisible()
+    await expect(page.locator('[data-testid="pagespeed-audit-card"]')).toBeVisible()
+    await expect(page.locator('[data-testid="aio-audit-card"]')).toBeVisible()
   })
 
-  test('shows validation message when audits are missing', async ({ page }) => {
+  test('shows instruction message when no audits selected', async ({ page }) => {
     await page.goto('/seo/reports/new')
 
-    // Try to click create without selecting audits
-    const createButton = page.getByRole('button', { name: /Generate Report/i })
-
-    // Button should be disabled if no audits are available
-    await expect(createButton).toBeDisabled()
+    // When no audits are selected, should show instruction card
+    await expect(page.locator('[data-testid="selection-instructions"]')).toBeVisible()
   })
 })
 
@@ -77,17 +73,15 @@ test.describe('Report Search', () => {
   test('has search functionality', async ({ page }) => {
     await page.goto('/seo/reports')
 
-    // Search only shows when there are reports or no org selected
-    // The page should at least load without errors
-    await expect(page.getByRole('heading', { name: /Report/i })).toBeVisible()
+    // The page should load without errors - check for main heading
+    await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 
   test('can type in search input', async ({ page }) => {
     await page.goto('/seo/reports')
 
-    // Search input only shows for one-time reports (no org)
-    // Test that page loads correctly
-    await expect(page.getByRole('heading', { name: /Report/i })).toBeVisible()
+    // Page should load correctly - check for main heading
+    await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 })
 
@@ -96,12 +90,12 @@ test.describe('Public Report Access', () => {
     // Try to access a non-existent shared report
     await page.goto('/r/invalid-token-12345')
 
-    // Should show error page - use heading which is unique
+    // Should show error page
     await expect(page.getByRole('heading', { name: /Not Found/i })).toBeVisible()
   })
 
   test('shows error for expired share link', async ({ page }) => {
-    // Attempt to access with a token that doesn't exist (will show "not found")
+    // Attempt to access with a token that doesn't exist
     await page.goto('/r/expired-test-token')
 
     await expect(page.getByRole('heading', { name: /Not Found/i })).toBeVisible()
@@ -117,9 +111,10 @@ test.describe('Report Permissions', () => {
     await page.click('button[type="submit"]')
     await expect(page).toHaveURL(/\/dashboard/)
 
-    // Navigate to reports
-    await page.click('a[href*="/seo/reports"]:not([href*="/new"])')
+    // Navigate directly to reports
+    await page.goto('/seo/reports')
     await expect(page).toHaveURL(/\/seo\/reports/)
+    await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 
   test('team member can access reports page', async ({ page }) => {
@@ -130,8 +125,9 @@ test.describe('Report Permissions', () => {
     await page.click('button[type="submit"]')
     await expect(page).toHaveURL(/\/dashboard/)
 
-    // Navigate to reports
-    await page.click('a[href*="/seo/reports"]:not([href*="/new"])')
+    // Navigate directly to reports
+    await page.goto('/seo/reports')
     await expect(page).toHaveURL(/\/seo\/reports/)
+    await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 })

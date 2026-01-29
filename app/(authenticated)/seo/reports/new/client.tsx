@@ -152,7 +152,9 @@ export function NewReportClient({
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">New Report</h1>
+          <h1 className="text-3xl font-bold" data-testid="new-report-page-title">
+            New Report
+          </h1>
           <p className="text-muted-foreground mt-1">
             Select one audit from each category to create a consolidated report
           </p>
@@ -173,7 +175,7 @@ export function NewReportClient({
       {/* Audit Selection Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* SEO Audit Selection */}
-        <Card>
+        <Card data-testid="seo-audit-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileSearch className="h-5 w-5" />
@@ -222,7 +224,7 @@ export function NewReportClient({
         </Card>
 
         {/* PageSpeed Audit Selection */}
-        <Card>
+        <Card data-testid="pagespeed-audit-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gauge className="h-5 w-5" />
@@ -270,7 +272,7 @@ export function NewReportClient({
         </Card>
 
         {/* AIO Audit Selection */}
-        <Card>
+        <Card data-testid="aio-audit-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
@@ -365,7 +367,11 @@ export function NewReportClient({
             {/* Action Buttons */}
             <div className="flex items-center justify-end gap-3">
               {!validation && (
-                <Button onClick={handleValidate} disabled={isValidating}>
+                <Button
+                  onClick={handleValidate}
+                  disabled={isValidating}
+                  data-testid="validate-selection-button"
+                >
                   {isValidating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -378,7 +384,11 @@ export function NewReportClient({
               )}
 
               {validation && (
-                <Button onClick={handleCreateReport} disabled={!canCreate || isCreating}>
+                <Button
+                  onClick={handleCreateReport}
+                  disabled={!canCreate || isCreating}
+                  data-testid="create-report-button"
+                >
                   {isCreating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -398,7 +408,7 @@ export function NewReportClient({
 
       {/* Selection Summary */}
       {!allSelected && (
-        <Card>
+        <Card data-testid="selection-instructions">
           <CardContent className="pt-6">
             <div className="text-muted-foreground text-center text-sm">
               Select one audit from each category above to create a consolidated report.

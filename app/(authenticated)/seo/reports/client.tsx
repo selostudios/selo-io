@@ -108,12 +108,14 @@ export function ReportsClient({ reports, selectedOrganizationId }: ReportsClient
       {/* Page Title */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Report History</h1>
+          <h1 className="text-3xl font-bold" data-testid="reports-page-title">
+            Report History
+          </h1>
           <p className="text-muted-foreground mt-1">
             View and manage your consolidated marketing performance reports
           </p>
         </div>
-        <Button asChild>
+        <Button asChild data-testid="new-report-button">
           <Link href="/seo/reports/new">
             <Plus className="mr-2 h-4 w-4" />
             New Report
@@ -136,7 +138,7 @@ export function ReportsClient({ reports, selectedOrganizationId }: ReportsClient
 
       {/* Reports List */}
       {filteredReports.length === 0 ? (
-        <Card>
+        <Card data-testid="reports-empty-state">
           <CardContent className="pt-6">
             <EmptyState
               icon={FileText}
