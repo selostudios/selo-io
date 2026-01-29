@@ -19,10 +19,10 @@ export function SlideContainer({ children, variant = 'light', className }: Slide
   return (
     <div
       className={cn(
-        'flex min-h-screen w-full flex-col p-8 md:p-12 lg:p-16',
+        'flex min-h-screen w-full flex-col',
         variantStyles[variant],
         // Print styles
-        'print:min-h-0 print:break-after-page print:p-8',
+        'print:min-h-0 print:break-after-page',
         className
       )}
     >
