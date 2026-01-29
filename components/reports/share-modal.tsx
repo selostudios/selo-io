@@ -263,7 +263,7 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
                 Expires: {format(new Date(createdShare.share.expires_at), 'PPP')}
               </p>
               <p>Max views: {createdShare.share.max_views}</p>
-              {createdShare.share.password_hash && (
+              {createdShare.share.has_password && (
                 <p className="flex items-center gap-1">
                   <Lock className="h-3 w-3" /> Password protected
                 </p>

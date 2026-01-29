@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Loader2, Lock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,18 +10,15 @@ import { ReportPresentation } from '@/components/reports/report-presentation'
 import { accessSharedReport } from '@/app/(authenticated)/seo/reports/share-actions'
 import { getSharedReportPresentationData } from './actions'
 import { getShareErrorMessage } from '@/lib/reports/types'
-import { ShareErrorCode } from '@/lib/enums'
 import type { ReportPresentationData } from '@/lib/reports/types'
 
 interface PublicReportClientProps {
   token: string
-  reportId: string
   requiresPassword: boolean
 }
 
 export function PublicReportClient({
   token,
-  reportId,
   requiresPassword,
 }: PublicReportClientProps) {
   const [password, setPassword] = useState('')
@@ -29,14 +26,7 @@ export function PublicReportClient({
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<ReportPresentationData | null>(null)
 
-  // Auto-load if no password required
-  useEffect(() => {
-    if (!requiresPassword) {
-      loadReport()
-    }
-  }, [requiresPassword])
-
-  const loadReport = async (providedPassword?: string) => {
+  const loadReport = useCallback(async (providedPassword?: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -66,7 +56,14 @@ export function PublicReportClient({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [token])
+
+  // Auto-load if no password required
+  useEffect(() => {
+    if (!requiresPassword) {
+      loadReport()
+    }
+  }, [requiresPassword, loadReport])
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()

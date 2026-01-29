@@ -63,7 +63,7 @@ export interface ReportShare {
 
   // Security settings
   expires_at: string
-  password_hash: string | null
+  has_password: boolean // Never expose password_hash to client
   max_views: number
 
   // Tracking

@@ -23,7 +23,6 @@ export default async function PublicReportPage({ params }: PageProps) {
   return (
     <PublicReportClient
       token={token}
-      reportId={validation.report_id!}
       requiresPassword={validation.requires_password}
     />
   )

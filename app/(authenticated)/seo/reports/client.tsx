@@ -15,7 +15,7 @@ import {
   ExternalLink,
   MoreHorizontal,
 } from 'lucide-react'
-import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -38,21 +38,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import type { GeneratedReport } from '@/lib/reports/types'
-import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { deleteReport } from './actions'
-import { getScoreStatus, getScoreBadgeVariant, getScoreStatusLabel } from '@/lib/reports'
-import { ScoreStatus } from '@/lib/enums'
+import { getScoreStatus, getScoreBadgeVariant } from '@/lib/reports'
 
 interface ReportsClientProps {
   reports: GeneratedReport[]
-  organizations: OrganizationForSelector[]
-  isInternal: boolean
   selectedOrganizationId: string | null
 }
 
 export function ReportsClient({
   reports,
-  organizations,
   selectedOrganizationId,
 }: ReportsClientProps) {
   const router = useRouter()

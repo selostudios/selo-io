@@ -12,6 +12,37 @@ import type {
 import { ShareExpiration, ShareErrorCode } from '@/lib/enums'
 import { getExpirationDays } from '@/lib/reports/types'
 
+// Database row type (internal only - includes password_hash)
+interface ReportShareRow {
+  id: string
+  report_id: string
+  token: string
+  expires_at: string
+  password_hash: string | null
+  max_views: number
+  view_count: number
+  last_viewed_at: string | null
+  created_at: string
+}
+
+/**
+ * Transform database row to client-safe ReportShare
+ * Never expose password_hash to the client
+ */
+function toClientShare(row: ReportShareRow): ReportShare {
+  return {
+    id: row.id,
+    report_id: row.report_id,
+    token: row.token,
+    expires_at: row.expires_at,
+    has_password: row.password_hash !== null,
+    max_views: row.max_views,
+    view_count: row.view_count,
+    last_viewed_at: row.last_viewed_at,
+    created_at: row.created_at,
+  }
+}
+
 // ============================================================
 // SHARE LINK CREATION
 // ============================================================
@@ -75,58 +106,23 @@ export async function createShareLink(
     )
 
     if (hashError) {
-      // If the function doesn't exist, we need to create it or handle differently
-      // For now, we'll use a simple approach via SQL
-      const { data: cryptResult } = await supabase.rpc('hash_password', {
+      // If crypt_password doesn't exist, try hash_password
+      const { data: cryptResult, error: hashError2 } = await supabase.rpc('hash_password', {
         password: input.password,
       })
+
+      if (hashError2 || !cryptResult) {
+        console.error('[Create Share Link Error]', {
+          type: 'password_hash_failed',
+          error: hashError2?.message ?? 'Password hashing unavailable',
+          timestamp: new Date().toISOString(),
+        })
+        return { success: false, error: 'Failed to secure share link with password. Please try again without password protection.' }
+      }
+
       passwordHash = cryptResult
     } else {
       passwordHash = hashResult
-    }
-
-    // Fallback: if neither works, store raw (not recommended for production)
-    // In production, we should ensure pgcrypto is available
-    if (!passwordHash && input.password) {
-      // Use the crypt function directly in an insert
-      const { data: share, error } = await supabase
-        .from('report_shares')
-        .insert({
-          report_id: input.report_id,
-          token,
-          expires_at: expiresAt.toISOString(),
-          password_hash: null, // Will be set via raw SQL
-          max_views: input.max_views ?? 50,
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('[Create Share Link Error]', {
-          type: 'insert_failed',
-          error: error.message,
-          timestamp: new Date().toISOString(),
-        })
-        return { success: false, error: 'Failed to create share link' }
-      }
-
-      // Update with password hash using raw SQL
-      if (input.password) {
-        await supabase.rpc('set_share_password', {
-          share_id: share.id,
-          password: input.password,
-        })
-      }
-
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-      const shareUrl = `${baseUrl}/r/${token}`
-
-      revalidatePath(`/seo/reports/${input.report_id}`)
-      return {
-        success: true,
-        share: share as ReportShare,
-        shareUrl,
-      }
     }
   }
 
@@ -158,7 +154,7 @@ export async function createShareLink(
   revalidatePath(`/seo/reports/${input.report_id}`)
   return {
     success: true,
-    share: share as ReportShare,
+    share: toClientShare(share as ReportShareRow),
     shareUrl,
   }
 }
@@ -191,7 +187,8 @@ export async function getShareLinksForReport(
     return []
   }
 
-  return (data ?? []) as ReportShare[]
+  // Transform to client-safe format (excludes password_hash)
+  return (data ?? []).map((row) => toClientShare(row as ReportShareRow))
 }
 
 /**

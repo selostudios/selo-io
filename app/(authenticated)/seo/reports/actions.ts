@@ -467,10 +467,51 @@ export async function deleteReport(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
 
-  const { error } = await supabase
+  // Authentication check
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  // Authorization check - get user's organization, role, and internal status
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('organization_id, role, is_internal')
+    .eq('id', user.id)
+    .single()
+
+  if (!userRecord) {
+    return { success: false, error: 'User not found' }
+  }
+
+  // Only admins and internal users (developers) can delete reports
+  const isAdmin = userRecord.role === 'admin'
+  const isInternal = userRecord.is_internal
+
+  if (!isAdmin && !isInternal) {
+    console.error('[Delete Report Error]', {
+      type: 'unauthorized',
+      userId: user.id,
+      role: userRecord.role,
+      timestamp: new Date().toISOString(),
+    })
+    return { success: false, error: "You don't have permission to delete reports" }
+  }
+
+  // Build delete query with organization filter for non-internal users
+  let deleteQuery = supabase
     .from('generated_reports')
     .delete()
     .eq('id', reportId)
+
+  // Non-internal users can only delete reports from their organization
+  if (!isInternal && userRecord.organization_id) {
+    deleteQuery = deleteQuery.eq('organization_id', userRecord.organization_id)
+  }
+
+  const { error } = await deleteQuery
 
   if (error) {
     console.error('[Delete Report Error]', {

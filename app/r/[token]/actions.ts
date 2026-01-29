@@ -1,10 +1,10 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
-import type { SiteAudit, SiteAuditCheck } from '@/lib/audit/types'
-import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
-import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
-import type { GeneratedReport, ReportPresentationData } from '@/lib/reports/types'
+import type { SiteAuditCheck } from '@/lib/audit/types'
+import type { PerformanceAuditResult } from '@/lib/performance/types'
+import type { AIOCheck } from '@/lib/aio/types'
+import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/seo/reports/[id]/transform'
 
 /**
