@@ -13,8 +13,8 @@ test.describe('Authentication', () => {
     await page.fill('input[name="password"]', testUsers.admin.password)
     await page.click('button[type="submit"]')
 
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/dashboard')
+    // Should redirect to dashboard (may include org query param)
+    await expect(page).toHaveURL(/\/dashboard/)
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
