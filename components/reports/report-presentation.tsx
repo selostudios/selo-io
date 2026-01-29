@@ -179,12 +179,15 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     )
   }
 
+  // Use full viewport height for public/fullscreen, or calc for authenticated layout
+  const containerHeight = isFullscreen || isPublic ? 'h-screen' : 'h-[calc(100vh-4rem)]'
+
   return (
     <div
       className={
         isFullscreen
           ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-white dark:bg-slate-950'
-          : 'relative h-[calc(100vh-4rem)] w-full overflow-hidden'
+          : `relative ${containerHeight} w-full overflow-hidden`
       }
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
