@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { canAccessAllAudits } from '@/lib/permissions'
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const { searchParams } = new URL(request.url)
+  const force = searchParams.get('force') === 'true'
+
   const supabase = await createClient()
 
   // Use getUser() to securely validate the session with the Auth server
@@ -46,6 +49,25 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   if (!hasAccess) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Check if any reports use this audit
+  const serviceClient = createServiceClient()
+  const { count: reportCount } = await serviceClient
+    .from('generated_reports')
+    .select('*', { count: 'exact', head: true })
+    .eq('aio_audit_id', id)
+
+  // If reports exist and force is not set, return warning
+  if (reportCount && reportCount > 0 && !force) {
+    return NextResponse.json(
+      {
+        error: 'Audit is used in reports',
+        reportCount,
+        message: `This audit is used in ${reportCount} report${reportCount > 1 ? 's' : ''}. Deleting it will also delete those reports.`,
+      },
+      { status: 409 }
+    )
   }
 
   // Delete audit (cascade will handle checks and AI analyses)

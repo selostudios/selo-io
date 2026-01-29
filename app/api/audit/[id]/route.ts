@@ -33,6 +33,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const { searchParams } = new URL(request.url)
+  const force = searchParams.get('force') === 'true'
+
   const supabase = await createClient()
 
   const {
@@ -63,8 +66,24 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
   }
 
-  // Use service client to bypass RLS for deletion
+  // Check if any reports use this audit
   const serviceClient = createServiceClient()
+  const { count: reportCount } = await serviceClient
+    .from('generated_reports')
+    .select('*', { count: 'exact', head: true })
+    .eq('site_audit_id', id)
+
+  // If reports exist and force is not set, return warning
+  if (reportCount && reportCount > 0 && !force) {
+    return NextResponse.json(
+      {
+        error: 'Audit is used in reports',
+        reportCount,
+        message: `This audit is used in ${reportCount} report${reportCount > 1 ? 's' : ''}. Deleting it will also delete those reports.`,
+      },
+      { status: 409 }
+    )
+  }
 
   // Delete checks first (cascade should handle this, but be explicit)
   await serviceClient.from('site_audit_checks').delete().eq('audit_id', id)
@@ -72,7 +91,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   // Delete pages
   await serviceClient.from('site_audit_pages').delete().eq('audit_id', id)
 
-  // Delete the audit
+  // Delete the audit (this will cascade delete reports due to FK)
   const { error: deleteError } = await serviceClient.from('site_audits').delete().eq('id', id)
 
   if (deleteError) {

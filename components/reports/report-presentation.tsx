@@ -1,0 +1,276 @@
+'use client'
+
+import { useState, useCallback, useEffect, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, ChevronRight, Share2, Printer, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ProgressDots } from './progress-dots'
+import type { ReportPresentationData } from '@/lib/reports/types'
+
+// Import slides
+import {
+  CoverSlide,
+  TocSlide,
+  AtAGlanceSlide,
+  ExecutiveSummarySlide,
+  OpportunitiesSlide,
+  BusinessImpactSlide,
+  RecommendationsSlide,
+  NextStepsSlide,
+} from './slides'
+
+interface ReportPresentationProps {
+  data: ReportPresentationData
+  isPublic?: boolean
+  onShare?: () => void
+}
+
+export function ReportPresentation({ data, isPublic = false, onShare }: ReportPresentationProps) {
+  const router = useRouter()
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+
+  // Calculate total slides based on content
+  const opportunityPages = Math.ceil(data.opportunities.length / 6) || 1
+  const recommendationPages = Math.ceil(data.recommendations.length / 5) || 1
+  const totalSlides = 4 + opportunityPages + 1 + recommendationPages + 1 // Cover, ToC, AtAGlance, Summary, Opportunities, Impact, Recommendations, NextSteps
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1))
+  }, [totalSlides])
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => Math.max(prev - 1, 0))
+  }, [])
+
+  const goToSlide = useCallback((index: number) => {
+    setCurrentSlide(Math.max(0, Math.min(index, totalSlides - 1)))
+  }, [totalSlides])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault()
+          nextSlide()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          prevSlide()
+          break
+        case 'Escape':
+          if (!isPublic) {
+            router.push('/seo/reports')
+          }
+          break
+        case 'Home':
+          e.preventDefault()
+          goToSlide(0)
+          break
+        case 'End':
+          e.preventDefault()
+          goToSlide(totalSlides - 1)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [nextSlide, prevSlide, goToSlide, totalSlides, router, isPublic])
+
+  // Touch/swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX)
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return
+
+    const touchEnd = e.changedTouches[0].clientX
+    const diff = touchStart - touchEnd
+
+    // Minimum swipe distance
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        nextSlide()
+      } else {
+        prevSlide()
+      }
+    }
+
+    setTouchStart(null)
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  // Render current slide
+  const renderSlide = (): ReactNode => {
+    let slideIndex = 0
+
+    // Slide 0: Cover
+    if (currentSlide === slideIndex++) {
+      return (
+        <CoverSlide
+          domain={data.domain}
+          date={data.created_at}
+          customLogoUrl={data.custom_logo_url}
+          customCompanyName={data.custom_company_name}
+        />
+      )
+    }
+
+    // Slide 1: Table of Contents
+    if (currentSlide === slideIndex++) {
+      return <TocSlide onNavigate={goToSlide} />
+    }
+
+    // Slide 2: At a Glance
+    if (currentSlide === slideIndex++) {
+      return (
+        <AtAGlanceSlide
+          combinedScore={data.combined_score}
+          seoScore={data.scores.seo.score}
+          pageSpeedScore={data.scores.page_speed.score}
+          aioScore={data.scores.aio.score}
+        />
+      )
+    }
+
+    // Slide 3: Executive Summary
+    if (currentSlide === slideIndex++) {
+      return (
+        <ExecutiveSummarySlide
+          summary={data.executive_summary}
+          stats={data.stats}
+        />
+      )
+    }
+
+    // Slides 4-N: Opportunities (paginated)
+    for (let page = 0; page < opportunityPages; page++) {
+      if (currentSlide === slideIndex++) {
+        return <OpportunitiesSlide opportunities={data.opportunities} page={page} />
+      }
+    }
+
+    // Slide: Business Impact
+    if (currentSlide === slideIndex++) {
+      return (
+        <BusinessImpactSlide
+          projections={data.projections}
+          combinedScore={data.combined_score}
+        />
+      )
+    }
+
+    // Slides: Recommendations (paginated)
+    for (let page = 0; page < recommendationPages; page++) {
+      if (currentSlide === slideIndex++) {
+        return <RecommendationsSlide recommendations={data.recommendations} page={page} />
+      }
+    }
+
+    // Final Slide: Next Steps
+    return (
+      <NextStepsSlide
+        customCompanyName={data.custom_company_name}
+        customLogoUrl={data.custom_logo_url}
+      />
+    )
+  }
+
+  return (
+    <div
+      className="relative h-screen w-screen overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Slides Container */}
+      <div className="h-full w-full overflow-y-auto print:overflow-visible">
+        {renderSlide()}
+      </div>
+
+      {/* Navigation Arrows */}
+      <div className="print:hidden">
+        {currentSlide > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={prevSlide}
+            className="fixed top-1/2 left-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+        )}
+
+        {currentSlide < totalSlides - 1 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={nextSlide}
+            className="fixed top-1/2 right-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
+
+      {/* Progress Dots */}
+      <ProgressDots current={currentSlide} total={totalSlides} onNavigate={goToSlide} />
+
+      {/* Top Controls */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 print:hidden">
+        {!isPublic && onShare && (
+          <Button variant="outline" size="sm" onClick={onShare}>
+            <Share2 className="mr-2 h-4 w-4" />
+            Share
+          </Button>
+        )}
+
+        <Button variant="outline" size="sm" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" />
+          Print
+        </Button>
+
+        {!isPublic && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/seo/reports')}
+            className="h-9 w-9"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Print Styles - render all slides for printing */}
+      <style jsx global>{`
+        @media print {
+          body {
+            overflow: visible !important;
+          }
+
+          .h-screen {
+            height: auto !important;
+          }
+
+          .overflow-hidden {
+            overflow: visible !important;
+          }
+
+          @page {
+            size: landscape;
+            margin: 0;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
