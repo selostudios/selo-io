@@ -52,8 +52,8 @@ const seoNavigation: NavigationGroup[] = [
     items: [{ name: 'AI Audit', href: '/seo/aio', icon: Sparkles }],
   },
   {
-    header: 'Reports',
-    items: [{ name: 'Consolidated Reports', href: '/seo/reports', icon: FileText }],
+    header: 'Report',
+    items: [{ name: 'Audit Reports', href: '/seo/reports', icon: FileText }],
   },
 ]
 
