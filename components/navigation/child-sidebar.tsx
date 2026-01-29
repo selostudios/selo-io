@@ -13,6 +13,7 @@ import {
   Building2,
   MessageSquare,
   Sparkles,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
@@ -50,6 +51,12 @@ const seoNavigation: NavigationGroup[] = [
     header: 'AIO',
     items: [
       { name: 'AI Audit', href: '/seo/aio', icon: Sparkles },
+    ],
+  },
+  {
+    header: 'Reports',
+    items: [
+      { name: 'Consolidated Reports', href: '/seo/reports', icon: FileText },
     ],
   },
 ]
