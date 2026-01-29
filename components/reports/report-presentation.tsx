@@ -184,7 +184,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       className={
         isFullscreen
           ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-white dark:bg-slate-950'
-          : 'relative h-[calc(100vh-12rem)] w-full overflow-hidden'
+          : 'relative h-[calc(100vh-4rem)] w-full overflow-hidden'
       }
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
