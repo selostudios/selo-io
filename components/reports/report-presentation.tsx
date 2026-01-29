@@ -111,12 +111,12 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     window.print()
   }
 
-  // Render current slide
-  const renderSlide = (): ReactNode => {
+  // Render a specific slide by index
+  const renderSlideByIndex = (index: number): ReactNode => {
     let slideIndex = 0
 
     // Slide 0: Cover
-    if (currentSlide === slideIndex++) {
+    if (index === slideIndex++) {
       return (
         <CoverSlide
           domain={data.domain}
@@ -128,12 +128,12 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     }
 
     // Slide 1: Table of Contents
-    if (currentSlide === slideIndex++) {
+    if (index === slideIndex++) {
       return <TocSlide onNavigate={goToSlide} />
     }
 
     // Slide 2: At a Glance
-    if (currentSlide === slideIndex++) {
+    if (index === slideIndex++) {
       return (
         <AtAGlanceSlide
           combinedScore={data.combined_score}
@@ -145,19 +145,19 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     }
 
     // Slide 3: Executive Summary
-    if (currentSlide === slideIndex++) {
+    if (index === slideIndex++) {
       return <ExecutiveSummarySlide summary={data.executive_summary} stats={data.stats} />
     }
 
     // Slides 4-N: Opportunities (paginated)
     for (let page = 0; page < opportunityPages; page++) {
-      if (currentSlide === slideIndex++) {
+      if (index === slideIndex++) {
         return <OpportunitiesSlide opportunities={data.opportunities} page={page} />
       }
     }
 
     // Slide: Business Impact
-    if (currentSlide === slideIndex++) {
+    if (index === slideIndex++) {
       return (
         <BusinessImpactSlide projections={data.projections} combinedScore={data.combined_score} />
       )
@@ -165,7 +165,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
     // Slides: Recommendations (paginated)
     for (let page = 0; page < recommendationPages; page++) {
-      if (currentSlide === slideIndex++) {
+      if (index === slideIndex++) {
         return <RecommendationsSlide recommendations={data.recommendations} page={page} />
       }
     }
@@ -177,6 +177,15 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
         customLogoUrl={data.custom_logo_url}
       />
     )
+  }
+
+  // Render all slides for printing
+  const renderAllSlides = (): ReactNode[] => {
+    return Array.from({ length: totalSlides }, (_, i) => (
+      <div key={i} className="print-slide">
+        {renderSlideByIndex(i)}
+      </div>
+    ))
   }
 
   // Use full viewport height for public/fullscreen, or calc for authenticated layout
@@ -192,8 +201,13 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Slides Container */}
-      <div className="h-full w-full overflow-y-auto print:overflow-visible">{renderSlide()}</div>
+      {/* Current Slide - visible on screen, hidden when printing */}
+      <div className="screen-only h-full w-full overflow-y-auto">
+        {renderSlideByIndex(currentSlide)}
+      </div>
+
+      {/* All Slides - hidden on screen, visible when printing */}
+      <div className="print-only">{renderAllSlides()}</div>
 
       {/* Navigation Arrows */}
       <div className="print:hidden">
@@ -263,22 +277,54 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
       {/* Print Styles - render all slides for printing */}
       <style jsx global>{`
+        /* Screen-only elements hidden during print */
+        .print-only {
+          display: none;
+        }
+
         @media print {
-          body {
-            overflow: visible !important;
-          }
-
-          .h-screen {
-            height: auto !important;
-          }
-
-          .overflow-hidden {
-            overflow: visible !important;
-          }
-
           @page {
-            size: landscape;
+            size: A4 landscape;
             margin: 0;
+          }
+
+          /* Hide screen-only content */
+          .screen-only,
+          .print\\:hidden {
+            display: none !important;
+          }
+
+          /* Show print-only content */
+          .print-only {
+            display: block !important;
+          }
+
+          html,
+          body {
+            width: 100%;
+            height: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .print-slide {
+            width: 100%;
+            height: 100vh;
+            min-height: 100vh;
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            overflow: hidden;
+            box-sizing: border-box;
+          }
+
+          .print-slide:last-child {
+            page-break-after: avoid;
+            break-after: avoid;
           }
         }
       `}</style>
