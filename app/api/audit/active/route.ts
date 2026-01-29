@@ -75,9 +75,10 @@ export async function GET() {
   }
 
   // Check for active performance audits
+  // Note: performance_audits doesn't have updated_at column (unlike site_audits and aio_audits)
   const { data: activePerformanceAudit } = await supabase
     .from('performance_audits')
-    .select('id, status, updated_at, created_at')
+    .select('id, status, created_at')
     .eq('organization_id', userRecord.organization_id)
     .in('status', ['pending', 'running'])
     .order('created_at', { ascending: false })
@@ -86,10 +87,10 @@ export async function GET() {
 
   if (activePerformanceAudit) {
     // Check if performance audit is stale (stuck for too long)
-    const timestamp = activePerformanceAudit.updated_at || activePerformanceAudit.created_at
-    const updatedAt = new Date(timestamp).getTime()
+    // Note: performance_audits doesn't have updated_at, so we use created_at
+    const createdAt = new Date(activePerformanceAudit.created_at).getTime()
     const now = Date.now()
-    const isStale = !isNaN(updatedAt) && now - updatedAt > STALE_AUDIT_THRESHOLD_MS
+    const isStale = !isNaN(createdAt) && now - createdAt > STALE_AUDIT_THRESHOLD_MS
 
     if (isStale && activePerformanceAudit.status === 'running') {
       // Mark stale performance audit as failed using service client (bypasses RLS)
@@ -107,7 +108,7 @@ export async function GET() {
       console.log('[Performance Audit Active Check] Marked stale audit as failed', {
         auditId: activePerformanceAudit.id,
         status: activePerformanceAudit.status,
-        updatedAt: activePerformanceAudit.updated_at,
+        createdAt: activePerformanceAudit.created_at,
         timestamp: new Date().toISOString(),
       })
     } else {
