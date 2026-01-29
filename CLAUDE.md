@@ -278,6 +278,7 @@ await page.locator('[data-testid="new-report-button"]').click()
 ```
 
 **Naming convention**: Use kebab-case with descriptive names like `{feature}-{element}-{state}`:
+
 - `reports-page-title` - Page title
 - `new-report-button` - Action button
 - `reports-empty-state` - Empty state container
