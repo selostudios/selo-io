@@ -13,7 +13,7 @@ export function ProgressDots({ current, total, onNavigate, className }: Progress
   return (
     <div
       className={cn(
-        'fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 gap-2 print:hidden',
+        'absolute bottom-8 left-1/2 z-50 flex -translate-x-1/2 gap-2 print:hidden',
         className
       )}
     >

@@ -184,7 +184,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       className={
         isFullscreen
           ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-white dark:bg-slate-950'
-          : 'relative h-full w-full overflow-hidden'
+          : 'relative h-[calc(100vh-12rem)] w-full overflow-hidden'
       }
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -199,7 +199,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
             variant="ghost"
             size="icon"
             onClick={prevSlide}
-            className="fixed top-1/2 left-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            className="absolute top-1/2 left-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
             aria-label="Previous slide"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -211,7 +211,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
             variant="ghost"
             size="icon"
             onClick={nextSlide}
-            className="fixed top-1/2 right-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
+            className="absolute top-1/2 right-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
             aria-label="Next slide"
           >
             <ChevronRight className="h-6 w-6" />
@@ -223,7 +223,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       <ProgressDots current={currentSlide} total={totalSlides} onNavigate={goToSlide} />
 
       {/* Top Controls */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 print:hidden">
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 print:hidden">
         {!isPublic && onShare && (
           <Button variant="outline" size="sm" onClick={onShare}>
             <Share2 className="mr-2 h-4 w-4" />
