@@ -56,14 +56,14 @@ export function ScoreRing({
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (displayScore / 100) * circumference
 
-  // Animate score on mount
+  // Animate score on mount - setState in effect is intentional for animation
   useEffect(() => {
     if (!animate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayScore(score)
       return
     }
 
-    let start = 0
     const duration = 1000 // 1 second
     const startTime = performance.now()
 

@@ -14,32 +14,35 @@ export default async function ReportDetailPage({ params, searchParams }: PagePro
   const { id } = await params
   const { share, settings } = await searchParams
 
-  try {
-    // Get report with all audit data
-    const report = await getReportWithAudits(id)
-    const auditData = await getReportAuditData(report)
-
-    // Generate summary if not already generated
-    if (!report.executive_summary) {
-      await generateSummaryForReport(id)
-      // Re-fetch to get the summary
-      const updatedReport = await getReportWithAudits(id)
-      Object.assign(report, updatedReport)
-    }
-
-    // Transform to presentation data
-    const presentationData = transformToPresentation(report, auditData)
-
-    return (
-      <ReportDetailClient
-        report={report}
-        presentationData={presentationData}
-        showShareModal={share === 'true'}
-        showSettings={settings === 'true'}
-      />
-    )
-  } catch (error) {
+  // Get report with all audit data
+  const report = await getReportWithAudits(id).catch((error) => {
     console.error('[Report Page Error]', error)
+    return null
+  })
+
+  if (!report) {
     notFound()
   }
+
+  const auditData = await getReportAuditData(report)
+
+  // Generate summary if not already generated
+  if (!report.executive_summary) {
+    await generateSummaryForReport(id)
+    // Re-fetch to get the summary
+    const updatedReport = await getReportWithAudits(id)
+    Object.assign(report, updatedReport)
+  }
+
+  // Transform to presentation data
+  const presentationData = transformToPresentation(report, auditData)
+
+  return (
+    <ReportDetailClient
+      report={report}
+      presentationData={presentationData}
+      showShareModal={share === 'true'}
+      showSettings={settings === 'true'}
+    />
+  )
 }

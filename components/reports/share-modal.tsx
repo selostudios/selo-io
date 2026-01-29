@@ -32,10 +32,9 @@ interface ShareModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   reportId: string
-  existingShares?: ReportShare[]
 }
 
-export function ShareModal({ open, onOpenChange, reportId, existingShares: _existingShares = [] }: ShareModalProps) {
+export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
   const [expiration, setExpiration] = useState<ShareExpiration>(ShareExpiration.ThirtyDays)
   const [customDate, setCustomDate] = useState<Date | undefined>(undefined)
   const [maxViews, setMaxViews] = useState(50)
