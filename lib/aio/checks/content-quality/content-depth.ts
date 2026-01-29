@@ -19,7 +19,10 @@ export const contentDepth: AIOCheckDefinition = {
     $('nav, header, footer, aside, script, style, noscript').remove()
     const mainText = $('main, article, [role="main"], body').first().text()
 
-    const words = mainText.trim().split(/\s+/).filter(w => w.length > 0)
+    const words = mainText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
     const wordCount = words.length
 
     // Thresholds based on content type heuristics
@@ -33,7 +36,8 @@ export const contentDepth: AIOCheckDefinition = {
         details: {
           message: `Very thin content (${wordCount} words). AI engines prioritize comprehensive content with depth and detail.`,
           wordCount,
-          fixGuidance: 'Expand content to at least 800-1000 words with detailed explanations, examples, and insights.',
+          fixGuidance:
+            'Expand content to at least 800-1000 words with detailed explanations, examples, and insights.',
         },
       }
     } else if (wordCount < 800) {
@@ -42,7 +46,8 @@ export const contentDepth: AIOCheckDefinition = {
         details: {
           message: `Moderate content depth (${wordCount} words). Consider adding more detail for better AI engine visibility.`,
           wordCount,
-          fixGuidance: 'Expand to 1000+ words with additional context, examples, and expert insights.',
+          fixGuidance:
+            'Expand to 1000+ words with additional context, examples, and expert insights.',
         },
       }
     } else if (wordCount < 1500) {

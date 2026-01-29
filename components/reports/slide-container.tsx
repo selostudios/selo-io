@@ -15,11 +15,7 @@ const variantStyles = {
   accent: 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white',
 }
 
-export function SlideContainer({
-  children,
-  variant = 'light',
-  className,
-}: SlideContainerProps) {
+export function SlideContainer({ children, variant = 'light', className }: SlideContainerProps) {
   return (
     <div
       className={cn(

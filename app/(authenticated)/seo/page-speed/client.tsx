@@ -207,7 +207,7 @@ export function PageSpeedClient({
                   </CardDescription>
                 </div>
                 <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                   <Input
                     type="text"
                     placeholder="Search by URL..."
@@ -273,7 +273,10 @@ export function PageSpeedClient({
                               Completed
                             </span>
                             {(() => {
-                              const duration = calculateDuration(audit.started_at, audit.completed_at)
+                              const duration = calculateDuration(
+                                audit.started_at,
+                                audit.completed_at
+                              )
                               return duration ? (
                                 <span className="text-muted-foreground flex items-center gap-1 text-xs">
                                   <Clock className="size-3" />
@@ -289,7 +292,10 @@ export function PageSpeedClient({
                               Stopped
                             </span>
                             {(() => {
-                              const duration = calculateDuration(audit.started_at, audit.completed_at)
+                              const duration = calculateDuration(
+                                audit.started_at,
+                                audit.completed_at
+                              )
                               return duration ? (
                                 <span className="text-muted-foreground flex items-center gap-1 text-xs">
                                   <Clock className="size-3" />
@@ -310,7 +316,9 @@ export function PageSpeedClient({
                           className="text-muted-foreground hover:text-foreground"
                           aria-label="Re-run audit"
                         >
-                          <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
+                          <RefreshCw
+                            className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`}
+                          />
                         </Button>
                         <Button
                           variant="ghost"

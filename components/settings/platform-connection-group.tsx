@@ -19,7 +19,15 @@ type Connection = {
   last_sync_at: string | null
 }
 
-const platformInfo: Record<string, { name: string; description: string; icon: React.ComponentType<{ className?: string }>; iconColor: string }> = {
+const platformInfo: Record<
+  string,
+  {
+    name: string
+    description: string
+    icon: React.ComponentType<{ className?: string }>
+    iconColor: string
+  }
+> = {
   hubspot: {
     name: 'HubSpot',
     description: 'Email campaigns, leads, deals, events',
@@ -61,7 +69,12 @@ export function PlatformConnectionGroup({
   platformType,
   connections,
 }: PlatformConnectionGroupProps) {
-  const info = platformInfo[platformType] || { name: 'Unknown', description: '', icon: () => null, iconColor: '' }
+  const info = platformInfo[platformType] || {
+    name: 'Unknown',
+    description: '',
+    icon: () => null,
+    iconColor: '',
+  }
   const Icon = info.icon
 
   if (connections.length === 0) {

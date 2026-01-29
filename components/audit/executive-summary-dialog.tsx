@@ -34,7 +34,7 @@ export function ExecutiveSummaryDialog({ summary, url }: ExecutiveSummaryDialogP
           <DialogTitle>Executive Summary</DialogTitle>
           <DialogDescription>{displayUrl}</DialogDescription>
         </DialogHeader>
-        <div className="text-sm leading-relaxed space-y-3 text-foreground">
+        <div className="text-foreground space-y-3 text-sm leading-relaxed">
           {summary.split('\n\n').map((paragraph, idx) => (
             <p key={idx}>{paragraph}</p>
           ))}

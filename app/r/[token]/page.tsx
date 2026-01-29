@@ -20,12 +20,7 @@ export default async function PublicReportPage({ params }: PageProps) {
     return <ErrorPage errorCode={validation.error_code} />
   }
 
-  return (
-    <PublicReportClient
-      token={token}
-      requiresPassword={validation.requires_password}
-    />
-  )
+  return <PublicReportClient token={token} requiresPassword={validation.requires_password} />
 }
 
 function ErrorPage({ errorCode }: { errorCode: ShareErrorCode | null }) {

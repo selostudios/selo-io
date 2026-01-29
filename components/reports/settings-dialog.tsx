@@ -29,12 +29,7 @@ interface SettingsDialogProps {
   onSaved?: () => void
 }
 
-export function SettingsDialog({
-  open,
-  onOpenChange,
-  report,
-  onSaved,
-}: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, report, onSaved }: SettingsDialogProps) {
   const [summary, setSummary] = useState(report.executive_summary ?? '')
   const [whiteLabelEnabled, setWhiteLabelEnabled] = useState(
     !!(report.custom_logo_url || report.custom_company_name)

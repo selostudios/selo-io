@@ -73,7 +73,7 @@ export function AIAnalysisCard({ analyses }: AIAnalysisCardProps) {
       </div>
       <CollapsibleContent className="mt-2 space-y-2 pl-4">
         {topRecommendations.map((rec, idx) => (
-          <div key={idx} className="rounded-md bg-muted/30 p-3">
+          <div key={idx} className="bg-muted/30 rounded-md p-3">
             <div className="flex items-start gap-3">
               <span
                 className={`mt-0.5 rounded px-1.5 py-0.5 text-xs font-medium ${getPriorityColor(rec.priority)}`}
@@ -82,10 +82,10 @@ export function AIAnalysisCard({ analyses }: AIAnalysisCardProps) {
               </span>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="text-sm font-medium">{rec.category}</p>
-                <p className="text-xs text-muted-foreground">{rec.issue}</p>
+                <p className="text-muted-foreground text-xs">{rec.issue}</p>
                 <p className="text-xs">{rec.recommendation}</p>
                 {rec.expectedImpact && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     <span className="font-medium">Impact:</span> {rec.expectedImpact}
                   </p>
                 )}

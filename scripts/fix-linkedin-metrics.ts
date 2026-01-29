@@ -155,9 +155,7 @@ async function fixLinkedInMetrics() {
   }
 
   // Determine Supabase URL based on environment
-  const supabaseUrl = prod
-    ? process.env.NEXT_PUBLIC_SUPABASE_URL
-    : 'http://127.0.0.1:54321'
+  const supabaseUrl = prod ? process.env.NEXT_PUBLIC_SUPABASE_URL : 'http://127.0.0.1:54321'
 
   if (prod && !supabaseUrl) {
     console.error('❌ Error: Missing NEXT_PUBLIC_SUPABASE_URL for production')
@@ -207,17 +205,13 @@ async function fixLinkedInMetrics() {
     console.error('❌ Multiple LinkedIn connections found. Please specify --org-id')
     console.log('\nAvailable connections:')
     for (const conn of connections) {
-      console.log(
-        `  - Org ID: ${conn.organization_id} (Connection ID: ${conn.id})`
-      )
+      console.log(`  - Org ID: ${conn.organization_id} (Connection ID: ${conn.id})`)
     }
     process.exit(1)
   }
 
   const connection = connections[0]
-  console.log(
-    `✅ Found connection for organization: ${connection.organization_id}`
-  )
+  console.log(`✅ Found connection for organization: ${connection.organization_id}`)
   console.log(`   Connection ID: ${connection.id}\n`)
 
   // Get credentials
@@ -228,9 +222,7 @@ async function fixLinkedInMetrics() {
   if (oauthProvider.shouldRefreshToken(credentials.expires_at)) {
     console.log('🔄 Refreshing expired access token...\n')
 
-    const newTokens = await oauthProvider.refreshAccessToken(
-      credentials.refresh_token
-    )
+    const newTokens = await oauthProvider.refreshAccessToken(credentials.refresh_token)
 
     // Update database with new tokens using service client
     const expiresAt = oauthProvider.calculateExpiresAt(newTokens.expires_in)
@@ -262,10 +254,7 @@ async function fixLinkedInMetrics() {
 
   // Calculate number of days
   const days =
-    Math.ceil(
-      (fetchEndDate.getTime() - fetchStartDate.getTime()) /
-        (1000 * 60 * 60 * 24)
-    ) + 1
+    Math.ceil((fetchEndDate.getTime() - fetchStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
 
   console.log('📅 Date range:')
   console.log(`   From: ${fetchStartDate.toISOString().split('T')[0]}`)
@@ -401,15 +390,9 @@ async function fixLinkedInMetrics() {
     // Display each day
     for (const [date, dayRecords] of Array.from(recordsByDate.entries()).sort()) {
       console.log(`📅 ${date}`)
-      for (const record of dayRecords.sort((a, b) =>
-        a.metric_type.localeCompare(b.metric_type)
-      )) {
-        const metricName = record.metric_type
-          .replace('linkedin_', '')
-          .replace(/_/g, ' ')
-        console.log(
-          `   ${metricName.padEnd(25)} ${record.value.toLocaleString()}`
-        )
+      for (const record of dayRecords.sort((a, b) => a.metric_type.localeCompare(b.metric_type))) {
+        const metricName = record.metric_type.replace('linkedin_', '').replace(/_/g, ' ')
+        console.log(`   ${metricName.padEnd(25)} ${record.value.toLocaleString()}`)
       }
       console.log('')
     }
@@ -438,11 +421,9 @@ async function fixLinkedInMetrics() {
     console.log('\n💾 Inserting records into database...\n')
 
     // Insert records (upsert to handle duplicates)
-    const { error: insertError } = await supabase
-      .from('campaign_metrics')
-      .upsert(records, {
-        onConflict: 'organization_id,platform_type,date,metric_type',
-      })
+    const { error: insertError } = await supabase.from('campaign_metrics').upsert(records, {
+      onConflict: 'organization_id,platform_type,date,metric_type',
+    })
 
     if (insertError) {
       console.error('❌ Failed to insert records:', insertError.message)
@@ -458,10 +439,7 @@ async function fixLinkedInMetrics() {
     console.log('✅ Records inserted successfully!')
     console.log('\n🎉 Backfill complete!\n')
   } catch (error) {
-    console.error(
-      '❌ Error:',
-      error instanceof Error ? error.message : 'Unknown error'
-    )
+    console.error('❌ Error:', error instanceof Error ? error.message : 'Unknown error')
     if (error instanceof Error && error.stack) {
       console.error('\nStack trace:')
       console.error(error.stack)

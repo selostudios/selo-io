@@ -22,12 +22,12 @@ export function TokenUsageBadge({
   const formattedTokens = totalTokens.toLocaleString()
 
   return (
-    <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+    <div className="bg-muted/30 flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
       <div className="flex items-center gap-1.5">
         <span className="text-muted-foreground">Tokens:</span>
         <span className="font-medium">{formattedTokens}</span>
       </div>
-      <div className="h-4 w-px bg-border" />
+      <div className="bg-border h-4 w-px" />
       <div className="flex items-center gap-1.5">
         <span className="text-muted-foreground">Cost:</span>
         <span className="font-medium">${formattedCost}</span>

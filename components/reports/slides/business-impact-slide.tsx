@@ -13,7 +13,7 @@ function ProjectionCard({ projection }: { projection: ReportProjection }) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-      <h4 className="text-muted-foreground mb-4 text-sm font-medium uppercase tracking-wide">
+      <h4 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">
         {projection.area}
       </h4>
 
@@ -82,7 +82,9 @@ export function BusinessImpactSlide({ projections, combinedScore }: BusinessImpa
                     <span className="font-bold">{potentialScore}/100</span>
                   </p>
                 </div>
-                <div className="text-6xl font-bold text-white/20">+{potentialScore - combinedScore}</div>
+                <div className="text-6xl font-bold text-white/20">
+                  +{potentialScore - combinedScore}
+                </div>
               </div>
             </div>
 

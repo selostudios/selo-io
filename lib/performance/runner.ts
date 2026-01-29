@@ -43,10 +43,7 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
       }
 
       // Update current URL being processed
-      await supabase
-        .from('performance_audits')
-        .update({ current_url: url })
-        .eq('id', auditId)
+      await supabase.from('performance_audits').update({ current_url: url }).eq('id', auditId)
 
       // Run mobile and desktop audits in parallel
       const devicePromises = devices.map(async (device) => {

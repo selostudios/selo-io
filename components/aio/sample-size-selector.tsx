@@ -73,10 +73,10 @@ export function SampleSizeSelector({
           disabled={disabled}
           className="w-full"
         />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
           <span>1 page</span>
           <div className="flex items-center gap-1">
-            <span className="font-medium text-foreground">{value}</span>
+            <span className="text-foreground font-medium">{value}</span>
             <span>pages selected</span>
             {pagesFound && <span className="ml-1">(of {pagesFound} found)</span>}
           </div>
@@ -84,7 +84,7 @@ export function SampleSizeSelector({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Analyzing {value} {value === 1 ? 'page' : 'pages'} will take approximately{' '}
         {value <= 3 ? '10-20' : value <= 6 ? '20-40' : '40-60'} seconds.
       </p>

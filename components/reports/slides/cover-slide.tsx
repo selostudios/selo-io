@@ -9,12 +9,7 @@ interface CoverSlideProps {
   customCompanyName?: string | null
 }
 
-export function CoverSlide({
-  domain,
-  date,
-  customLogoUrl,
-  customCompanyName,
-}: CoverSlideProps) {
+export function CoverSlide({ domain, date, customLogoUrl, customCompanyName }: CoverSlideProps) {
   const companyName = customCompanyName || 'Selo Studios'
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
     month: 'long',
@@ -42,11 +37,7 @@ export function CoverSlide({
         <div className="flex items-start justify-between">
           {customLogoUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
-            <img
-              src={customLogoUrl}
-              alt={companyName}
-              className="h-12 w-auto object-contain"
-            />
+            <img src={customLogoUrl} alt={companyName} className="h-12 w-auto object-contain" />
           ) : (
             <div className="text-xl font-bold tracking-tight text-white/90">{companyName}</div>
           )}

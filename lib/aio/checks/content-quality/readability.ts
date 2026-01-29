@@ -19,8 +19,11 @@ export const readability: AIOCheckDefinition = {
     $('nav, header, footer, aside, script, style, noscript').remove()
     const mainText = $('main, article, [role="main"], body').first().text()
 
-    const sentences = mainText.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    const words = mainText.trim().split(/\s+/).filter(w => w.length > 0)
+    const sentences = mainText.split(/[.!?]+/).filter((s) => s.trim().length > 0)
+    const words = mainText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
 
     if (sentences.length === 0 || words.length === 0) {
       return {
@@ -77,7 +80,8 @@ export const readability: AIOCheckDefinition = {
         details: {
           message: `Moderate readability (Flesch score: ${Math.round(fleschScore)}). Consider simplifying sentence structure.`,
           ...details,
-          fixGuidance: 'Break up long sentences (keep under 20 words) and use simpler vocabulary where possible.',
+          fixGuidance:
+            'Break up long sentences (keep under 20 words) and use simpler vocabulary where possible.',
         },
       }
     } else {
@@ -86,7 +90,8 @@ export const readability: AIOCheckDefinition = {
         details: {
           message: `Poor readability (Flesch score: ${Math.round(fleschScore)}). Content is too complex for optimal AI extraction.`,
           ...details,
-          fixGuidance: 'Significantly simplify language: use shorter sentences (12-15 words), simpler words, and active voice.',
+          fixGuidance:
+            'Significantly simplify language: use shorter sentences (12-15 words), simpler words, and active voice.',
         },
       }
     }

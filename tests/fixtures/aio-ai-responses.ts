@@ -68,16 +68,14 @@ export const mockAIOPageAnalysis: AIOPageAnalysis = {
       priority: 'medium',
       category: 'Comprehensiveness',
       issue: 'Missing coverage of mobile-first indexing and Core Web Vitals',
-      recommendation:
-        'Add section on mobile SEO and page speed optimization (300-500 words)',
+      recommendation: 'Add section on mobile SEO and page speed optimization (300-500 words)',
       expectedImpact: 'Fills content gaps, appeals to broader search queries',
     },
     {
       priority: 'medium',
       category: 'Expert Credibility',
       issue: 'Good expert quotes but could strengthen author credentials',
-      recommendation:
-        'Add author bio with SEO credentials and link to author profile page',
+      recommendation: 'Add author bio with SEO credentials and link to author profile page',
       expectedImpact: 'Strengthens E-E-A-T signals, increases authority score',
     },
   ],

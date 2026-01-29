@@ -160,7 +160,9 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="Re-run audit"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`}
+                />
               </Button>
             )}
             <Button

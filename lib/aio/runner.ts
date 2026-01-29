@@ -1,12 +1,7 @@
 import { siteWideChecks, pageSpecificChecks } from './checks'
 import { crawlSite } from '../audit/crawler'
 import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
-import type {
-  AIOCheck,
-  AIOCheckContext,
-  AIORunnerOptions,
-  AIORunnerResult,
-} from './types'
+import type { AIOCheck, AIOCheckContext, AIORunnerOptions, AIORunnerResult } from './types'
 
 /**
  * Runs all AIO programmatic checks against a website
@@ -50,9 +45,7 @@ export async function runAIOChecks(options: AIORunnerOptions): Promise<AIORunner
           checks.push(check)
           await onCheckComplete?.(check)
 
-          console.log(
-            `[AIO Runner] ${checkDef.name}: ${result.status} (${checkDef.category})`
-          )
+          console.log(`[AIO Runner] ${checkDef.name}: ${result.status} (${checkDef.category})`)
         }
       }
 
@@ -78,9 +71,7 @@ export async function runAIOChecks(options: AIORunnerOptions): Promise<AIORunner
         checks.push(check)
         await onCheckComplete?.(check)
 
-        console.log(
-          `[AIO Runner] ${checkDef.name}: ${result.status} (${checkDef.category})`
-        )
+        console.log(`[AIO Runner] ${checkDef.name}: ${result.status} (${checkDef.category})`)
       }
     },
   })
@@ -157,9 +148,7 @@ export function getCategoryScores(checks: AIOCheck[]): {
   contentQuality: number
 } {
   const categories = {
-    technical_foundation: checks.filter(
-      (c) => c.category === AIOCheckCategory.TechnicalFoundation
-    ),
+    technical_foundation: checks.filter((c) => c.category === AIOCheckCategory.TechnicalFoundation),
     content_structure: checks.filter((c) => c.category === AIOCheckCategory.ContentStructure),
     content_quality: checks.filter((c) => c.category === AIOCheckCategory.ContentQuality),
   }

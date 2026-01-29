@@ -22,10 +22,7 @@ interface SummaryInput {
 /**
  * Count critical issues across all audit types
  */
-function countCriticalIssues(
-  siteChecks: SiteAuditCheck[],
-  aioChecks: AIOCheck[]
-): number {
+function countCriticalIssues(siteChecks: SiteAuditCheck[], aioChecks: AIOCheck[]): number {
   const siteCritical = siteChecks.filter(
     (c) => c.priority === CheckPriority.Critical && c.status === CheckStatus.Failed
   ).length
@@ -93,8 +90,7 @@ function getTopOpportunities(
 function getPerformanceSummary(results: PerformanceAuditResult[]): string {
   if (results.length === 0) return 'No performance data available'
 
-  const avgScore =
-    results.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) / results.length
+  const avgScore = results.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) / results.length
 
   const mobileResults = results.filter((r) => r.device === 'mobile')
   const desktopResults = results.filter((r) => r.device === 'desktop')
@@ -103,15 +99,13 @@ function getPerformanceSummary(results: PerformanceAuditResult[]): string {
 
   if (mobileResults.length > 0) {
     const mobileAvg =
-      mobileResults.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) /
-      mobileResults.length
+      mobileResults.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) / mobileResults.length
     parts.push(`Mobile: ${Math.round(mobileAvg)}/100`)
   }
 
   if (desktopResults.length > 0) {
     const desktopAvg =
-      desktopResults.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) /
-      desktopResults.length
+      desktopResults.reduce((sum, r) => sum + (r.performance_score ?? 0), 0) / desktopResults.length
     parts.push(`Desktop: ${Math.round(desktopAvg)}/100`)
   }
 
@@ -197,8 +191,16 @@ Maximum 150 words. Professional, consultative tone. Plain text only - no asteris
  * Generate a fallback summary when AI is unavailable
  */
 export function generateFallbackReportSummary(input: SummaryInput): string {
-  const { domain, combinedScore, seoScore, pageSpeedScore, aioScore, siteAudit, aioChecks, siteChecks } =
-    input
+  const {
+    domain,
+    combinedScore,
+    seoScore,
+    pageSpeedScore,
+    aioScore,
+    siteAudit,
+    aioChecks,
+    siteChecks,
+  } = input
 
   const healthStatus =
     combinedScore >= 80

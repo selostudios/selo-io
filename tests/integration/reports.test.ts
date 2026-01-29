@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { testDb, createTestUser, createTestOrganization, linkUserToOrganization } from '../helpers/db'
+import {
+  testDb,
+  createTestUser,
+  createTestOrganization,
+  linkUserToOrganization,
+} from '../helpers/db'
 
 describe('Reports Database Operations', () => {
   let testUser: { id: string }
@@ -102,7 +107,10 @@ describe('Reports Database Operations', () => {
       }
 
       if (testPerformanceAudit?.id) {
-        await testDb.from('performance_audit_results').delete().eq('audit_id', testPerformanceAudit.id)
+        await testDb
+          .from('performance_audit_results')
+          .delete()
+          .eq('audit_id', testPerformanceAudit.id)
       }
       if (testAIOAudit?.id) {
         await testDb.from('aio_checks').delete().eq('audit_id', testAIOAudit.id)
@@ -298,12 +306,14 @@ describe('Reports Database Operations', () => {
     it('fetches report with related audits', async () => {
       const { data, error } = await testDb
         .from('generated_reports')
-        .select(`
+        .select(
+          `
           *,
           site_audit:site_audits(*),
           performance_audit:performance_audits(*),
           aio_audit:aio_audits(*)
-        `)
+        `
+        )
         .eq('id', reportId)
         .single()
 
@@ -410,14 +420,12 @@ describe('Reports Database Operations', () => {
       const expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + 7)
 
-      await testDb
-        .from('report_shares')
-        .insert({
-          report_id: reportId,
-          token,
-          expires_at: expiresAt.toISOString(),
-          max_views: 50,
-        })
+      await testDb.from('report_shares').insert({
+        report_id: reportId,
+        token,
+        expires_at: expiresAt.toISOString(),
+        max_views: 50,
+      })
 
       const { data, error } = await testDb
         .from('report_shares')

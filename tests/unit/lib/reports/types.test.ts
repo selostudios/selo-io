@@ -134,7 +134,8 @@ describe('getShareErrorMessage', () => {
 
 describe('DEFAULT_SCORE_WEIGHTS', () => {
   it('weights sum to 1.0', () => {
-    const total = DEFAULT_SCORE_WEIGHTS.seo + DEFAULT_SCORE_WEIGHTS.page_speed + DEFAULT_SCORE_WEIGHTS.aio
+    const total =
+      DEFAULT_SCORE_WEIGHTS.seo + DEFAULT_SCORE_WEIGHTS.page_speed + DEFAULT_SCORE_WEIGHTS.aio
     expect(total).toBe(1.0)
   })
 

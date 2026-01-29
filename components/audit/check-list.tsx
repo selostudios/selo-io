@@ -95,7 +95,9 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
     return map
   }, [pageSpecificChecks])
 
-  const siteWideFailedCount = uniqueSiteWideChecks.filter((c) => c.status === CheckStatus.Failed).length
+  const siteWideFailedCount = uniqueSiteWideChecks.filter(
+    (c) => c.status === CheckStatus.Failed
+  ).length
 
   // Sort page groups: pages with failed checks first, then by URL
   // Memoize to satisfy React Compiler

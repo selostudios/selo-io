@@ -20,7 +20,11 @@ export function extractDomain(url: string): string {
     return parsed.hostname.replace(/^www\./, '').toLowerCase()
   } catch {
     // Fallback: try to extract domain directly from string
-    return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase()
+    return url
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .split('/')[0]
+      .toLowerCase()
   }
 }
 
@@ -115,9 +119,7 @@ export function validatePerformanceAudit(
   }
 
   // Calculate average performance score from results
-  const scores = results
-    .map((r) => r.performance_score)
-    .filter((s): s is number => s !== null)
+  const scores = results.map((r) => r.performance_score).filter((s): s is number => s !== null)
 
   if (scores.length === 0) {
     return {
@@ -252,9 +254,7 @@ export function validateReportAudits(
 
   const uniqueDomains = [...new Set(domains)]
   if (uniqueDomains.length > 1) {
-    errors.push(
-      `All audits must be for the same domain. Found: ${uniqueDomains.join(', ')}`
-    )
+    errors.push(`All audits must be for the same domain. Found: ${uniqueDomains.join(', ')}`)
   }
 
   // Check date proximity

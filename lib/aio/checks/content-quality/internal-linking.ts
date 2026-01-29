@@ -28,7 +28,12 @@ export const internalLinking: AIOCheckDefinition = {
 
       // Relative links are internal
       if (!href.startsWith('http')) {
-        return href.length > 0 && !href.startsWith('#') && !href.startsWith('mailto:') && !href.startsWith('tel:')
+        return (
+          href.length > 0 &&
+          !href.startsWith('#') &&
+          !href.startsWith('mailto:') &&
+          !href.startsWith('tel:')
+        )
       }
 
       // Absolute links - check domain
@@ -54,7 +59,10 @@ export const internalLinking: AIOCheckDefinition = {
 
     // Get word count for context
     const mainText = $('main, article, [role="main"], body').first().text()
-    const wordCount = mainText.trim().split(/\s+/).filter(w => w.length > 0).length
+    const wordCount = mainText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length
 
     // Calculate linking metrics
     const internalLinkDensity = wordCount > 0 ? (internalLinks.length / wordCount) * 100 : 0
@@ -84,7 +92,8 @@ export const internalLinking: AIOCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: 'No internal links found. Internal linking helps AI engines discover related content.',
+          message:
+            'No internal links found. Internal linking helps AI engines discover related content.',
           ...details,
           fixGuidance: 'Add 2-5 contextual links to related pages within your content.',
         },
@@ -104,7 +113,8 @@ export const internalLinking: AIOCheckDefinition = {
         details: {
           message: `Limited internal linking (${contextualInternalLinks.length} contextual links in ${wordCount} words). Add more links to related content.`,
           ...details,
-          fixGuidance: 'Add 2-5 contextual links to related pages (roughly 1 link per 200-300 words).',
+          fixGuidance:
+            'Add 2-5 contextual links to related pages (roughly 1 link per 200-300 words).',
         },
       }
     } else if (internalLinkDensity > 3) {

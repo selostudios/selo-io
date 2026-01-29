@@ -1,11 +1,6 @@
 import { z } from 'zod'
 
-import {
-  AIOAuditStatus,
-  AIOCheckCategory,
-  CheckPriority,
-  CheckStatus,
-} from '@/lib/enums'
+import { AIOAuditStatus, AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 
 //============================================================================
 // Re-exports for backwards compatibility

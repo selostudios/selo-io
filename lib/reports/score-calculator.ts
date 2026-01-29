@@ -30,9 +30,7 @@ export function calculateCombinedScore(
 
   // Calculate weighted average
   const combined =
-    seoScore * weights.seo +
-    pageSpeedScore * weights.page_speed +
-    aioScore * weights.aio
+    seoScore * weights.seo + pageSpeedScore * weights.page_speed + aioScore * weights.aio
 
   // Round to nearest integer
   return Math.round(combined)
@@ -47,12 +45,7 @@ export function getScoreBreakdown(
   aioScore: number | null,
   weights: ScoreWeights = DEFAULT_SCORE_WEIGHTS
 ): ScoreBreakdown {
-  const combinedScore = calculateCombinedScore(
-    seoScore,
-    pageSpeedScore,
-    aioScore,
-    weights
-  )
+  const combinedScore = calculateCombinedScore(seoScore, pageSpeedScore, aioScore, weights)
 
   return {
     seo_score: seoScore,
@@ -83,10 +76,7 @@ export function getScoreWithStatus(score: number | null): {
  * Determine if a score indicates room for improvement
  * Used to decide whether to show projections
  */
-export function hasImprovementPotential(
-  score: number | null,
-  threshold: number = 85
-): boolean {
+export function hasImprovementPotential(score: number | null, threshold: number = 85): boolean {
   return score === null || score < threshold
 }
 
@@ -127,9 +117,7 @@ export function calculatePotentialImprovement(
   )
 
   const improvement =
-    currentCombined !== null && targetCombined !== null
-      ? targetCombined - currentCombined
-      : null
+    currentCombined !== null && targetCombined !== null ? targetCombined - currentCombined : null
 
   return {
     currentCombined,

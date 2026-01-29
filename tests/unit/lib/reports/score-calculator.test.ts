@@ -144,11 +144,7 @@ describe('hasImprovementPotential', () => {
 
 describe('calculatePotentialImprovement', () => {
   it('calculates improvement for SEO category', () => {
-    const result = calculatePotentialImprovement(
-      { seo: 70, pageSpeed: 80, aio: 75 },
-      'seo',
-      90
-    )
+    const result = calculatePotentialImprovement({ seo: 70, pageSpeed: 80, aio: 75 }, 'seo', 90)
 
     // Current: 70*0.5 + 80*0.3 + 75*0.2 = 35 + 24 + 15 = 74
     // Target:  90*0.5 + 80*0.3 + 75*0.2 = 45 + 24 + 15 = 84
@@ -158,11 +154,7 @@ describe('calculatePotentialImprovement', () => {
   })
 
   it('returns null improvement when scores are null', () => {
-    const result = calculatePotentialImprovement(
-      { seo: null, pageSpeed: 80, aio: 75 },
-      'seo',
-      90
-    )
+    const result = calculatePotentialImprovement({ seo: null, pageSpeed: 80, aio: 75 }, 'seo', 90)
 
     expect(result.currentCombined).toBeNull()
     expect(result.improvement).toBeNull()
@@ -295,7 +287,8 @@ describe('getScoreContributions', () => {
     expect(contributions.aio.points).toBe(14)
 
     // Percentages should roughly add up to 100
-    const totalPercent = contributions.seo.percent + contributions.pageSpeed.percent + contributions.aio.percent
+    const totalPercent =
+      contributions.seo.percent + contributions.pageSpeed.percent + contributions.aio.percent
     expect(totalPercent).toBeGreaterThanOrEqual(98)
     expect(totalPercent).toBeLessThanOrEqual(102) // Allow for rounding
   })

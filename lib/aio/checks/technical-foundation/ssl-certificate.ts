@@ -18,9 +18,11 @@ export const sslCertificate: AIOCheckDefinition = {
       return {
         status: CheckStatus.Failed,
         details: {
-          message: 'Site is not using HTTPS. AI engines require secure connections for content indexing.',
+          message:
+            'Site is not using HTTPS. AI engines require secure connections for content indexing.',
           protocol: url.protocol,
-          fixGuidance: 'Enable HTTPS with a valid SSL certificate. Most hosting providers offer free certificates via Let\'s Encrypt.',
+          fixGuidance:
+            "Enable HTTPS with a valid SSL certificate. Most hosting providers offer free certificates via Let's Encrypt.",
         },
       }
     }

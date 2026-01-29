@@ -14,7 +14,10 @@ interface CampaignDetailPageProps {
   searchParams: Promise<{ org?: string }>
 }
 
-export default async function CampaignDetailPage({ params, searchParams }: CampaignDetailPageProps) {
+export default async function CampaignDetailPage({
+  params,
+  searchParams,
+}: CampaignDetailPageProps) {
   const { id } = await params
   const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()

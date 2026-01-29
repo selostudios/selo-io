@@ -24,14 +24,18 @@ export const mediaRichness: AIOCheckDefinition = {
 
     // Get word count for context
     const mainText = $('main, article, [role="main"], body').first().text()
-    const wordCount = mainText.trim().split(/\s+/).filter(w => w.length > 0).length
+    const wordCount = mainText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length
 
     if (totalMedia === 0) {
       if (wordCount > 800) {
         return {
           status: CheckStatus.Warning,
           details: {
-            message: 'No images or videos found in long-form content. Visual aids improve engagement and understanding.',
+            message:
+              'No images or videos found in long-form content. Visual aids improve engagement and understanding.',
             wordCount,
             fixGuidance: 'Add relevant images, diagrams, or videos to illustrate key concepts.',
           },
@@ -83,7 +87,8 @@ export const mediaRichness: AIOCheckDefinition = {
         details: {
           message: `Found ${images.length} image(s) but only ${Math.round(altTextCoverage)}% have alt text. AI engines need descriptions to understand visual content.`,
           ...details,
-          fixGuidance: 'Add descriptive alt text (5-15 words) to all images explaining what they show.',
+          fixGuidance:
+            'Add descriptive alt text (5-15 words) to all images explaining what they show.',
         },
       }
     } else if (goodAltCoverage < 50) {
@@ -92,7 +97,8 @@ export const mediaRichness: AIOCheckDefinition = {
         details: {
           message: `Media present (${totalMedia} items) but alt text could be more descriptive (only ${Math.round(goodAltCoverage)}% have detailed descriptions)`,
           ...details,
-          fixGuidance: 'Improve alt text quality with detailed descriptions (5-15 words) rather than short labels.',
+          fixGuidance:
+            'Improve alt text quality with detailed descriptions (5-15 words) rather than short labels.',
         },
       }
     } else {

@@ -16,11 +16,7 @@ import type {
   ReportUpdateInput,
   ReportValidationResult,
 } from '@/lib/reports/types'
-import {
-  validateReportAudits,
-  calculateCombinedScore,
-  generateReportSummary,
-} from '@/lib/reports'
+import { validateReportAudits, calculateCombinedScore, generateReportSummary } from '@/lib/reports'
 import { AuditStatus, PerformanceAuditStatus, AIOAuditStatus } from '@/lib/enums'
 
 // ============================================================
@@ -37,9 +33,7 @@ export interface ReportsPageData {
 /**
  * Get reports list data for the reports page
  */
-export async function getReportsPageData(
-  organizationId?: string
-): Promise<ReportsPageData> {
+export async function getReportsPageData(organizationId?: string): Promise<ReportsPageData> {
   const supabase = await createClient()
   const currentUser = await getCurrentUser()
 
@@ -91,9 +85,7 @@ export async function getReportsPageData(
 /**
  * Get a single report with all related audit data
  */
-export async function getReportWithAudits(
-  reportId: string
-): Promise<GeneratedReportWithAudits> {
+export async function getReportWithAudits(reportId: string): Promise<GeneratedReportWithAudits> {
   const supabase = await createClient()
 
   // Fetch report with joined audits
@@ -217,12 +209,7 @@ export async function getEligibleAuditsForDomain(
   const aioAudit = (aioAudits?.[0] as AIOAudit) ?? null
 
   // Validate the combination
-  const validation = validateReportAudits(
-    siteAudit,
-    performanceAudit,
-    performanceResults,
-    aioAudit
-  )
+  const validation = validateReportAudits(siteAudit, performanceAudit, performanceResults, aioAudit)
 
   return {
     siteAudit,
@@ -281,9 +268,7 @@ export interface CreateReportResult {
 /**
  * Create a new report from validated audits
  */
-export async function createReport(
-  input: ReportGenerationInput
-): Promise<CreateReportResult> {
+export async function createReport(input: ReportGenerationInput): Promise<CreateReportResult> {
   const supabase = await createClient()
   const currentUser = await getCurrentUser()
 
@@ -401,10 +386,7 @@ export async function updateExecutiveSummary(
     updateData.original_executive_summary = summary
   }
 
-  const { error } = await supabase
-    .from('generated_reports')
-    .update(updateData)
-    .eq('id', reportId)
+  const { error } = await supabase.from('generated_reports').update(updateData).eq('id', reportId)
 
   if (error) {
     console.error('[Update Summary Error]', {
@@ -501,10 +483,7 @@ export async function deleteReport(
   }
 
   // Build delete query with organization filter for non-internal users
-  let deleteQuery = supabase
-    .from('generated_reports')
-    .delete()
-    .eq('id', reportId)
+  let deleteQuery = supabase.from('generated_reports').delete().eq('id', reportId)
 
   // Non-internal users can only delete reports from their organization
   if (!isInternal && userRecord.organization_id) {

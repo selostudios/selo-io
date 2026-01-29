@@ -100,7 +100,10 @@ async function processAudit(
 
   try {
     // Update status: running
-    await supabase.from('aio_audits').update({ status: 'running', started_at: new Date().toISOString() }).eq('id', auditId)
+    await supabase
+      .from('aio_audits')
+      .update({ status: 'running', started_at: new Date().toISOString() })
+      .eq('id', auditId)
 
     await sendEvent(writer, encoder, { type: 'status', status: 'running_programmatic' })
 
@@ -200,7 +203,9 @@ async function processAudit(
             model_used: 'claude-opus-4-20250514',
             prompt_tokens: Math.floor(tokens.promptTokens / analyses.length),
             completion_tokens: Math.floor(tokens.completionTokens / analyses.length),
-            total_tokens: Math.floor((tokens.promptTokens + tokens.completionTokens) / analyses.length),
+            total_tokens: Math.floor(
+              (tokens.promptTokens + tokens.completionTokens) / analyses.length
+            ),
             cost: cost / analyses.length,
             score_data_quality: analysis.scores.dataQuality,
             score_expert_credibility: analysis.scores.expertCredibility,
@@ -289,11 +294,7 @@ async function processAudit(
 /**
  * Helper to send SSE event
  */
-async function sendEvent(
-  writer: WritableStreamDefaultWriter,
-  encoder: TextEncoder,
-  data: unknown
-) {
+async function sendEvent(writer: WritableStreamDefaultWriter, encoder: TextEncoder, data: unknown) {
   const message = `data: ${JSON.stringify(data)}\n\n`
   await writer.write(encoder.encode(message))
 }

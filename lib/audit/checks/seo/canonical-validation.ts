@@ -9,7 +9,8 @@ export const canonicalValidation: AuditCheckDefinition = {
   description: 'Canonical URLs should be valid, accessible, and self-referencing on unique pages',
   displayName: 'Invalid Canonical URL',
   displayNamePassed: 'Valid Canonical URLs',
-  learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls',
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

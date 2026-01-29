@@ -120,9 +120,7 @@ export function canManageFeedback(role: string | undefined): boolean {
  * Check if user is an internal Selo employee.
  * This is separate from role-based permissions - internal users can access all organizations.
  */
-export function isInternalUser(userRecord: {
-  is_internal?: boolean | null
-}): boolean {
+export function isInternalUser(userRecord: { is_internal?: boolean | null }): boolean {
   return userRecord.is_internal === true
 }
 

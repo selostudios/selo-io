@@ -5,10 +5,12 @@ export const httpToHttpsRedirect: AuditCheckDefinition = {
   name: 'http_to_https_redirect',
   type: CheckType.SEO,
   priority: CheckPriority.Critical,
-  description: 'HTTP version should redirect to HTTPS to consolidate SEO signals and ensure security',
+  description:
+    'HTTP version should redirect to HTTPS to consolidate SEO signals and ensure security',
   displayName: 'Missing HTTP to HTTPS Redirect',
   displayNamePassed: 'HTTP to HTTPS Redirect',
-  learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls',
   isSiteWide: true,
 
   async run(context: CheckContext): Promise<CheckResult> {

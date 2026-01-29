@@ -66,10 +66,7 @@ function generateShareToken(): string {
 /**
  * Calculate expiration date from expiration type
  */
-function calculateExpirationDate(
-  expiresIn: ShareExpiration,
-  customDate?: string
-): Date {
+function calculateExpirationDate(expiresIn: ShareExpiration, customDate?: string): Date {
   if (expiresIn === ShareExpiration.Custom && customDate) {
     return new Date(customDate)
   }
@@ -83,27 +80,21 @@ function calculateExpirationDate(
 /**
  * Create a new share link for a report
  */
-export async function createShareLink(
-  input: CreateShareLinkInput
-): Promise<CreateShareLinkResult> {
+export async function createShareLink(input: CreateShareLinkInput): Promise<CreateShareLinkResult> {
   const supabase = await createClient()
 
   // Generate secure token
   const token = generateShareToken()
 
   // Calculate expiration
-  const expiresAt = calculateExpirationDate(
-    input.expires_in,
-    input.custom_expiration
-  )
+  const expiresAt = calculateExpirationDate(input.expires_in, input.custom_expiration)
 
   // Hash password if provided (using database function)
   let passwordHash: string | null = null
   if (input.password) {
-    const { data: hashResult, error: hashError } = await supabase.rpc(
-      'crypt_password',
-      { password: input.password }
-    )
+    const { data: hashResult, error: hashError } = await supabase.rpc('crypt_password', {
+      password: input.password,
+    })
 
     if (hashError) {
       // If crypt_password doesn't exist, try hash_password
@@ -117,7 +108,11 @@ export async function createShareLink(
           error: hashError2?.message ?? 'Password hashing unavailable',
           timestamp: new Date().toISOString(),
         })
-        return { success: false, error: 'Failed to secure share link with password. Please try again without password protection.' }
+        return {
+          success: false,
+          error:
+            'Failed to secure share link with password. Please try again without password protection.',
+        }
       }
 
       passwordHash = cryptResult
@@ -166,9 +161,7 @@ export async function createShareLink(
 /**
  * Get all share links for a report
  */
-export async function getShareLinksForReport(
-  reportId: string
-): Promise<ReportShare[]> {
+export async function getShareLinksForReport(reportId: string): Promise<ReportShare[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -206,10 +199,7 @@ export async function deleteShareLink(
     .eq('id', shareId)
     .single()
 
-  const { error } = await supabase
-    .from('report_shares')
-    .delete()
-    .eq('id', shareId)
+  const { error } = await supabase.from('report_shares').delete().eq('id', shareId)
 
   if (error) {
     console.error('[Delete Share Link Error]', {
@@ -245,10 +235,7 @@ export async function updateShareLink(
     .eq('id', shareId)
     .single()
 
-  const { error } = await supabase
-    .from('report_shares')
-    .update(updates)
-    .eq('id', shareId)
+  const { error } = await supabase.from('report_shares').update(updates).eq('id', shareId)
 
   if (error) {
     console.error('[Update Share Link Error]', {
@@ -274,9 +261,7 @@ export async function updateShareLink(
  * Validate a share token (for checking password requirement)
  * This uses the SECURITY DEFINER function to bypass RLS
  */
-export async function validateShareToken(
-  token: string
-): Promise<ShareLinkValidation> {
+export async function validateShareToken(token: string): Promise<ShareLinkValidation> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('validate_share_token', {

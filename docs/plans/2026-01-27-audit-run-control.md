@@ -13,6 +13,7 @@
 ### Task 1: Create AuditRunControl Component
 
 **Files:**
+
 - Create: `components/audit/audit-run-control.tsx`
 
 **Step 1: Create the component file**
@@ -164,11 +165,13 @@ git commit -m "feat: add reusable AuditRunControl component"
 ### Task 2: Update PageSpeedClient to Use AuditRunControl
 
 **Files:**
+
 - Modify: `app/(authenticated)/seo/page-speed/client.tsx`
 
 **Step 1: Update imports and remove monitored pages logic**
 
 Replace the one-time audit Card section with AuditRunControl:
+
 - Import `AuditRunControl`
 - Remove `monitoredPages` from props
 - Update `selectedTarget` to include websiteUrl for organization
@@ -195,6 +198,7 @@ git commit -m "refactor: use AuditRunControl in PageSpeedClient"
 ### Task 3: Update PerformanceDashboard - Remove Monitored Pages
 
 **Files:**
+
 - Modify: `components/performance/performance-dashboard.tsx`
 
 **Step 1: Remove monitored pages functionality**
@@ -222,6 +226,7 @@ git commit -m "refactor: remove monitored pages, use AuditRunControl in Performa
 ### Task 4: Update PageSpeed Actions to Remove Monitored Pages
 
 **Files:**
+
 - Modify: `app/(authenticated)/seo/page-speed/actions.ts`
 
 **Step 1: Remove monitoredPages from getPageSpeedData**
@@ -246,6 +251,7 @@ git commit -m "refactor: remove monitored pages from page speed actions"
 ### Task 5: Update AIOAuditClient to Use AuditRunControl
 
 **Files:**
+
 - Modify: `app/(authenticated)/seo/aio/client.tsx`
 
 **Step 1: Replace inline Card with AuditRunControl**
@@ -272,6 +278,7 @@ git commit -m "refactor: use AuditRunControl in AIOAuditClient"
 ### Task 6: Clean Up Unused Code
 
 **Files:**
+
 - Check: `lib/performance/types.ts` - Remove MonitoredPage if unused
 - Check: `app/api/performance/pages/route.ts` - May need to remove or deprecate
 
@@ -318,41 +325,52 @@ Expected: All pass
 
 ```tsx
 interface AuditRunControlProps {
-  title: string                    // "One-Time Page Speed Audit"
-  description: string              // "Add domain URL to begin auditing site"
-  organization?: {                 // If provided, shows org URL mode
+  title: string // "One-Time Page Speed Audit"
+  description: string // "Add domain URL to begin auditing site"
+  organization?: {
+    // If provided, shows org URL mode
     id: string
     websiteUrl: string
   } | null
   onRunAudit: (url: string, organizationId?: string) => Promise<void>
   isRunning?: boolean
-  children?: ReactNode             // For SampleSizeSelector, etc.
+  children?: ReactNode // For SampleSizeSelector, etc.
 }
 ```
 
 **Usage in Page Speed:**
+
 ```tsx
 <AuditRunControl
   title="One-Time Page Speed Audit"
   description="Add domain URL to begin auditing site"
-  organization={selectedTarget?.type === 'organization' ? {
-    id: selectedTarget.organizationId,
-    websiteUrl: selectedTarget.url
-  } : null}
+  organization={
+    selectedTarget?.type === 'organization'
+      ? {
+          id: selectedTarget.organizationId,
+          websiteUrl: selectedTarget.url,
+        }
+      : null
+  }
   onRunAudit={handleRunAudit}
   isRunning={isPending}
 />
 ```
 
 **Usage in AIO:**
+
 ```tsx
 <AuditRunControl
   title="One-Time AIO Audit"
   description="Add URL to begin AIO audit"
-  organization={selectedTarget?.type === 'organization' ? {
-    id: selectedTarget.organizationId,
-    websiteUrl: selectedTarget.url
-  } : null}
+  organization={
+    selectedTarget?.type === 'organization'
+      ? {
+          id: selectedTarget.organizationId,
+          websiteUrl: selectedTarget.url,
+        }
+      : null
+  }
   onRunAudit={handleStartAudit}
   isRunning={isRunning}
 >

@@ -141,7 +141,8 @@ export async function GET() {
         .from('aio_audits')
         .update({
           status: 'failed',
-          error_message: 'Audit timed out - the server function was terminated before completion. Please try again.',
+          error_message:
+            'Audit timed out - the server function was terminated before completion. Please try again.',
           completed_at: new Date().toISOString(),
         })
         .eq('id', activeAioAudit.id)

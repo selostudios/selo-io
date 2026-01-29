@@ -43,9 +43,12 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     setCurrentSlide((prev) => Math.max(prev - 1, 0))
   }, [])
 
-  const goToSlide = useCallback((index: number) => {
-    setCurrentSlide(Math.max(0, Math.min(index, totalSlides - 1)))
-  }, [totalSlides])
+  const goToSlide = useCallback(
+    (index: number) => {
+      setCurrentSlide(Math.max(0, Math.min(index, totalSlides - 1)))
+    },
+    [totalSlides]
+  )
 
   // Keyboard navigation
   useEffect(() => {
@@ -142,12 +145,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
     // Slide 3: Executive Summary
     if (currentSlide === slideIndex++) {
-      return (
-        <ExecutiveSummarySlide
-          summary={data.executive_summary}
-          stats={data.stats}
-        />
-      )
+      return <ExecutiveSummarySlide summary={data.executive_summary} stats={data.stats} />
     }
 
     // Slides 4-N: Opportunities (paginated)
@@ -160,10 +158,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     // Slide: Business Impact
     if (currentSlide === slideIndex++) {
       return (
-        <BusinessImpactSlide
-          projections={data.projections}
-          combinedScore={data.combined_score}
-        />
+        <BusinessImpactSlide projections={data.projections} combinedScore={data.combined_score} />
       )
     }
 
@@ -190,9 +185,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       onTouchEnd={handleTouchEnd}
     >
       {/* Slides Container */}
-      <div className="h-full w-full overflow-y-auto print:overflow-visible">
-        {renderSlide()}
-      </div>
+      <div className="h-full w-full overflow-y-auto print:overflow-visible">{renderSlide()}</div>
 
       {/* Navigation Arrows */}
       <div className="print:hidden">

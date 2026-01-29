@@ -47,8 +47,10 @@ export const definitionBoxes: AIOCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: 'No clear definition sections found. AI engines prefer explicit "What is X" content for featured snippets.',
-          fixGuidance: 'Add a "What is [topic]?" section near the top with a concise 2-3 sentence definition.',
+          message:
+            'No clear definition sections found. AI engines prefer explicit "What is X" content for featured snippets.',
+          fixGuidance:
+            'Add a "What is [topic]?" section near the top with a concise 2-3 sentence definition.',
         },
       }
     } else {

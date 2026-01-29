@@ -88,11 +88,7 @@ export function ScoreRing({
   return (
     <div className={cn('flex flex-col items-center', className)}>
       <div className="relative" style={{ width: config.dimension, height: config.dimension }}>
-        <svg
-          className="-rotate-90 transform"
-          width={config.dimension}
-          height={config.dimension}
-        >
+        <svg className="-rotate-90 transform" width={config.dimension} height={config.dimension}>
           {/* Background circle */}
           <circle
             cx={config.dimension / 2}
@@ -119,9 +115,7 @@ export function ScoreRing({
         </svg>
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={cn('font-bold', config.fontSize, colors.text)}>
-            {displayScore}
-          </span>
+          <span className={cn('font-bold', config.fontSize, colors.text)}>{displayScore}</span>
           {showLabel && label && (
             <span className={cn('text-muted-foreground mt-1', config.labelSize)}>{label}</span>
           )}

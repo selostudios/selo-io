@@ -17,46 +17,46 @@ interface PublicReportClientProps {
   requiresPassword: boolean
 }
 
-export function PublicReportClient({
-  token,
-  requiresPassword,
-}: PublicReportClientProps) {
+export function PublicReportClient({ token, requiresPassword }: PublicReportClientProps) {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(!requiresPassword)
   const [error, setError] = useState<string | null>(null)
   const [reportData, setReportData] = useState<ReportPresentationData | null>(null)
 
-  const loadReport = useCallback(async (providedPassword?: string) => {
-    setIsLoading(true)
-    setError(null)
+  const loadReport = useCallback(
+    async (providedPassword?: string) => {
+      setIsLoading(true)
+      setError(null)
 
-    try {
-      const result = await accessSharedReport(token, providedPassword)
+      try {
+        const result = await accessSharedReport(token, providedPassword)
 
-      if (!result.success) {
-        const errorMessage = result.errorCode
-          ? getShareErrorMessage(result.errorCode)
-          : 'Unable to access this report'
-        setError(errorMessage)
+        if (!result.success) {
+          const errorMessage = result.errorCode
+            ? getShareErrorMessage(result.errorCode)
+            : 'Unable to access this report'
+          setError(errorMessage)
+          setIsLoading(false)
+          return
+        }
+
+        // Get full presentation data using server action
+        const presentationData = await getSharedReportPresentationData(result.report!.id)
+        if (!presentationData) {
+          setError('Failed to load report data')
+          setIsLoading(false)
+          return
+        }
+
+        setReportData(presentationData)
+      } catch {
+        setError('Failed to load report')
+      } finally {
         setIsLoading(false)
-        return
       }
-
-      // Get full presentation data using server action
-      const presentationData = await getSharedReportPresentationData(result.report!.id)
-      if (!presentationData) {
-        setError('Failed to load report data')
-        setIsLoading(false)
-        return
-      }
-
-      setReportData(presentationData)
-    } catch {
-      setError('Failed to load report')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [token])
+    },
+    [token]
+  )
 
   // Auto-load if no password required
   useEffect(() => {

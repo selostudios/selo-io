@@ -53,9 +53,10 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
       const result = await createShareLink({
         report_id: reportId,
         expires_in: expiration,
-        custom_expiration: expiration === ShareExpiration.Custom && customDate
-          ? customDate.toISOString()
-          : undefined,
+        custom_expiration:
+          expiration === ShareExpiration.Custom && customDate
+            ? customDate.toISOString()
+            : undefined,
         password: passwordEnabled ? password : undefined,
         max_views: maxViews,
       })
@@ -111,9 +112,7 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Report</DialogTitle>
-          <DialogDescription>
-            Create a shareable link for this report
-          </DialogDescription>
+          <DialogDescription>Create a shareable link for this report</DialogDescription>
         </DialogHeader>
 
         {!createdShare ? (
@@ -121,10 +120,7 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
             {/* Expiration */}
             <div className="space-y-2">
               <Label>Expires after</Label>
-              <Select
-                value={expiration}
-                onValueChange={(v) => setExpiration(v as ShareExpiration)}
-              >
+              <Select value={expiration} onValueChange={(v) => setExpiration(v as ShareExpiration)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -206,9 +202,7 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
               )}
             </div>
 
-            {error && (
-              <p className="text-destructive text-sm">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm">{error}</p>}
 
             <Button
               onClick={handleCreate}
@@ -238,17 +232,8 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
 
             {/* URL display */}
             <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={createdShare.url}
-                className="bg-muted font-mono text-sm"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopy}
-                className="flex-shrink-0"
-              >
+              <Input readOnly value={createdShare.url} className="bg-muted font-mono text-sm" />
+              <Button variant="outline" size="icon" onClick={handleCopy} className="flex-shrink-0">
                 {copied ? (
                   <Check className="h-4 w-4 text-green-600" />
                 ) : (
@@ -259,9 +244,7 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
 
             {/* Link details */}
             <div className="text-muted-foreground text-sm">
-              <p>
-                Expires: {format(new Date(createdShare.share.expires_at), 'PPP')}
-              </p>
+              <p>Expires: {format(new Date(createdShare.share.expires_at), 'PPP')}</p>
               <p>Max views: {createdShare.share.max_views}</p>
               {createdShare.share.has_password && (
                 <p className="flex items-center gap-1">

@@ -46,10 +46,7 @@ interface ReportsClientProps {
   selectedOrganizationId: string | null
 }
 
-export function ReportsClient({
-  reports,
-  selectedOrganizationId,
-}: ReportsClientProps) {
+export function ReportsClient({ reports, selectedOrganizationId }: ReportsClientProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)

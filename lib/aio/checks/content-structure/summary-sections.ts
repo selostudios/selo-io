@@ -18,7 +18,9 @@ export const summarySections: AIOCheckDefinition = {
     // Check for summary-related headings
     const summaryHeadings = $('h1, h2, h3, h4, h5, h6').filter((_, el) => {
       const text = $(el).text().toLowerCase()
-      return /^(tl;dr|tldr|summary|key takeaways|key points|in (a )?nutshell|quick summary|executive summary|conclusion)/i.test(text.trim())
+      return /^(tl;dr|tldr|summary|key takeaways|key points|in (a )?nutshell|quick summary|executive summary|conclusion)/i.test(
+        text.trim()
+      )
     })
 
     // Check for HTML5 summary elements
@@ -55,8 +57,10 @@ export const summarySections: AIOCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: 'No summary section found. AI engines prioritize content with clear TL;DR or key takeaways for quick extraction.',
-          fixGuidance: 'Add a "Summary" or "Key Takeaways" section with 3-5 bullet points of main insights.',
+          message:
+            'No summary section found. AI engines prioritize content with clear TL;DR or key takeaways for quick extraction.',
+          fixGuidance:
+            'Add a "Summary" or "Key Takeaways" section with 3-5 bullet points of main insights.',
         },
       }
     } else {

@@ -241,10 +241,7 @@ export function OrgSelector({
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium">{org.name}</span>
-                    <Badge
-                      variant="secondary"
-                      className={cn('text-xs', statusColors[org.status])}
-                    >
+                    <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
                       {org.status}
                     </Badge>
                   </div>

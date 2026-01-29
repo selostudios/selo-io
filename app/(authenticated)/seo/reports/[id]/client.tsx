@@ -38,11 +38,7 @@ export function ReportDetailClient({
       <ReportPresentation data={presentationData} onShare={handleShare} />
 
       {/* Share Modal */}
-      <ShareModal
-        open={shareModalOpen}
-        onOpenChange={setShareModalOpen}
-        reportId={report.id}
-      />
+      <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} reportId={report.id} />
 
       {/* Settings Dialog */}
       <SettingsDialog

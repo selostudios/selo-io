@@ -135,7 +135,9 @@ describe('validatePerformanceAudit', () => {
     }
   }
 
-  function createPerformanceResult(overrides: Partial<PerformanceAuditResult> = {}): PerformanceAuditResult {
+  function createPerformanceResult(
+    overrides: Partial<PerformanceAuditResult> = {}
+  ): PerformanceAuditResult {
     return {
       id: 'result-1',
       audit_id: 'perf-1',
@@ -311,17 +313,19 @@ describe('validateReportAudits', () => {
   }
 
   function createPerformanceResults(domain = 'example.com'): PerformanceAuditResult[] {
-    return [{
-      id: 'result-1',
-      audit_id: 'perf-1',
-      url: `https://${domain}`,
-      device: 'desktop',
-      performance_score: 90,
-      accessibility_score: 95,
-      best_practices_score: 100,
-      seo_score: 92,
-      created_at: new Date().toISOString(),
-    }]
+    return [
+      {
+        id: 'result-1',
+        audit_id: 'perf-1',
+        url: `https://${domain}`,
+        device: 'desktop',
+        performance_score: 90,
+        accessibility_score: 95,
+        best_practices_score: 100,
+        seo_score: 92,
+        created_at: new Date().toISOString(),
+      },
+    ]
   }
 
   function createAIOAudit(domain = 'example.com', daysOffset = 0): AIOAudit {
@@ -378,7 +382,7 @@ describe('validateReportAudits', () => {
     )
 
     expect(result.is_valid).toBe(false)
-    expect(result.errors.some(e => e.includes('same domain'))).toBe(true)
+    expect(result.errors.some((e) => e.includes('same domain'))).toBe(true)
   })
 
   it('returns invalid when audits are more than 7 days apart', () => {
@@ -390,7 +394,7 @@ describe('validateReportAudits', () => {
     )
 
     expect(result.is_valid).toBe(false)
-    expect(result.errors.some(e => e.includes('within 7 days'))).toBe(true)
+    expect(result.errors.some((e) => e.includes('within 7 days'))).toBe(true)
   })
 
   it('returns valid with warning when audits are 4-7 days apart', () => {
@@ -402,7 +406,7 @@ describe('validateReportAudits', () => {
     )
 
     expect(result.is_valid).toBe(true)
-    expect(result.warnings.some(w => w.includes('days apart'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('days apart'))).toBe(true)
   })
 
   it('normalizes domains with www prefix', () => {
@@ -431,9 +435,30 @@ describe('getMissingAudits', () => {
     const validation = {
       is_valid: true,
       audits: {
-        site_audit: { audit_type: AuditSource.SEO, audit_id: '1', score: 85, created_at: '', domain: 'example.com', is_eligible: true },
-        performance_audit: { audit_type: AuditSource.PageSpeed, audit_id: '2', score: 90, created_at: '', domain: 'example.com', is_eligible: true },
-        aio_audit: { audit_type: AuditSource.AIO, audit_id: '3', score: 75, created_at: '', domain: 'example.com', is_eligible: true },
+        site_audit: {
+          audit_type: AuditSource.SEO,
+          audit_id: '1',
+          score: 85,
+          created_at: '',
+          domain: 'example.com',
+          is_eligible: true,
+        },
+        performance_audit: {
+          audit_type: AuditSource.PageSpeed,
+          audit_id: '2',
+          score: 90,
+          created_at: '',
+          domain: 'example.com',
+          is_eligible: true,
+        },
+        aio_audit: {
+          audit_type: AuditSource.AIO,
+          audit_id: '3',
+          score: 75,
+          created_at: '',
+          domain: 'example.com',
+          is_eligible: true,
+        },
       },
       errors: [],
       warnings: [],
@@ -447,9 +472,31 @@ describe('getMissingAudits', () => {
     const validation = {
       is_valid: false,
       audits: {
-        site_audit: { audit_type: AuditSource.SEO, audit_id: null, score: null, created_at: null, domain: null, is_eligible: false, reason: 'No SEO audit found' },
-        performance_audit: { audit_type: AuditSource.PageSpeed, audit_id: '2', score: 90, created_at: '', domain: 'example.com', is_eligible: true },
-        aio_audit: { audit_type: AuditSource.AIO, audit_id: '3', score: 75, created_at: '', domain: 'example.com', is_eligible: true },
+        site_audit: {
+          audit_type: AuditSource.SEO,
+          audit_id: null,
+          score: null,
+          created_at: null,
+          domain: null,
+          is_eligible: false,
+          reason: 'No SEO audit found',
+        },
+        performance_audit: {
+          audit_type: AuditSource.PageSpeed,
+          audit_id: '2',
+          score: 90,
+          created_at: '',
+          domain: 'example.com',
+          is_eligible: true,
+        },
+        aio_audit: {
+          audit_type: AuditSource.AIO,
+          audit_id: '3',
+          score: 75,
+          created_at: '',
+          domain: 'example.com',
+          is_eligible: true,
+        },
       },
       errors: ['No SEO audit found'],
       warnings: [],
@@ -463,9 +510,30 @@ describe('getMissingAudits', () => {
     const validation = {
       is_valid: false,
       audits: {
-        site_audit: { audit_type: AuditSource.SEO, audit_id: null, score: null, created_at: null, domain: null, is_eligible: false },
-        performance_audit: { audit_type: AuditSource.PageSpeed, audit_id: null, score: null, created_at: null, domain: null, is_eligible: false },
-        aio_audit: { audit_type: AuditSource.AIO, audit_id: null, score: null, created_at: null, domain: null, is_eligible: false },
+        site_audit: {
+          audit_type: AuditSource.SEO,
+          audit_id: null,
+          score: null,
+          created_at: null,
+          domain: null,
+          is_eligible: false,
+        },
+        performance_audit: {
+          audit_type: AuditSource.PageSpeed,
+          audit_id: null,
+          score: null,
+          created_at: null,
+          domain: null,
+          is_eligible: false,
+        },
+        aio_audit: {
+          audit_type: AuditSource.AIO,
+          audit_id: null,
+          score: null,
+          created_at: null,
+          domain: null,
+          is_eligible: false,
+        },
       },
       errors: [],
       warnings: [],
