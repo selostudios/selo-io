@@ -253,15 +253,17 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           Print
         </Button>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          className="h-9 w-9"
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-        >
-          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-        </Button>
+        {!isPublic && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="h-9 w-9"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        )}
 
         {!isPublic && (
           <Button
