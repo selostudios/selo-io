@@ -203,6 +203,7 @@ export function SettingsDialog({
                   </div>
                   {logoUrl && (
                     <div className="mt-2 rounded border p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */}
                       <img
                         src={logoUrl}
                         alt="Logo preview"

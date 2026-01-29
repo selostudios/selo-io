@@ -41,6 +41,7 @@ export function CoverSlide({
         {/* Top: Logo/Company */}
         <div className="flex items-start justify-between">
           {customLogoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
             <img
               src={customLogoUrl}
               alt={companyName}

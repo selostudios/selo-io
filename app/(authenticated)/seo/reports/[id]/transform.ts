@@ -78,7 +78,7 @@ function transformOpportunities(auditData: ReportAuditData): ReportOpportunity[]
         id: check.id,
         title: check.display_name || check.check_name.replace(/_/g, ' '),
         description: check.description || '',
-        impact: getImpactDescription(check.check_name, AuditSource.SEO),
+        impact: getImpactDescription(check.check_name),
         fix: check.fix_guidance || '',
         priority: mapPriorityToReport(check.priority),
         source: AuditSource.SEO,
@@ -93,7 +93,7 @@ function transformOpportunities(auditData: ReportAuditData): ReportOpportunity[]
         id: check.id,
         title: check.display_name || check.check_name.replace(/_/g, ' '),
         description: check.description || '',
-        impact: getImpactDescription(check.check_name, AuditSource.AIO),
+        impact: getImpactDescription(check.check_name),
         fix: check.fix_guidance || '',
         priority: mapPriorityToReport(check.priority),
         source: AuditSource.AIO,
@@ -243,7 +243,7 @@ function mapPriorityToReport(priority: CheckPriority): ReportPriority {
   }
 }
 
-function getImpactDescription(checkName: string, _source: AuditSource): string {
+function getImpactDescription(checkName: string): string {
   // Simplified impact descriptions
   const impacts: Record<string, string> = {
     'missing-meta-description': 'Lower click-through rates in search results',

@@ -27,6 +27,7 @@ export function NextStepsSlide({ customCompanyName, customLogoUrl }: NextStepsSl
         <div className="mb-12 rounded-2xl bg-white/10 p-8 backdrop-blur">
           <div className="mb-6 flex justify-center">
             {customLogoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
               <img
                 src={customLogoUrl}
                 alt={companyName}
