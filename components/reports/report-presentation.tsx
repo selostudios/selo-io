@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Share2, Printer, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Share2, Printer, X, Maximize2, Minimize2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProgressDots } from './progress-dots'
 import type { ReportPresentationData } from '@/lib/reports/types'
@@ -29,6 +29,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
   const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // Calculate total slides based on content
   const opportunityPages = Math.ceil(data.opportunities.length / 6) || 1
@@ -180,7 +181,11 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
   return (
     <div
-      className="relative h-screen w-screen overflow-hidden"
+      className={
+        isFullscreen
+          ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-white dark:bg-slate-950'
+          : 'relative h-full w-full overflow-hidden'
+      }
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -229,6 +234,16 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
         <Button variant="outline" size="sm" onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
           Print
+        </Button>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="h-9 w-9"
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
         </Button>
 
         {!isPublic && (
