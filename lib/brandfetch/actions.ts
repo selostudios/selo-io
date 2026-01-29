@@ -91,7 +91,7 @@ export async function uploadBrandLogo(
   // Determine which organization to update
   // Internal users can specify a different org, otherwise use their own
   const isInternal = userRecord.is_internal === true
-  const orgId = (isInternal && organizationId) ? organizationId : userRecord.organization_id
+  const orgId = isInternal && organizationId ? organizationId : userRecord.organization_id
 
   if (!orgId) {
     return { error: 'No organization specified' }

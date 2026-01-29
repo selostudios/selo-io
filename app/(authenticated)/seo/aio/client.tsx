@@ -267,8 +267,11 @@ export function AIOAuditClient({
             <Card>
               <CardContent className="py-8">
                 <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-                  <p className="text-sm text-muted-foreground">
+                  <Loader2
+                    className="text-muted-foreground h-6 w-6 animate-spin"
+                    aria-hidden="true"
+                  />
+                  <p className="text-muted-foreground text-sm">
                     Running AI quality analysis on {aioAudit.selectedPages.length}{' '}
                     {aioAudit.selectedPages.length === 1 ? 'page' : 'pages'}…
                   </p>
@@ -310,10 +313,10 @@ export function AIOAuditClient({
 
               {/* Token Usage and Cost */}
               {aioAudit.tokenUsage.total > 0 && (
-                <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4">
+                <div className="bg-muted/30 flex items-center justify-between rounded-md border p-4">
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Analysis Complete</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       Analyzed {aioAudit.selectedPages.length}{' '}
                       {aioAudit.selectedPages.length === 1 ? 'page' : 'pages'} in{' '}
                       {aioAudit.executionTime !== null
@@ -347,10 +350,7 @@ export function AIOAuditClient({
           )}
         </CardHeader>
         <CardContent>
-          <AIOAuditHistoryList
-            audits={audits}
-            showUrl={!selectedOrganizationId || isInternal}
-          />
+          <AIOAuditHistoryList audits={audits} showUrl={!selectedOrganizationId || isInternal} />
         </CardContent>
       </Card>
     </div>

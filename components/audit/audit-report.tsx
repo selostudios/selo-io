@@ -129,10 +129,10 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
               href={audit.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+              className="inline-flex items-center gap-1.5 text-2xl font-bold hover:underline"
             >
               {displayUrl}
-              <ExternalLink className="size-5 text-muted-foreground" />
+              <ExternalLink className="text-muted-foreground size-5" />
             </a>
             {audit.status === AuditStatus.Stopped && (
               <Badge variant="secondary" className="text-xs">

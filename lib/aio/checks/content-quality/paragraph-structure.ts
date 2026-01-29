@@ -33,11 +33,11 @@ export const paragraphStructure: AIOCheckDefinition = {
     const paragraphLengths = paragraphs
       .map((_, el) => $(el).text().trim().split(/\s+/).length)
       .get()
-      .filter(len => len > 0)
+      .filter((len) => len > 0)
 
     const avgParagraphLength = paragraphLengths.reduce((a, b) => a + b, 0) / paragraphLengths.length
-    const longParagraphs = paragraphLengths.filter(len => len > 150).length
-    const shortParagraphs = paragraphLengths.filter(len => len < 30 && len > 0).length
+    const longParagraphs = paragraphLengths.filter((len) => len > 150).length
+    const shortParagraphs = paragraphLengths.filter((len) => len < 30 && len > 0).length
 
     const issues = []
     const strengths = []
@@ -55,7 +55,7 @@ export const paragraphStructure: AIOCheckDefinition = {
     }
 
     // Check paragraph variety
-    const hasVariety = shortParagraphs > 0 && paragraphLengths.some(len => len >= 50)
+    const hasVariety = shortParagraphs > 0 && paragraphLengths.some((len) => len >= 50)
     if (hasVariety) {
       strengths.push('good paragraph variety')
     }
@@ -81,7 +81,8 @@ export const paragraphStructure: AIOCheckDefinition = {
         details: {
           message: `Paragraph structure could be improved: ${issues.join('; ')}`,
           ...details,
-          fixGuidance: 'Break long paragraphs into 3-5 sentence chunks (40-80 words) for better scannability.',
+          fixGuidance:
+            'Break long paragraphs into 3-5 sentence chunks (40-80 words) for better scannability.',
         },
       }
     } else {
@@ -90,7 +91,8 @@ export const paragraphStructure: AIOCheckDefinition = {
         details: {
           message: `Poor paragraph structure: ${issues.join('; ')}`,
           ...details,
-          fixGuidance: 'Restructure content into shorter, focused paragraphs (40-80 words each) with clear topic sentences.',
+          fixGuidance:
+            'Restructure content into shorter, focused paragraphs (40-80 words each) with clear topic sentences.',
         },
       }
     }

@@ -97,12 +97,18 @@ export function useAIOAuditStream() {
           ...prev,
           aiAnalyses: [...prev.aiAnalyses, ...(event.analyses as AIOPageAnalysis[])],
           tokenUsage: {
-            input: prev.tokenUsage.input + ((event.tokens as { promptTokens: number }).promptTokens || 0),
-            output: prev.tokenUsage.output + ((event.tokens as { completionTokens: number }).completionTokens || 0),
+            input:
+              prev.tokenUsage.input +
+              ((event.tokens as { promptTokens: number }).promptTokens || 0),
+            output:
+              prev.tokenUsage.output +
+              ((event.tokens as { completionTokens: number }).completionTokens || 0),
             total:
               prev.tokenUsage.total +
-              ((event.tokens as { promptTokens: number; completionTokens: number }).promptTokens || 0) +
-              ((event.tokens as { promptTokens: number; completionTokens: number }).completionTokens || 0),
+              ((event.tokens as { promptTokens: number; completionTokens: number }).promptTokens ||
+                0) +
+              ((event.tokens as { promptTokens: number; completionTokens: number })
+                .completionTokens || 0),
           },
           cost: prev.cost + (event.cost as number),
         }))

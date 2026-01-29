@@ -134,15 +134,15 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
             )}
             {/* Show duration for completed audits */}
             {audit.status === 'completed' &&
-            (() => {
-              const duration = calculateDuration(audit.started_at, audit.completed_at)
-              return duration ? (
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <Clock className="size-3" />
-                  {formatDuration(duration)}
-                </span>
-              ) : null
-            })()}
+              (() => {
+                const duration = calculateDuration(audit.started_at, audit.completed_at)
+                return duration ? (
+                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                    <Clock className="size-3" />
+                    {formatDuration(duration)}
+                  </span>
+                ) : null
+              })()}
             <Button asChild variant="outline" size="sm">
               <Link href={`/seo/aio/${audit.id}`}>View</Link>
             </Button>
@@ -155,7 +155,9 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="Re-run audit"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`}
+                />
               </Button>
             )}
             <Button

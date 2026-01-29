@@ -9,7 +9,8 @@ export const mobileFriendly: AIOCheckDefinition = {
   description: 'Mobile optimization ensures AI engines can access content on all devices',
   displayName: 'Not Mobile-Friendly',
   displayNamePassed: 'Mobile-Friendly',
-  learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing',
   isSiteWide: false,
 
   async run(context: AIOCheckContext): Promise<CheckResult> {
@@ -55,7 +56,8 @@ export const mobileFriendly: AIOCheckDefinition = {
         status: CheckStatus.Warning,
         details: {
           message: issues[0],
-          fixGuidance: 'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to the <head> section.',
+          fixGuidance:
+            'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to the <head> section.',
         },
       }
     } else {

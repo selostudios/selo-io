@@ -71,10 +71,7 @@ export async function getAIOAuditData(organizationId?: string) {
 
       if (analyses) {
         // Count recommendations by priority for each audit
-        const countsByAudit: Record<
-          string,
-          { critical: number; high: number }
-        > = {}
+        const countsByAudit: Record<string, { critical: number; high: number }> = {}
 
         for (const analysis of analyses) {
           if (!countsByAudit[analysis.audit_id]) {

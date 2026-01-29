@@ -28,11 +28,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   // Get audit
-  const { data: audit, error } = await supabase
-    .from('aio_audits')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data: audit, error } = await supabase.from('aio_audits').select('*').eq('id', id).single()
 
   if (error || !audit) {
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })

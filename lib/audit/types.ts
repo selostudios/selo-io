@@ -1,9 +1,4 @@
-import {
-  AuditStatus,
-  CheckType,
-  CheckPriority,
-  CheckStatus,
-} from '@/lib/enums'
+import { AuditStatus, CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 // Re-export enums for convenience
 export { AuditStatus, CheckType, CheckPriority, CheckStatus }

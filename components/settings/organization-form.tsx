@@ -145,7 +145,11 @@ export function OrganizationForm({
 
     // Apply logo if selected
     if (selections.logo && brandData.logo) {
-      const result = await uploadBrandLogo(brandData.logo.url, brandData.logo.format, organizationId)
+      const result = await uploadBrandLogo(
+        brandData.logo.url,
+        brandData.logo.format,
+        organizationId
+      )
       if (result.logoUrl) {
         setLogoUrl(result.logoUrl)
       } else if (result.error) {

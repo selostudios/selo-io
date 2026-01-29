@@ -152,6 +152,7 @@ Located in `lib/audit/checks/`. The site audit runs **36 comprehensive checks** 
 #### SEO Checks (21 total)
 
 **Critical (9 checks):**
+
 - `missing-meta-description` - Every page needs a meta description
 - `missing-title` - Every page needs a title tag
 - `missing-h1` - Every page needs an H1 heading
@@ -163,6 +164,7 @@ Located in `lib/audit/checks/`. The site audit runs **36 comprehensive checks** 
 - `http-to-https-redirect` - Verifies HTTP redirects to HTTPS properly
 
 **Recommended (10 checks):**
+
 - `meta-description-length` - 150-160 characters optimal
 - `title-length` - 50-60 characters optimal
 - `duplicate-meta-descriptions` - Finds duplicate meta descriptions across site
@@ -175,12 +177,14 @@ Located in `lib/audit/checks/`. The site audit runs **36 comprehensive checks** 
 - `non-descriptive-url` - URL structure readability
 
 **Optional (2 checks):**
+
 - `thin-content` - Content length analysis
 - `oversized-images` - Large image detection
 
 #### AI-Readiness Checks (9 total)
 
 **Critical (5 checks):**
+
 - `missing-llms-txt` - AI crawler configuration file
 - `ai-crawlers-blocked` - Ensures AI crawlers not blocked in robots.txt
 - `missing-structured-data` - JSON-LD structured data presence
@@ -188,32 +192,39 @@ Located in `lib/audit/checks/`. The site audit runs **36 comprehensive checks** 
 - `js-rendered-content` - Detects client-side rendering issues
 
 **Recommended (3 checks):**
+
 - `no-faq-content` - FAQ sections for LLM training
 - `missing-organization-schema` - Organization schema markup
 - `no-recent-updates` - Content freshness (last modified)
 
 **Optional (1 check):**
+
 - `missing-markdown` - Markdown content for AI parsing
 
 #### Technical Checks (6 total)
 
 **Critical (2 checks):**
+
 - `missing-ssl` - HTTPS encryption required
 - `invalid-ssl-certificate` - SSL certificate validity
 
 **Recommended (2 checks):**
+
 - `missing-viewport` - Mobile viewport meta tag
 - `mixed-content` - HTTP resources on HTTPS pages
 
 **Optional (2 checks):**
+
 - `missing-og-tags` - Open Graph meta tags
 - `missing-favicon` - Favicon presence
 
 **Check Types:**
+
 - **Site-wide checks** - Run once per audit (robots.txt, sitemap, duplicate titles, redirect chains, etc.)
 - **Page-specific checks** - Run on each crawled page (title, meta, H1, images, etc.)
 
 **Implementation Details:**
+
 - Checks are defined in `lib/audit/checks/{category}/{check-name}.ts`
 - All checks follow `AuditCheckDefinition` interface with priority (critical/recommended/optional)
 - Results include actionable fix guidance and learn-more URLs
@@ -251,6 +262,31 @@ tests/
 
 Integration and E2E tests require local Supabase running via Docker.
 
+#### E2E Testing Conventions
+
+**Always add `data-testid` attributes** to components that will be targeted in E2E tests:
+
+```typescript
+// In component:
+<h1 data-testid="reports-page-title">Report History</h1>
+<Button data-testid="new-report-button">New Report</Button>
+<Card data-testid="reports-empty-state">...</Card>
+
+// In test:
+await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
+await page.locator('[data-testid="new-report-button"]').click()
+```
+
+**Naming convention**: Use kebab-case with descriptive names like `{feature}-{element}-{state}`:
+
+- `reports-page-title` - Page title
+- `new-report-button` - Action button
+- `reports-empty-state` - Empty state container
+- `seo-audit-card` - Selection card
+- `validate-selection-button` - Form action
+
+**Why**: Data-testid attributes are more reliable than text selectors (which can match multiple elements) or CSS classes (which may change with styling). They clearly indicate "this element is used in tests" and survive refactoring.
+
 ### Before Pushing
 
 Always run lint and tests before pushing to remote:
@@ -273,25 +309,27 @@ The application uses a comprehensive role-based access control (RBAC) system def
 #### Permission Types
 
 ```typescript
-'org:update'          // Manage organization settings
-'org:view'            // View organization (all roles)
-'team:invite'         // Invite new team members
-'team:view'           // View team members (all roles)
+'org:update' // Manage organization settings
+'org:view' // View organization (all roles)
+'team:invite' // Invite new team members
+'team:view' // View team members (all roles)
 'integrations:manage' // Connect/disconnect platforms
-'campaigns:create'    // Create campaigns
-'campaigns:update'    // Update campaigns
-'campaigns:delete'    // Delete campaigns
-'feedback:manage'     // Manage feedback/support tickets
+'campaigns:create' // Create campaigns
+'campaigns:update' // Update campaigns
+'campaigns:delete' // Delete campaigns
+'feedback:manage' // Manage feedback/support tickets
 ```
 
 #### Permission Helpers
 
 **Core Functions:**
+
 - `hasPermission(role, permission)` - Check specific permission
 - `requirePermission(role, permission)` - Throws error if denied
 - `getPermissions(role)` - Returns all permissions for role
 
 **Convenience Helpers:**
+
 - `canManageOrg(role)` - Organization management
 - `canManageTeam(role)` - Team invitation/management
 - `canManageIntegrations(role)` - Platform connections
@@ -302,21 +340,22 @@ The application uses a comprehensive role-based access control (RBAC) system def
 
 #### Role-Based Access Matrix
 
-| Feature | Admin | Developer | Team Member | Client Viewer |
-|---------|-------|-----------|-------------|---------------|
-| **Dashboard** | ✓ Full Access | ✗ No Access | ✓ Full Access | ✓ Limited View |
-| **Campaigns** | ✓ Create/Edit/Delete | ✗ No Access | ✓ Create/Edit/Delete | ✗ View Only (via RLS) |
-| **Organization Settings** | ✓ Full Management | ✓ View/Update | ✗ No Access | ✗ No Access |
-| **Team Management** | ✓ View + Invite | ✓ View Only | ✓ View Only | ✓ View Only |
-| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access | ✗ No Access | ✗ No Access |
-| **Support/Feedback** | ✓ Manage Tickets | ✓ Manage Tickets | ✗ No Access | ✗ No Access |
-| **Site Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
-| **Page Speed Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
-| **AIO Audits** | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only | ✓ View Only |
+| Feature                   | Admin                | Developer              | Team Member          | Client Viewer         |
+| ------------------------- | -------------------- | ---------------------- | -------------------- | --------------------- |
+| **Dashboard**             | ✓ Full Access        | ✗ No Access            | ✓ Full Access        | ✓ Limited View        |
+| **Campaigns**             | ✓ Create/Edit/Delete | ✗ No Access            | ✓ Create/Edit/Delete | ✗ View Only (via RLS) |
+| **Organization Settings** | ✓ Full Management    | ✓ View/Update          | ✗ No Access          | ✗ No Access           |
+| **Team Management**       | ✓ View + Invite      | ✓ View Only            | ✓ View Only          | ✓ View Only           |
+| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access            | ✗ No Access          | ✗ No Access           |
+| **Support/Feedback**      | ✓ Manage Tickets     | ✓ Manage Tickets       | ✗ No Access          | ✗ No Access           |
+| **Site Audits**           | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
+| **Page Speed Audits**     | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
+| **AIO Audits**            | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
 
 #### Special Access: Internal Users
 
 Users with `is_internal: true` flag (Selo employees) have elevated privileges:
+
 - Can view and manage any organization (not just their own)
 - Can access all audits across organizations
 - Can perform support/debugging operations
@@ -325,6 +364,7 @@ Users with `is_internal: true` flag (Selo employees) have elevated privileges:
 #### Security Architecture
 
 **Defense in Depth:**
+
 1. **Layout-level guards** - Prevent unauthorized page navigation
 2. **Page-level checks** - Secondary verification before rendering
 3. **Server action guards** - Protect all mutations at the action level
@@ -332,17 +372,20 @@ Users with `is_internal: true` flag (Selo employees) have elevated privileges:
 5. **RLS policies** - Database-level security boundary (final enforcement)
 
 **Organization Isolation:**
+
 - All queries include explicit `organization_id` filters
 - Prevents cross-organization data access even with valid session
 - Internal users can bypass via `canAccessAllAudits()` helper
 
 **Important Notes:**
+
 - RLS policies are the **security boundary** - never rely solely on UI checks
 - Permission helpers are for **UX decisions** (showing/hiding UI elements)
 - Always import from `@/lib/permissions` - never duplicate permission logic inline
 - Use `isInternalUser(userRecord)` instead of `userRecord.is_internal === true`
 
 **Maintenance Reminder:**
+
 > ⚠️ **When adding new roles, permissions, or features:** Update the Role-Based Access Matrix in both `CLAUDE.md` and `README.md` to keep documentation accurate for team onboarding.
 
 ### Error Logging Convention

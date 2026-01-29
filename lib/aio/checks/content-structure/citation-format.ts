@@ -28,10 +28,18 @@ export const citationFormat: AIOCheckDefinition = {
     })
 
     // Check for academic/authoritative domains
-    const authoritativeDomains = ['.edu', '.gov', '.org', 'doi.org', 'arxiv.org', 'pubmed', 'scholar.google']
+    const authoritativeDomains = [
+      '.edu',
+      '.gov',
+      '.org',
+      'doi.org',
+      'arxiv.org',
+      'pubmed',
+      'scholar.google',
+    ]
     const authoritativeLinks = externalLinks.filter((_, el) => {
       const href = $(el).attr('href') || ''
-      return authoritativeDomains.some(domain => href.includes(domain))
+      return authoritativeDomains.some((domain) => href.includes(domain))
     })
 
     // Check for citation-related elements
@@ -40,7 +48,9 @@ export const citationFormat: AIOCheckDefinition = {
     // Check for reference sections
     const referenceHeadings = $('h1, h2, h3, h4, h5, h6').filter((_, el) => {
       const text = $(el).text().toLowerCase()
-      return /^(references|sources|citations|bibliography|further reading|works cited)/i.test(text.trim())
+      return /^(references|sources|citations|bibliography|further reading|works cited)/i.test(
+        text.trim()
+      )
     })
 
     // Check for footnote/superscript citation markers
@@ -51,7 +61,9 @@ export const citationFormat: AIOCheckDefinition = {
       indicators.push(`${authoritativeLinks.length} authoritative source link(s)`)
     }
     if (externalLinks.length > authoritativeLinks.length) {
-      indicators.push(`${externalLinks.length - authoritativeLinks.length} additional external link(s)`)
+      indicators.push(
+        `${externalLinks.length - authoritativeLinks.length} additional external link(s)`
+      )
     }
     if (citationElements > 0) {
       indicators.push(`${citationElements} citation element(s)`)
@@ -63,13 +75,19 @@ export const citationFormat: AIOCheckDefinition = {
       indicators.push(`${citationMarkers} citation marker(s)`)
     }
 
-    if (authoritativeLinks.length === 0 && citationElements === 0 && referenceHeadings.length === 0) {
+    if (
+      authoritativeLinks.length === 0 &&
+      citationElements === 0 &&
+      referenceHeadings.length === 0
+    ) {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: 'No citations or source links found. AI engines prioritize content with clear source attribution.',
+          message:
+            'No citations or source links found. AI engines prioritize content with clear source attribution.',
           externalLinks: externalLinks.length,
-          fixGuidance: 'Add links to authoritative sources (research papers, .edu/.gov sites) and use <cite> tags for quotes.',
+          fixGuidance:
+            'Add links to authoritative sources (research papers, .edu/.gov sites) and use <cite> tags for quotes.',
         },
       }
     } else if (authoritativeLinks.length >= 3 || referenceHeadings.length > 0) {
@@ -88,7 +106,8 @@ export const citationFormat: AIOCheckDefinition = {
           message: `Some citations found (${indicators.join(', ')}) but could be improved with more authoritative sources`,
           indicators,
           authoritativeLinks: authoritativeLinks.length,
-          fixGuidance: 'Link to more authoritative sources (.edu, .gov, research papers) to strengthen credibility.',
+          fixGuidance:
+            'Link to more authoritative sources (.edu, .gov, research papers) to strengthen credibility.',
         },
       }
     }

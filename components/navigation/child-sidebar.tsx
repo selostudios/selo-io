@@ -13,6 +13,7 @@ import {
   Building2,
   MessageSquare,
   Sparkles,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ParentSection } from './parent-sidebar'
@@ -48,9 +49,11 @@ const seoNavigation: NavigationGroup[] = [
   },
   {
     header: 'AIO',
-    items: [
-      { name: 'AI Audit', href: '/seo/aio', icon: Sparkles },
-    ],
+    items: [{ name: 'AI Audit', href: '/seo/aio', icon: Sparkles }],
+  },
+  {
+    header: 'Reports',
+    items: [{ name: 'Consolidated Reports', href: '/seo/reports', icon: FileText }],
   },
 ]
 
@@ -153,7 +156,12 @@ export function ChildSidebar({
 
                 // Preserve org parameter for SEO, Settings, and Dashboard links
                 let href = item.href
-                if (orgParam && (activeSection === 'seo' || item.href.startsWith('/settings') || item.href.startsWith('/dashboard'))) {
+                if (
+                  orgParam &&
+                  (activeSection === 'seo' ||
+                    item.href.startsWith('/settings') ||
+                    item.href.startsWith('/dashboard'))
+                ) {
                   href = `${item.href}?org=${orgParam}`
                 }
 
@@ -170,7 +178,9 @@ export function ChildSidebar({
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
                     <span className="flex-1">{item.name}</span>
-                    {showSpinner && <Loader2 className="h-4 w-4 motion-safe:animate-spin text-neutral-400" />}
+                    {showSpinner && (
+                      <Loader2 className="h-4 w-4 text-neutral-400 motion-safe:animate-spin" />
+                    )}
                   </Link>
                 )
               })}

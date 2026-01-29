@@ -28,16 +28,21 @@ export const listUsage: AIOCheckDefinition = {
 
     // Get word count for context
     const mainText = $('main, article, [role="main"], body').first().text()
-    const wordCount = mainText.trim().split(/\s+/).filter(w => w.length > 0).length
+    const wordCount = mainText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length
 
     if (totalLists === 0) {
       if (wordCount > 500) {
         return {
           status: CheckStatus.Warning,
           details: {
-            message: 'No lists found in substantial content. Lists help AI engines extract key points.',
+            message:
+              'No lists found in substantial content. Lists help AI engines extract key points.',
             wordCount,
-            fixGuidance: 'Add bullet points for key takeaways, features, or steps. Lists improve content scannability.',
+            fixGuidance:
+              'Add bullet points for key takeaways, features, or steps. Lists improve content scannability.',
           },
         }
       } else {
@@ -73,7 +78,8 @@ export const listUsage: AIOCheckDefinition = {
         details: {
           message: `Found ${totalLists} list(s) but many have few items. Use lists for 3+ related points.`,
           ...details,
-          fixGuidance: 'Consolidate short lists or expand them to at least 3 items for better structure.',
+          fixGuidance:
+            'Consolidate short lists or expand them to at least 3 items for better structure.',
         },
       }
     }

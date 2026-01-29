@@ -124,8 +124,8 @@ export function SiteAuditClient({
       <div>
         <h1 className="text-3xl font-bold">Site Audit</h1>
         <p className="text-muted-foreground mt-1">
-          Crawl and analyze websites for SEO issues, missing meta tags, broken links, and
-          technical problems
+          Crawl and analyze websites for SEO issues, missing meta tags, broken links, and technical
+          problems
         </p>
       </div>
 
@@ -215,7 +215,7 @@ export function SiteAuditClient({
             isOneTimeHistory
             searchInput={
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                 <Input
                   type="text"
                   placeholder="Search by URL..."

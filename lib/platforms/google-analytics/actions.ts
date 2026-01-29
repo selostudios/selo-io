@@ -66,7 +66,13 @@ export async function syncMetricsForGoogleAnalyticsConnection(
   const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
-  console.log('[GA Sync] Storing', records.length, 'metric records for', dailyMetrics.length, 'days')
+  console.log(
+    '[GA Sync] Storing',
+    records.length,
+    'metric records for',
+    dailyMetrics.length,
+    'days'
+  )
 
   // Upsert to avoid duplicate entries
   const { error: insertError } = await supabase
@@ -127,7 +133,10 @@ export async function syncGoogleAnalyticsMetrics() {
 
     // Fetch daily breakdowns
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
+    const records = adapter.normalizeDailyMetricsToDbRecords(
+      dailyMetrics,
+      userRecord.organization_id
+    )
 
     // Upsert to avoid duplicate entries
     const { error: insertError } = await supabase

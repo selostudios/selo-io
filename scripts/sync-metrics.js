@@ -26,7 +26,7 @@ function loadEnv() {
   const envContent = fs.readFileSync(envPath, 'utf8')
   const env = {}
 
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line) => {
     const match = line.match(/^([^#=]+)=(.*)$/)
     if (match) {
       const key = match[1].trim()
@@ -58,7 +58,7 @@ async function syncMetrics() {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${env.CRON_SECRET}`,
+        Authorization: `Bearer ${env.CRON_SECRET}`,
         'Content-Type': 'application/json',
       },
     })

@@ -27,9 +27,7 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
 
   // Extract domain from first URL
   const firstUrl = audit.first_url || audit.current_url || results[0]?.url
-  const displayUrl = firstUrl
-    ? firstUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
-    : 'Unknown'
+  const displayUrl = firstUrl ? firstUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'Unknown'
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -62,10 +60,10 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
                 href={firstUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+                className="inline-flex items-center gap-1.5 text-2xl font-bold hover:underline"
               >
                 {displayUrl}
-                <ExternalLink className="size-5 text-muted-foreground" />
+                <ExternalLink className="text-muted-foreground size-5" />
               </a>
             )}
             <Badge
@@ -112,9 +110,7 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
             return duration ? ` · ${formatDuration(duration)}` : ''
           })()}
         </p>
-        {audit.error_message && (
-          <p className="mt-2 text-sm text-red-600">{audit.error_message}</p>
-        )}
+        {audit.error_message && <p className="mt-2 text-sm text-red-600">{audit.error_message}</p>}
       </div>
 
       {/* Results */}

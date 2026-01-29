@@ -26,7 +26,11 @@ interface LinkedInSectionProps {
 
 const LINKEDIN_COLOR = '#0A66C2'
 
-function formatMetricsForClipboard(metrics: Metric[], period: Period, accountName?: string): string {
+function formatMetricsForClipboard(
+  metrics: Metric[],
+  period: Period,
+  accountName?: string
+): string {
   const periodLabel =
     period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : 'This quarter'
   const header = accountName
@@ -47,11 +51,7 @@ async function fetchLinkedInMetrics(connectionId: string, period: Period) {
   }
 }
 
-function renderLinkedInMetrics(
-  metrics: Metric[],
-  timeSeries: MetricTimeSeries[],
-  period: Period
-) {
+function renderLinkedInMetrics(metrics: Metric[], timeSeries: MetricTimeSeries[], period: Period) {
   const getTimeSeriesForMetric = (label: string) => {
     const series = timeSeries.find((s) => s.label === label)
     return series?.data

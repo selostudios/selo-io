@@ -93,12 +93,16 @@ async function analyzeBatch(batch: PageContent[]): Promise<{
 
 ## Pages to Analyze
 
-${pageContents.map((p, i) => `
+${pageContents
+  .map(
+    (p, i) => `
 ### Page ${i + 1}: ${p.url}
 
 ${p.content.slice(0, 6000)}
 ${p.content.length > 6000 ? '...[truncated for brevity]' : ''}
-`).join('\n\n')}
+`
+  )
+  .join('\n\n')}
 
 Analyze each page and provide structured output with scores, findings, and recommendations.
 
@@ -138,7 +142,9 @@ Return ONLY the JSON object, no explanation text before or after.`
       parsedResponse = JSON.parse(cleanedText)
     } catch (parseError) {
       console.error('[AI Auditor] Failed to parse JSON response:', result.text.slice(0, 500))
-      throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`)
+      throw new Error(
+        `Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+      )
     }
 
     // Claude sometimes returns a bare array instead of wrapping it in an object
@@ -168,7 +174,9 @@ Return ONLY the JSON object, no explanation text before or after.`
         stack: error.stack,
       })
     }
-    throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
   }
 }
 
@@ -250,10 +258,10 @@ export function calculateStrategicScore(analyses: AIOPageAnalysis[]): number {
   // Weights for each dimension (sum to 1.0)
   const weights = {
     dataQuality: 0.25,
-    expertCredibility: 0.20,
-    comprehensiveness: 0.20,
+    expertCredibility: 0.2,
+    comprehensiveness: 0.2,
     citability: 0.25,
-    authority: 0.10,
+    authority: 0.1,
   }
 
   // Calculate weighted average across all pages

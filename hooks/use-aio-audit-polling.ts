@@ -27,7 +27,10 @@ export function useAIOAuditPolling(auditId: string): AIOAuditPollingResult {
           setChecks(data.checks ?? [])
 
           // Stop polling if audit is complete or failed
-          if (data.audit?.status === AIOAuditStatus.Completed || data.audit?.status === AIOAuditStatus.Failed) {
+          if (
+            data.audit?.status === AIOAuditStatus.Completed ||
+            data.audit?.status === AIOAuditStatus.Failed
+          ) {
             setIsPolling(false)
             return
           }

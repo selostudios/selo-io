@@ -13,6 +13,7 @@
 ## Overview
 
 This refactoring converts ~60+ string literal comparisons across the codebase to type-safe enum references. TypeScript enums provide:
+
 - IDE autocomplete and refactoring support
 - Single source of truth for valid values
 - Compile-time type checking
@@ -25,6 +26,7 @@ This refactoring converts ~60+ string literal comparisons across the codebase to
 ## Task 1: Create Centralized Enums File
 
 **Files:**
+
 - Create: `lib/enums.ts`
 
 **Step 1: Create the enums file with all shared enums**
@@ -224,6 +226,7 @@ git commit -m "feat: add centralized TypeScript enums"
 ## Task 2: Update Audit Types to Use Enums
 
 **Files:**
+
 - Modify: `lib/audit/types.ts`
 
 **Step 1: Update imports and type definitions**
@@ -231,12 +234,7 @@ git commit -m "feat: add centralized TypeScript enums"
 Replace the string literal types with enum imports:
 
 ```typescript
-import {
-  AuditStatus,
-  CheckType,
-  CheckPriority,
-  CheckStatus,
-} from '@/lib/enums'
+import { AuditStatus, CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 // Re-export enums for convenience
 export { AuditStatus, CheckType, CheckPriority, CheckStatus }
@@ -267,6 +265,7 @@ git commit -m "refactor: use enums in audit types"
 ## Task 3: Update Audit Runner String Comparisons
 
 **Files:**
+
 - Modify: `lib/audit/runner.ts`
 - Modify: `lib/audit/batch-crawler.ts`
 
@@ -281,6 +280,7 @@ import { AuditStatus, CheckStatus } from '@/lib/enums'
 **Step 2: Replace string comparisons in runner.ts**
 
 Find and replace:
+
 - `status === 'stopped'` → `status === AuditStatus.Stopped`
 - `status === 'completed'` → `status === AuditStatus.Completed`
 - `check.status === 'passed'` → `check.status === CheckStatus.Passed`
@@ -314,6 +314,7 @@ git commit -m "refactor: use AuditStatus and CheckStatus enums in audit runner"
 ## Task 4: Update Audit PDF and Summary
 
 **Files:**
+
 - Modify: `lib/audit/pdf.tsx`
 - Modify: `lib/audit/summary.ts`
 - Modify: `lib/pdf/components.tsx`
@@ -372,6 +373,7 @@ git commit -m "refactor: use CheckPriority and CheckStatus enums in PDF/summary"
 ## Task 5: Update Performance Types and Runner
 
 **Files:**
+
 - Modify: `lib/performance/types.ts`
 - Modify: `lib/performance/runner.ts`
 - Modify: `lib/performance/pdf.tsx`
@@ -379,11 +381,7 @@ git commit -m "refactor: use CheckPriority and CheckStatus enums in PDF/summary"
 **Step 1: Update performance/types.ts**
 
 ```typescript
-import {
-  PerformanceAuditStatus,
-  CWVRating,
-  DeviceType,
-} from '@/lib/enums'
+import { PerformanceAuditStatus, CWVRating, DeviceType } from '@/lib/enums'
 
 // Re-export for convenience
 export { PerformanceAuditStatus, CWVRating, DeviceType }
@@ -401,6 +399,7 @@ import { PerformanceAuditStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `status === 'stopped'` → `status === PerformanceAuditStatus.Stopped`
 
 **Step 3: Update performance/pdf.tsx**
@@ -410,6 +409,7 @@ import { DeviceType } from '@/lib/enums'
 ```
 
 Replace:
+
 - `r.device === 'mobile'` → `r.device === DeviceType.Mobile`
 - `r.device === 'desktop'` → `r.device === DeviceType.Desktop`
 
@@ -430,18 +430,14 @@ git commit -m "refactor: use PerformanceAuditStatus and DeviceType enums"
 ## Task 6: Update AIO Types and Runner
 
 **Files:**
+
 - Modify: `lib/aio/types.ts`
 - Modify: `lib/aio/runner.ts`
 
 **Step 1: Update aio/types.ts**
 
 ```typescript
-import {
-  AIOAuditStatus,
-  AIOCheckCategory,
-  CheckPriority,
-  CheckStatus,
-} from '@/lib/enums'
+import { AIOAuditStatus, AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 
 // Re-export and create alias for AIO-specific priority
 export { AIOAuditStatus, AIOCheckCategory, CheckStatus }
@@ -461,6 +457,7 @@ import { AIOCheckCategory, CheckPriority, CheckStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `check.priority === 'critical'` → `check.priority === CheckPriority.Critical`
 - `check.priority === 'recommended'` → `check.priority === CheckPriority.Recommended`
 - `check.status === 'passed'` → `check.status === CheckStatus.Passed`
@@ -486,6 +483,7 @@ git commit -m "refactor: use AIO enums in types and runner"
 ## Task 7: Update Organization Types
 
 **Files:**
+
 - Modify: `lib/organizations/types.ts`
 - Modify: `app/(authenticated)/organizations/client.tsx`
 
@@ -506,6 +504,7 @@ import { OrganizationStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `o.status === 'prospect'` → `o.status === OrganizationStatus.Prospect`
 - `o.status === 'customer'` → `o.status === OrganizationStatus.Customer`
 - `o.status === 'inactive'` → `o.status === OrganizationStatus.Inactive`
@@ -527,6 +526,7 @@ git commit -m "refactor: use OrganizationStatus enum"
 ## Task 8: Update Permissions with UserRole Enum
 
 **Files:**
+
 - Modify: `lib/permissions.ts`
 
 **Step 1: Update permissions.ts**
@@ -560,6 +560,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 **Step 2: Update canAccessAllAudits function**
 
 Replace:
+
 - `userRecord.role === 'admin'` → `userRecord.role === UserRole.Admin`
 - `userRecord.role === 'developer'` → `userRecord.role === UserRole.Developer`
 
@@ -580,6 +581,7 @@ git commit -m "refactor: use UserRole enum in permissions"
 ## Task 9: Update Campaign Status
 
 **Files:**
+
 - Modify: `lib/utils.ts`
 
 **Step 1: Update utils.ts**
@@ -626,6 +628,7 @@ git commit -m "refactor: use CampaignStatus enum instead of const object"
 ## Task 10: Update Feedback Types
 
 **Files:**
+
 - Modify: `lib/types/feedback.ts`
 
 **Step 1: Update feedback.ts**
@@ -687,6 +690,7 @@ git commit -m "refactor: use Feedback enums in types"
 ## Task 11: Update Period Type and Date Ranges
 
 **Files:**
+
 - Modify: `lib/metrics/types.ts`
 - Modify: `lib/utils/date-ranges.ts`
 - Modify: `lib/metrics/format.ts`
@@ -720,10 +724,7 @@ export function getDateRange(period: Period): DateRange {
   // Quarter case is the else
 }
 
-export function getPreviousPeriodRange(
-  currentRange: DateRange,
-  period: Period
-): DateRange {
+export function getPreviousPeriodRange(currentRange: DateRange, period: Period): DateRange {
   if (period === Period.Quarter) {
     // ...
   }
@@ -765,6 +766,7 @@ git commit -m "refactor: use Period enum in metrics and date ranges"
 ## Task 12: Update Google Analytics Channel Comparisons
 
 **Files:**
+
 - Modify: `lib/platforms/google-analytics/client.ts`
 
 **Step 1: Add enum import**
@@ -817,6 +819,7 @@ git commit -m "refactor: use GAChannel enum in Google Analytics client"
 ## Task 13: Update Brandfetch Client
 
 **Files:**
+
 - Modify: `lib/brandfetch/client.ts`
 
 **Step 1: Add enum import**
@@ -859,6 +862,7 @@ git commit -m "refactor: use LogoType and ImageFormat enums in Brandfetch"
 ## Task 14: Update UI Components with Enum Comparisons
 
 **Files:**
+
 - Modify: `components/audit/check-list.tsx`
 - Modify: `components/audit/audit-report.tsx`
 - Modify: `components/performance/performance-live-progress.tsx`
@@ -889,6 +893,7 @@ import { PerformanceAuditStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `progress?.status === 'failed'` → `progress?.status === PerformanceAuditStatus.Failed`
 - `progress?.status === 'stopped'` → `progress?.status === PerformanceAuditStatus.Stopped`
 - `progress?.status === 'pending'` → `progress?.status === PerformanceAuditStatus.Pending`
@@ -908,6 +913,7 @@ import { AuditStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `data.status === 'batch_complete'` → `data.status === AuditStatus.BatchComplete`
 - `data.status === 'pending'` → `data.status === AuditStatus.Pending`
 - `data.status === 'crawling'` → `data.status === AuditStatus.Crawling`
@@ -920,6 +926,7 @@ import { AIOAuditStatus } from '@/lib/enums'
 ```
 
 Replace:
+
 - `data.audit?.status === 'completed'` → `data.audit?.status === AIOAuditStatus.Completed`
 - `data.audit?.status === 'failed'` → `data.audit?.status === AIOAuditStatus.Failed`
 
@@ -942,6 +949,7 @@ git commit -m "refactor: use enums in UI components and hooks"
 ## Task 15: Update Dashboard Platform Sections
 
 **Files:**
+
 - Modify: `components/dashboard/integrations-panel.tsx` (if Period type used)
 - Modify: `components/dashboard/platform-section/types.ts`
 

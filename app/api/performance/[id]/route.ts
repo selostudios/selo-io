@@ -42,6 +42,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const { searchParams } = new URL(request.url)
+  const force = searchParams.get('force') === 'true'
+
   const supabase = await createClient()
 
   const {
@@ -74,6 +77,24 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   // Use service client to bypass RLS for deletion
   const serviceClient = createServiceClient()
+
+  // Check if any reports use this audit
+  const { count: reportCount } = await serviceClient
+    .from('generated_reports')
+    .select('*', { count: 'exact', head: true })
+    .eq('performance_audit_id', id)
+
+  // If reports exist and force is not set, return warning
+  if (reportCount && reportCount > 0 && !force) {
+    return NextResponse.json(
+      {
+        error: 'Audit is used in reports',
+        reportCount,
+        message: `This audit is used in ${reportCount} report${reportCount > 1 ? 's' : ''}. Deleting it will also delete those reports.`,
+      },
+      { status: 409 }
+    )
+  }
 
   // Delete results first (cascade should handle this, but be explicit)
   await serviceClient.from('performance_audit_results').delete().eq('audit_id', id)

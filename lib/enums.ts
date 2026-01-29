@@ -173,3 +173,53 @@ export enum ImageFormat {
   PNG = 'png',
   JPG = 'jpg',
 }
+
+// =============================================================================
+// Report Enums
+// =============================================================================
+
+export enum ShareExpiration {
+  SevenDays = '7d',
+  ThirtyDays = '30d',
+  NinetyDays = '90d',
+  Custom = 'custom',
+}
+
+export enum ShareErrorCode {
+  NotFound = 'not_found',
+  Expired = 'expired',
+  ViewLimitExceeded = 'view_limit_exceeded',
+  PasswordRequired = 'password_required',
+  InvalidPassword = 'invalid_password',
+  ReportNotFound = 'report_not_found',
+}
+
+export enum ScoreStatus {
+  Good = 'good',
+  NeedsImprovement = 'needs_improvement',
+  Poor = 'poor',
+}
+
+export enum ReportPriority {
+  High = 'high',
+  Medium = 'medium',
+  Low = 'low',
+}
+
+export enum ReportEffort {
+  QuickWin = 'quick_win',
+  Medium = 'medium',
+  Major = 'major',
+}
+
+export enum ReportOwner {
+  Marketing = 'marketing',
+  Developer = 'developer',
+  Content = 'content',
+}
+
+export enum AuditSource {
+  SEO = 'seo',
+  PageSpeed = 'page_speed',
+  AIO = 'aio',
+}

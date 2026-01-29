@@ -16,10 +16,11 @@ export const faqSection: AIOCheckDefinition = {
     const $ = cheerio.load(context.html)
 
     // Check for FAQPage schema
-    const hasFAQSchema = $('script[type="application/ld+json"]').filter((_, el) => {
-      const content = $(el).html()
-      return !!(content?.includes('"@type":"FAQPage"') || content?.includes('"@type": "FAQPage"'))
-    }).length > 0
+    const hasFAQSchema =
+      $('script[type="application/ld+json"]').filter((_, el) => {
+        const content = $(el).html()
+        return !!(content?.includes('"@type":"FAQPage"') || content?.includes('"@type": "FAQPage"'))
+      }).length > 0
 
     // Check for FAQ-related headings
     const faqHeadings = $('h1, h2, h3, h4, h5, h6').filter((_, el) => {
@@ -41,8 +42,10 @@ export const faqSection: AIOCheckDefinition = {
       return {
         status: CheckStatus.Failed,
         details: {
-          message: 'No FAQ section detected. AI engines prioritize sites with Q&A content for direct answer citations.',
-          fixGuidance: 'Add a FAQ section with common questions and detailed answers. Use FAQPage schema markup for best results.',
+          message:
+            'No FAQ section detected. AI engines prioritize sites with Q&A content for direct answer citations.',
+          fixGuidance:
+            'Add a FAQ section with common questions and detailed answers. Use FAQPage schema markup for best results.',
         },
       }
     } else if (hasFAQSchema) {

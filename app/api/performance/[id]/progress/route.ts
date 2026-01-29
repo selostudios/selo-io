@@ -53,10 +53,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   // Check for stale running audits and mark them as completed with partial results
-  if (
-    audit.status === PerformanceAuditStatus.Running &&
-    audit.started_at
-  ) {
+  if (audit.status === PerformanceAuditStatus.Running && audit.started_at) {
     const startedAt = new Date(audit.started_at).getTime()
     const now = Date.now()
     const elapsed = now - startedAt

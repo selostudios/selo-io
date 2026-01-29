@@ -2,13 +2,7 @@
 
 import { useState, type ReactNode, type KeyboardEvent } from 'react'
 import { Loader2 } from 'lucide-react'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -102,10 +96,7 @@ export function AuditRunControl({
             <Button onClick={handleRunAudit} disabled={isDisabled}>
               {isRunning ? (
                 <>
-                  <Loader2
-                    className="mr-2 h-4 w-4 motion-safe:animate-spin"
-                    aria-hidden="true"
-                  />
+                  <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
                   Running...
                 </>
               ) : (
@@ -135,10 +126,7 @@ export function AuditRunControl({
               <Button onClick={handleRunAudit} disabled={isDisabled}>
                 {isRunning ? (
                   <>
-                    <Loader2
-                      className="mr-2 h-4 w-4 motion-safe:animate-spin"
-                      aria-hidden="true"
-                    />
+                    <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
                     Running...
                   </>
                 ) : (

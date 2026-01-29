@@ -49,7 +49,10 @@ export function AIOLiveProgress({ auditId, initialStatus }: AIOLiveProgressProps
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 motion-safe:animate-spin text-neutral-400" aria-hidden="true" />
+            <Loader2
+              className="h-5 w-5 text-neutral-400 motion-safe:animate-spin"
+              aria-hidden="true"
+            />
             {currentStatus === 'pending' && 'Starting Audit…'}
             {currentStatus === 'running' && 'Running Analysis…'}
           </CardTitle>
@@ -93,7 +96,8 @@ export function AIOLiveProgress({ auditId, initialStatus }: AIOLiveProgressProps
                     priority: check.priority,
                     status: check.status,
                     display_name: check.display_name ?? check.check_name,
-                    display_name_passed: check.display_name_passed ?? check.display_name ?? check.check_name,
+                    display_name_passed:
+                      check.display_name_passed ?? check.display_name ?? check.check_name,
                     details: check.details,
                     learn_more_url: check.learn_more_url ?? undefined,
                     created_at: check.created_at,

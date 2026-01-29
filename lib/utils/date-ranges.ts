@@ -31,10 +31,7 @@ export function getDateRange(period: Period): DateRange {
   return { start: quarterStart, end }
 }
 
-export function getPreviousPeriodRange(
-  currentRange: DateRange,
-  period: Period
-): DateRange {
+export function getPreviousPeriodRange(currentRange: DateRange, period: Period): DateRange {
   if (period === Period.Quarter) {
     return getPreviousQuarterRange(currentRange.start)
   }

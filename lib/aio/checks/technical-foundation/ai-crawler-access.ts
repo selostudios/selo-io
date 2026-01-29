@@ -52,7 +52,8 @@ export const aiCrawlerAccess: AIOCheckDefinition = {
           details: {
             message: `Your robots.txt blocks these AI crawlers: ${blocked.join(', ')}. This prevents AI engines from indexing and citing your content.`,
             blocked,
-            fixGuidance: 'Remove or comment out Disallow rules for AI crawlers in your robots.txt file.',
+            fixGuidance:
+              'Remove or comment out Disallow rules for AI crawlers in your robots.txt file.',
           },
         }
       }

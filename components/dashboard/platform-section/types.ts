@@ -26,16 +26,15 @@ export interface PlatformSectionProps<TMetrics> {
   connections: PlatformConnection[]
   period: Period
   config: PlatformConfig
-  getMetrics: (connectionId: string, period: Period) => Promise<{
+  getMetrics: (
+    connectionId: string,
+    period: Period
+  ) => Promise<{
     metrics?: TMetrics
     timeSeries?: MetricTimeSeries[]
   }>
   formatMetricsForClipboard: (metrics: TMetrics, period: Period, accountName?: string) => string
-  renderMetrics: (
-    metrics: TMetrics,
-    timeSeries: MetricTimeSeries[],
-    period: Period
-  ) => ReactNode
+  renderMetrics: (metrics: TMetrics, timeSeries: MetricTimeSeries[], period: Period) => ReactNode
 }
 
 export function getConnectionLabel(connection: PlatformConnection): string {

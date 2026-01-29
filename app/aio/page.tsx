@@ -258,10 +258,13 @@ export default function AIOAuditPage() {
 
                 {/* AI Analysis Loading State */}
                 {aioAudit.status === 'running_ai' && aioAudit.aiAnalyses.length === 0 && (
-                  <div className="flex items-center justify-center rounded-md border bg-muted/30 py-8">
+                  <div className="bg-muted/30 flex items-center justify-center rounded-md border py-8">
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-                      <p className="text-sm text-muted-foreground">
+                      <Loader2
+                        className="text-muted-foreground h-6 w-6 animate-spin"
+                        aria-hidden="true"
+                      />
+                      <p className="text-muted-foreground text-sm">
                         Running AI quality analysis on {aioAudit.selectedPages.length}{' '}
                         {aioAudit.selectedPages.length === 1 ? 'page' : 'pages'}…
                       </p>
@@ -276,10 +279,10 @@ export default function AIOAuditPage() {
 
                 {/* Token Usage and Cost */}
                 {isComplete && aioAudit.tokenUsage.total > 0 && (
-                  <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4">
+                  <div className="bg-muted/30 flex items-center justify-between rounded-md border p-4">
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Analysis Complete</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         Analyzed {aioAudit.selectedPages.length}{' '}
                         {aioAudit.selectedPages.length === 1 ? 'page' : 'pages'} in{' '}
                         {aioAudit.executionTime !== null
@@ -313,17 +316,17 @@ export default function AIOAuditPage() {
               Enter your website URL above and configure the sample size to start your AIO audit
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <CardContent className="text-muted-foreground space-y-4 text-sm">
             <div className="space-y-2">
-              <p className="font-medium text-foreground">What is AIO?</p>
+              <p className="text-foreground font-medium">What is AIO?</p>
               <p>
-                Artificial Intelligence Optimization (AIO) is the practice of optimizing content for AI
-                systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need
+                Artificial Intelligence Optimization (AIO) is the practice of optimizing content for
+                AI systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need
                 different signals than traditional search engines.
               </p>
             </div>
             <div className="space-y-2">
-              <p className="font-medium text-foreground">What we check:</p>
+              <p className="text-foreground font-medium">What we check:</p>
               <ul className="list-inside list-disc space-y-1">
                 <li>
                   <strong>Technical Foundation:</strong> AI crawler access, schema markup, page

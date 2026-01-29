@@ -9,7 +9,8 @@ export const schemaMarkup: AIOCheckDefinition = {
   description: 'Structured data helps AI engines understand and extract your content',
   displayName: 'Missing Structured Data',
   displayNamePassed: 'Structured Data Present',
-  learnMoreUrl: 'https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data',
   isSiteWide: false,
 
   async run(context: AIOCheckContext): Promise<CheckResult> {
@@ -24,7 +25,11 @@ export const schemaMarkup: AIOCheckDefinition = {
         const content = $(element).html()
         if (content) {
           const data = JSON.parse(content)
-          const type = data['@type'] || (Array.isArray(data) ? data.map((d: { '@type': string }) => d['@type']).join(', ') : 'Unknown')
+          const type =
+            data['@type'] ||
+            (Array.isArray(data)
+              ? data.map((d: { '@type': string }) => d['@type']).join(', ')
+              : 'Unknown')
           schemas.push(type)
         }
       } catch {
@@ -33,17 +38,27 @@ export const schemaMarkup: AIOCheckDefinition = {
     })
 
     // Prioritize schema types most valuable for AIO
-    const aioRelevantSchemas = ['Article', 'FAQPage', 'HowTo', 'Organization', 'Person', 'Product', 'Review']
-    const foundRelevant = schemas.filter(schema =>
-      aioRelevantSchemas.some(relevant => schema.includes(relevant))
+    const aioRelevantSchemas = [
+      'Article',
+      'FAQPage',
+      'HowTo',
+      'Organization',
+      'Person',
+      'Product',
+      'Review',
+    ]
+    const foundRelevant = schemas.filter((schema) =>
+      aioRelevantSchemas.some((relevant) => schema.includes(relevant))
     )
 
     if (schemas.length === 0) {
       return {
         status: CheckStatus.Failed,
         details: {
-          message: 'No structured data found. AI engines rely on Schema.org markup to understand content type and extract key information.',
-          fixGuidance: 'Add JSON-LD structured data for Article, FAQPage, or HowTo depending on your content type.',
+          message:
+            'No structured data found. AI engines rely on Schema.org markup to understand content type and extract key information.',
+          fixGuidance:
+            'Add JSON-LD structured data for Article, FAQPage, or HowTo depending on your content type.',
         },
       }
     }

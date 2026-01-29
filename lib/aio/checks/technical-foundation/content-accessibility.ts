@@ -27,7 +27,9 @@ export const contentAccessibility: AIOCheckDefinition = {
     if (images.length > 0) {
       const altTextCoverage = ((images.length - imagesWithoutAlt) / images.length) * 100
       if (altTextCoverage < 50) {
-        issues.push(`${imagesWithoutAlt} of ${images.length} images missing alt text (${altTextCoverage.toFixed(0)}% coverage)`)
+        issues.push(
+          `${imagesWithoutAlt} of ${images.length} images missing alt text (${altTextCoverage.toFixed(0)}% coverage)`
+        )
       } else if (altTextCoverage < 100) {
         issues.push(`${imagesWithoutAlt} of ${images.length} images missing alt text`)
       } else {
@@ -36,7 +38,9 @@ export const contentAccessibility: AIOCheckDefinition = {
     }
 
     // Check for ARIA landmarks
-    const ariaLandmarks = $('[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], main, nav, header, footer').length
+    const ariaLandmarks = $(
+      '[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], main, nav, header, footer'
+    ).length
     if (ariaLandmarks > 0) {
       goodPractices.push(`${ariaLandmarks} ARIA landmarks found`)
     } else {
@@ -94,7 +98,8 @@ export const contentAccessibility: AIOCheckDefinition = {
         details: {
           message: `Multiple accessibility issues: ${issues.join('; ')}`,
           issues,
-          fixGuidance: 'Implement alt text for all images, use semantic HTML, and add proper ARIA landmarks.',
+          fixGuidance:
+            'Implement alt text for all images, use semantic HTML, and add proper ARIA landmarks.',
         },
       }
     }

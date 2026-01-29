@@ -9,7 +9,8 @@ export const javascriptRendering: AIOCheckDefinition = {
   description: 'Content should be available in initial HTML for reliable AI crawler access',
   displayName: 'JavaScript-Dependent Content',
   displayNamePassed: 'Server-Rendered Content',
-  learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics',
+  learnMoreUrl:
+    'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics',
   isSiteWide: false,
 
   async run(context: AIOCheckContext): Promise<CheckResult> {
@@ -17,11 +18,14 @@ export const javascriptRendering: AIOCheckDefinition = {
 
     // Count text content in initial HTML
     const bodyText = $('body').text().trim()
-    const wordCount = bodyText.split(/\s+/).filter(w => w.length > 0).length
+    const wordCount = bodyText.split(/\s+/).filter((w) => w.length > 0).length
 
     // Check for common client-side rendering frameworks
     const frameworks = {
-      react: context.html.includes('__NEXT_DATA__') || context.html.includes('_reactRoot') || $('#root').length > 0,
+      react:
+        context.html.includes('__NEXT_DATA__') ||
+        context.html.includes('_reactRoot') ||
+        $('#root').length > 0,
       vue: context.html.includes('v-cloak') || $('[v-app]').length > 0,
       angular: context.html.includes('ng-version') || $('[ng-app]').length > 0,
       svelte: context.html.includes('__SVELTE__'),
@@ -46,7 +50,8 @@ export const javascriptRendering: AIOCheckDefinition = {
           message: `Very little content in initial HTML (${wordCount} words). AI crawlers may not see your content if it requires JavaScript execution.`,
           wordCount,
           detectedFrameworks,
-          fixGuidance: 'Implement server-side rendering (SSR) or static site generation (SSG) to ensure content is available in initial HTML.',
+          fixGuidance:
+            'Implement server-side rendering (SSR) or static site generation (SSG) to ensure content is available in initial HTML.',
         },
       }
     } else if (wordCount < 200 && detectedFrameworks.length > 0 && !hasSSRIndicators) {
@@ -56,7 +61,8 @@ export const javascriptRendering: AIOCheckDefinition = {
           message: `Limited content in initial HTML (${wordCount} words). Framework detected (${detectedFrameworks.join(', ')}) but SSR not confirmed. AI crawlers may miss dynamically loaded content.`,
           wordCount,
           detectedFrameworks,
-          fixGuidance: 'Enable server-side rendering to ensure all content is available to AI crawlers.',
+          fixGuidance:
+            'Enable server-side rendering to ensure all content is available to AI crawlers.',
         },
       }
     } else {

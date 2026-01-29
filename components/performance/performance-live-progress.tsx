@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, XCircle, Clock, CheckCircle2, StopCircle, Smartphone, Monitor } from 'lucide-react'
+import {
+  Loader2,
+  XCircle,
+  Clock,
+  CheckCircle2,
+  StopCircle,
+  Smartphone,
+  Monitor,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatDuration } from '@/lib/utils'
@@ -35,7 +43,9 @@ export function PerformanceLiveProgress({ auditId, initialStatus }: PerformanceL
   const [elapsedMs, setElapsedMs] = useState(0)
   const [isCancelling, setIsCancelling] = useState(false)
 
-  const shouldPoll = initialStatus === PerformanceAuditStatus.Pending || initialStatus === PerformanceAuditStatus.Running
+  const shouldPoll =
+    initialStatus === PerformanceAuditStatus.Pending ||
+    initialStatus === PerformanceAuditStatus.Running
 
   const handleCancel = async () => {
     setIsCancelling(true)

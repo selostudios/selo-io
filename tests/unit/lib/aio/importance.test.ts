@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  calculatePageImportance,
-  selectTopPages,
-  getAverageImportance,
-} from '@/lib/aio/importance'
+import { calculatePageImportance, selectTopPages, getAverageImportance } from '@/lib/aio/importance'
 import type { SiteAuditPage } from '@/lib/audit/types'
 
 describe('Page Importance', () => {
@@ -154,10 +150,7 @@ describe('Page Importance', () => {
     })
 
     it('should handle request for more pages than available', () => {
-      const pages = [
-        createPage('https://example.com/'),
-        createPage('https://example.com/about'),
-      ]
+      const pages = [createPage('https://example.com/'), createPage('https://example.com/about')]
 
       const topPages = selectTopPages(pages, baseUrl, 10)
 

@@ -16,10 +16,11 @@ export const stepByStepGuides: AIOCheckDefinition = {
     const $ = cheerio.load(context.html)
 
     // Check for HowTo schema
-    const hasHowToSchema = $('script[type="application/ld+json"]').filter((_, el) => {
-      const content = $(el).html()
-      return !!(content?.includes('"@type":"HowTo"') || content?.includes('"@type": "HowTo"'))
-    }).length > 0
+    const hasHowToSchema =
+      $('script[type="application/ld+json"]').filter((_, el) => {
+        const content = $(el).html()
+        return !!(content?.includes('"@type":"HowTo"') || content?.includes('"@type": "HowTo"'))
+      }).length > 0
 
     // Check for how-to headings
     const howToHeadings = $('h1, h2, h3, h4, h5, h6').filter((_, el) => {
@@ -65,7 +66,8 @@ export const stepByStepGuides: AIOCheckDefinition = {
         details: {
           message: `Step-by-step content detected (${indicators.join(', ')}) but missing HowTo schema markup`,
           indicators,
-          fixGuidance: 'Add HowTo structured data to help AI engines extract step-by-step instructions.',
+          fixGuidance:
+            'Add HowTo structured data to help AI engines extract step-by-step instructions.',
         },
       }
     } else {

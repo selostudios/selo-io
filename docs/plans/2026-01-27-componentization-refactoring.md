@@ -15,6 +15,7 @@
 ### Task 1: Create Shared Platform Types
 
 **Files:**
+
 - Create: `components/dashboard/platform-section/types.ts`
 
 **Step 1: Create the types file**
@@ -48,16 +49,15 @@ export interface PlatformSectionProps<TMetrics> {
   connections: PlatformConnection[]
   period: Period
   config: PlatformConfig
-  getMetrics: (connectionId: string, period: Period) => Promise<{
+  getMetrics: (
+    connectionId: string,
+    period: Period
+  ) => Promise<{
     metrics?: TMetrics
     timeSeries?: MetricTimeSeries[]
   }>
   formatMetricsForClipboard: (metrics: TMetrics, period: Period, accountName?: string) => string
-  renderMetrics: (
-    metrics: TMetrics,
-    timeSeries: MetricTimeSeries[],
-    period: Period
-  ) => ReactNode
+  renderMetrics: (metrics: TMetrics, timeSeries: MetricTimeSeries[], period: Period) => ReactNode
 }
 
 export function getConnectionLabel(connection: PlatformConnection): string {
@@ -85,6 +85,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 2: Create Generic PlatformSection Component
 
 **Files:**
+
 - Create: `components/dashboard/platform-section/platform-section.tsx`
 
 **Step 1: Create the component**
@@ -304,6 +305,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 3: Refactor LinkedIn Section to Use PlatformSection
 
 **Files:**
+
 - Modify: `components/dashboard/linkedin-section.tsx`
 
 **Step 1: Rewrite linkedin-section.tsx**
@@ -427,6 +429,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 4: Refactor HubSpot Section to Use PlatformSection
 
 **Files:**
+
 - Modify: `components/dashboard/hubspot-section.tsx`
 
 **Step 1: Rewrite hubspot-section.tsx**
@@ -632,6 +635,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 5: Refactor Google Analytics Section to Use PlatformSection
 
 **Files:**
+
 - Modify: `components/dashboard/google-analytics-section.tsx`
 
 **Step 1: Rewrite google-analytics-section.tsx**
@@ -841,6 +845,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 6: Create Settings Auth Helper
 
 **Files:**
+
 - Create: `lib/auth/settings-auth.ts`
 
 **Step 1: Create the auth helper**
@@ -941,6 +946,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 7: Refactor Integrations Page to Use Settings Auth
 
 **Files:**
+
 - Modify: `app/(authenticated)/settings/integrations/page.tsx`
 
 **Step 1: Refactor to use withSettingsAuth**
@@ -1013,6 +1019,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 8: Refactor Team Page to Use Settings Auth
 
 **Files:**
+
 - Modify: `app/(authenticated)/settings/team/page.tsx`
 
 **Step 1: Refactor to use withSettingsAuth**
@@ -1244,6 +1251,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 9: Refactor Organization Page to Use Settings Auth
 
 **Files:**
+
 - Modify: `app/(authenticated)/settings/organization/page.tsx`
 
 **Step 1: Refactor to use withSettingsAuth**
@@ -1358,6 +1366,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ### Task 10: Extract Shared Metrics Formatting
 
 **Files:**
+
 - Create: `lib/metrics/format.ts`
 
 **Step 1: Create the format utilities**
@@ -1482,11 +1491,11 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 
 ## Summary
 
-| Phase | Task | LOC Saved | Files Changed |
-|-------|------|-----------|---------------|
-| 1 | PlatformSection component | ~600 | 5 new, 3 modified |
-| 2 | Settings auth helper | ~120 | 1 new, 3 modified |
-| 3 | Metrics utilities | ~60 | 1 new, 1 modified |
-| **Total** | | **~780** | **7 new, 7 modified** |
+| Phase     | Task                      | LOC Saved | Files Changed         |
+| --------- | ------------------------- | --------- | --------------------- |
+| 1         | PlatformSection component | ~600      | 5 new, 3 modified     |
+| 2         | Settings auth helper      | ~120      | 1 new, 3 modified     |
+| 3         | Metrics utilities         | ~60       | 1 new, 1 modified     |
+| **Total** |                           | **~780**  | **7 new, 7 modified** |
 
 The remaining ~600 LOC savings from audit pages would require a Phase 5 for the `AuditPageShell` component, which can be implemented in a follow-up.

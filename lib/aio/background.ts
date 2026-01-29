@@ -68,7 +68,9 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
     let totalCost = 0
 
     if (audit.ai_analysis_enabled && audit.sample_size > 0) {
-      console.log(`[AIO Background] Crawling site for AI analysis (sample size: ${audit.sample_size})`)
+      console.log(
+        `[AIO Background] Crawling site for AI analysis (sample size: ${audit.sample_size})`
+      )
 
       const pages: SiteAuditPage[] = []
 
@@ -142,9 +144,11 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
         strategicScore = calculateStrategicScore(aiResult.analyses)
 
         // Calculate overall score (weighted average of technical and strategic)
-        overallScore = Math.round((technicalScore * 0.4) + (strategicScore * 0.6))
+        overallScore = Math.round(technicalScore * 0.4 + strategicScore * 0.6)
 
-        console.log(`[AIO Background] AI analysis complete: strategic=${strategicScore}, overall=${overallScore}`)
+        console.log(
+          `[AIO Background] AI analysis complete: strategic=${strategicScore}, overall=${overallScore}`
+        )
       }
     }
 
@@ -168,8 +172,9 @@ export async function runAIOAuditBackground(auditId: string, url: string): Promi
       })
       .eq('id', auditId)
 
-    console.log(`[AIO Background] Audit ${auditId} completed in ${(executionTime / 1000).toFixed(1)}s`)
-
+    console.log(
+      `[AIO Background] Audit ${auditId} completed in ${(executionTime / 1000).toFixed(1)}s`
+    )
   } catch (error) {
     console.error(`[AIO Background] Audit ${auditId} failed:`, error)
 

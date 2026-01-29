@@ -1,4 +1,8 @@
-import type { GoogleAnalyticsCredentials, GoogleAnalyticsMetrics, GoogleAnalyticsDailyMetrics } from './types'
+import type {
+  GoogleAnalyticsCredentials,
+  GoogleAnalyticsMetrics,
+  GoogleAnalyticsDailyMetrics,
+} from './types'
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
@@ -239,10 +243,7 @@ export class GoogleAnalyticsClient {
    * Fetch daily metrics breakdown for a date range.
    * Returns one record per day with that day's metrics.
    */
-  async fetchDailyMetrics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<GoogleAnalyticsDailyMetrics[]> {
+  async fetchDailyMetrics(startDate: Date, endDate: Date): Promise<GoogleAnalyticsDailyMetrics[]> {
     try {
       const propertyPath = this.propertyId.startsWith('properties/')
         ? this.propertyId
@@ -339,7 +340,9 @@ export class GoogleAnalyticsClient {
         }
       }
 
-      const result = Array.from(dailyMetricsMap.values()).sort((a, b) => a.date.localeCompare(b.date))
+      const result = Array.from(dailyMetricsMap.values()).sort((a, b) =>
+        a.date.localeCompare(b.date)
+      )
       console.log('[GA Client] Parsed daily metrics:', result.length, 'days')
       return result
     } catch (error) {

@@ -32,35 +32,35 @@ export function AIOInfoDialog() {
 
         <div className="space-y-4 text-sm">
           <div className="space-y-2">
-            <p className="font-medium text-foreground">What is AIO?</p>
+            <p className="text-foreground font-medium">What is AIO?</p>
             <p className="text-muted-foreground">
-              Artificial Intelligence Optimization (AIO) is the practice of optimizing content for AI
-              systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need different
-              signals than traditional search engines.
+              Artificial Intelligence Optimization (AIO) is the practice of optimizing content for
+              AI systems like ChatGPT, Claude, Perplexity, and Gemini. These AI engines need
+              different signals than traditional search engines.
             </p>
           </div>
 
           <div className="space-y-2">
-            <p className="font-medium text-foreground">What we check:</p>
-            <ul className="list-inside list-disc space-y-2 text-muted-foreground">
+            <p className="text-foreground font-medium">What we check:</p>
+            <ul className="text-muted-foreground list-inside list-disc space-y-2">
               <li>
-                <strong className="font-medium text-foreground">Technical Foundation:</strong> AI
+                <strong className="text-foreground font-medium">Technical Foundation:</strong> AI
                 crawler access, schema markup, page speed
               </li>
               <li>
-                <strong className="font-medium text-foreground">Content Structure:</strong> FAQ
+                <strong className="text-foreground font-medium">Content Structure:</strong> FAQ
                 sections, comparison tables, step-by-step guides
               </li>
               <li>
-                <strong className="font-medium text-foreground">Content Quality:</strong> Data
+                <strong className="text-foreground font-medium">Content Quality:</strong> Data
                 sourcing, expert credibility, comprehensiveness
               </li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <p className="font-medium text-foreground">How it works:</p>
-            <ol className="list-inside list-decimal space-y-2 text-muted-foreground">
+            <p className="text-foreground font-medium">How it works:</p>
+            <ol className="text-muted-foreground list-inside list-decimal space-y-2">
               <li>We crawl the customer website and analyze its structure</li>
               <li>Run 20 programmatic checks for technical validation (fast, $0 cost)</li>
               <li>Use AI to analyze content quality on the selected sample of pages</li>
@@ -68,9 +68,9 @@ export function AIOInfoDialog() {
             </ol>
           </div>
 
-          <div className="rounded-md border bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground">
-              <strong className="font-medium text-foreground">Sample Size:</strong> You control how
+          <div className="bg-muted/30 rounded-md border p-3">
+            <p className="text-muted-foreground text-xs">
+              <strong className="text-foreground font-medium">Sample Size:</strong> You control how
               many pages are analyzed by AI. We automatically select the most important pages based
               on depth, freshness, and content type. Higher sample sizes provide more comprehensive
               analysis but increase cost and time.

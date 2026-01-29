@@ -18,7 +18,7 @@ export const htmlStructure: AIOCheckDefinition = {
 
     // Check for semantic HTML5 elements
     const semanticElements = ['article', 'section', 'nav', 'aside', 'header', 'footer', 'main']
-    const foundSemantic = semanticElements.filter(tag => $(tag).length > 0)
+    const foundSemantic = semanticElements.filter((tag) => $(tag).length > 0)
 
     if (foundSemantic.length === 0) {
       issues.push('No semantic HTML5 elements found (article, section, header, etc.)')
@@ -58,7 +58,8 @@ export const htmlStructure: AIOCheckDefinition = {
         details: {
           message: `HTML structure could be improved: ${issues.join('; ')}`,
           issues,
-          fixGuidance: 'Use semantic HTML5 elements (article, section, header) instead of generic divs where appropriate.',
+          fixGuidance:
+            'Use semantic HTML5 elements (article, section, header) instead of generic divs where appropriate.',
         },
       }
     } else {

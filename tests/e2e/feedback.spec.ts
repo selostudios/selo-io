@@ -8,7 +8,8 @@ test.describe('Feedback Submission', () => {
     await page.fill('input[name="email"]', testUsers.admin.email)
     await page.fill('input[name="password"]', testUsers.admin.password)
     await page.click('button[type="submit"]')
-    await expect(page).toHaveURL('/dashboard')
+    // Dashboard may include org query param
+    await expect(page).toHaveURL(/\/dashboard/)
   })
 
   test('opens feedback dialog from user menu', async ({ page }) => {

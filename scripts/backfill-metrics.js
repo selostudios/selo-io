@@ -14,8 +14,8 @@ const path = require('path')
 
 // Parse command line args
 const args = process.argv.slice(2)
-const dateArg = args.find(arg => arg.match(/^\d{4}-\d{2}-\d{2}$/))
-const daysArg = args.find(arg => arg.startsWith('--days='))
+const dateArg = args.find((arg) => arg.match(/^\d{4}-\d{2}-\d{2}$/))
+const daysArg = args.find((arg) => arg.startsWith('--days='))
 const isProd = args.includes('--prod') || args.includes('-p')
 
 // Calculate start date
@@ -72,7 +72,7 @@ function loadEnv() {
   const envContent = fs.readFileSync(envPath, 'utf8')
   const env = {}
 
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line) => {
     const match = line.match(/^([^#=]+)=(.*)$/)
     if (match) {
       const key = match[1].trim()
@@ -116,7 +116,7 @@ async function backfillMetrics() {
     const syncResponse = await fetch(syncUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${env.CRON_SECRET}`,
+        Authorization: `Bearer ${env.CRON_SECRET}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -143,7 +143,9 @@ async function backfillMetrics() {
       // Only show first 10 errors to avoid flooding console
       const errorsToShow = data.errors.slice(0, 10)
       errorsToShow.forEach((err, idx) => {
-        console.log(`   ${idx + 1}. Connection ${err.connectionId.substring(0, 8)}... (${err.date || 'unknown date'})`)
+        console.log(
+          `   ${idx + 1}. Connection ${err.connectionId.substring(0, 8)}... (${err.date || 'unknown date'})`
+        )
         console.log(`      ${err.error}`)
       })
       if (data.errors.length > 10) {

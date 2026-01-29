@@ -187,7 +187,11 @@ export async function POST(request: Request) {
   console.log('[Cron Info]', {
     type: isBackfill ? 'backfill_completed' : 'daily_metrics_sync_completed',
     timestamp: new Date().toISOString(),
-    results: { synced: results.synced, failed: results.failed, daysProcessed: results.daysProcessed },
+    results: {
+      synced: results.synced,
+      failed: results.failed,
+      daysProcessed: results.daysProcessed,
+    },
   })
 
   return NextResponse.json(results)

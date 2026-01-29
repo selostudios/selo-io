@@ -26,7 +26,6 @@ interface PerformanceResultsProps {
 }
 
 export function PerformanceResults({ results, device }: PerformanceResultsProps) {
-
   // Log full PageSpeed API response data
   useEffect(() => {
     if (results.length > 0) {
@@ -94,7 +93,6 @@ export function PerformanceResults({ results, device }: PerformanceResultsProps)
 
         return (
           <div key={url} className="space-y-6">
-
             {/* Lighthouse Scores */}
             <div>
               <h4 className="text-muted-foreground mb-4 text-sm font-medium">Lighthouse Scores</h4>

@@ -115,7 +115,9 @@ export function AuditDashboard({
           {searchInput ? (
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>{isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}</CardTitle>
+                <CardTitle>
+                  {isOneTimeHistory ? 'One-time Audit History' : 'Audit History'}
+                </CardTitle>
                 {isOneTimeHistory && (
                   <CardDescription>
                     Audits run on URLs not associated with an organization

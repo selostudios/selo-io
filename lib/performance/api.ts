@@ -50,7 +50,9 @@ export async function fetchPageSpeedInsights({
   } catch (error) {
     clearTimeout(timeoutId)
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`PageSpeed API timeout after ${PAGESPEED_TIMEOUT_MS / 1000}s for ${url} (${device})`)
+      throw new Error(
+        `PageSpeed API timeout after ${PAGESPEED_TIMEOUT_MS / 1000}s for ${url} (${device})`
+      )
     }
     throw error
   }

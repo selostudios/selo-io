@@ -1,8 +1,4 @@
-import {
-  PerformanceAuditStatus,
-  CWVRating,
-  DeviceType,
-} from '@/lib/enums'
+import { PerformanceAuditStatus, CWVRating, DeviceType } from '@/lib/enums'
 
 export { PerformanceAuditStatus, CWVRating, DeviceType }
 

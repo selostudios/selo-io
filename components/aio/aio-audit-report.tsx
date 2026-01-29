@@ -74,10 +74,10 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
             href={audit.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-2xl font-bold hover:underline inline-flex items-center gap-1.5"
+            className="inline-flex items-center gap-1.5 text-2xl font-bold hover:underline"
           >
             {getDomain(audit.url)}
-            <ExternalLink className="size-5 text-muted-foreground" />
+            <ExternalLink className="text-muted-foreground size-5" />
           </a>
           <Badge
             variant={
@@ -91,7 +91,7 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
             {audit.status}
           </Badge>
         </div>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground mt-1 text-sm">
           {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
           {audit.pages_analyzed} {audit.pages_analyzed === 1 ? 'page' : 'pages'} analyzed
           {audit.execution_time_ms !== null
@@ -166,124 +166,127 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
             {/* Technical Foundation */}
             {checksByCategory['technical_foundation'] && (
               <Collapsible defaultOpen className="group/category">
-              <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/30 transition-colors">
-                <ChevronDown
-                  className={cn(
-                    'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
-                    'group-data-[state=closed]/category:-rotate-90'
-                  )}
-                />
-                <span className="font-semibold">Technical Foundation</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  ({checksByCategory['technical_foundation'].length} checks)
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 ml-6 space-y-1">
-                {checksByCategory['technical_foundation'].map((check) => (
-                  <CheckItem
-                    key={check.id}
-                    check={
-                      {
-                        id: check.id,
-                        audit_id: check.audit_id,
-                        page_id: null,
-                        check_type: 'ai_readiness',
-                        check_name: check.check_name,
-                        priority: check.priority,
-                        status: check.status,
-                        display_name: check.display_name ?? check.check_name,
-                        display_name_passed: check.display_name_passed ?? check.display_name ?? check.check_name,
-                        details: check.details,
-                        learn_more_url: check.learn_more_url ?? undefined,
-                        created_at: check.created_at,
-                      } as SiteAuditCheck
-                    }
+                <CollapsibleTrigger className="hover:bg-muted/30 flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left transition-colors">
+                  <ChevronDown
+                    className={cn(
+                      'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+                      'group-data-[state=closed]/category:-rotate-90'
+                    )}
                   />
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+                  <span className="font-semibold">Technical Foundation</span>
+                  <span className="text-muted-foreground ml-auto text-sm">
+                    ({checksByCategory['technical_foundation'].length} checks)
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1 ml-6 space-y-1">
+                  {checksByCategory['technical_foundation'].map((check) => (
+                    <CheckItem
+                      key={check.id}
+                      check={
+                        {
+                          id: check.id,
+                          audit_id: check.audit_id,
+                          page_id: null,
+                          check_type: 'ai_readiness',
+                          check_name: check.check_name,
+                          priority: check.priority,
+                          status: check.status,
+                          display_name: check.display_name ?? check.check_name,
+                          display_name_passed:
+                            check.display_name_passed ?? check.display_name ?? check.check_name,
+                          details: check.details,
+                          learn_more_url: check.learn_more_url ?? undefined,
+                          created_at: check.created_at,
+                        } as SiteAuditCheck
+                      }
+                    />
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             {/* Content Structure */}
             {checksByCategory['content_structure'] && (
               <Collapsible defaultOpen={false} className="group/category">
-              <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/30 transition-colors">
-                <ChevronDown
-                  className={cn(
-                    'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
-                    'group-data-[state=closed]/category:-rotate-90'
-                  )}
-                />
-                <span className="font-semibold">Content Structure</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  ({checksByCategory['content_structure'].length} checks)
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 ml-6 space-y-1">
-                {checksByCategory['content_structure'].map((check) => (
-                  <CheckItem
-                    key={check.id}
-                    check={
-                      {
-                        id: check.id,
-                        audit_id: check.audit_id,
-                        page_id: null,
-                        check_type: 'ai_readiness',
-                        check_name: check.check_name,
-                        priority: check.priority,
-                        status: check.status,
-                        display_name: check.display_name ?? check.check_name,
-                        display_name_passed: check.display_name_passed ?? check.display_name ?? check.check_name,
-                        details: check.details,
-                        learn_more_url: check.learn_more_url ?? undefined,
-                        created_at: check.created_at,
-                      } as SiteAuditCheck
-                    }
+                <CollapsibleTrigger className="hover:bg-muted/30 flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left transition-colors">
+                  <ChevronDown
+                    className={cn(
+                      'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+                      'group-data-[state=closed]/category:-rotate-90'
+                    )}
                   />
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+                  <span className="font-semibold">Content Structure</span>
+                  <span className="text-muted-foreground ml-auto text-sm">
+                    ({checksByCategory['content_structure'].length} checks)
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1 ml-6 space-y-1">
+                  {checksByCategory['content_structure'].map((check) => (
+                    <CheckItem
+                      key={check.id}
+                      check={
+                        {
+                          id: check.id,
+                          audit_id: check.audit_id,
+                          page_id: null,
+                          check_type: 'ai_readiness',
+                          check_name: check.check_name,
+                          priority: check.priority,
+                          status: check.status,
+                          display_name: check.display_name ?? check.check_name,
+                          display_name_passed:
+                            check.display_name_passed ?? check.display_name ?? check.check_name,
+                          details: check.details,
+                          learn_more_url: check.learn_more_url ?? undefined,
+                          created_at: check.created_at,
+                        } as SiteAuditCheck
+                      }
+                    />
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
-          {checksByCategory['content_quality'] && (
-            <Collapsible defaultOpen={false} className="group/category">
-              <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted/30 transition-colors">
-                <ChevronDown
-                  className={cn(
-                    'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
-                    'group-data-[state=closed]/category:-rotate-90'
-                  )}
-                />
-                <span className="font-semibold">Content Quality</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  ({checksByCategory['content_quality'].length} checks)
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 ml-6 space-y-1">
-                {checksByCategory['content_quality'].map((check) => (
-                  <CheckItem
-                    key={check.id}
-                    check={
-                      {
-                        id: check.id,
-                        audit_id: check.audit_id,
-                        page_id: null,
-                        check_type: 'ai_readiness',
-                        check_name: check.check_name,
-                        priority: check.priority,
-                        status: check.status,
-                        display_name: check.display_name ?? check.check_name,
-                        display_name_passed: check.display_name_passed ?? check.display_name ?? check.check_name,
-                        details: check.details,
-                        learn_more_url: check.learn_more_url ?? undefined,
-                        created_at: check.created_at,
-                      } as SiteAuditCheck
-                    }
+            {checksByCategory['content_quality'] && (
+              <Collapsible defaultOpen={false} className="group/category">
+                <CollapsibleTrigger className="hover:bg-muted/30 flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left transition-colors">
+                  <ChevronDown
+                    className={cn(
+                      'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+                      'group-data-[state=closed]/category:-rotate-90'
+                    )}
                   />
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+                  <span className="font-semibold">Content Quality</span>
+                  <span className="text-muted-foreground ml-auto text-sm">
+                    ({checksByCategory['content_quality'].length} checks)
+                  </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1 ml-6 space-y-1">
+                  {checksByCategory['content_quality'].map((check) => (
+                    <CheckItem
+                      key={check.id}
+                      check={
+                        {
+                          id: check.id,
+                          audit_id: check.audit_id,
+                          page_id: null,
+                          check_type: 'ai_readiness',
+                          check_name: check.check_name,
+                          priority: check.priority,
+                          status: check.status,
+                          display_name: check.display_name ?? check.check_name,
+                          display_name_passed:
+                            check.display_name_passed ?? check.display_name ?? check.check_name,
+                          details: check.details,
+                          learn_more_url: check.learn_more_url ?? undefined,
+                          created_at: check.created_at,
+                        } as SiteAuditCheck
+                      }
+                    />
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         </Card>
       )}

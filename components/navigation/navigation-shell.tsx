@@ -73,9 +73,10 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
         const orgParam = searchParams.get('org')
 
         // Preserve org parameter for home and seo sections
-        const href = orgParam && (section === 'home' || section === 'seo')
-          ? `${baseRoute}?org=${orgParam}`
-          : baseRoute
+        const href =
+          orgParam && (section === 'home' || section === 'seo')
+            ? `${baseRoute}?org=${orgParam}`
+            : baseRoute
 
         router.push(href)
       }

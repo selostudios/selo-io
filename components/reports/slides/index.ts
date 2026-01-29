@@ -1,0 +1,8 @@
+export { CoverSlide } from './cover-slide'
+export { TocSlide } from './toc-slide'
+export { AtAGlanceSlide } from './at-a-glance-slide'
+export { ExecutiveSummarySlide } from './executive-summary-slide'
+export { OpportunitiesSlide } from './opportunities-slide'
+export { BusinessImpactSlide } from './business-impact-slide'
+export { RecommendationsSlide } from './recommendations-slide'
+export { NextStepsSlide } from './next-steps-slide'
