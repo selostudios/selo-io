@@ -8,14 +8,17 @@ import type {
 
 /**
  * Calculate date ranges for current and previous periods based on the selected period.
+ * Uses yesterday as the end date since today's data isn't complete yet.
  */
 export function getDateRanges(period: Period): DateRanges {
   const daysBack = period === '7d' ? 7 : period === '30d' ? 30 : 90
 
-  // Current period
-  const currentEnd = new Date()
-  const currentStart = new Date()
-  currentStart.setDate(currentStart.getDate() - daysBack)
+  // Current period ends yesterday (today's data isn't complete)
+  // Use local date to avoid timezone issues
+  const now = new Date()
+  const currentEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+  const currentStart = new Date(currentEnd)
+  currentStart.setDate(currentStart.getDate() - daysBack + 1)
 
   // Previous period (same length, immediately before current)
   const previousEnd = new Date(currentStart)
@@ -35,12 +38,22 @@ export function formatDateString(date: Date): string {
 
 /**
  * Calculate percentage change between current and previous values.
+ * Returns null if previous is 0 and current is also 0.
+ * Caps extreme percentages at ±999% to avoid misleading displays.
  */
 export function calculateChange(current: number, previous: number): number | null {
   if (previous === 0) {
     return current > 0 ? 100 : null
   }
-  return ((current - previous) / previous) * 100
+  const change = ((current - previous) / previous) * 100
+
+  // Cap extreme percentages to avoid misleading displays from sparse data
+  // (e.g., comparing 324 vs 1 would show +32300% which isn't meaningful)
+  const MAX_PERCENTAGE = 999
+  if (change > MAX_PERCENTAGE) return MAX_PERCENTAGE
+  if (change < -MAX_PERCENTAGE) return -MAX_PERCENTAGE
+
+  return change
 }
 
 /**

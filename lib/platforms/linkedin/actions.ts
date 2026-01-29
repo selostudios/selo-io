@@ -5,12 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { LinkedInAdapter } from './adapter'
 import { decryptCredentials } from '@/lib/utils/crypto'
 import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
-import {
-  calculateTrendFromDb,
-  buildTimeSeriesArray,
-  getDateRanges,
-  calculateChange,
-} from '@/lib/metrics/helpers'
+import { calculateTrendFromDb, buildTimeSeriesArray } from '@/lib/metrics/helpers'
 import { LINKEDIN_METRICS } from '@/lib/metrics/types'
 import type { LinkedInCredentials } from './types'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -35,25 +30,28 @@ function getCredentials(stored: StoredCredentials): LinkedInCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches metrics from LinkedIn API and stores them in the database.
- * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
+ * @param targetDate - Optional specific date to sync. Defaults to yesterday.
  */
 export async function syncMetricsForLinkedInConnection(
   connectionId: string,
   organizationId: string,
   storedCredentials: StoredCredentials,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
   const adapter = new LinkedInAdapter(credentials, connectionId)
 
-  // Fetch only yesterday's metrics (cron runs daily)
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  yesterday.setHours(0, 0, 0, 0)
-  const endDate = new Date(yesterday)
+  // Use provided date or default to yesterday
+  const syncDate = targetDate ? new Date(targetDate) : new Date()
+  if (!targetDate) {
+    syncDate.setDate(syncDate.getDate() - 1)
+  }
+  syncDate.setHours(0, 0, 0, 0)
+  const endDate = new Date(syncDate)
   endDate.setHours(23, 59, 59, 999)
 
-  const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
+  const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
@@ -224,73 +222,12 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
       return formatLinkedInMetricsFromDb(cached, period)
     }
 
-    // 3. Otherwise, fetch fresh from API
-    const { currentStart, currentEnd, previousStart, previousEnd } = getDateRanges(period)
-
-    const credentials = getCredentials(connection.credentials as StoredCredentials)
-    const adapter = new LinkedInAdapter(credentials, connection.id)
-
-    const [currentMetrics, previousMetrics] = await Promise.all([
-      adapter.fetchMetrics(currentStart, currentEnd),
-      adapter.fetchMetrics(previousStart, previousEnd),
-    ])
-
-    // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
-    const records = adapter.normalizeToDbRecords(
-      currentMetrics,
-      userRecord.organization_id,
-      new Date()
-    )
-
-    await supabase
-      .from('campaign_metrics')
-      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
-
-    // Update last_sync_at
-    await supabase
-      .from('platform_connections')
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq('id', connection.id)
-
-    // 5. Return fresh data with historical time series from DB
-    const metrics = [
-      {
-        label: 'New Followers',
-        value: currentMetrics.followerGrowth,
-        change: calculateChange(currentMetrics.followerGrowth, previousMetrics.followerGrowth),
-      },
-      {
-        label: 'Impressions',
-        value: currentMetrics.impressions,
-        change: calculateChange(currentMetrics.impressions, previousMetrics.impressions),
-      },
-      {
-        label: 'Reactions',
-        value: currentMetrics.reactions,
-        change: calculateChange(currentMetrics.reactions, previousMetrics.reactions),
-      },
-      {
-        label: 'Page Views',
-        value: currentMetrics.pageViews,
-        change: calculateChange(currentMetrics.pageViews, previousMetrics.pageViews),
-      },
-      {
-        label: 'Unique Visitors',
-        value: currentMetrics.uniqueVisitors,
-        change: calculateChange(currentMetrics.uniqueVisitors, previousMetrics.uniqueVisitors),
-      },
-    ]
-
-    // Re-query DB for historical time series (now includes fresh data)
-    const updatedCache = await getMetricsFromDb(
-      supabase,
-      userRecord.organization_id,
-      'linkedin',
-      period
-    )
-    const timeSeries = buildTimeSeriesArray(updatedCache.metrics, LINKEDIN_METRICS, period)
-
-    return { metrics, timeSeries }
+    // 3. Cache is stale - just return DB data anyway
+    // NOTE: We no longer fetch fresh from API here because it was storing
+    // accumulated period totals as single-day values, causing massive data spikes.
+    // The daily cron job handles storing daily metrics correctly.
+    // Users can manually refresh via sync button if needed.
+    return formatLinkedInMetricsFromDb(cached, period)
   } catch (error) {
     console.error('[LinkedIn Metrics Error]', error)
     if (error instanceof Error) {

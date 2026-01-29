@@ -5,12 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { GoogleAnalyticsAdapter } from './adapter'
 import { decryptCredentials } from '@/lib/utils/crypto'
 import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
-import {
-  calculateTrendFromDb,
-  buildTimeSeriesArray,
-  getDateRanges,
-  calculateChange,
-} from '@/lib/metrics/helpers'
+import { calculateTrendFromDb, buildTimeSeriesArray } from '@/lib/metrics/helpers'
 import { GA_METRICS } from '@/lib/metrics/types'
 import type { GoogleAnalyticsCredentials, TrafficAcquisition } from './types'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -46,26 +41,29 @@ function getCredentials(stored: StoredCredentials): GoogleAnalyticsCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches daily metrics from Google Analytics API and stores them in the database.
- * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
+ * @param targetDate - Optional specific date to sync. Defaults to yesterday.
  */
 export async function syncMetricsForGoogleAnalyticsConnection(
   connectionId: string,
   organizationId: string,
   storedCredentials: StoredCredentials,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
   const adapter = new GoogleAnalyticsAdapter(credentials, connectionId)
 
-  // Fetch only yesterday's metrics (cron runs daily)
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  yesterday.setHours(0, 0, 0, 0)
-  const endDate = new Date(yesterday)
+  // Use provided date or default to yesterday
+  const syncDate = targetDate ? new Date(targetDate) : new Date()
+  if (!targetDate) {
+    syncDate.setDate(syncDate.getDate() - 1)
+  }
+  syncDate.setHours(0, 0, 0, 0)
+  const endDate = new Date(syncDate)
   endDate.setHours(23, 59, 59, 999)
 
   // Fetch daily breakdowns
-  const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
+  const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   console.log('[GA Sync] Storing', records.length, 'metric records for', dailyMetrics.length, 'days')
@@ -280,78 +278,12 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
       return formatGAMetricsFromDb(cached, period)
     }
 
-    // 3. Otherwise, fetch fresh from API
-    const { currentStart, currentEnd, previousStart, previousEnd } = getDateRanges(period)
-
-    const credentials = getCredentials(connection.credentials as StoredCredentials)
-    const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
-
-    const [currentMetrics, previousMetrics] = await Promise.all([
-      adapter.fetchMetrics(currentStart, currentEnd),
-      adapter.fetchMetrics(previousStart, previousEnd),
-    ])
-
-    // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
-    const records = adapter.normalizeToDbRecords(
-      currentMetrics,
-      userRecord.organization_id,
-      new Date()
-    )
-
-    await supabase
-      .from('campaign_metrics')
-      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
-
-    // Update last_sync_at
-    await supabase
-      .from('platform_connections')
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq('id', connection.id)
-
-    // 5. Return fresh data with historical time series from DB
-    // Re-query DB for historical time series (now includes fresh data)
-    const updatedCache = await getMetricsFromDb(
-      supabase,
-      userRecord.organization_id,
-      'google_analytics',
-      period
-    )
-    const timeSeries = buildTimeSeriesArray(updatedCache.metrics, GA_METRICS, period)
-
-    return {
-      metrics: {
-        activeUsers: currentMetrics.activeUsers,
-        activeUsersChange: calculateChange(currentMetrics.activeUsers, previousMetrics.activeUsers),
-        newUsers: currentMetrics.newUsers,
-        newUsersChange: calculateChange(currentMetrics.newUsers, previousMetrics.newUsers),
-        sessions: currentMetrics.sessions,
-        sessionsChange: calculateChange(currentMetrics.sessions, previousMetrics.sessions),
-        trafficAcquisition: currentMetrics.trafficAcquisition,
-        trafficAcquisitionChanges: {
-          direct: calculateChange(
-            currentMetrics.trafficAcquisition.direct,
-            previousMetrics.trafficAcquisition.direct
-          ),
-          organicSearch: calculateChange(
-            currentMetrics.trafficAcquisition.organicSearch,
-            previousMetrics.trafficAcquisition.organicSearch
-          ),
-          email: calculateChange(
-            currentMetrics.trafficAcquisition.email,
-            previousMetrics.trafficAcquisition.email
-          ),
-          organicSocial: calculateChange(
-            currentMetrics.trafficAcquisition.organicSocial,
-            previousMetrics.trafficAcquisition.organicSocial
-          ),
-          referral: calculateChange(
-            currentMetrics.trafficAcquisition.referral,
-            previousMetrics.trafficAcquisition.referral
-          ),
-        },
-      },
-      timeSeries,
-    }
+    // 3. Cache is stale - just return DB data anyway
+    // NOTE: We no longer fetch fresh from API here because it was storing
+    // accumulated period totals as single-day values, causing massive data spikes.
+    // The daily cron job handles storing daily metrics correctly.
+    // Users can manually refresh via sync button if needed.
+    return formatGAMetricsFromDb(cached, period)
   } catch (error) {
     console.error('[GA Metrics Error]', error)
     if (error instanceof Error) {

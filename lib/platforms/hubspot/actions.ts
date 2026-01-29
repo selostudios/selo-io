@@ -37,28 +37,30 @@ function getCredentials(stored: StoredCredentials): HubSpotCredentials {
 /**
  * Service-level sync function for use by cron jobs (no user auth required).
  * Fetches metrics from HubSpot API and stores them in the database.
- * Only syncs yesterday's data since cron runs daily (use backfill script for historical data).
+ * @param targetDate - Optional specific date to sync. Defaults to yesterday.
  */
 export async function syncMetricsForHubSpotConnection(
   connectionId: string,
   organizationId: string,
   storedCredentials: StoredCredentials,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
   const adapter = new HubSpotAdapter(credentials, connectionId)
 
-  // Fetch only yesterday's metrics (cron runs daily)
-  // days: 1 = new deals/won/lost from yesterday only (not overlapping 30-day windows)
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  yesterday.setHours(0, 0, 0, 0)
-  const endDate = new Date(yesterday)
+  // Use provided date or default to yesterday
+  const syncDate = targetDate ? new Date(targetDate) : new Date()
+  if (!targetDate) {
+    syncDate.setDate(syncDate.getDate() - 1)
+  }
+  syncDate.setHours(0, 0, 0, 0)
+  const endDate = new Date(syncDate)
   endDate.setHours(23, 59, 59, 999)
 
   // Include form submissions in cron sync (expensive but runs once daily)
-  const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
-  const records = adapter.normalizeToDbRecords(metrics, organizationId, yesterday)
+  const metrics = await adapter.fetchMetrics(syncDate, endDate, 1, true)
+  const records = adapter.normalizeToDbRecords(metrics, organizationId, syncDate)
 
   // Upsert to avoid duplicate entries
   const { error: insertError } = await supabase
