@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { nanoid } from 'nanoid'
 import type {
   ReportShare,
@@ -143,7 +144,11 @@ export async function createShareLink(input: CreateShareLinkInput): Promise<Crea
     return { success: false, error: 'Failed to create share link' }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+  // Get the base URL from headers or env
+  const headersList = await headers()
+  const host = headersList.get('host') || ''
+  const protocol = headersList.get('x-forwarded-proto') || 'https'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
   const shareUrl = `${baseUrl}/r/${token}`
 
   revalidatePath(`/seo/reports/${input.report_id}`)
