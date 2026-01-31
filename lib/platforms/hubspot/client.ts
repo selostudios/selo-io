@@ -190,15 +190,6 @@ export class HubSpotClient {
     endDate?: Date,
     days: number = 30
   ): Promise<HubSpotCRMMetrics> {
-    const emptyMetrics: HubSpotCRMMetrics = {
-      totalContacts: 0,
-      totalDeals: 0,
-      newDeals: 0,
-      totalPipelineValue: 0,
-      dealsWon: 0,
-      dealsLost: 0,
-    }
-
     try {
       // Calculate date range for "new deals" filter
       let filterStartDate: Date
@@ -354,7 +345,8 @@ export class HubSpotClient {
       return metrics
     } catch (error) {
       console.error('[HubSpot Client] CRM metrics error:', error)
-      return emptyMetrics
+      // Re-throw so callers know the fetch failed (don't silently return empty)
+      throw error
     }
   }
 
@@ -367,15 +359,6 @@ export class HubSpotClient {
     // Return cached result if available (marketing metrics don't change between period fetches)
     if (this.marketingMetricsCache) {
       return this.marketingMetricsCache
-    }
-
-    const emptyMetrics: HubSpotMarketingMetrics = {
-      emailsSent: 0,
-      emailsOpened: 0,
-      emailsClicked: 0,
-      openRate: 0,
-      clickRate: 0,
-      formSubmissions: 0,
     }
 
     try {
@@ -462,7 +445,8 @@ export class HubSpotClient {
       return metrics
     } catch (error) {
       console.error('[HubSpot Client] Marketing metrics error:', error)
-      return emptyMetrics
+      // Re-throw so callers know the fetch failed (don't silently return empty)
+      throw error
     }
   }
 

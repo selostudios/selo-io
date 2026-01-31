@@ -64,6 +64,15 @@ export async function syncMetricsForGoogleAnalyticsConnection(
 
   // Fetch daily breakdowns
   const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
+
+  if (dailyMetrics.length === 0) {
+    console.warn('[GA Sync] Warning: No data returned from GA API', {
+      connectionId,
+      syncDate: syncDate.toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
+    })
+  }
+
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   console.log(
@@ -300,7 +309,10 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     endDate.setHours(23, 59, 59, 999)
 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
+    const records = adapter.normalizeDailyMetricsToDbRecords(
+      dailyMetrics,
+      userRecord.organization_id
+    )
 
     await supabase
       .from('campaign_metrics')

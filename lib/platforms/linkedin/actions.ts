@@ -52,6 +52,15 @@ export async function syncMetricsForLinkedInConnection(
   endDate.setHours(23, 59, 59, 999)
 
   const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
+
+  if (!dailyMetrics || Object.keys(dailyMetrics).length === 0) {
+    console.warn('[LinkedIn Sync] Warning: No data returned from LinkedIn API', {
+      connectionId,
+      syncDate: syncDate.toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
+    })
+  }
+
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
   // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
@@ -238,7 +247,10 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
     endDate.setHours(23, 59, 59, 999)
 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
+    const records = adapter.normalizeDailyMetricsToDbRecords(
+      dailyMetrics,
+      userRecord.organization_id
+    )
 
     await supabase
       .from('campaign_metrics')

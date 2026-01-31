@@ -347,7 +347,8 @@ export class GoogleAnalyticsClient {
       return result
     } catch (error) {
       console.error('[GA Client] Daily metrics error:', error)
-      return []
+      // Re-throw so callers know the fetch failed (don't silently return empty)
+      throw error
     }
   }
 }

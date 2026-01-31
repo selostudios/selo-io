@@ -55,6 +55,15 @@ export async function syncMetricsForHubSpotConnection(
 
   // Include form submissions in cron sync (expensive but runs once daily)
   const metrics = await adapter.fetchMetrics(syncDate, endDate, 1, true)
+
+  if (!metrics || (metrics.crm.totalContacts === 0 && metrics.crm.totalDeals === 0)) {
+    console.warn('[HubSpot Sync] Warning: No data returned from HubSpot API', {
+      connectionId,
+      syncDate: syncDate.toISOString().split('T')[0],
+      timestamp: new Date().toISOString(),
+    })
+  }
+
   const records = adapter.normalizeToDbRecords(metrics, organizationId, syncDate)
 
   // Upsert to avoid duplicate entries
