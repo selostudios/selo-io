@@ -30,6 +30,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const supabase = createServiceClient()
+
+  // Create execution log entry
+  const { data: logEntry } = await supabase
+    .from('cron_execution_log')
+    .insert({
+      job_name: 'daily-metrics-sync',
+      status: 'running',
+    })
+    .select('id')
+    .single()
+
+  const logId = logEntry?.id
+
   // Parse optional backfill parameters from request body
   let startDate: Date | undefined
   let endDate: Date | undefined
@@ -51,8 +65,6 @@ export async function POST(request: Request) {
   } catch {
     // No body or invalid JSON - continue with default (yesterday only)
   }
-
-  const supabase = createServiceClient()
 
   // Get all active platform connections
   const { data: connections, error } = await supabase
@@ -193,6 +205,26 @@ export async function POST(request: Request) {
       daysProcessed: results.daysProcessed,
     },
   })
+
+  // Update execution log with results
+  if (logId) {
+    await supabase
+      .from('cron_execution_log')
+      .update({
+        completed_at: new Date().toISOString(),
+        status: results.failed > 0 ? 'completed_with_errors' : 'completed',
+        connections_synced: results.synced,
+        connections_failed: results.failed,
+        error_message: results.errors.length > 0 ? JSON.stringify(results.errors) : null,
+        metadata: {
+          isBackfill,
+          daysProcessed: results.daysProcessed,
+          startDate: startDate?.toISOString().split('T')[0],
+          endDate: endDate?.toISOString().split('T')[0],
+        },
+      })
+      .eq('id', logId)
+  }
 
   return NextResponse.json(results)
 }

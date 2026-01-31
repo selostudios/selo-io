@@ -225,12 +225,38 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
       return formatLinkedInMetricsFromDb(cached, period)
     }
 
-    // 3. Cache is stale - just return DB data anyway
-    // NOTE: We no longer fetch fresh from API here because it was storing
-    // accumulated period totals as single-day values, causing massive data spikes.
-    // The daily cron job handles storing daily metrics correctly.
-    // Users can manually refresh via sync button if needed.
-    return formatLinkedInMetricsFromDb(cached, period)
+    // 3. Cache is stale - sync yesterday's daily data (not accumulated period data)
+    // This correctly stores single-day values instead of the old buggy behavior
+    // that stored accumulated period totals as single-day values
+    const credentials = getCredentials(connection.credentials as StoredCredentials)
+    const adapter = new LinkedInAdapter(credentials, connection.id)
+
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    const endDate = new Date(yesterday)
+    endDate.setHours(23, 59, 59, 999)
+
+    const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, userRecord.organization_id)
+
+    await supabase
+      .from('campaign_metrics')
+      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
+
+    await supabase
+      .from('platform_connections')
+      .update({ last_sync_at: new Date().toISOString() })
+      .eq('id', connection.id)
+
+    // Re-fetch from DB to get all data including the fresh sync
+    const updatedCache = await getMetricsFromDb(
+      supabase,
+      userRecord.organization_id,
+      'linkedin',
+      period
+    )
+    return formatLinkedInMetricsFromDb(updatedCache, period)
   } catch (error) {
     console.error('[LinkedIn Metrics Error]', error)
     if (error instanceof Error) {

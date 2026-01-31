@@ -4,12 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { HubSpotAdapter } from './adapter'
 import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
-import {
-  calculateTrendFromDb,
-  buildTimeSeriesArray,
-  getDateRanges,
-  calculateChange,
-} from '@/lib/metrics/helpers'
+import { calculateTrendFromDb, buildTimeSeriesArray } from '@/lib/metrics/helpers'
 import { HUBSPOT_METRICS } from '@/lib/metrics/types'
 import type { HubSpotCredentials } from './types'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -261,88 +256,39 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
       return formatHubSpotMetricsFromDb(cached, period)
     }
 
-    // 3. Otherwise, fetch fresh from API
-    const { currentStart, currentEnd, previousStart, previousEnd } = getDateRanges(period)
-
+    // 3. Cache is stale - sync yesterday's daily data (not accumulated period data)
+    // This correctly stores single-day values instead of the old buggy behavior
+    // that stored accumulated period totals as single-day values
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new HubSpotAdapter(credentials, connection.id)
 
-    // Fetch CRM metrics for both periods (date-dependent)
-    // Skip form submissions - use cached value from DB (updated by cron/manual refresh)
-    const [currentCRM, previousCRM] = await Promise.all([
-      adapter.fetchCRMMetrics(currentStart, currentEnd),
-      adapter.fetchCRMMetrics(previousStart, previousEnd),
-    ])
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    const endDate = new Date(yesterday)
+    endDate.setHours(23, 59, 59, 999)
 
-    // Get cached form submissions value (don't overwrite with 0)
-    const cachedFormSubmissions =
-      cached.metrics.find((m) => m.metric_type === 'hubspot_form_submissions')?.value ?? 0
-
-    // Combine into full metrics objects, preserving cached form submissions
-    const marketing = {
-      emailsSent: 0,
-      emailsOpened: 0,
-      emailsClicked: 0,
-      openRate: 0,
-      clickRate: 0,
-      formSubmissions: cachedFormSubmissions,
-    }
-    const currentMetrics = { crm: currentCRM, marketing }
-    const previousMetrics = { crm: previousCRM, marketing }
-
-    // 4. Store to DB (today's snapshot, upsert to avoid duplicates)
-    // Only store CRM metrics, preserve existing marketing metrics
-    const records = adapter
-      .normalizeToDbRecords(currentMetrics, userRecord.organization_id, new Date())
-      .filter((r) => !r.metric_type.includes('form_submissions')) // Don't overwrite form submissions
+    // Fetch yesterday's metrics only
+    const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
+    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, yesterday)
 
     await supabase
       .from('campaign_metrics')
       .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
 
-    // Update last_sync_at
     await supabase
       .from('platform_connections')
       .update({ last_sync_at: new Date().toISOString() })
       .eq('id', connection.id)
 
-    // 5. Return fresh data with historical time series from DB
-    // Re-query DB for historical time series (now includes fresh data)
+    // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(
       supabase,
       userRecord.organization_id,
       'hubspot',
       period
     )
-    const timeSeries = buildTimeSeriesArray(updatedCache.metrics, HUBSPOT_METRICS, period)
-
-    return {
-      metrics: {
-        crm: {
-          ...currentMetrics.crm,
-          newDealsChange: calculateChange(
-            currentMetrics.crm.newDeals,
-            previousMetrics.crm.newDeals
-          ),
-          dealsWonChange: calculateChange(
-            currentMetrics.crm.dealsWon,
-            previousMetrics.crm.dealsWon
-          ),
-          dealsLostChange: calculateChange(
-            currentMetrics.crm.dealsLost,
-            previousMetrics.crm.dealsLost
-          ),
-        },
-        marketing: {
-          ...currentMetrics.marketing,
-          formSubmissionsChange: calculateChange(
-            currentMetrics.marketing.formSubmissions,
-            previousMetrics.marketing.formSubmissions
-          ),
-        },
-      },
-      timeSeries,
-    }
+    return formatHubSpotMetricsFromDb(updatedCache, period)
   } catch (error) {
     console.error('[HubSpot Metrics Error]', error)
     if (error instanceof Error) {
