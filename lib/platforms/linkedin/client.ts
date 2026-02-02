@@ -337,8 +337,11 @@ export class LinkedInClient {
     while (currentDate <= endDate) {
       const dayStart = new Date(currentDate)
       dayStart.setHours(0, 0, 0, 0)
+      // LinkedIn API requires end time to be at least one full day after start
+      // when using DAY granularity. Set to midnight of the next day.
       const dayEnd = new Date(currentDate)
-      dayEnd.setHours(23, 59, 59, 999)
+      dayEnd.setDate(dayEnd.getDate() + 1)
+      dayEnd.setHours(0, 0, 0, 0)
 
       const metrics = await this.getAllMetrics(dayStart, dayEnd)
 
