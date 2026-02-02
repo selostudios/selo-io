@@ -362,26 +362,32 @@ export class HubSpotClient {
     }
 
     try {
-      // Get marketing email statistics
-      // Note: This endpoint may require marketing hub subscription
+      // Get marketing email statistics using v3 API
+      // Note: This endpoint requires Marketing Hub subscription
+      // The v1 API was sunset on November 1, 2025
       let emailsSent = 0
       let emailsOpened = 0
       let emailsClicked = 0
 
       try {
+        // Use v3 API with statistics included
+        // Pagination: fetch up to 100 emails per page
         const emailsResponse = await this.fetch<{
-          objects: Array<{
-            stats: {
-              counters: {
+          results: Array<{
+            stats?: {
+              counters?: {
                 sent?: number
                 open?: number
                 click?: number
               }
             }
           }>
-        }>('/marketing-emails/v1/emails/with-statistics?limit=100')
+        }>(
+          '/marketing/v3/emails?limit=100&includeStats=true',
+          true // silent - don't log errors for expected failures (no Marketing Hub)
+        )
 
-        for (const email of emailsResponse.objects || []) {
+        for (const email of emailsResponse.results || []) {
           emailsSent += email.stats?.counters?.sent || 0
           emailsOpened += email.stats?.counters?.open || 0
           emailsClicked += email.stats?.counters?.click || 0
@@ -389,7 +395,7 @@ export class HubSpotClient {
       } catch {
         // Marketing Hub may not be available - this is expected for many accounts
         if (process.env.NODE_ENV === 'development') {
-          console.log('[HubSpot Client] Marketing emails not available')
+          console.log('[HubSpot Client] Marketing emails not available (requires Marketing Hub)')
         }
       }
 
