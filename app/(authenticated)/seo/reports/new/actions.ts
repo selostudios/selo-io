@@ -14,6 +14,10 @@ export interface NewReportPageData {
   siteAudits: SiteAudit[]
   performanceAudits: (PerformanceAudit & { domain: string | null })[]
   aioAudits: AIOAudit[]
+  // In-progress audits (shown but disabled)
+  inProgressSiteAudits: SiteAudit[]
+  inProgressPerformanceAudits: (PerformanceAudit & { domain: string | null })[]
+  inProgressAioAudits: AIOAudit[]
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
@@ -53,6 +57,22 @@ export async function getNewReportData(
 
   const { data: siteAudits } = await siteQuery
 
+  // Fetch in-progress site audits
+  let inProgressSiteQuery = supabase
+    .from('site_audits')
+    .select('*')
+    .in('status', [AuditStatus.Pending, AuditStatus.Crawling, AuditStatus.Checking])
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (filterOrgId) {
+    inProgressSiteQuery = inProgressSiteQuery.eq('organization_id', filterOrgId)
+  } else {
+    inProgressSiteQuery = inProgressSiteQuery.is('organization_id', null)
+  }
+
+  const { data: inProgressSiteAudits } = await inProgressSiteQuery
+
   // Fetch completed performance audits with their first URL for domain extraction
   let perfQuery = supabase
     .from('performance_audits')
@@ -84,6 +104,40 @@ export async function getNewReportData(
     }
   }
 
+  // Fetch in-progress performance audits
+  let inProgressPerfQuery = supabase
+    .from('performance_audits')
+    .select('*')
+    .in('status', [PerformanceAuditStatus.Pending, PerformanceAuditStatus.Running])
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (filterOrgId) {
+    inProgressPerfQuery = inProgressPerfQuery.eq('organization_id', filterOrgId)
+  } else {
+    inProgressPerfQuery = inProgressPerfQuery.is('organization_id', null)
+  }
+
+  const { data: inProgressPerfAudits } = await inProgressPerfQuery
+
+  // Get domains for in-progress performance audits
+  const inProgressPerformanceAudits: (PerformanceAudit & { domain: string | null })[] = []
+  if (inProgressPerfAudits) {
+    for (const audit of inProgressPerfAudits) {
+      const { data: results } = await supabase
+        .from('performance_audit_results')
+        .select('url')
+        .eq('audit_id', audit.id)
+        .limit(1)
+
+      const domain = results?.[0]?.url ? extractDomain(results[0].url) : null
+      inProgressPerformanceAudits.push({
+        ...audit,
+        domain,
+      } as PerformanceAudit & { domain: string | null })
+    }
+  }
+
   // Fetch completed AIO audits
   let aioQuery = supabase
     .from('aio_audits')
@@ -101,6 +155,22 @@ export async function getNewReportData(
 
   const { data: aioAudits } = await aioQuery
 
+  // Fetch in-progress AIO audits
+  let inProgressAioQuery = supabase
+    .from('aio_audits')
+    .select('*')
+    .in('status', [AIOAuditStatus.Pending, AIOAuditStatus.Running])
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (filterOrgId) {
+    inProgressAioQuery = inProgressAioQuery.eq('organization_id', filterOrgId)
+  } else {
+    inProgressAioQuery = inProgressAioQuery.is('organization_id', null)
+  }
+
+  const { data: inProgressAioAudits } = await inProgressAioQuery
+
   // Get organizations for selector
   const orgs = await getOrganizations()
   const organizations: OrganizationForSelector[] = orgs.map((org) => ({
@@ -115,6 +185,9 @@ export async function getNewReportData(
     siteAudits: (siteAudits ?? []) as SiteAudit[],
     performanceAudits,
     aioAudits: (aioAudits ?? []) as AIOAudit[],
+    inProgressSiteAudits: (inProgressSiteAudits ?? []) as SiteAudit[],
+    inProgressPerformanceAudits,
+    inProgressAioAudits: (inProgressAioAudits ?? []) as AIOAudit[],
     organizations,
     isInternal,
     selectedOrganizationId: filterOrgId,

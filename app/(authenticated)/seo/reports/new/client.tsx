@@ -32,6 +32,9 @@ interface NewReportClientProps {
   siteAudits: SiteAudit[]
   performanceAudits: (PerformanceAudit & { domain: string | null })[]
   aioAudits: AIOAudit[]
+  inProgressSiteAudits: SiteAudit[]
+  inProgressPerformanceAudits: (PerformanceAudit & { domain: string | null })[]
+  inProgressAioAudits: AIOAudit[]
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
@@ -42,6 +45,9 @@ export function NewReportClient({
   siteAudits,
   performanceAudits,
   aioAudits,
+  inProgressSiteAudits,
+  inProgressPerformanceAudits,
+  inProgressAioAudits,
   preselectedDomain,
 }: NewReportClientProps) {
   const router = useRouter()
@@ -63,17 +69,35 @@ export function NewReportClient({
     return siteAudits.filter((a) => extractDomain(a.url).includes(query))
   }, [siteAudits, searchQuery])
 
+  const filteredInProgressSiteAudits = useMemo(() => {
+    if (!searchQuery.trim()) return inProgressSiteAudits
+    const query = searchQuery.toLowerCase()
+    return inProgressSiteAudits.filter((a) => extractDomain(a.url).includes(query))
+  }, [inProgressSiteAudits, searchQuery])
+
   const filteredPerfAudits = useMemo(() => {
     if (!searchQuery.trim()) return performanceAudits
     const query = searchQuery.toLowerCase()
     return performanceAudits.filter((a) => a.domain?.includes(query))
   }, [performanceAudits, searchQuery])
 
+  const filteredInProgressPerfAudits = useMemo(() => {
+    if (!searchQuery.trim()) return inProgressPerformanceAudits
+    const query = searchQuery.toLowerCase()
+    return inProgressPerformanceAudits.filter((a) => a.domain?.includes(query))
+  }, [inProgressPerformanceAudits, searchQuery])
+
   const filteredAioAudits = useMemo(() => {
     if (!searchQuery.trim()) return aioAudits
     const query = searchQuery.toLowerCase()
     return aioAudits.filter((a) => extractDomain(a.url).includes(query))
   }, [aioAudits, searchQuery])
+
+  const filteredInProgressAioAudits = useMemo(() => {
+    if (!searchQuery.trim()) return inProgressAioAudits
+    const query = searchQuery.toLowerCase()
+    return inProgressAioAudits.filter((a) => extractDomain(a.url).includes(query))
+  }, [inProgressAioAudits, searchQuery])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -184,7 +208,7 @@ export function NewReportClient({
             <CardDescription>Select a completed site audit</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {filteredSiteAudits.length === 0 ? (
+            {filteredSiteAudits.length === 0 && filteredInProgressSiteAudits.length === 0 ? (
               <EmptyState
                 icon={FileSearch}
                 title="No SEO audits"
@@ -193,6 +217,29 @@ export function NewReportClient({
               />
             ) : (
               <div className="max-h-64 space-y-2 overflow-y-auto">
+                {/* In-progress audits (shown first, disabled) */}
+                {filteredInProgressSiteAudits.map((audit) => (
+                  <div
+                    key={audit.id}
+                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate text-sm font-medium text-neutral-500">
+                        {extractDomain(audit.url)}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
+                        <Badge variant="outline" className="text-xs">
+                          In Progress
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {formatDate(audit.created_at)}
+                    </div>
+                  </div>
+                ))}
+                {/* Completed audits (selectable) */}
                 {filteredSiteAudits.map((audit) => (
                   <button
                     key={audit.id}
@@ -233,7 +280,7 @@ export function NewReportClient({
             <CardDescription>Select a completed performance audit</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {filteredPerfAudits.length === 0 ? (
+            {filteredPerfAudits.length === 0 && filteredInProgressPerfAudits.length === 0 ? (
               <EmptyState
                 icon={Gauge}
                 title="No PageSpeed audits"
@@ -242,6 +289,29 @@ export function NewReportClient({
               />
             ) : (
               <div className="max-h-64 space-y-2 overflow-y-auto">
+                {/* In-progress audits (shown first, disabled) */}
+                {filteredInProgressPerfAudits.map((audit) => (
+                  <div
+                    key={audit.id}
+                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate text-sm font-medium text-neutral-500">
+                        {audit.domain ?? 'Unknown domain'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
+                        <Badge variant="outline" className="text-xs">
+                          In Progress
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {formatDate(audit.created_at)}
+                    </div>
+                  </div>
+                ))}
+                {/* Completed audits (selectable) */}
                 {filteredPerfAudits.map((audit) => (
                   <button
                     key={audit.id}
@@ -281,7 +351,7 @@ export function NewReportClient({
             <CardDescription>Select a completed AI optimization audit</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {filteredAioAudits.length === 0 ? (
+            {filteredAioAudits.length === 0 && filteredInProgressAioAudits.length === 0 ? (
               <EmptyState
                 icon={Bot}
                 title="No AIO audits"
@@ -290,6 +360,29 @@ export function NewReportClient({
               />
             ) : (
               <div className="max-h-64 space-y-2 overflow-y-auto">
+                {/* In-progress audits (shown first, disabled) */}
+                {filteredInProgressAioAudits.map((audit) => (
+                  <div
+                    key={audit.id}
+                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate text-sm font-medium text-neutral-500">
+                        {extractDomain(audit.url)}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
+                        <Badge variant="outline" className="text-xs">
+                          In Progress
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {formatDate(audit.created_at)}
+                    </div>
+                  </div>
+                ))}
+                {/* Completed audits (selectable) */}
                 {filteredAioAudits.map((audit) => (
                   <button
                     key={audit.id}
