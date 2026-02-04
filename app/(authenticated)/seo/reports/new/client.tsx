@@ -48,6 +48,7 @@ export function NewReportClient({
   inProgressSiteAudits,
   inProgressPerformanceAudits,
   inProgressAioAudits,
+  selectedOrganizationId,
   preselectedDomain,
 }: NewReportClientProps) {
   const router = useRouter()
@@ -185,16 +186,18 @@ export function NewReportClient({
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-        <Input
-          placeholder="Filter by domain..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      {/* Search - only show for one-time audits (no organization selected) */}
+      {!selectedOrganizationId && (
+        <div className="relative max-w-md">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder="Filter by domain..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
 
       {/* Audit Selection Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
