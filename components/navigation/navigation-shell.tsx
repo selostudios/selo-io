@@ -40,7 +40,8 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit()
+  const orgParam = searchParams.get('org')
+  const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit(orgParam)
 
   // Derive active section from current pathname
   const activeSection = getSectionFromPathname(pathname)

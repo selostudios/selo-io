@@ -1,32 +1,62 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // Audits stuck in crawling/checking for more than 15 minutes are considered stale
 // (Vercel function timeout is 800 seconds / ~13 minutes, so 15 minutes catches timeouts)
 const STALE_AUDIT_THRESHOLD_MS = 15 * 60 * 1000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
-  // Use getUser() to securely validate the session with the Auth server
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
+  // Get optional org parameter from query string
+  const requestedOrgId = request.nextUrl.searchParams.get('org')
 
-  if (error || !user) {
-    return NextResponse.json({ hasSiteAudit: false, hasPerformanceAudit: false })
+  // Use getSession() for this frequently-polled endpoint to avoid rate limits
+  // (called every 30 seconds - getUser() would exhaust Supabase auth rate limits)
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession()
+
+  if (error || !session?.user) {
+    return NextResponse.json({
+      hasSiteAudit: false,
+      hasPerformanceAudit: false,
+      hasAioAudit: false,
+    })
   }
 
-  // Get user's organization
+  const user = session.user
+
+  // Get user's organization and internal status
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('organization_id, is_internal')
     .eq('id', user.id)
     .single()
 
   if (!userRecord) {
-    return NextResponse.json({ hasSiteAudit: false, hasPerformanceAudit: false })
+    return NextResponse.json({
+      hasSiteAudit: false,
+      hasPerformanceAudit: false,
+      hasAioAudit: false,
+    })
+  }
+
+  // Determine which organization to check:
+  // - Internal users can check any org (use requested org if provided)
+  // - Non-internal users can only check their own org
+  const targetOrgId = userRecord.is_internal
+    ? requestedOrgId || userRecord.organization_id
+    : userRecord.organization_id
+
+  // If no org to check (internal user with no org selected), return no active audits
+  if (!targetOrgId) {
+    return NextResponse.json({
+      hasSiteAudit: false,
+      hasPerformanceAudit: false,
+      hasAioAudit: false,
+    })
   }
 
   let hasSiteAudit = false
@@ -37,7 +67,7 @@ export async function GET() {
   const { data: activeAudit } = await supabase
     .from('site_audits')
     .select('id, status, updated_at, created_at')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', targetOrgId)
     .in('status', ['pending', 'crawling', 'checking'])
     .order('created_at', { ascending: false })
     .limit(1)
@@ -79,7 +109,7 @@ export async function GET() {
   const { data: activePerformanceAudit } = await supabase
     .from('performance_audits')
     .select('id, status, created_at')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', targetOrgId)
     .in('status', ['pending', 'running'])
     .order('created_at', { ascending: false })
     .limit(1)
@@ -120,7 +150,7 @@ export async function GET() {
   const { data: activeAioAudit } = await supabase
     .from('aio_audits')
     .select('id, status, updated_at, created_at')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', targetOrgId)
     .in('status', ['pending', 'running'])
     .order('created_at', { ascending: false })
     .limit(1)

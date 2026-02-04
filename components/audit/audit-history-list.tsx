@@ -25,7 +25,7 @@ function formatAuditDate(dateString: string): string {
 }
 
 function isInProgress(status: SiteAudit['status']): boolean {
-  return status === 'pending' || status === 'crawling'
+  return status === 'pending' || status === 'crawling' || status === 'checking'
 }
 
 function getDomain(url: string): string {
