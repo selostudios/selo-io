@@ -28,7 +28,7 @@ interface OrgSelectorProps {
 }
 
 // SEO routes where "One-time URL" option should appear
-const SEO_ROUTES = ['/seo/site-audit', '/seo/page-speed', '/seo/aio']
+const SEO_ROUTES = ['/seo/site-audit', '/seo/page-speed', '/seo/aio', '/seo/reports']
 
 const statusColors: Record<string, string> = {
   prospect: 'bg-amber-100 text-amber-700',
@@ -65,12 +65,15 @@ export function OrgSelector({
     localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
     window.dispatchEvent(new Event('sidebar-expand'))
 
-    // Update URL - Next.js will automatically re-render Server Components with new searchParams
+    // Update URL and refresh to re-fetch server data
     const url = new URL(window.location.href)
     url.searchParams.set('org', orgId)
     const newUrl = pathname + url.search
 
-    router.push(newUrl)
+    startTransition(() => {
+      router.push(newUrl)
+      router.refresh()
+    })
   }
 
   const handleSelectOneTime = () => {
