@@ -16,7 +16,7 @@ export async function getSharedReportPresentationData(
 ): Promise<ReportPresentationData | null> {
   const supabase = await createServiceClient()
 
-  // Fetch report with audits using service role (bypasses RLS)
+  // Fetch report with audits and organization (for brand colors) using service role (bypasses RLS)
   const { data: report, error: reportError } = await supabase
     .from('generated_reports')
     .select(
@@ -24,7 +24,8 @@ export async function getSharedReportPresentationData(
       *,
       site_audit:site_audits(*),
       performance_audit:performance_audits(*),
-      aio_audit:aio_audits(*)
+      aio_audit:aio_audits(*),
+      organization:organizations(primary_color)
     `
     )
     .eq('id', reportId)
@@ -38,6 +39,9 @@ export async function getSharedReportPresentationData(
     })
     return null
   }
+
+  // Extract primary_color from organization if present
+  const primaryColor = report.organization?.primary_color ?? null
 
   // Fetch performance results
   const { data: performanceResults } = await supabase
@@ -63,6 +67,7 @@ export async function getSharedReportPresentationData(
   const reportWithAudits = {
     ...report,
     performance_results: performanceResults ?? [],
+    primary_color: primaryColor,
   }
 
   const auditData = {

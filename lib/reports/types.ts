@@ -82,6 +82,8 @@ export interface GeneratedReportWithAudits extends GeneratedReport {
   aio_audit: AIOAudit
   // Performance audit results for detailed metrics
   performance_results?: PerformanceAuditResult[]
+  // Organization brand color (fetched via join)
+  primary_color?: string | null
 }
 
 export interface ReportShareWithReport extends ReportShare {
@@ -188,6 +190,7 @@ export interface ReportPresentationData {
   // Branding
   custom_logo_url: string | null
   custom_company_name: string | null
+  primary_color: string | null
 
   // Executive summary
   executive_summary: string

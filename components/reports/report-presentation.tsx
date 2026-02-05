@@ -123,6 +123,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           date={data.created_at}
           customLogoUrl={data.custom_logo_url}
           customCompanyName={data.custom_company_name}
+          primaryColor={data.primary_color}
         />
       )
     }

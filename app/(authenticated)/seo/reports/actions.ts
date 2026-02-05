@@ -88,7 +88,7 @@ export async function getReportsPageData(organizationId?: string): Promise<Repor
 export async function getReportWithAudits(reportId: string): Promise<GeneratedReportWithAudits> {
   const supabase = await createClient()
 
-  // Fetch report with joined audits
+  // Fetch report with joined audits and organization (for brand colors)
   const { data: report, error } = await supabase
     .from('generated_reports')
     .select(
@@ -96,7 +96,8 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
       *,
       site_audit:site_audits(*),
       performance_audit:performance_audits(*),
-      aio_audit:aio_audits(*)
+      aio_audit:aio_audits(*),
+      organization:organizations(primary_color)
     `
     )
     .eq('id', reportId)
@@ -118,9 +119,13 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     .select('*')
     .eq('audit_id', report.performance_audit_id)
 
+  // Extract primary_color from organization if present
+  const primaryColor = report.organization?.primary_color ?? null
+
   return {
     ...report,
     performance_results: performanceResults ?? [],
+    primary_color: primaryColor,
   } as GeneratedReportWithAudits
 }
 

@@ -51,6 +51,7 @@ export function transformToPresentation(
     combined_score: report.combined_score ?? 0,
     custom_logo_url: report.custom_logo_url,
     custom_company_name: report.custom_company_name,
+    primary_color: report.primary_color ?? null,
     executive_summary: report.executive_summary ?? 'Summary not yet generated.',
     scores: {
       seo: { score: seoScore, status: getScoreStatus(seoScore) },
