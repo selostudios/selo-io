@@ -44,6 +44,7 @@ The dashboard displays marketing metrics from three platforms: LinkedIn, Google 
 **NEVER store accumulated period totals as daily values.**
 
 ### Correct ✅
+
 ```typescript
 // Fetch ONE day's data, store with THAT day's date
 const dailyMetrics = await adapter.fetchDailyMetrics(jan28, jan28)
@@ -53,6 +54,7 @@ adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 ```
 
 ### Wrong ❌
+
 ```typescript
 // Fetch 7 days of accumulated data, store as single day
 const periodMetrics = await adapter.fetchMetrics(jan22, jan28)
@@ -83,12 +85,14 @@ CREATE TABLE campaign_metrics (
 **Schedule:** Daily at 3 AM UTC (`0 3 * * *`)
 
 **What it does:**
+
 1. Gets all active platform connections
 2. For each connection, fetches YESTERDAY's metrics from the platform API
 3. Stores daily values in `campaign_metrics` (upsert to avoid duplicates)
 4. Updates `platform_connections.last_sync_at`
 
 **Verify cron is running:**
+
 ```sql
 -- Check last_sync_at for all connections
 SELECT organization_id, platform_type, last_sync_at, status
@@ -100,6 +104,7 @@ ORDER BY last_sync_at DESC;
 ```
 
 **Vercel Cron Logs:**
+
 1. Go to Vercel Dashboard → Project → Logs
 2. Filter by "cron" or look for `/api/cron/daily-metrics-sync`
 3. Check for errors
@@ -111,7 +116,9 @@ ORDER BY last_sync_at DESC;
 **Cause:** Accumulated period data was stored as a single day's value.
 
 **Solution:**
+
 1. Identify the bad date(s) by querying:
+
    ```sql
    SELECT date, metric_type, value
    FROM campaign_metrics
@@ -120,9 +127,11 @@ ORDER BY last_sync_at DESC;
      AND date >= '2026-01-20'
    ORDER BY date, metric_type;
    ```
+
    Look for values 10-100x higher than surrounding days.
 
 2. Delete the corrupted records:
+
    ```sql
    DELETE FROM campaign_metrics
    WHERE organization_id = '<org_id>'
@@ -138,24 +147,29 @@ ORDER BY last_sync_at DESC;
 ### Symptom: Dashboard shows stale data
 
 **Check 1:** Is the cron running?
+
 ```sql
 SELECT platform_type, last_sync_at
 FROM platform_connections
 WHERE organization_id = '<org_id>';
 ```
+
 If `last_sync_at` is >48 hours old, the cron isn't running.
 
 **Check 2:** Verify Vercel cron configuration
+
 - Check `vercel.json` has the cron defined
 - Check Vercel dashboard → Settings → Crons
 - Check `CRON_SECRET` environment variable is set
 
 **Check 3:** Check for errors in Vercel logs
+
 - Filter logs by "Cron Error" or the endpoint path
 
 ### Symptom: Cron runs but data isn't synced
 
 **Possible causes:**
+
 1. OAuth token expired → Check `platform_connections.status` for 'failed'
 2. API rate limits → Check logs for 429 errors
 3. Platform API down → Check platform status pages
@@ -163,6 +177,7 @@ If `last_sync_at` is >48 hours old, the cron isn't running.
 ## Manual Operations
 
 ### Backfill Historical Data
+
 ```bash
 # Backfill from a specific date to today
 npm run backfill:metrics -- 2026-01-20 --prod
@@ -172,7 +187,9 @@ npm run backfill:metrics -- 2026-01-20 2026-01-25 --prod
 ```
 
 ### Manual Sync (User-triggered)
+
 Users can click the refresh button on the dashboard to trigger:
+
 - `syncLinkedInMetrics()`
 - `syncGoogleAnalyticsMetrics()`
 - `syncHubSpotMetrics()`
@@ -180,6 +197,7 @@ Users can click the refresh button on the dashboard to trigger:
 These fetch yesterday's daily data and store it correctly.
 
 ### Test Cron Manually
+
 ```bash
 # From local development
 curl -X POST http://localhost:3000/api/cron/daily-metrics-sync \
@@ -195,6 +213,7 @@ curl -X POST https://your-domain.vercel.app/api/cron/daily-metrics-sync \
 ## Metric Types
 
 ### LinkedIn
+
 - `linkedin_followers` - Total follower count (cumulative)
 - `linkedin_follower_growth` - New followers that day
 - `linkedin_impressions` - Post impressions
@@ -203,6 +222,7 @@ curl -X POST https://your-domain.vercel.app/api/cron/daily-metrics-sync \
 - `linkedin_unique_visitors` - Unique page visitors
 
 ### Google Analytics
+
 - `ga_active_users` - Active users
 - `ga_new_users` - New users
 - `ga_sessions` - Total sessions
@@ -213,6 +233,7 @@ curl -X POST https://your-domain.vercel.app/api/cron/daily-metrics-sync \
 - `ga_traffic_referral` - Referral sessions
 
 ### HubSpot
+
 - `hubspot_total_contacts` - Total contacts (cumulative)
 - `hubspot_new_contacts` - New contacts that day
 - `hubspot_total_companies` - Total companies (cumulative)
@@ -223,16 +244,16 @@ curl -X POST https://your-domain.vercel.app/api/cron/daily-metrics-sync \
 
 ## Code Locations
 
-| Component | Location |
-|-----------|----------|
-| Cron job | `app/api/cron/daily-metrics-sync/route.ts` |
-| LinkedIn sync | `lib/platforms/linkedin/actions.ts` |
-| GA sync | `lib/platforms/google-analytics/actions.ts` |
-| HubSpot sync | `lib/platforms/hubspot/actions.ts` |
-| Metrics helpers | `lib/metrics/helpers.ts` |
-| Metrics queries | `lib/metrics/queries.ts` |
-| Dashboard UI | `components/dashboard/integrations-panel.tsx` |
-| Backfill script | `scripts/backfill-metrics.ts` |
+| Component       | Location                                      |
+| --------------- | --------------------------------------------- |
+| Cron job        | `app/api/cron/daily-metrics-sync/route.ts`    |
+| LinkedIn sync   | `lib/platforms/linkedin/actions.ts`           |
+| GA sync         | `lib/platforms/google-analytics/actions.ts`   |
+| HubSpot sync    | `lib/platforms/hubspot/actions.ts`            |
+| Metrics helpers | `lib/metrics/helpers.ts`                      |
+| Metrics queries | `lib/metrics/queries.ts`                      |
+| Dashboard UI    | `components/dashboard/integrations-panel.tsx` |
+| Backfill script | `scripts/backfill-metrics.ts`                 |
 
 ## Prevention Checklist
 
