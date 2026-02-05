@@ -147,20 +147,22 @@ export function OrgSelector({
       return <span className="text-neutral-500">Select organization</span>
     }
 
+    // If logo exists, show only logo; otherwise show name with status badge
+    if (selectedOrg.logo_url) {
+      return (
+        <Image
+          src={selectedOrg.logo_url}
+          alt={selectedOrg.name}
+          width={0}
+          height={0}
+          sizes="100px"
+          className="h-7 w-auto max-w-24 rounded object-contain"
+        />
+      )
+    }
+
     return (
       <>
-        {selectedOrg.logo_url ? (
-          <Image
-            src={selectedOrg.logo_url}
-            alt=""
-            width={0}
-            height={0}
-            sizes="100px"
-            className="h-7 w-auto max-w-24 rounded object-contain"
-          />
-        ) : (
-          <Building2 className="h-6 w-6 text-neutral-500" aria-hidden="true" />
-        )}
         <span className="font-medium">{selectedOrg.name}</span>
         <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
           {selectedOrg.status}
@@ -181,23 +183,20 @@ export function OrgSelector({
       )
     }
 
+    // If logo exists, show only logo; otherwise show name
     return (
       <div className="flex items-center gap-2 px-3 py-2">
         {org.logo_url ? (
           <Image
             src={org.logo_url}
-            alt=""
+            alt={org.name}
             width={0}
             height={0}
             sizes="100px"
             className="h-7 w-auto max-w-24 rounded object-contain"
           />
         ) : (
-          <Building2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
-        )}
-        <span className="font-medium">{org.name}</span>
-        {isSeoRoute && org.website_url && (
-          <span className="text-muted-foreground text-sm">({getDomain(org.website_url)})</span>
+          <span className="font-medium">{org.name}</span>
         )}
       </div>
     )
