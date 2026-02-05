@@ -147,23 +147,21 @@ export function OrgSelector({
       return <span className="text-neutral-500">Select organization</span>
     }
 
-    // If logo exists, show only logo; otherwise show name with status badge
-    if (selectedOrg.logo_url) {
-      return (
-        <Image
-          src={selectedOrg.logo_url}
-          alt={selectedOrg.name}
-          width={0}
-          height={0}
-          sizes="100px"
-          className="h-7 w-auto max-w-24 rounded object-contain"
-        />
-      )
-    }
-
+    // Show logo or name, plus status badge
     return (
       <>
-        <span className="font-medium">{selectedOrg.name}</span>
+        {selectedOrg.logo_url ? (
+          <Image
+            src={selectedOrg.logo_url}
+            alt={selectedOrg.name}
+            width={0}
+            height={0}
+            sizes="100px"
+            className="h-7 w-auto max-w-24 rounded object-contain"
+          />
+        ) : (
+          <span className="font-medium">{selectedOrg.name}</span>
+        )}
         <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
           {selectedOrg.status}
         </Badge>
