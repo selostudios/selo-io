@@ -1,16 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUser, getOrganizations } from '@/lib/organizations/actions'
-import { redirect } from 'next/navigation'
+import { getCurrentUser } from '@/lib/organizations/actions'
 import { revalidatePath } from 'next/cache'
 import { notFound } from 'next/navigation'
 import type { SiteAudit, SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
-import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type {
-  GeneratedReport,
   GeneratedReportWithAudits,
   ReportGenerationInput,
   ReportUpdateInput,
@@ -18,69 +15,19 @@ import type {
 } from '@/lib/reports/types'
 import { validateReportAudits, calculateCombinedScore, generateReportSummary } from '@/lib/reports'
 import { AuditStatus, PerformanceAuditStatus, AIOAuditStatus } from '@/lib/enums'
+import { getReportsListData } from '@/lib/actions/audit-list-helpers'
+
+// Re-export types for consumers
+export type { ReportsListResult as ReportsPageData } from '@/lib/actions/audit-list-helpers'
 
 // ============================================================
 // DATA FETCHING
 // ============================================================
 
-export interface ReportsPageData {
-  reports: GeneratedReport[]
-  organizations: OrganizationForSelector[]
-  isInternal: boolean
-  selectedOrganizationId: string | null
-}
-
 /**
  * Get reports list data for the reports page
  */
-export async function getReportsPageData(organizationId?: string): Promise<ReportsPageData> {
-  const supabase = await createClient()
-  const currentUser = await getCurrentUser()
-
-  if (!currentUser) redirect('/login')
-
-  const { isInternal, organizationId: userOrgId } = currentUser
-
-  // Determine the filter organization
-  const filterOrgId = isInternal ? organizationId || null : userOrgId
-
-  // Build reports query
-  let reportsQuery = supabase
-    .from('generated_reports')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (filterOrgId) {
-    reportsQuery = reportsQuery.eq('organization_id', filterOrgId)
-  }
-
-  const { data: reports, error } = await reportsQuery
-
-  if (error) {
-    console.error('[Get Reports Error]', {
-      type: 'reports_fetch_failed',
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    })
-  }
-
-  // Get organizations for selector
-  const orgs = await getOrganizations()
-  const organizations: OrganizationForSelector[] = orgs.map((org) => ({
-    id: org.id,
-    name: org.name,
-    website_url: org.website_url,
-    status: org.status,
-    logo_url: org.logo_url,
-  }))
-
-  return {
-    reports: (reports ?? []) as GeneratedReport[],
-    organizations,
-    isInternal,
-    selectedOrganizationId: filterOrgId,
-  }
-}
+export { getReportsListData as getReportsPageData }
 
 /**
  * Get a single report with all related audit data

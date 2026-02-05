@@ -94,7 +94,7 @@ export function EditableUtmSection({ campaignId, initialValues }: EditableUtmSec
     const result = await updateUtmParameters(campaignId, values)
     setIsSaving(false)
 
-    if (result.error) {
+    if ('error' in result) {
       showError(result.error)
     } else {
       showSuccess('UTM parameters updated')

@@ -27,7 +27,7 @@ export function EditableDescription({ campaignId, currentDescription }: Editable
     setIsLoading(true)
     const result = await updateCampaignDescription(campaignId, description)
 
-    if (result.error) {
+    if ('error' in result) {
       showError(result.error)
     } else {
       showSuccess('Description updated')

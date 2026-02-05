@@ -58,7 +58,7 @@ export default async function CampaignDetailPage({
   async function handleDelete() {
     'use server'
     const result = await deleteCampaign((await params).id)
-    if (!result?.error) {
+    if ('success' in result && result.success) {
       redirect('/dashboard/campaigns')
     }
   }

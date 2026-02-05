@@ -19,10 +19,10 @@ export function CreateCampaignForm() {
 
     const result = await createCampaign(formData)
 
-    if (result?.error) {
+    if ('error' in result) {
       setError(result.error)
       setIsLoading(false)
-    } else if (result?.success) {
+    } else {
       router.push(`/dashboard/campaigns/${result.campaign.id}`)
     }
   }

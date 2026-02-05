@@ -66,10 +66,10 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
 
     const result = await createCampaign(formData)
 
-    if (result?.error) {
+    if ('error' in result) {
       showError(result.error)
       setIsLoading(false)
-    } else if (result?.success) {
+    } else {
       showSuccess('Campaign created successfully!')
       setOpen(false)
       resetForm()
