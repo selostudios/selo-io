@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface ActiveAuditStatus {
   hasSiteAudit: boolean
   hasPerformanceAudit: boolean
   hasAioAudit: boolean
 }
+
+const POLL_INTERVAL = 30000 // 30 seconds
 
 export function useActiveAudit(organizationId?: string | null) {
   const [status, setStatus] = useState<ActiveAuditStatus>({
@@ -15,75 +17,130 @@ export function useActiveAudit(organizationId?: string | null) {
     hasAioAudit: false,
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [isPolling, setIsPolling] = useState(false)
 
-  // Use ref to track the latest organizationId for the polling closure
+  // Refs for the polling closure
   const orgIdRef = useRef(organizationId)
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+  const startPollingLoopRef = useRef<() => Promise<void>>(async () => {})
 
-  // Track org changes to trigger re-poll
-  const prevOrgIdRef = useRef(organizationId)
-
+  // Update org ref when it changes
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout
-    let isMounted = true
+    orgIdRef.current = organizationId
+  }, [organizationId])
 
-    const poll = async () => {
-      try {
-        // Build URL with optional org parameter
-        const url = new URL('/api/audit/active', window.location.origin)
-        if (orgIdRef.current) {
-          url.searchParams.set('org', orgIdRef.current)
-        }
+  // Core poll function
+  const poll = useCallback(async (): Promise<boolean> => {
+    try {
+      const url = new URL('/api/audit/active', window.location.origin)
+      if (orgIdRef.current) {
+        url.searchParams.set('org', orgIdRef.current)
+      }
 
-        const response = await fetch(url.toString())
-        if (response.ok && isMounted) {
-          const data = await response.json()
-          setStatus(data)
-        } else if (!response.ok) {
-          console.error('[Active Audit Polling Error]', {
-            type: 'http_error',
-            status: response.status,
-            timestamp: new Date().toISOString(),
-          })
-        }
-        if (isMounted) {
-          setIsLoading(false)
-          // Poll every 30 seconds to check for active audits
-          // Reduced from 10s to avoid Supabase auth rate limits
-          timeoutId = setTimeout(poll, 30000)
-        }
-      } catch (error) {
+      const response = await fetch(url.toString())
+      if (response.ok && isMountedRef.current) {
+        const data: ActiveAuditStatus = await response.json()
+        setStatus(data)
+        setIsLoading(false)
+
+        // Return true if any audit is active (should continue polling)
+        return data.hasSiteAudit || data.hasPerformanceAudit || data.hasAioAudit
+      } else if (!response.ok) {
         console.error('[Active Audit Polling Error]', {
-          type: 'fetch_error',
-          error,
+          type: 'http_error',
+          status: response.status,
           timestamp: new Date().toISOString(),
         })
-        if (isMounted) {
-          setIsLoading(false)
-          timeoutId = setTimeout(poll, 30000) // Retry after 30s on error
-        }
+      }
+    } catch (error) {
+      console.error('[Active Audit Polling Error]', {
+        type: 'fetch_error',
+        error,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    if (isMountedRef.current) {
+      setIsLoading(false)
+    }
+    return false
+  }, [])
+
+  // Start polling loop - continues until all audits are inactive
+  const startPollingLoop = useCallback(async () => {
+    if (!isMountedRef.current) return
+
+    // Clear any existing timeout
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current)
+      timeoutIdRef.current = null
+    }
+
+    setIsPolling(true)
+    const hasActive = await poll()
+
+    if (hasActive && isMountedRef.current) {
+      // Continue polling since there's an active audit
+      timeoutIdRef.current = setTimeout(() => startPollingLoopRef.current(), POLL_INTERVAL)
+    } else if (isMountedRef.current) {
+      // No active audits, stop polling
+      setIsPolling(false)
+    }
+  }, [poll])
+
+  // Keep ref updated with latest function
+  useEffect(() => {
+    startPollingLoopRef.current = startPollingLoop
+  }, [startPollingLoop])
+
+  // Function to trigger polling (call this when starting an audit)
+  const startPolling = useCallback(() => {
+    if (!isPolling) {
+      startPollingLoop()
+    }
+  }, [isPolling, startPollingLoop])
+
+  // Initial check on mount and when org changes
+  useEffect(() => {
+    isMountedRef.current = true
+
+    // Do initial check
+    const initialCheck = async () => {
+      const hasActive = await poll()
+      if (hasActive && isMountedRef.current) {
+        // Start polling loop if there are active audits
+        startPollingLoop()
       }
     }
 
-    // Update ref for current org
-    orgIdRef.current = organizationId
-
-    // Check if org changed - if so, poll immediately
-    const orgChanged = prevOrgIdRef.current !== organizationId
-    prevOrgIdRef.current = organizationId
-
-    if (orgChanged) {
-      // Org changed, poll immediately
-      poll()
-    } else {
-      // Initial mount or no change - start polling
-      poll()
-    }
+    initialCheck()
 
     return () => {
-      isMounted = false
-      clearTimeout(timeoutId)
+      isMountedRef.current = false
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current)
+        timeoutIdRef.current = null
+      }
     }
-  }, [organizationId])
+  }, [organizationId, poll, startPollingLoop])
 
-  return { ...status, isLoading }
+  // Listen for audit-started events to trigger polling
+  useEffect(() => {
+    const handleAuditStarted = () => {
+      startPolling()
+    }
+
+    window.addEventListener('audit-started', handleAuditStarted)
+    return () => window.removeEventListener('audit-started', handleAuditStarted)
+  }, [startPolling])
+
+  return { ...status, isLoading, isPolling, startPolling }
+}
+
+// Helper function to trigger polling from anywhere (call after starting an audit)
+export function notifyAuditStarted() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('audit-started'))
+  }
 }

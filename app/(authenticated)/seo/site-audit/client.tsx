@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AuditDashboard } from '@/components/audit/audit-dashboard'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 import type { SiteAudit } from '@/lib/audit/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
@@ -65,6 +66,7 @@ export function SiteAuditClient({
       }
 
       const data = await response.json()
+      notifyAuditStarted()
       router.push(`/seo/site-audit/${data.auditId}`)
     } catch (error) {
       console.error('Failed to start audit:', error)

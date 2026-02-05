@@ -18,6 +18,7 @@ import type { ProgrammaticCheck } from '@/hooks/use-aio-audit-stream'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type { AIOAudit } from '@/lib/aio/types'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 interface AIOAuditClientProps {
   organizations: OrganizationForSelector[]
@@ -63,6 +64,7 @@ export function AIOAuditClient({
     }
 
     const data = await response.json()
+    notifyAuditStarted()
     router.push(`/seo/aio/${data.auditId}`)
   }
 

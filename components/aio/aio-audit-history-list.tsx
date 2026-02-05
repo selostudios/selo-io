@@ -9,6 +9,7 @@ import { Clock, Sparkles, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { AIOAudit } from '@/lib/aio/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
 import { useState } from 'react'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 interface AIOAuditHistoryListProps {
   audits: AIOAudit[]
@@ -70,6 +71,7 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
       }
 
       const data = await response.json()
+      notifyAuditStarted()
       router.push(`/seo/aio/${data.auditId}`)
     } catch (error) {
       console.error('Failed to start audit:', error)

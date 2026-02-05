@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
 import type { PerformanceAudit } from '@/lib/performance/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 function formatAuditDate(dateString: string): string {
   const date = new Date(dateString)
@@ -55,6 +56,7 @@ export function PerformanceDashboard({
           }
 
           const data = await response.json()
+          notifyAuditStarted()
           router.push(`/seo/page-speed/${data.auditId}`)
           resolve()
         } catch (err) {

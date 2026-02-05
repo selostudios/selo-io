@@ -12,6 +12,7 @@ import { AuditRunControl } from '@/components/audit/audit-run-control'
 import type { PerformanceAudit } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 interface PageSpeedClientProps {
   audits: PerformanceAudit[]
@@ -86,6 +87,7 @@ export function PageSpeedClient({
       }
 
       const data = await response.json()
+      notifyAuditStarted()
       router.push(`/seo/page-speed/${data.auditId}`)
     } catch (error) {
       console.error('Failed to start audit:', error)
@@ -192,6 +194,7 @@ export function PageSpeedClient({
               })
               if (!response.ok) throw new Error('Failed to start audit')
               const data = await response.json()
+              notifyAuditStarted()
               router.push(`/seo/page-speed/${data.auditId}`)
             }}
           />

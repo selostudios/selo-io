@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ScoreTrendChart } from './score-trend-chart'
 import { AuditHistoryList } from './audit-history-list'
 import { DismissedChecksList } from './dismissed-checks-list'
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 import type { SiteAudit } from '@/lib/audit/types'
 
 interface AuditDashboardProps {
@@ -49,6 +50,7 @@ export function AuditDashboard({
         }
 
         const data = await response.json()
+        notifyAuditStarted()
         router.push(`/seo/site-audit/${data.auditId}`)
       } catch (err) {
         console.error('[Audit Dashboard] Failed to start audit:', err)
