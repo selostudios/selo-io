@@ -121,9 +121,11 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
         <CoverSlide
           domain={data.domain}
           date={data.created_at}
-          customLogoUrl={data.custom_logo_url}
-          customCompanyName={data.custom_company_name}
+          logoUrl={data.logo_url}
+          companyName={data.company_name}
           primaryColor={data.primary_color}
+          secondaryColor={data.secondary_color}
+          accentColor={data.accent_color}
         />
       )
     }
@@ -174,8 +176,10 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     // Final Slide: Next Steps
     return (
       <NextStepsSlide
-        customCompanyName={data.custom_company_name}
-        customLogoUrl={data.custom_logo_url}
+        companyName={data.company_name}
+        logoUrl={data.logo_url}
+        primaryColor={data.primary_color}
+        accentColor={data.accent_color}
       />
     )
   }

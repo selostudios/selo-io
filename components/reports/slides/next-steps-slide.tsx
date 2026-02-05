@@ -3,15 +3,31 @@
 import { SlideContainer } from '../slide-container'
 
 interface NextStepsSlideProps {
-  customCompanyName?: string | null
-  customLogoUrl?: string | null
+  companyName?: string | null
+  logoUrl?: string | null
+  primaryColor?: string | null
+  accentColor?: string | null
 }
 
-export function NextStepsSlide({ customCompanyName, customLogoUrl }: NextStepsSlideProps) {
-  const companyName = customCompanyName || 'Selo Studios'
+export function NextStepsSlide({
+  companyName,
+  logoUrl,
+  primaryColor,
+  accentColor,
+}: NextStepsSlideProps) {
+  const displayName = companyName || 'Selo Studios'
+
+  // Use brand colors for gradient background
+  const gradientFrom = accentColor || primaryColor || '#4f46e5' // indigo-600
+  const gradientTo = primaryColor || '#7c3aed' // violet-600
 
   return (
-    <SlideContainer variant="accent">
+    <SlideContainer
+      className="text-white"
+      style={{
+        background: `linear-gradient(to bottom right, ${gradientFrom}, ${gradientTo})`,
+      }}
+    >
       <div className="flex flex-1 flex-col items-center justify-center text-center">
         <h2 className="mb-8 text-4xl font-bold text-white md:text-5xl">
           Ready to Improve
@@ -26,15 +42,15 @@ export function NextStepsSlide({ customCompanyName, customLogoUrl }: NextStepsSl
 
         <div className="mb-12 rounded-2xl bg-white/10 p-8 backdrop-blur">
           <div className="mb-6 flex justify-center">
-            {customLogoUrl ? (
+            {logoUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
               <img
-                src={customLogoUrl}
-                alt={companyName}
+                src={logoUrl}
+                alt={displayName}
                 className="h-12 w-auto object-contain brightness-0 invert"
               />
             ) : (
-              <div className="text-2xl font-bold text-white">{companyName}</div>
+              <div className="text-2xl font-bold text-white">{displayName}</div>
             )}
           </div>
 

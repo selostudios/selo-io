@@ -88,7 +88,7 @@ export async function getReportsPageData(organizationId?: string): Promise<Repor
 export async function getReportWithAudits(reportId: string): Promise<GeneratedReportWithAudits> {
   const supabase = await createClient()
 
-  // Fetch report with joined audits and organization (for brand colors)
+  // Fetch report with joined audits and organization (for branding)
   const { data: report, error } = await supabase
     .from('generated_reports')
     .select(
@@ -97,7 +97,7 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
       site_audit:site_audits(*),
       performance_audit:performance_audits(*),
       aio_audit:aio_audits(*),
-      organization:organizations(primary_color)
+      organization:organizations(name, logo_url, primary_color, secondary_color, accent_color)
     `
     )
     .eq('id', reportId)
@@ -119,13 +119,17 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     .select('*')
     .eq('audit_id', report.performance_audit_id)
 
-  // Extract primary_color from organization if present
-  const primaryColor = report.organization?.primary_color ?? null
-
+  // Extract organization branding (use as defaults, custom fields override)
+  const org = report.organization
   return {
     ...report,
     performance_results: performanceResults ?? [],
-    primary_color: primaryColor,
+    // Use custom fields if set, otherwise fall back to organization data
+    org_name: org?.name ?? null,
+    org_logo_url: org?.logo_url ?? null,
+    primary_color: org?.primary_color ?? null,
+    secondary_color: org?.secondary_color ?? null,
+    accent_color: org?.accent_color ?? null,
   } as GeneratedReportWithAudits
 }
 

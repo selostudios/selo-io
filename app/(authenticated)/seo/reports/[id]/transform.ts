@@ -44,14 +44,20 @@ export function transformToPresentation(
   // Transform recommendations
   const recommendations = transformRecommendations(auditData)
 
+  // Branding: custom fields override organization defaults
+  const logoUrl = report.custom_logo_url || report.org_logo_url || null
+  const companyName = report.custom_company_name || report.org_name || null
+
   return {
     id: report.id,
     domain: report.domain,
     created_at: report.created_at,
     combined_score: report.combined_score ?? 0,
-    custom_logo_url: report.custom_logo_url,
-    custom_company_name: report.custom_company_name,
+    logo_url: logoUrl,
+    company_name: companyName,
     primary_color: report.primary_color ?? null,
+    secondary_color: report.secondary_color ?? null,
+    accent_color: report.accent_color ?? null,
     executive_summary: report.executive_summary ?? 'Summary not yet generated.',
     scores: {
       seo: { score: seoScore, status: getScoreStatus(seoScore) },
