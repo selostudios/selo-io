@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { uploadLogo, removeLogo } from '@/app/(authenticated)/settings/organization/actions'
 import { Button } from '@/components/ui/button'
 import { showSuccess, showError } from '@/components/ui/sonner'
@@ -28,6 +28,11 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
   const [dialogOpen, setDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  // Sync previewUrl when currentLogoUrl prop changes (e.g., from brandfetch upload)
+  useEffect(() => {
+    setPreviewUrl(currentLogoUrl)
+  }, [currentLogoUrl])
 
   const initial = organizationName.charAt(0).toUpperCase()
 
@@ -131,30 +136,21 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
       <div className="flex items-center gap-4">
         {/* Logo Preview */}
         {previewUrl ? (
-          <div
-            className="shrink-0 overflow-hidden rounded-lg"
-            style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px' }}
-          >
+          <div className="flex h-12 shrink-0 items-center overflow-hidden rounded-lg">
             <Image
               src={previewUrl}
               alt="Organization logo"
-              width={48}
+              width={120}
               height={48}
-              className="h-full w-full object-cover"
+              className="h-full w-auto object-contain"
             />
           </div>
         ) : (
           <div
             role="img"
             aria-label={`${organizationName} logo placeholder`}
-            className="flex shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
-            style={{
-              backgroundColor: primaryColor || '#6B7280',
-              width: '48px',
-              height: '48px',
-              minWidth: '48px',
-              minHeight: '48px',
-            }}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white"
+            style={{ backgroundColor: primaryColor || '#6B7280' }}
           >
             {initial}
           </div>
