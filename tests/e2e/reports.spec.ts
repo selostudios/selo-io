@@ -17,7 +17,7 @@ test.describe('Reports Page', () => {
     await page.goto('/seo/reports')
 
     await expect(page).toHaveURL(/\/seo\/reports/)
-    await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Report History')
+    await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Combined Reports')
   })
 
   test('shows empty state when no reports exist', async ({ page }) => {

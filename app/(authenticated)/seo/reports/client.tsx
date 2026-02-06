@@ -109,7 +109,7 @@ export function ReportsClient({ reports, selectedOrganizationId }: ReportsClient
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold" data-testid="reports-page-title">
-            Report History
+            Combined Reports
           </h1>
           <p className="text-muted-foreground mt-1">
             View and manage your consolidated marketing performance reports
@@ -155,7 +155,7 @@ export function ReportsClient({ reports, selectedOrganizationId }: ReportsClient
         <div className="space-y-4">
           {filteredReports.map((report) => (
             <Card key={report.id} className="hover:border-primary/50 transition-colors">
-              <CardContent className="p-6">
+              <CardContent className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {/* Score Badge */}

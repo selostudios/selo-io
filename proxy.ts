@@ -1,11 +1,9 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+  let supabaseResponse = NextResponse.next({
+    request,
   })
 
   const supabase = createServerClient(
@@ -13,52 +11,51 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
           })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
   )
 
-  await supabase.auth.getUser()
+  // Do not run code between createServerClient and supabase.auth.getClaims().
+  // A simple mistake could make it very hard to debug issues with users being
+  // randomly logged out.
 
-  return response
+  // IMPORTANT: Removing getClaims() can cause random logouts with SSR.
+  // This call refreshes the session and ensures cookies are properly chunked
+  // (preventing the 4096-byte cookie size limit from truncating session data).
+  await supabase.auth.getClaims()
+
+  // IMPORTANT: Return the supabaseResponse object as-is.
+  // If creating a new response, you must:
+  // 1. Pass the request: NextResponse.next({ request })
+  // 2. Copy cookies: newResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+  // 3. Return the new response
+  // Failing to do this causes browser/server cookie desync and premature session termination.
+
+  return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
+     * - api/cron (cron jobs don't have user sessions)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

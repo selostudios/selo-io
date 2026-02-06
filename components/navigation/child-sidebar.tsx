@@ -53,7 +53,7 @@ const seoNavigation: NavigationGroup[] = [
   },
   {
     header: 'Report',
-    items: [{ name: 'Audit Reports', href: '/seo/reports', icon: FileText }],
+    items: [{ name: 'Combined Reports', href: '/seo/reports', icon: FileText }],
   },
 ]
 
