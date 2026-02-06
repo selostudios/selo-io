@@ -192,6 +192,14 @@ export enum ShareErrorCode {
   PasswordRequired = 'password_required',
   InvalidPassword = 'invalid_password',
   ReportNotFound = 'report_not_found',
+  ResourceNotFound = 'resource_not_found',
+}
+
+export enum SharedResourceType {
+  Report = 'report',
+  SiteAudit = 'site_audit',
+  PerformanceAudit = 'performance_audit',
+  AIOAudit = 'aio_audit',
 }
 
 export enum ScoreStatus {

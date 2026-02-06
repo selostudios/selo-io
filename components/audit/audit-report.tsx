@@ -1,14 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Download, Search, X, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft, Search, X, ExternalLink, Share2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScoreCards } from './score-cards'
 import { CheckList } from './check-list'
 import { ResourceList } from './resource-list'
-import { ExecutiveSummaryDialog } from './executive-summary-dialog'
 import type { SiteAudit, SiteAuditCheck, SiteAuditPage, DismissedCheck } from '@/lib/audit/types'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -18,17 +17,20 @@ interface AuditReportProps {
   audit: SiteAudit
   checks: SiteAuditCheck[]
   pages: SiteAuditPage[]
+  isPublic?: boolean
+  onShare?: () => void
 }
 
 type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'
 
-export function AuditReport({ audit, checks, pages }: AuditReportProps) {
+export function AuditReport({ audit, checks, pages, isPublic, onShare }: AuditReportProps) {
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [dismissedChecks, setDismissedChecks] = useState<DismissedCheck[]>([])
 
-  // Fetch dismissed checks on mount
+  // Fetch dismissed checks on mount (skip for public view)
   useEffect(() => {
+    if (isPublic) return
     fetch('/api/audit/dismiss')
       .then((res) => res.json())
       .then((data) => {
@@ -37,7 +39,7 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
         }
       })
       .catch((err) => console.error('[Fetch Dismissed Checks Error]', err))
-  }, [])
+  }, [isPublic])
 
   // Create a map of page_id to page URL for looking up dismissed checks
   const pageMap = useMemo(() => new Map(pages.map((p) => [p.id, p.url])), [pages])
@@ -104,21 +106,23 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/audit"
-          className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Audits
-        </Link>
-        <Button variant="outline" asChild>
-          <a href={`/api/audit/${audit.id}/export`} download>
-            <Download className="mr-2 h-4 w-4" />
-            Export PDF
-          </a>
-        </Button>
-      </div>
+      {!isPublic && (
+        <div className="flex items-center justify-between">
+          <Link
+            href="/audit"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Audits
+          </Link>
+          {onShare && (
+            <Button variant="outline" size="sm" onClick={onShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Site Info */}
       <div>
@@ -145,9 +149,6 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
               </Badge>
             )}
           </div>
-          {audit.executive_summary && (
-            <ExecutiveSummaryDialog summary={audit.executive_summary} url={audit.url} />
-          )}
         </div>
         <p className="text-muted-foreground text-sm">
           {audit.status === AuditStatus.Stopped ? 'Stopped' : 'Audited'}{' '}
@@ -229,19 +230,19 @@ export function AuditReport({ audit, checks, pages }: AuditReportProps) {
           title="SEO Issues"
           checks={filterChecks(seoChecks)}
           pages={htmlPages}
-          onDismissCheck={handleDismissCheck}
+          onDismissCheck={isPublic ? undefined : handleDismissCheck}
         />
         <CheckList
           title="AI-Readiness Issues"
           checks={filterChecks(aiChecks)}
           pages={htmlPages}
-          onDismissCheck={handleDismissCheck}
+          onDismissCheck={isPublic ? undefined : handleDismissCheck}
         />
         <CheckList
           title="Technical Issues"
           checks={filterChecks(technicalChecks)}
           pages={htmlPages}
-          onDismissCheck={handleDismissCheck}
+          onDismissCheck={isPublic ? undefined : handleDismissCheck}
         />
         <ResourceList resources={resourcePages} baseUrl={audit.url} />
       </div>

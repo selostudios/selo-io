@@ -316,5 +316,7 @@ export function getShareErrorMessage(error: ShareErrorCode): string {
       return 'Incorrect password.'
     case ShareErrorCode.ReportNotFound:
       return 'The report could not be found.'
+    case ShareErrorCode.ResourceNotFound:
+      return 'The shared resource could not be found.'
   }
 }

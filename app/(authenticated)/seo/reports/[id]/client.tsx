@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ReportPresentation } from '@/components/reports/report-presentation'
-import { ShareModal } from '@/components/reports/share-modal'
+import { ShareModal } from '@/components/share/share-modal'
+import { SharedResourceType } from '@/lib/enums'
 import { SettingsDialog } from '@/components/reports/settings-dialog'
 import type { GeneratedReportWithAudits, ReportPresentationData } from '@/lib/reports/types'
 
@@ -38,7 +39,12 @@ export function ReportDetailClient({
       <ReportPresentation data={presentationData} onShare={handleShare} />
 
       {/* Share Modal */}
-      <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} reportId={report.id} />
+      <ShareModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        resourceType={SharedResourceType.Report}
+        resourceId={report.id}
+      />
 
       {/* Settings Dialog */}
       <SettingsDialog

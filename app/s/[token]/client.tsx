@@ -7,50 +7,82 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ReportPresentation } from '@/components/reports/report-presentation'
-import { accessSharedReport } from '@/app/(authenticated)/seo/reports/share-actions'
-import { getSharedReportPresentationData } from './actions'
-import { getShareErrorMessage } from '@/lib/reports/types'
+import { AuditReport } from '@/components/audit/audit-report'
+import { accessSharedLink } from '@/lib/share/actions'
+import { getSharedReportData, getSharedSiteAuditData } from './actions'
+import { getShareErrorMessage, getResourceTypeLabel } from '@/lib/share/utils'
+import { SharedResourceType } from '@/lib/enums'
 import type { ReportPresentationData } from '@/lib/reports/types'
+import type { SharedSiteAuditData } from './actions'
 
-interface PublicReportClientProps {
+interface SharedResourceClientProps {
   token: string
+  resourceType: SharedResourceType
   requiresPassword: boolean
 }
 
-export function PublicReportClient({ token, requiresPassword }: PublicReportClientProps) {
+type ResourceData =
+  | { type: 'report'; data: ReportPresentationData }
+  | { type: 'site_audit'; data: SharedSiteAuditData }
+
+export function SharedResourceClient({
+  token,
+  resourceType,
+  requiresPassword,
+}: SharedResourceClientProps) {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(!requiresPassword)
   const [error, setError] = useState<string | null>(null)
-  const [reportData, setReportData] = useState<ReportPresentationData | null>(null)
+  const [resourceData, setResourceData] = useState<ResourceData | null>(null)
 
-  const loadReport = useCallback(
+  const label = getResourceTypeLabel(resourceType)
+
+  const loadResource = useCallback(
     async (providedPassword?: string) => {
       setIsLoading(true)
       setError(null)
 
       try {
-        const result = await accessSharedReport(token, providedPassword)
+        const result = await accessSharedLink(token, providedPassword)
 
         if (!result.success) {
           const errorMessage = result.errorCode
             ? getShareErrorMessage(result.errorCode)
-            : 'Unable to access this report'
+            : 'Unable to access this resource'
           setError(errorMessage)
           setIsLoading(false)
           return
         }
 
-        // Get full presentation data using server action
-        const presentationData = await getSharedReportPresentationData(result.report!.id)
-        if (!presentationData) {
-          setError('Failed to load report data')
-          setIsLoading(false)
-          return
+        // Fetch resource-specific data based on type
+        switch (result.resource_type) {
+          case SharedResourceType.Report: {
+            const reportData = await getSharedReportData(result.resource_id!)
+            if (!reportData) {
+              setError('Failed to load report data')
+              setIsLoading(false)
+              return
+            }
+            setResourceData({ type: 'report', data: reportData })
+            break
+          }
+          case SharedResourceType.SiteAudit: {
+            const auditData = await getSharedSiteAuditData(result.resource_id!)
+            if (!auditData) {
+              setError('Failed to load audit data')
+              setIsLoading(false)
+              return
+            }
+            setResourceData({ type: 'site_audit', data: auditData })
+            break
+          }
+          default:
+            setError('Unsupported resource type')
+            setIsLoading(false)
+            return
         }
-
-        setReportData(presentationData)
       } catch {
-        setError('Failed to load report')
+        setError('Failed to load resource')
       } finally {
         setIsLoading(false)
       }
@@ -58,17 +90,16 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
     [token]
   )
 
-  // Auto-load if no password required
   useEffect(() => {
     if (!requiresPassword) {
-      loadReport()
+      loadResource()
     }
-  }, [requiresPassword, loadReport])
+  }, [requiresPassword, loadResource])
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (password.trim()) {
-      loadReport(password)
+      loadResource(password)
     }
   }
 
@@ -78,14 +109,14 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-muted-foreground mt-4">Loading report...</p>
+          <p className="text-muted-foreground mt-4">Loading {label.toLowerCase()}...</p>
         </div>
       </div>
     )
   }
 
   // Password entry
-  if (requiresPassword && !reportData) {
+  if (requiresPassword && !resourceData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Card className="w-full max-w-md">
@@ -95,7 +126,7 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
             </div>
             <CardTitle>Password Required</CardTitle>
             <CardDescription>
-              This report is password protected. Enter the password to view it.
+              This {label.toLowerCase()} is password protected. Enter the password to view it.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -120,7 +151,7 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
               )}
 
               <Button type="submit" className="w-full" disabled={!password.trim()}>
-                View Report
+                View {label}
               </Button>
             </form>
           </CardContent>
@@ -130,12 +161,12 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
   }
 
   // Error state
-  if (error && !reportData) {
+  if (error && !resourceData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="mx-auto max-w-md px-4 text-center">
           <div className="mb-6 text-6xl">⚠️</div>
-          <h1 className="mb-4 text-2xl font-bold">Unable to Load Report</h1>
+          <h1 className="mb-4 text-2xl font-bold">Unable to Load {label}</h1>
           <p className="text-muted-foreground mb-8">{error}</p>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
@@ -143,9 +174,23 @@ export function PublicReportClient({ token, requiresPassword }: PublicReportClie
     )
   }
 
-  // Report presentation
-  if (reportData) {
-    return <ReportPresentation data={reportData} isPublic />
+  // Render the resource
+  if (resourceData) {
+    switch (resourceData.type) {
+      case 'report':
+        return <ReportPresentation data={resourceData.data} isPublic />
+      case 'site_audit':
+        return (
+          <div className="p-6">
+            <AuditReport
+              audit={resourceData.data.audit}
+              checks={resourceData.data.checks}
+              pages={resourceData.data.pages}
+              isPublic
+            />
+          </div>
+        )
+    }
   }
 
   return null

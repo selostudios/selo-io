@@ -1,5 +1,5 @@
 import { getAuditReport } from './actions'
-import { AuditReport } from '@/components/audit/audit-report'
+import { SiteAuditDetailClient } from './client'
 import { LiveProgress } from '@/components/audit/live-progress'
 
 interface AuditReportPageProps {
@@ -20,5 +20,5 @@ export default async function AuditReportPage({ params }: AuditReportPageProps) 
     return <LiveProgress auditId={audit.id} initialStatus={audit.status} />
   }
 
-  return <AuditReport audit={audit} checks={checks} pages={pages} />
+  return <SiteAuditDetailClient audit={audit} checks={checks} pages={pages} />
 }

@@ -25,33 +25,39 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ShareExpiration } from '@/lib/enums'
-import { createShareLink } from '@/app/(authenticated)/seo/reports/share-actions'
-import type { ReportShare } from '@/lib/reports/types'
+import type { SharedResourceType } from '@/lib/enums'
+import { createSharedLink } from '@/lib/share/actions'
+import { getResourceTypeLabel } from '@/lib/share/utils'
+import type { SharedLink } from '@/lib/share/types'
 
 interface ShareModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  reportId: string
+  resourceType: SharedResourceType
+  resourceId: string
 }
 
-export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
+export function ShareModal({ open, onOpenChange, resourceType, resourceId }: ShareModalProps) {
   const [expiration, setExpiration] = useState<ShareExpiration>(ShareExpiration.ThirtyDays)
   const [customDate, setCustomDate] = useState<Date | undefined>(undefined)
   const [maxViews, setMaxViews] = useState(50)
   const [passwordEnabled, setPasswordEnabled] = useState(false)
   const [password, setPassword] = useState('')
   const [isCreating, setIsCreating] = useState(false)
-  const [createdShare, setCreatedShare] = useState<{ share: ReportShare; url: string } | null>(null)
+  const [createdShare, setCreatedShare] = useState<{ share: SharedLink; url: string } | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const label = getResourceTypeLabel(resourceType)
 
   const handleCreate = async () => {
     setIsCreating(true)
     setError(null)
 
     try {
-      const result = await createShareLink({
-        report_id: reportId,
+      const result = await createSharedLink({
+        resource_type: resourceType,
+        resource_id: resourceId,
         expires_in: expiration,
         custom_expiration:
           expiration === ShareExpiration.Custom && customDate
@@ -81,7 +87,6 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea')
       textarea.value = createdShare.url
       document.body.appendChild(textarea)
@@ -95,7 +100,6 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
 
   const handleClose = () => {
     onOpenChange(false)
-    // Reset state after close animation
     setTimeout(() => {
       setCreatedShare(null)
       setError(null)
@@ -111,8 +115,10 @@ export function ShareModal({ open, onOpenChange, reportId }: ShareModalProps) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share Report</DialogTitle>
-          <DialogDescription>Create a shareable link for this report</DialogDescription>
+          <DialogTitle>Share {label}</DialogTitle>
+          <DialogDescription>
+            Create a shareable link for this {label.toLowerCase()}
+          </DialogDescription>
         </DialogHeader>
 
         {!createdShare ? (
