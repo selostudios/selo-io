@@ -17,7 +17,6 @@ function useIsClient() {
 interface ScoreCardsProps {
   overall: number | null
   seo: number | null
-  ai: number | null
   technical: number | null
 }
 
@@ -124,23 +123,18 @@ export function ScoreCard({ label, score, description }: ScoreCardProps) {
   )
 }
 
-export function ScoreCards({ overall, seo, ai, technical }: ScoreCardsProps) {
+export function ScoreCards({ overall, seo, technical }: ScoreCardsProps) {
   return (
     <div className="flex gap-4">
       <ScoreCard
         label="Overall"
         score={overall}
-        description="A weighted average of SEO, AI Readiness, and Technical scores. Represents the overall health of the website."
+        description="A weighted average of SEO and Technical scores. Represents the overall health of the website."
       />
       <ScoreCard
         label="SEO"
         score={seo}
         description="Measures search engine optimization factors including meta tags, headings, content structure, and internal linking."
-      />
-      <ScoreCard
-        label="AI Readiness"
-        score={ai}
-        description="Evaluates how well content is structured for AI systems and LLMs, including schema markup, clear content hierarchy, and machine-readable data."
       />
       <ScoreCard
         label="Technical"

@@ -170,7 +170,6 @@ export function AuditReport({ audit, checks, pages, isPublic, onShare }: AuditRe
       <ScoreCards
         overall={audit.overall_score}
         seo={audit.seo_score}
-        ai={audit.ai_readiness_score}
         technical={audit.technical_score}
       />
 
