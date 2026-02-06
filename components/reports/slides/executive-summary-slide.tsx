@@ -9,18 +9,32 @@ interface ExecutiveSummarySlideProps {
     opportunities_found: number
     recommendations_count: number
   }
+  accentColor?: string | null
 }
 
-function StatItem({ value, label }: { value: string | number; label: string }) {
+function StatItem({
+  value,
+  label,
+  accentColor,
+}: {
+  value: string | number
+  label: string
+  accentColor?: string | null
+}) {
   return (
     <div className="text-center">
-      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{value}</div>
+      <div
+        className={`text-3xl font-bold ${!accentColor ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
+        style={accentColor ? { color: accentColor } : undefined}
+      >
+        {value}
+      </div>
       <div className="text-muted-foreground mt-1 text-sm">{label}</div>
     </div>
   )
 }
 
-export function ExecutiveSummarySlide({ summary, stats }: ExecutiveSummarySlideProps) {
+export function ExecutiveSummarySlide({ summary, stats, accentColor }: ExecutiveSummarySlideProps) {
   // Split summary into paragraphs
   const paragraphs = summary.split('\n\n').filter(Boolean)
 
@@ -41,9 +55,17 @@ export function ExecutiveSummarySlide({ summary, stats }: ExecutiveSummarySlideP
         {/* Stats Bar */}
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
           <div className="grid grid-cols-3 gap-8">
-            <StatItem value={stats.pages_analyzed} label="Pages Analyzed" />
-            <StatItem value={stats.opportunities_found} label="Opportunities Found" />
-            <StatItem value={stats.recommendations_count} label="Recommendations" />
+            <StatItem value={stats.pages_analyzed} label="Pages Analyzed" accentColor={accentColor} />
+            <StatItem
+              value={stats.opportunities_found}
+              label="Opportunities Found"
+              accentColor={accentColor}
+            />
+            <StatItem
+              value={stats.recommendations_count}
+              label="Recommendations"
+              accentColor={accentColor}
+            />
           </div>
         </div>
       </div>

@@ -149,7 +149,13 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
     // Slide 3: Executive Summary
     if (index === slideIndex++) {
-      return <ExecutiveSummarySlide summary={data.executive_summary} stats={data.stats} />
+      return (
+        <ExecutiveSummarySlide
+          summary={data.executive_summary}
+          stats={data.stats}
+          accentColor={data.accent_color}
+        />
+      )
     }
 
     // Slides 4-N: Opportunities (paginated)
