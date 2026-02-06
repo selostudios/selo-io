@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { EmptyState } from '@/components/ui/empty-state'
 import { CheckItem } from './check-item'
 import type { SiteAuditCheck, SiteAuditPage } from '@/lib/audit/types'
+import { Button } from '@/components/ui/button'
 import {
   CheckCircle,
   ChevronDown,
@@ -63,6 +64,8 @@ function formatLastModified(lastModified: string | null): string | null {
   }
 }
 
+const PAGE_GROUP_BATCH_SIZE = 50
+
 export function CheckList({ title, checks, pages, onDismissCheck }: CheckListProps) {
   const failedCount = checks.filter((c) => c.status === CheckStatus.Failed).length
   const warningCount = checks.filter((c) => c.status === CheckStatus.Warning).length
@@ -117,6 +120,11 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
       return aUrl.localeCompare(bUrl)
     })
   }, [checksByPage, pageMap])
+
+  // Client-side pagination: only render a batch of page groups at a time
+  const [visiblePageCount, setVisiblePageCount] = useState(PAGE_GROUP_BATCH_SIZE)
+  const visiblePageIds = sortedPageIds.slice(0, visiblePageCount)
+  const hasMorePages = visiblePageCount < sortedPageIds.length
 
   // Build list of all collapsible IDs (site-wide + page IDs)
   const allCollapsibleIds = useMemo(() => {
@@ -243,7 +251,7 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
         )}
 
         {/* Page-specific issues */}
-        {sortedPageIds.map((pageId) => {
+        {visiblePageIds.map((pageId) => {
           const pageChecks = sortChecks(checksByPage.get(pageId) || [])
           const page = pageId ? pageMap.get(pageId) : null
           const pagePath = page ? formatPagePath(page.url) : 'General'
@@ -334,6 +342,16 @@ export function CheckList({ title, checks, pages, onDismissCheck }: CheckListPro
             </Collapsible>
           )
         })}
+        {hasMorePages && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setVisiblePageCount((prev) => prev + PAGE_GROUP_BATCH_SIZE)}
+          >
+            Show more pages ({sortedPageIds.length - visiblePageCount} remaining)
+          </Button>
+        )}
         {checks.length === 0 && (
           <EmptyState icon={CheckCircle} title="No checks in this category" className="py-4" />
         )}
