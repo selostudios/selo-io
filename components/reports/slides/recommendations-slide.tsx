@@ -8,6 +8,7 @@ import type { ReportRecommendation } from '@/lib/reports/types'
 interface RecommendationsSlideProps {
   recommendations: ReportRecommendation[]
   page: number // 0 or 1 for pagination
+  accentColor?: string | null
 }
 
 const impactConfig = {
@@ -40,24 +41,36 @@ const effortConfig = {
   },
 }
 
-const ownerConfig = {
-  [ReportOwner.Marketing]: {
-    label: 'Marketing',
-    color: 'text-purple-600 dark:text-purple-400',
-  },
-  [ReportOwner.Developer]: {
-    label: 'Developer',
-    color: 'text-blue-600 dark:text-blue-400',
-  },
-  [ReportOwner.Content]: {
-    label: 'Content',
-    color: 'text-amber-600 dark:text-amber-400',
-  },
+function getOwnerConfig(accentColor?: string | null) {
+  return {
+    [ReportOwner.Marketing]: {
+      label: 'Marketing',
+      color: accentColor ? undefined : 'text-purple-600 dark:text-purple-400',
+      inlineColor: accentColor || undefined,
+    },
+    [ReportOwner.Developer]: {
+      label: 'Developer',
+      color: 'text-blue-600 dark:text-blue-400',
+      inlineColor: undefined,
+    },
+    [ReportOwner.Content]: {
+      label: 'Content',
+      color: 'text-amber-600 dark:text-amber-400',
+      inlineColor: undefined,
+    },
+  }
 }
 
-function RecommendationRow({ recommendation }: { recommendation: ReportRecommendation }) {
+function RecommendationRow({
+  recommendation,
+  accentColor,
+}: {
+  recommendation: ReportRecommendation
+  accentColor?: string | null
+}) {
   const impact = impactConfig[recommendation.impact]
   const effort = effortConfig[recommendation.effort]
+  const ownerConfig = getOwnerConfig(accentColor)
   const owner = ownerConfig[recommendation.owner]
 
   return (
@@ -82,19 +95,30 @@ function RecommendationRow({ recommendation }: { recommendation: ReportRecommend
           </span>
 
           {/* Owner */}
-          <span className={cn('text-sm font-medium', owner.color)}>{owner.label}</span>
+          <span
+            className={cn('text-sm font-medium', owner.color)}
+            style={owner.inlineColor ? { color: owner.inlineColor } : undefined}
+          >
+            {owner.label}
+          </span>
         </div>
       </div>
     </div>
   )
 }
 
-export function RecommendationsSlide({ recommendations, page }: RecommendationsSlideProps) {
+export function RecommendationsSlide({
+  recommendations,
+  page,
+  accentColor,
+}: RecommendationsSlideProps) {
   // Split recommendations across two pages
   const itemsPerPage = 5
   const startIndex = page * itemsPerPage
   const pageRecommendations = recommendations.slice(startIndex, startIndex + itemsPerPage)
   const totalPages = Math.ceil(recommendations.length / itemsPerPage)
+
+  const marketingColor = accentColor || undefined
 
   return (
     <SlideContainer variant="light">
@@ -113,7 +137,7 @@ export function RecommendationsSlide({ recommendations, page }: RecommendationsS
 
         <div className="flex-1 space-y-4">
           {pageRecommendations.map((rec) => (
-            <RecommendationRow key={rec.rank} recommendation={rec} />
+            <RecommendationRow key={rec.rank} recommendation={rec} accentColor={accentColor} />
           ))}
         </div>
 
@@ -138,8 +162,13 @@ export function RecommendationsSlide({ recommendations, page }: RecommendationsS
               </div>
               <div>
                 <span className="font-medium">Owner:</span>{' '}
-                <span className="text-purple-600 dark:text-purple-400">Marketing</span> ·{' '}
-                <span className="text-blue-600 dark:text-blue-400">Developer</span> ·{' '}
+                <span
+                  className={!marketingColor ? 'text-purple-600 dark:text-purple-400' : undefined}
+                  style={marketingColor ? { color: marketingColor } : undefined}
+                >
+                  Marketing
+                </span>{' '}
+                · <span className="text-blue-600 dark:text-blue-400">Developer</span> ·{' '}
                 <span className="text-amber-600 dark:text-amber-400">Content</span>
               </div>
             </div>

@@ -6,6 +6,7 @@ import type { ReportProjection } from '@/lib/reports/types'
 interface BusinessImpactSlideProps {
   projections: ReportProjection[]
   combinedScore: number
+  accentColor?: string | null
 }
 
 function ProjectionCard({ projection }: { projection: ReportProjection }) {
@@ -52,9 +53,17 @@ function ProjectionCard({ projection }: { projection: ReportProjection }) {
   )
 }
 
-export function BusinessImpactSlide({ projections, combinedScore }: BusinessImpactSlideProps) {
+export function BusinessImpactSlide({
+  projections,
+  combinedScore,
+  accentColor,
+}: BusinessImpactSlideProps) {
   const visibleProjections = projections.filter((p) => p.show)
   const potentialScore = Math.min(combinedScore + 20, 100) // Estimate potential improvement
+
+  // Use brand accent color for the gradient, with indigo fallback
+  const gradientFrom = accentColor || '#4f46e5' // indigo-600
+  const gradientTo = accentColor ? `${accentColor}cc` : '#7c3aed' // slightly transparent accent, or purple-600
 
   return (
     <SlideContainer variant="light">
@@ -73,7 +82,12 @@ export function BusinessImpactSlide({ projections, combinedScore }: BusinessImpa
             </div>
 
             {/* Combined impact statement */}
-            <div className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white">
+            <div
+              className="rounded-xl p-8 text-white"
+              style={{
+                background: `linear-gradient(to right, ${gradientFrom}, ${gradientTo})`,
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-semibold">Combined Potential</h3>

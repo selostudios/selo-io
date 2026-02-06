@@ -162,14 +162,24 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
     // Slide: Business Impact
     if (index === slideIndex++) {
       return (
-        <BusinessImpactSlide projections={data.projections} combinedScore={data.combined_score} />
+        <BusinessImpactSlide
+          projections={data.projections}
+          combinedScore={data.combined_score}
+          accentColor={data.accent_color}
+        />
       )
     }
 
     // Slides: Recommendations (paginated)
     for (let page = 0; page < recommendationPages; page++) {
       if (index === slideIndex++) {
-        return <RecommendationsSlide recommendations={data.recommendations} page={page} />
+        return (
+          <RecommendationsSlide
+            recommendations={data.recommendations}
+            page={page}
+            accentColor={data.accent_color}
+          />
+        )
       }
     }
 
@@ -242,7 +252,12 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
       </div>
 
       {/* Progress Dots */}
-      <ProgressDots current={currentSlide} total={totalSlides} onNavigate={goToSlide} />
+      <ProgressDots
+        current={currentSlide}
+        total={totalSlides}
+        onNavigate={goToSlide}
+        accentColor={data.accent_color}
+      />
 
       {/* Top Controls */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 print:hidden">

@@ -7,9 +7,18 @@ interface ProgressDotsProps {
   total: number
   onNavigate?: (index: number) => void
   className?: string
+  accentColor?: string | null
 }
 
-export function ProgressDots({ current, total, onNavigate, className }: ProgressDotsProps) {
+export function ProgressDots({
+  current,
+  total,
+  onNavigate,
+  className,
+  accentColor,
+}: ProgressDotsProps) {
+  const activeBg = accentColor || undefined
+
   return (
     <div
       className={cn(
@@ -23,10 +32,11 @@ export function ProgressDots({ current, total, onNavigate, className }: Progress
           onClick={() => onNavigate?.(index)}
           className={cn(
             'h-2 rounded-full transition-all duration-300',
-            index === current ? 'w-8 bg-indigo-600' : 'w-2 bg-slate-300 hover:bg-slate-400',
-            'dark:bg-slate-600 dark:hover:bg-slate-500',
-            index === current && 'dark:bg-indigo-500'
+            index === current
+              ? `w-8 ${!activeBg ? 'bg-indigo-600 dark:bg-indigo-500' : ''}`
+              : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500'
           )}
+          style={index === current && activeBg ? { backgroundColor: activeBg } : undefined}
           aria-label={`Go to slide ${index + 1}`}
           aria-current={index === current ? 'step' : undefined}
         />
