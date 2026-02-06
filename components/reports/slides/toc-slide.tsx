@@ -4,6 +4,7 @@ import { SlideContainer } from '../slide-container'
 
 interface TocSlideProps {
   onNavigate?: (slideIndex: number) => void
+  accentColor?: string | null
 }
 
 const sections = [
@@ -15,7 +16,7 @@ const sections = [
   { title: 'Next Steps', slideIndex: 9 },
 ]
 
-export function TocSlide({ onNavigate }: TocSlideProps) {
+export function TocSlide({ onNavigate, accentColor }: TocSlideProps) {
   return (
     <SlideContainer variant="light">
       <div className="flex flex-1 flex-col justify-center">
@@ -33,7 +34,22 @@ export function TocSlide({ onNavigate }: TocSlideProps) {
                   <span className="text-muted-foreground text-lg font-medium">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="text-xl font-medium group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                  <span
+                    className={`text-xl font-medium ${!accentColor ? 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400' : ''}`}
+                    style={
+                      accentColor
+                        ? ({ '--accent': accentColor, color: 'inherit' } as React.CSSProperties)
+                        : undefined
+                    }
+                    onMouseEnter={
+                      accentColor
+                        ? (e) => (e.currentTarget.style.color = accentColor)
+                        : undefined
+                    }
+                    onMouseLeave={
+                      accentColor ? (e) => (e.currentTarget.style.color = 'inherit') : undefined
+                    }
+                  >
                     {section.title}
                   </span>
                 </div>

@@ -9,7 +9,13 @@ interface BusinessImpactSlideProps {
   accentColor?: string | null
 }
 
-function ProjectionCard({ projection }: { projection: ReportProjection }) {
+function ProjectionCard({
+  projection,
+  accentColor,
+}: {
+  projection: ReportProjection
+  accentColor?: string | null
+}) {
   if (!projection.show) return null
 
   return (
@@ -28,8 +34,20 @@ function ProjectionCard({ projection }: { projection: ReportProjection }) {
         {/* Arrow */}
         <div className="flex-1">
           <div className="flex items-center">
-            <div className="h-px flex-1 bg-gradient-to-r from-slate-300 to-indigo-400 dark:from-slate-700 dark:to-indigo-600" />
-            <svg className="h-4 w-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <div
+              className={`h-px flex-1 ${!accentColor ? 'bg-gradient-to-r from-slate-300 to-indigo-400 dark:from-slate-700 dark:to-indigo-600' : ''}`}
+              style={
+                accentColor
+                  ? { background: `linear-gradient(to right, #cbd5e1, ${accentColor})` }
+                  : undefined
+              }
+            />
+            <svg
+              className={`h-4 w-4 ${!accentColor ? 'text-indigo-500' : ''}`}
+              style={accentColor ? { color: accentColor } : undefined}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
@@ -41,7 +59,10 @@ function ProjectionCard({ projection }: { projection: ReportProjection }) {
 
         {/* Target */}
         <div className="text-center">
-          <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+          <div
+            className={`text-3xl font-bold ${!accentColor ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
+            style={accentColor ? { color: accentColor } : undefined}
+          >
             {projection.target_value}
           </div>
           <div className="text-muted-foreground text-xs">Potential</div>
@@ -77,7 +98,7 @@ export function BusinessImpactSlide({
           <>
             <div className="mb-12 grid gap-6 md:grid-cols-3">
               {visibleProjections.map((projection, index) => (
-                <ProjectionCard key={index} projection={projection} />
+                <ProjectionCard key={index} projection={projection} accentColor={accentColor} />
               ))}
             </div>
 

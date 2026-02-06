@@ -76,7 +76,14 @@ function RecommendationRow({
   return (
     <div className="flex items-start gap-6 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
       {/* Rank Number */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-lg font-bold text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+      <div
+        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold ${!accentColor ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : ''}`}
+        style={
+          accentColor
+            ? { backgroundColor: `${accentColor}1a`, color: accentColor }
+            : undefined
+        }
+      >
         {recommendation.rank}
       </div>
 

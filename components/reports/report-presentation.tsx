@@ -132,7 +132,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
     // Slide 1: Table of Contents
     if (index === slideIndex++) {
-      return <TocSlide onNavigate={goToSlide} />
+      return <TocSlide onNavigate={goToSlide} accentColor={data.accent_color} />
     }
 
     // Slide 2: At a Glance
