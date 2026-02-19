@@ -17,6 +17,7 @@ Add AI-generated Executive Summary and Developer Notes to all three audit types 
 ### 1. Database Schema Changes
 
 **Add to `performance_audits` table:**
+
 ```sql
 ALTER TABLE performance_audits
   ADD COLUMN executive_summary TEXT,
@@ -24,6 +25,7 @@ ALTER TABLE performance_audits
 ```
 
 **Add to `aio_audits` table:**
+
 ```sql
 ALTER TABLE aio_audits
   ADD COLUMN executive_summary TEXT,
@@ -31,6 +33,7 @@ ALTER TABLE aio_audits
 ```
 
 **Already exists in `site_audits`:**
+
 - `executive_summary` ✓ (exists)
 - Need to add: `developer_notes`
 
@@ -49,7 +52,9 @@ import { z } from 'zod'
 
 export const AuditSummarySchema = z.object({
   summary: z.string().describe('2-3 paragraph executive summary (100 words max, plain text)'),
-  developerNotes: z.string().describe('Step-by-step technical implementation guide (markdown format)')
+  developerNotes: z
+    .string()
+    .describe('Step-by-step technical implementation guide (markdown format)'),
 })
 
 export type AuditSummary = z.infer<typeof AuditSummarySchema>
@@ -73,7 +78,7 @@ interface GenerateAuditSummaryParams {
 export async function generateAuditSummary({
   summaryPrompt,
   developerNotesPrompt,
-  auditType
+  auditType,
 }: GenerateAuditSummaryParams): Promise<AuditSummary> {
   const { object } = await generateObject({
     model: anthropic('claude-opus-4-20250514'),
@@ -87,7 +92,7 @@ You will generate two distinct outputs:
 1. Executive Summary: For Selo employees reviewing customer audits
 2. Developer Notes: For engineers implementing fixes
 
-Be specific, actionable, and concise.`
+Be specific, actionable, and concise.`,
       },
       {
         role: 'user',
@@ -97,9 +102,9 @@ Be specific, actionable, and concise.`
 ${summaryPrompt}
 
 # Developer Notes Instructions
-${developerNotesPrompt}`
-      }
-    ]
+${developerNotesPrompt}`,
+      },
+    ],
   })
 
   return object
@@ -122,8 +127,8 @@ export function buildSeoSummaryPrompt(audit: {
   technicalScore: number
   aiReadinessScore: number
   pagesCrawled: number
-  criticalIssues: Array<{ name: string, failedCount: number }>
-  warnings: Array<{ name: string, warningCount: number }>
+  criticalIssues: Array<{ name: string; failedCount: number }>
+  warnings: Array<{ name: string; warningCount: number }>
 }): string {
   return `Site: ${audit.url}
 Overall Score: ${audit.overallScore}/100
@@ -134,10 +139,16 @@ Overall Score: ${audit.overallScore}/100
 Pages analyzed: ${audit.pagesCrawled}
 
 Top Critical Issues:
-${audit.criticalIssues.slice(0, 5).map(i => `- ${i.name} (${i.failedCount} pages)`).join('\n')}
+${audit.criticalIssues
+  .slice(0, 5)
+  .map((i) => `- ${i.name} (${i.failedCount} pages)`)
+  .join('\n')}
 
 Top Warnings:
-${audit.warnings.slice(0, 3).map(w => `- ${w.name} (${w.warningCount} pages)`).join('\n')}
+${audit.warnings
+  .slice(0, 3)
+  .map((w) => `- ${w.name} (${w.warningCount} pages)`)
+  .join('\n')}
 
 Write 2-3 short paragraphs:
 1. Diagnose overall health (be specific about what's working/not working)
@@ -165,18 +176,28 @@ export function buildSeoDeveloperPrompt(audit: {
   return `Site: ${audit.url}
 
 Critical Issues to Fix:
-${audit.criticalIssues.slice(0, 5).map(i => `
+${audit.criticalIssues
+  .slice(0, 5)
+  .map(
+    (i) => `
 ### ${i.name} (${i.failedCount} pages affected)
 ${i.description}
 ${i.learnMoreUrl ? `Learn more: ${i.learnMoreUrl}` : ''}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 High-Priority Warnings:
-${audit.warnings.slice(0, 3).map(w => `
+${audit.warnings
+  .slice(0, 3)
+  .map(
+    (w) => `
 ### ${w.name} (${w.warningCount} pages affected)
 ${w.description}
 ${w.learnMoreUrl ? `Learn more: ${w.learnMoreUrl}` : ''}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 Create a step-by-step implementation guide:
 
@@ -230,25 +251,35 @@ export function buildPerformanceDeveloperPrompt(audit: {
   url: string
   mobileScore: number | null
   desktopScore: number | null
-  opportunities: Array<{ title: string, description: string, savings: string }>
-  diagnostics: Array<{ title: string, description: string }>
+  opportunities: Array<{ title: string; description: string; savings: string }>
+  diagnostics: Array<{ title: string; description: string }>
 }): string {
   return `Site: ${audit.url}
 
 Performance Scores: Mobile ${audit.mobileScore}/100, Desktop ${audit.desktopScore}/100
 
 Top Opportunities:
-${audit.opportunities.slice(0, 5).map(o => `
+${audit.opportunities
+  .slice(0, 5)
+  .map(
+    (o) => `
 ### ${o.title}
 ${o.description}
 Potential savings: ${o.savings}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 Diagnostics:
-${audit.diagnostics.slice(0, 3).map(d => `
+${audit.diagnostics
+  .slice(0, 3)
+  .map(
+    (d) => `
 ### ${d.title}
 ${d.description}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 Create a performance optimization implementation plan:
 
@@ -312,16 +343,21 @@ export function buildAioDeveloperPrompt(audit: {
     recommendations: string[]
   }>
 }): string {
-  const failedChecks = audit.programmaticChecks.filter(c => c.status === 'failed')
+  const failedChecks = audit.programmaticChecks.filter((c) => c.status === 'failed')
   const topAnalysis = audit.aiAnalyses[0] // Most important page
 
   return `Site: ${audit.url}
 
 Failed Technical Checks:
-${failedChecks.slice(0, 5).map(c => `
+${failedChecks
+  .slice(0, 5)
+  .map(
+    (c) => `
 ### ${c.name}
 ${c.description}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 AI Quality Analysis (sample page: ${topAnalysis?.url || 'N/A'}):
 - Data Quality: ${topAnalysis?.dataQuality}/100
@@ -330,7 +366,12 @@ AI Quality Analysis (sample page: ${topAnalysis?.url || 'N/A'}):
 - Citability: ${topAnalysis?.citability}/100
 
 Top Recommendations:
-${topAnalysis?.recommendations.slice(0, 5).map(r => `- ${r}`).join('\n') || 'None'}
+${
+  topAnalysis?.recommendations
+    .slice(0, 5)
+    .map((r) => `- ${r}`)
+    .join('\n') || 'None'
+}
 
 Create an AIO implementation roadmap:
 
@@ -445,30 +486,33 @@ export function AuditSummaryDialog({
 #### **SEO Site Audit** (`lib/audit/summary.ts`)
 
 **Current:**
+
 ```typescript
 export async function generateExecutiveSummary(...): Promise<string>
 ```
 
 **New:**
+
 ```typescript
 import { generateAuditSummary } from '@/lib/ai/audit-summary'
 import { buildSeoSummaryPrompt, buildSeoDeveloperPrompt } from '@/lib/ai/prompts/seo-audit'
 
 export async function generateSeoAuditSummary(
   auditData: SeoAuditData
-): Promise<{ summary: string, developerNotes: string }> {
+): Promise<{ summary: string; developerNotes: string }> {
   const summaryPrompt = buildSeoSummaryPrompt(auditData)
   const developerPrompt = buildSeoDeveloperPrompt(auditData)
 
   return await generateAuditSummary({
     summaryPrompt,
     developerNotesPrompt: developerPrompt,
-    auditType: 'seo'
+    auditType: 'seo',
   })
 }
 ```
 
 **When to call:**
+
 - After all checks complete in `lib/audit/runner.ts`
 - Store both `executive_summary` and `developer_notes` in DB
 
@@ -478,24 +522,25 @@ export async function generateSeoAuditSummary(
 import { generateAuditSummary } from '@/lib/ai/audit-summary'
 import {
   buildPerformanceSummaryPrompt,
-  buildPerformanceDeveloperPrompt
+  buildPerformanceDeveloperPrompt,
 } from '@/lib/ai/prompts/performance-audit'
 
 export async function generatePerformanceAuditSummary(
   auditData: PerformanceAuditData
-): Promise<{ summary: string, developerNotes: string }> {
+): Promise<{ summary: string; developerNotes: string }> {
   const summaryPrompt = buildPerformanceSummaryPrompt(auditData)
   const developerPrompt = buildPerformanceDeveloperPrompt(auditData)
 
   return await generateAuditSummary({
     summaryPrompt,
     developerNotesPrompt: developerPrompt,
-    auditType: 'performance'
+    auditType: 'performance',
   })
 }
 ```
 
 **When to call:**
+
 - After all pages processed in `api/performance/start/route.ts`
 - Before setting status to 'completed'
 
@@ -507,49 +552,56 @@ import { buildAioSummaryPrompt, buildAioDeveloperPrompt } from '@/lib/ai/prompts
 
 export async function generateAioAuditSummary(
   auditData: AioAuditData
-): Promise<{ summary: string, developerNotes: string }> {
+): Promise<{ summary: string; developerNotes: string }> {
   const summaryPrompt = buildAioSummaryPrompt(auditData)
   const developerPrompt = buildAioDeveloperPrompt(auditData)
 
   return await generateAuditSummary({
     summaryPrompt,
     developerNotesPrompt: developerPrompt,
-    auditType: 'aio'
+    auditType: 'aio',
   })
 }
 ```
 
 **When to call:**
+
 - After AI analysis completes in `api/aio/audit/route.ts`
 - Before setting status to 'completed'
 
 ### 7. Component Updates
 
 **Replace in:**
+
 - `components/audit/audit-report.tsx` - Replace `ExecutiveSummaryDialog` with `AuditSummaryDialog`
 - `components/performance/performance-audit-page.tsx` - Add `AuditSummaryDialog` to header
 - `components/aio/aio-audit-report.tsx` - Add `AuditSummaryDialog` to header
 
 **Example (SEO Audit):**
+
 ```tsx
-{audit.executive_summary && audit.developer_notes && (
-  <AuditSummaryDialog
-    summary={audit.executive_summary}
-    developerNotes={audit.developer_notes}
-    auditType="SEO Site Audit"
-    url={audit.url}
-  />
-)}
+{
+  audit.executive_summary && audit.developer_notes && (
+    <AuditSummaryDialog
+      summary={audit.executive_summary}
+      developerNotes={audit.developer_notes}
+      auditType="SEO Site Audit"
+      url={audit.url}
+    />
+  )
+}
 ```
 
 ### 8. Dependencies
 
 **Add to package.json:**
+
 ```bash
 npm install react-markdown
 ```
 
 **Already installed:**
+
 - `ai` ✓
 - `@ai-sdk/anthropic` ✓
 - `zod` ✓
@@ -557,42 +609,51 @@ npm install react-markdown
 ### 9. Testing Strategy
 
 #### Unit Tests
+
 - `tests/unit/lib/ai/audit-summary.test.ts` - Mock generateObject, test Zod validation
 - `tests/unit/lib/ai/prompts/*.test.ts` - Test prompt builders return expected format
 
 #### Integration Tests
+
 - `tests/integration/api/audit-summary.test.ts` - Test full flow with real Opus (use fixture)
 - Save real Opus responses to `tests/fixtures/audit-summaries/`
 
 #### E2E Tests
+
 - `tests/e2e/audit-summary.spec.ts` - Open dialog, verify tabs work, check markdown rendering
 
 ### 10. Migration & Rollout
 
 **Phase 1: Database**
+
 1. Run migration to add columns
 2. Existing audits will have NULL values (acceptable)
 
 **Phase 2: Component**
+
 1. Create global `AuditSummaryDialog` component
 2. Test standalone with mock data
 
 **Phase 3: SEO Audit**
+
 1. Update SEO audit to use new structure (already has summary)
 2. Generate developer_notes on new audits
 3. Replace old dialog with new one
 
 **Phase 4: PageSpeed**
+
 1. Add summary generation to performance audit flow
 2. Add dialog to performance audit page
 
 **Phase 5: AIO**
+
 1. Add summary generation to AIO audit flow
 2. Add dialog to AIO audit page
 
 ### 11. Error Handling
 
 **If AI generation fails:**
+
 ```typescript
 try {
   const { summary, developerNotes } = await generateAuditSummary(...)
@@ -605,6 +666,7 @@ try {
 ```
 
 **Graceful degradation:**
+
 - If `summary` is null → Don't show dialog button
 - If `developerNotes` is null but summary exists → Show summary-only dialog
 - If both exist → Show tabbed dialog
@@ -612,22 +674,26 @@ try {
 ### 12. Cost Estimates
 
 **Per audit AI generation:**
+
 - Input: ~500 tokens (prompt + audit data)
 - Output: ~600 tokens (summary 100 words + developer notes 500 words)
 - Total: ~1,100 tokens
 - Cost (Opus 4.5): ~$0.02 per audit
 
 **At scale:**
+
 - 100 audits/month: $2
 - 1,000 audits/month: $20
 - 10,000 audits/month: $200
 
 **Total cost for user running all 3 audits:**
+
 - SEO + PageSpeed + AIO = 3 × $0.02 = **$0.06 per full audit session**
 
 ### 13. File Checklist
 
 **New Files:**
+
 - [ ] `supabase/migrations/YYYYMMDD_add_audit_summaries.sql`
 - [ ] `lib/ai/types.ts`
 - [ ] `lib/ai/audit-summary.ts`
@@ -643,6 +709,7 @@ try {
 - [ ] `tests/fixtures/audit-summaries/aio-sample.json`
 
 **Modified Files:**
+
 - [ ] `lib/audit/types.ts` - Add `developer_notes` to SiteAudit type
 - [ ] `lib/performance/types.ts` - Add summary fields to PerformanceAudit type
 - [ ] `lib/aio/types.ts` - Add summary fields to AIOAudit type
@@ -656,6 +723,7 @@ try {
 - [ ] `package.json` - Add react-markdown
 
 **Deprecated Files:**
+
 - [ ] `components/audit/executive-summary-dialog.tsx` - Replace with shared component
 
 ### 14. Success Criteria

@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Download, ExternalLink, Smartphone, Monitor, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Smartphone, Monitor, AlertTriangle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PerformanceResults } from './performance-results'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
@@ -40,14 +39,6 @@ export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPag
           <ArrowLeft className="h-4 w-4" />
           Back to Page Speed
         </Link>
-        {audit.status === PerformanceAuditStatus.Completed && (
-          <Button variant="outline" asChild>
-            <a href={`/api/performance/${id}/export`} download>
-              <Download className="mr-2 h-4 w-4" />
-              Export PDF
-            </a>
-          </Button>
-        )}
       </div>
 
       {/* Audit Info with Device Toggle */}

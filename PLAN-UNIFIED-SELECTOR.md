@@ -3,10 +3,12 @@
 ## Problem
 
 We currently have two separate organization selectors:
+
 1. **OrganizationSelector** - Used in Dashboard, Settings, Profile, Organizations pages
 2. **AuditTargetSelector** - Used in SEO pages (Site Audit, PageSpeed, AIO)
 
 This causes:
+
 - Inconsistent UX between sections
 - Flash when navigating from SEO pages to Dashboard (org selector resets)
 - Code duplication
@@ -15,6 +17,7 @@ This causes:
 ## Solution
 
 Merge into a single **UnifiedOrgSelector** component that:
+
 - Always shows organization selection
 - Conditionally shows "One-time URL" option only on SEO/AIO routes
 - Eliminates flash by reading from URL params consistently
@@ -311,9 +314,11 @@ export function UnifiedOrgSelector({
 ### 2. Update All Headers
 
 #### Dashboard Header
+
 **File:** `components/dashboard/header.tsx`
 
 Replace:
+
 ```typescript
 <OrganizationSelector
   organizations={organizations}
@@ -322,6 +327,7 @@ Replace:
 ```
 
 With:
+
 ```typescript
 <UnifiedOrgSelector
   organizations={organizations}
@@ -331,9 +337,11 @@ With:
 ```
 
 #### SEO Header
+
 **File:** `components/seo/seo-header.tsx`
 
 Replace:
+
 ```typescript
 <AuditTargetSelector
   organizations={organizations}
@@ -344,6 +352,7 @@ Replace:
 ```
 
 With:
+
 ```typescript
 <UnifiedOrgSelector
   organizations={organizations}
@@ -406,6 +415,7 @@ const selectedTarget = useMemo(() => {
 **Breaking changes:** None - the API is compatible
 
 **localStorage keys:**
+
 - Keep using `selo-last-organization-id`
 - Keep using `selo-last-view-type` for one-time mode
 - Keep using `child-sidebar-collapsed`
