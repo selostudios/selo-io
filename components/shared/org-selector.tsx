@@ -20,6 +20,20 @@ import type { OrganizationForSelector } from '@/lib/organizations/types'
 const LAST_ORG_KEY = 'selo-last-organization-id'
 const LAST_VIEW_KEY = 'selo-last-view-type'
 const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
+const SELO_ORG_COOKIE = 'selo-org'
+
+function setOrgCookie(orgId: string) {
+  document.cookie = `${SELO_ORG_COOKIE}=${orgId}; path=/; max-age=31536000; SameSite=Lax`
+}
+
+function clearOrgCookie() {
+  document.cookie = `${SELO_ORG_COOKIE}=; path=/; max-age=0; SameSite=Lax`
+}
+
+function getOrgCookie(): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${SELO_ORG_COOKIE}=([^;]*)`))
+  return match ? match[1] : null
+}
 
 interface OrgSelectorProps {
   organizations: OrganizationForSelector[]
@@ -63,6 +77,7 @@ export function OrgSelector({
     localStorage.setItem(LAST_ORG_KEY, orgId)
     localStorage.setItem(LAST_VIEW_KEY, 'organization')
     localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
+    setOrgCookie(orgId)
     window.dispatchEvent(new Event('sidebar-expand'))
 
     // Update URL and refresh to re-fetch server data
@@ -79,6 +94,7 @@ export function OrgSelector({
   const handleSelectOneTime = () => {
     localStorage.removeItem(LAST_ORG_KEY)
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
+    clearOrgCookie()
 
     // Remove org param from URL and refresh to re-fetch server data
     startTransition(() => {
@@ -92,34 +108,53 @@ export function OrgSelector({
     handleSelectOrganization(organization.id)
   }
 
-  // Initialize from localStorage when no org is selected
+  // Sync cookie when URL org changes (e.g. direct link with ?org=)
   useEffect(() => {
-    if (!selectedOrganizationId && activeOrganizations.length > 0) {
-      // For non-SEO routes, always select an org
-      if (!isSeoRoute) {
-        const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-        if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
-          handleSelectOrganization(lastOrgId)
-        } else {
-          handleSelectOrganization(activeOrganizations[0].id)
-        }
-        return
-      }
+    if (urlOrgId) {
+      setOrgCookie(urlOrgId)
+      localStorage.setItem(LAST_ORG_KEY, urlOrgId)
+    }
+  }, [urlOrgId])
 
-      // For SEO routes, check if we should restore one-time mode
-      const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
-      if (lastViewType === 'one-time') {
-        // Already in one-time mode, do nothing
-        return
-      }
-
-      // Try to restore last org if it has a website URL
+  // One-time migration: if localStorage has an org but cookie doesn't, set the cookie.
+  // This ensures existing users get server-side org resolution on their next page load.
+  useEffect(() => {
+    const cookieOrg = getOrgCookie()
+    if (!cookieOrg) {
       const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
       if (lastOrgId) {
-        const org = activeOrganizations.find((o) => o.id === lastOrgId)
-        if (org?.website_url) {
-          handleSelectOrganization(lastOrgId)
-        }
+        setOrgCookie(lastOrgId)
+      }
+    }
+  }, [])
+
+  // For SEO routes with no org selected: handle one-time mode and restore last org.
+  // For non-SEO routes: the server already resolves the org from the cookie,
+  // so we only need to handle the edge case where there's no cookie AND no server-resolved org.
+  useEffect(() => {
+    if (selectedOrganizationId || activeOrganizations.length === 0) return
+
+    if (!isSeoRoute) {
+      // Non-SEO route with no org resolved server-side — pick one and navigate
+      const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
+      if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
+        handleSelectOrganization(lastOrgId)
+      } else {
+        handleSelectOrganization(activeOrganizations[0].id)
+      }
+      return
+    }
+
+    // SEO routes: check if we should restore one-time mode
+    const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
+    if (lastViewType === 'one-time') return
+
+    // Try to restore last org if it has a website URL
+    const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
+    if (lastOrgId) {
+      const org = activeOrganizations.find((o) => o.id === lastOrgId)
+      if (org?.website_url) {
+        handleSelectOrganization(lastOrgId)
       }
     }
   }, [selectedOrganizationId, activeOrganizations.length, isSeoRoute]) // eslint-disable-line react-hooks/exhaustive-deps

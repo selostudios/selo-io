@@ -1,6 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { isInternalUser } from '@/lib/permissions'
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
@@ -12,28 +14,22 @@ interface PageProps {
 
 export default async function DashboardPage({ searchParams }: PageProps) {
   const { org: selectedOrgId } = await searchParams
-  const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
 
-  const { data: userRecord, error: userError } = await supabase
-    .from('users')
-    .select('organization:organizations(name), organization_id, is_internal')
-    .eq('id', user.id)
-    .single()
-
-  // Internal users can view any org, external users only their own
+  const userRecord = await getUserRecord(user.id)
   const isInternal = userRecord ? isInternalUser(userRecord) : false
-  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord?.organization_id
+  const organizationId = await resolveOrganizationId(
+    selectedOrgId,
+    userRecord?.organization_id ?? null,
+    isInternal
+  )
 
-  if (userError || !userRecord || !organizationId) {
-    if (isInternal && !selectedOrgId) {
-      // Internal user without org selected - show prompt
+  if (!userRecord || !organizationId) {
+    if (isInternal && !organizationId) {
       return (
         <div className="flex items-center justify-center py-12">
           <p className="text-muted-foreground">Select an organization to view dashboard.</p>
@@ -43,19 +39,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     redirect('/onboarding')
   }
 
-  // Get organization's details
-  const { data: orgData } = await supabase
-    .from('organizations')
-    .select('name, website_url')
-    .eq('id', organizationId)
-    .single()
+  const supabase = await createClient()
 
-  // Get all platform connections for this organization
-  const { data: connections } = await supabase
-    .from('platform_connections')
-    .select('id, platform_type, account_name, display_name, status, last_sync_at')
-    .eq('organization_id', organizationId)
-    .order('created_at', { ascending: true })
+  // Fetch org details and connections in parallel
+  const [{ data: orgData }, { data: connections }] = await Promise.all([
+    supabase.from('organizations').select('name, website_url').eq('id', organizationId).single(),
+    supabase
+      .from('platform_connections')
+      .select('id, platform_type, account_name, display_name, status, last_sync_at')
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: true }),
+  ])
 
   // Group connections by platform type
   const linkedInConnections = (connections || []).filter((c) => c.platform_type === 'linkedin')

@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { NavigationShell } from '@/components/navigation/navigation-shell'
 import { Header } from '@/components/dashboard/header'
@@ -6,30 +5,27 @@ import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
 import { isInternalUser } from '@/lib/permissions'
+import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (!user) {
     redirect('/login')
   }
 
-  // Check if user has organization and internal status
-  const { data: userRecord, error } = await supabase
-    .from('users')
-    .select('organization_id, is_internal')
-    .eq('id', user.id)
-    .single()
+  const userRecord = await getUserRecord(user.id)
 
-  if (error || !userRecord?.organization_id) {
+  if (!userRecord?.organization_id) {
     redirect('/onboarding')
   }
 
   const isInternal = isInternalUser(userRecord)
+
+  // Warm the organizations cache for internal users (Header will hit this same cache)
+  if (isInternal) {
+    getOrganizationsList()
+  }
 
   return (
     <FeedbackProvider>

@@ -1,63 +1,41 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UserMenu } from '@/components/dashboard/user-menu'
 import { OrgSelector } from '@/components/shared/org-selector'
-import { getOrganizations } from '@/lib/organizations/actions'
+import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
+import { resolveOrganizationId } from '@/lib/auth/resolve-org'
+import { isInternalUser } from '@/lib/permissions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
-interface HeaderProps {
-  selectedOrgId?: string | null
-}
-
-export async function Header({ selectedOrgId }: HeaderProps = {}) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export async function Header() {
+  const user = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
 
-  const { data: userRecord, error } = await supabase
-    .from('users')
-    .select(
-      'organization:organizations(id, name, logo_url, website_url, status), first_name, last_name, role, is_internal, organization_id'
-    )
-    .eq('id', user.id)
-    .single()
-
-  if (error || !userRecord) {
+  const userRecord = await getUserRecord(user.id)
+  if (!userRecord) {
     redirect('/login')
   }
 
-  const userEmail = user?.email || ''
-  const firstName = userRecord?.first_name || userEmail.split('@')[0]
-  const lastName = userRecord?.last_name || ''
-  const role = userRecord?.role || 'team_member'
-  const isInternal = userRecord?.is_internal === true
+  const userEmail = user.email || ''
+  const firstName = userRecord.first_name || userEmail.split('@')[0]
+  const lastName = userRecord.last_name || ''
+  const role = userRecord.role || 'team_member'
+  const isInternal = isInternalUser(userRecord)
 
-  // Fetch all organizations for internal users, or just user's org for external users
+  // Resolve org from cookie for server-side pre-selection
+  const resolvedOrgId = await resolveOrganizationId(
+    undefined,
+    userRecord.organization_id,
+    isInternal
+  )
+
+  // Fetch organizations for the selector
   let organizations: OrganizationForSelector[] = []
   if (isInternal) {
-    const allOrgs = await getOrganizations()
-    organizations = allOrgs.map((org) => ({
-      id: org.id,
-      name: org.name,
-      website_url: org.website_url,
-      status: org.status,
-      logo_url: org.logo_url,
-    }))
+    organizations = await getOrganizationsList()
   } else {
-    // External users: use their organization data
-    const userOrg = userRecord?.organization as unknown as {
-      id: string
-      name: string
-      logo_url: string | null
-      website_url: string | null
-      status: string
-    } | null
-
+    const userOrg = userRecord.organization
     if (userOrg) {
       organizations = [
         {
@@ -77,7 +55,7 @@ export async function Header({ selectedOrgId }: HeaderProps = {}) {
         <OrgSelector
           organizations={organizations}
           isInternal={isInternal}
-          selectedOrganizationId={selectedOrgId}
+          selectedOrganizationId={resolvedOrgId}
         />
       </div>
       <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />

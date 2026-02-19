@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUser, getOrganizations } from '@/lib/organizations/actions'
 import { redirect } from 'next/navigation'
+import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
+import { isInternalUser } from '@/lib/permissions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type { SiteAudit } from '@/lib/audit/types'
 import type { PerformanceAudit } from '@/lib/performance/types'
@@ -35,17 +36,27 @@ export interface AuditListContext {
 // ============================================================
 
 /**
- * Get organizations formatted for selector component
+ * Get organizations formatted for selector component.
+ * Delegates to cached helper to avoid redundant queries within the same request.
  */
 export async function getOrganizationsForSelector(): Promise<OrganizationForSelector[]> {
-  const orgs = await getOrganizations()
-  return orgs.map((org) => ({
-    id: org.id,
-    name: org.name,
-    website_url: org.website_url,
-    status: org.status,
-    logo_url: org.logo_url,
-  }))
+  return getOrganizationsList()
+}
+
+// ============================================================
+// Cached Auth Helper
+// ============================================================
+
+async function getCachedCurrentUser() {
+  const user = await getAuthUser()
+  if (!user) return null
+  const record = await getUserRecord(user.id)
+  if (!record) return null
+  return {
+    id: record.id,
+    isInternal: isInternalUser(record),
+    organizationId: record.organization_id,
+  }
 }
 
 // ============================================================
@@ -73,7 +84,7 @@ export async function getAuditListData<T>(options: {
   buildQuery: (ctx: AuditListContext) => Promise<T[]>
 }): Promise<AuditListBaseResult & { audits: T[] }> {
   const supabase = await createClient()
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCachedCurrentUser()
 
   if (!currentUser) redirect('/login')
 
@@ -125,7 +136,7 @@ const SITE_AUDIT_SELECT = `
  */
 export async function getSiteAuditListData(organizationId?: string): Promise<SiteAuditListResult> {
   const supabase = await createClient()
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCachedCurrentUser()
 
   if (!currentUser) redirect('/login')
 
@@ -190,7 +201,7 @@ export async function getPerformanceAuditListData(
   organizationId?: string
 ): Promise<PerformanceAuditListResult> {
   const supabase = await createClient()
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCachedCurrentUser()
 
   if (!currentUser) redirect('/login')
 
@@ -279,7 +290,7 @@ export interface ReportsListResult extends AuditListBaseResult {
  */
 export async function getReportsListData(organizationId?: string): Promise<ReportsListResult> {
   const supabase = await createClient()
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCachedCurrentUser()
 
   if (!currentUser) redirect('/login')
 
