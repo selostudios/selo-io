@@ -42,9 +42,7 @@ export function TocSlide({ onNavigate, accentColor }: TocSlideProps) {
                         : undefined
                     }
                     onMouseEnter={
-                      accentColor
-                        ? (e) => (e.currentTarget.style.color = accentColor)
-                        : undefined
+                      accentColor ? (e) => (e.currentTarget.style.color = accentColor) : undefined
                     }
                     onMouseLeave={
                       accentColor ? (e) => (e.currentTarget.style.color = 'inherit') : undefined

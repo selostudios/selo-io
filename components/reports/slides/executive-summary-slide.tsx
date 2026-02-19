@@ -55,7 +55,11 @@ export function ExecutiveSummarySlide({ summary, stats, accentColor }: Executive
         {/* Stats Bar */}
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
           <div className="grid grid-cols-3 gap-8">
-            <StatItem value={stats.pages_analyzed} label="Pages Analyzed" accentColor={accentColor} />
+            <StatItem
+              value={stats.pages_analyzed}
+              label="Pages Analyzed"
+              accentColor={accentColor}
+            />
             <StatItem
               value={stats.opportunities_found}
               label="Opportunities Found"

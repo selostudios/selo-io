@@ -79,9 +79,7 @@ function RecommendationRow({
       <div
         className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold ${!accentColor ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : ''}`}
         style={
-          accentColor
-            ? { backgroundColor: `${accentColor}1a`, color: accentColor }
-            : undefined
+          accentColor ? { backgroundColor: `${accentColor}1a`, color: accentColor } : undefined
         }
       >
         {recommendation.rank}
