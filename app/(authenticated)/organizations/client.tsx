@@ -212,7 +212,7 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                         variant="secondary"
                         className={cn('text-xs', statusColors[org.status])}
                       >
-                        {org.status}
+                        {org.status.charAt(0).toUpperCase() + org.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell>
