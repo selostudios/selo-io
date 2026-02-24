@@ -318,12 +318,19 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
 }
 
 /**
- * Run an audit in batch mode - processes ~50 pages per execution.
+ * Run an audit in batch mode - loops through batches of ~50 pages per function invocation.
  * On first batch, initializes the crawl queue.
- * Returns 'batch_complete' status if more pages remain.
+ * Continues processing batches until all pages are crawled or the function timeout approaches.
+ * When approaching timeout, self-triggers a new invocation via the continue endpoint.
+ * Browser polling acts as a fallback if self-triggering fails.
  */
+// Budget for starting new batches: 800s max function timeout minus 300s buffer
+// (each batch can take up to 240s, plus time for DB ops and self-trigger)
+const MAX_FUNCTION_DURATION_MS = 500_000
+
 export async function runAuditBatch(auditId: string, url: string): Promise<void> {
   const supabase = createServiceClient()
+  const functionStartTime = Date.now()
 
   try {
     // Fetch audit data including batch tracking
@@ -337,10 +344,9 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
       throw new Error('Audit not found')
     }
 
-    const currentBatch = auditData.current_batch || 0
-    const isFirstBatch = currentBatch === 0
+    let currentBatch = auditData.current_batch || 0
 
-    // Load dismissed checks
+    // Load dismissed checks (once per function invocation)
     const dismissedChecks: DismissedCheck[] = []
     if (auditData.organization_id) {
       const { data: dismissed } = await supabase
@@ -354,7 +360,7 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
     }
 
     // First batch: initialize queue with start URL
-    if (isFirstBatch) {
+    if (currentBatch === 0) {
       await supabase
         .from('site_audits')
         .update({
@@ -365,35 +371,53 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
         .eq('id', auditId)
 
       await initializeCrawlQueue(auditId, url)
-    } else {
-      // Subsequent batches: increment batch counter
-      await supabase
-        .from('site_audits')
-        .update({
-          status: 'crawling',
-          current_batch: currentBatch + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', auditId)
+      currentBatch = 1
     }
 
-    // Run the batch crawl
-    const result = await crawlBatch(auditId, { dismissedChecks })
+    // Process batches in a loop until done or approaching function timeout
+    while (true) {
+      // Check if approaching function timeout before starting a new batch
+      const elapsed = Date.now() - functionStartTime
+      if (elapsed > MAX_FUNCTION_DURATION_MS) {
+        console.log(
+          `[Audit Batch] Approaching function timeout (${Math.round(elapsed / 1000)}s), triggering continuation`
+        )
+        await supabase.from('site_audits').update({ status: 'batch_complete' }).eq('id', auditId)
+        await triggerContinuation(auditId)
+        return
+      }
 
-    console.log(
-      `[Audit Batch] Batch ${currentBatch + 1} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`
-    )
+      // Update batch counter for subsequent batches (first batch already set above)
+      if (currentBatch > (auditData.current_batch || 0)) {
+        await supabase
+          .from('site_audits')
+          .update({
+            status: 'crawling',
+            current_batch: currentBatch,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', auditId)
+      }
 
-    // Handle results
-    if (result.stopped) {
-      // User stopped the audit - complete with current results
-      await completeAuditWithExistingChecks(auditId, url)
-    } else if (result.hasMorePages) {
-      // More pages to crawl - signal batch complete
-      await supabase.from('site_audits').update({ status: 'batch_complete' }).eq('id', auditId)
-    } else {
-      // No more pages - run site-wide checks and complete
-      await finishAudit(auditId, url, dismissedChecks)
+      // Run the batch crawl
+      const result = await crawlBatch(auditId, { dismissedChecks })
+
+      console.log(
+        `[Audit Batch] Batch ${currentBatch} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`
+      )
+
+      if (result.stopped) {
+        await completeAuditWithExistingChecks(auditId, url)
+        return
+      } else if (result.hasMorePages) {
+        // Continue to next batch in the same function invocation
+        currentBatch++
+        continue
+      } else {
+        // No more pages - run site-wide checks and complete
+        await finishAudit(auditId, url, dismissedChecks)
+        return
+      }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
@@ -414,6 +438,38 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
         completed_at: new Date().toISOString(),
       })
       .eq('id', auditId)
+  }
+}
+
+/**
+ * Self-trigger the next function invocation to continue processing batches.
+ * Falls back to batch_complete status if the trigger fails (browser polling can resume).
+ */
+async function triggerContinuation(auditId: string): Promise<void> {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+
+  if (!baseUrl) {
+    console.error('[Audit Continuation] No base URL configured, cannot self-trigger')
+    return
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}/api/audit/${auditId}/continue`, {
+      method: 'POST',
+      headers: {
+        'x-cron-secret': process.env.CRON_SECRET || '',
+      },
+      signal: AbortSignal.timeout(10_000),
+    })
+
+    if (!response.ok) {
+      console.error('[Audit Continuation] Failed to trigger:', response.status)
+    }
+  } catch (err) {
+    console.error('[Audit Continuation] Failed to self-trigger:', err)
+    // batch_complete status already set before this call, so browser polling can still resume
   }
 }
 

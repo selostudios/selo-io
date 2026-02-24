@@ -54,15 +54,22 @@ export function formatDate(dateString: string, includeTime = true): string {
  */
 export function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
+  const totalMinutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
+  const paddedSeconds = seconds.toString().padStart(2, '0')
 
-  if (minutes === 0) {
+  if (totalMinutes === 0) {
     return `${seconds}s`
   }
 
-  const paddedSeconds = seconds.toString().padStart(2, '0')
-  return `${minutes}:${paddedSeconds}s`
+  if (totalMinutes >= 60) {
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    const paddedMinutes = minutes.toString().padStart(2, '0')
+    return `${hours}:${paddedMinutes}:${paddedSeconds}s`
+  }
+
+  return `${totalMinutes}:${paddedSeconds}s`
 }
 
 /**

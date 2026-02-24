@@ -294,7 +294,6 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
   const currentPhaseIndex = phases.findIndex((p) => p.key === effectiveStatus)
 
   // Batch progress info
-  const currentBatch = progress?.current_batch ?? 0
   const urlsDiscovered = progress?.urls_discovered ?? 0
   const urlsRemaining = progress?.urls_remaining ?? 0
 
@@ -384,10 +383,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
           {urlsDiscovered > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {currentBatch > 0 && `Batch ${currentBatch} \u00b7 `}
-                  {urlsDiscovered} URLs discovered
-                </span>
+                <span className="text-muted-foreground">{urlsDiscovered} URLs discovered</span>
                 {urlsRemaining > 0 && (
                   <span className="text-muted-foreground">{urlsRemaining} remaining</span>
                 )}
@@ -474,7 +470,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
 
           {/* Helpful text */}
           <p className="text-muted-foreground text-center text-xs">
-            This page will automatically update when the audit is complete.
+            The audit runs in the background. You can close this tab and come back later.
           </p>
         </CardContent>
       </Card>

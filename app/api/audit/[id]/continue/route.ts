@@ -1,45 +1,49 @@
 import { NextResponse, after } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { runAuditBatch } from '@/lib/audit/runner'
 
-// Extend function timeout for batch processing (max 300s on Pro plan)
+// Extend function timeout for batch processing (800s on Vercel Pro plan)
 export const maxDuration = 800
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: auditId } = await params
-  const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Accept either user auth or internal service call via CRON_SECRET
+  const cronSecret = request.headers.get('x-cron-secret')
+  const isInternalCall = cronSecret === process.env.CRON_SECRET && !!cronSecret
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isInternalCall) {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
-  // Get audit and verify status
-  const { data: audit, error } = await supabase
+  // Use service client for audit query (works for both user and internal calls)
+  const supabase = createServiceClient()
+
+  // Atomically claim the continuation to prevent duplicate batch runs
+  // (both browser polling and server self-trigger may hit this endpoint simultaneously)
+  const { data: claimed } = await supabase
     .from('site_audits')
-    .select('id, url, status, current_batch')
+    .update({ status: 'crawling', updated_at: new Date().toISOString() })
     .eq('id', auditId)
+    .eq('status', 'batch_complete')
+    .select('id, url, current_batch')
     .single()
 
-  if (error || !audit) {
-    return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
-  }
-
-  // Only continue if status is batch_complete
-  if (audit.status !== 'batch_complete') {
-    return NextResponse.json(
-      { error: `Cannot continue audit in ${audit.status} status` },
-      { status: 400 }
-    )
+  if (!claimed) {
+    return NextResponse.json({ error: 'Audit not available for continuation' }, { status: 409 })
   }
 
   // Run next batch in background
   after(async () => {
     try {
-      await runAuditBatch(auditId, audit.url)
+      await runAuditBatch(auditId, claimed.url)
     } catch (err) {
       console.error('[Audit Continue] Background batch failed:', err)
     }
@@ -47,6 +51,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   return NextResponse.json({
     success: true,
-    batch: (audit.current_batch || 0) + 1,
+    batch: (claimed.current_batch || 0) + 1,
   })
 }
