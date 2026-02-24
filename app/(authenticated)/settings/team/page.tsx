@@ -154,7 +154,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
         </CardContent>
       </Card>
 
-      {isAdmin && pendingInvites.length > 0 && (
+      {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle>Pending Invites</CardTitle>
@@ -162,40 +162,46 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {pendingInvites.map((invite) => {
-                const expiresAt = new Date(invite.expires_at)
-                const isExpired = expiresAt < new Date()
+              {pendingInvites.length === 0 ? (
+                <p className="text-muted-foreground py-8 text-center text-sm">
+                  No pending invites
+                </p>
+              ) : (
+                pendingInvites.map((invite) => {
+                  const expiresAt = new Date(invite.expires_at)
+                  const isExpired = expiresAt < new Date()
 
-                return (
-                  <div
-                    key={invite.id}
-                    className="flex items-center justify-between rounded-lg border p-4"
-                  >
-                    <div>
-                      <p className="font-medium">{invite.email}</p>
-                      <p className="text-muted-foreground text-sm">
-                        {isExpired ? (
-                          <span className="text-red-600">
-                            Expired {formatDate(invite.expires_at)}
-                          </span>
-                        ) : (
-                          <>Expires {formatDate(invite.expires_at)}</>
-                        )}
-                      </p>
+                  return (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between rounded-lg border p-4"
+                    >
+                      <div>
+                        <p className="font-medium">{invite.email}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {isExpired ? (
+                            <span className="text-red-600">
+                              Expired {formatDate(invite.expires_at)}
+                            </span>
+                          ) : (
+                            <>Expires {formatDate(invite.expires_at)}</>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{displayName(invite.role)}</Badge>
+                        <ResendInviteButton inviteId={invite.id} email={invite.email} />
+                        <form action={handleDeleteInvite}>
+                          <input type="hidden" name="inviteId" value={invite.id} />
+                          <Button type="submit" variant="ghost" size="sm">
+                            Cancel
+                          </Button>
+                        </form>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{displayName(invite.role)}</Badge>
-                      <ResendInviteButton inviteId={invite.id} email={invite.email} />
-                      <form action={handleDeleteInvite}>
-                        <input type="hidden" name="inviteId" value={invite.id} />
-                        <Button type="submit" variant="ghost" size="sm">
-                          Cancel
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </CardContent>
         </Card>
