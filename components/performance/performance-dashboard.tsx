@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
+import { ScoreTrendChart, type ScoreDataPoint } from '@/components/audit/score-trend-chart'
 import type { PerformanceAudit } from '@/lib/performance/types'
 import { formatDuration, calculateDuration } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
@@ -88,6 +89,27 @@ export function PerformanceDashboard({
         onRunAudit={handleRunAudit}
         isRunning={isPending}
       />
+
+      {/* Score History */}
+      {audits.some((a) => a.status === 'completed' && a.avg_performance_score != null) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Score History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScoreTrendChart
+              dataPoints={audits
+                .filter((a) => a.status === 'completed' && a.avg_performance_score != null)
+                .map(
+                  (a): ScoreDataPoint => ({
+                    score: a.avg_performance_score as number,
+                    completedAt: a.completed_at,
+                  })
+                )}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Audit History */}
       <Card>

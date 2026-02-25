@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Loader2, ChevronDown, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ScoreTrendChart } from './score-trend-chart'
+import { ScoreTrendChart, type ScoreDataPoint } from './score-trend-chart'
 import { AuditHistoryList } from './audit-history-list'
 import { DismissedChecksList } from './dismissed-checks-list'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
@@ -106,7 +106,16 @@ export function AuditDashboard({
             <CardTitle>Score History</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScoreTrendChart audits={audits} />
+            <ScoreTrendChart
+              dataPoints={audits
+                .filter((a) => a.status === 'completed' && a.overall_score !== null)
+                .map(
+                  (a): ScoreDataPoint => ({
+                    score: a.overall_score as number,
+                    completedAt: a.completed_at,
+                  })
+                )}
+            />
           </CardContent>
         </Card>
       )}

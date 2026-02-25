@@ -13,6 +13,7 @@ import { AIAnalysisCard } from '@/components/aio/ai-analysis-card'
 import { QualityDimensionCards } from '@/components/aio/quality-dimension-cards'
 import { AIOInfoDialog } from '@/components/aio/aio-info-dialog'
 import { AIOAuditHistoryList } from '@/components/aio/aio-audit-history-list'
+import { ScoreTrendChart, type ScoreDataPoint } from '@/components/audit/score-trend-chart'
 import { useAIOAuditStream } from '@/hooks/use-aio-audit-stream'
 import type { ProgrammaticCheck } from '@/hooks/use-aio-audit-stream'
 import type { SiteAuditCheck } from '@/lib/audit/types'
@@ -338,6 +339,28 @@ export function AIOAuditClient({
           )}
         </>
       )}
+
+      {/* Score History - Only show for organization audits with completed data */}
+      {selectedOrganizationId &&
+        audits.some((a) => a.status === 'completed' && a.overall_aio_score !== null) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Score History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScoreTrendChart
+                dataPoints={audits
+                  .filter((a) => a.status === 'completed' && a.overall_aio_score !== null)
+                  .map(
+                    (a): ScoreDataPoint => ({
+                      score: a.overall_aio_score as number,
+                      completedAt: a.completed_at,
+                    })
+                  )}
+              />
+            </CardContent>
+          </Card>
+        )}
 
       {/* Audit History */}
       <Card>

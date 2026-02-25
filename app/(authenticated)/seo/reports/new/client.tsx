@@ -13,19 +13,17 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { EmptyState } from '@/components/ui/empty-state'
-import { cn } from '@/lib/utils'
+import { AuditSelectionCard, type AuditItem } from '@/components/reports/audit-selection-card'
 import type { SiteAudit } from '@/lib/audit/types'
 import type { PerformanceAudit } from '@/lib/performance/types'
 import type { AIOAudit } from '@/lib/aio/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { createReport, validateAuditsForReport } from '../actions'
-import { extractDomain, getScoreStatus, getScoreBadgeVariant } from '@/lib/reports'
+import { extractDomain } from '@/lib/reports'
 import type { ReportValidationResult } from '@/lib/reports/types'
 
 interface NewReportClientProps {
@@ -53,11 +51,9 @@ export function NewReportClient({
 }: NewReportClientProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState(preselectedDomain ?? '')
-  const [selectedSiteAudit, setSelectedSiteAudit] = useState<SiteAudit | null>(null)
-  const [selectedPerfAudit, setSelectedPerfAudit] = useState<
-    (PerformanceAudit & { domain: string | null }) | null
-  >(null)
-  const [selectedAioAudit, setSelectedAioAudit] = useState<AIOAudit | null>(null)
+  const [selectedSiteAuditId, setSelectedSiteAuditId] = useState<string | null>(null)
+  const [selectedPerfAuditId, setSelectedPerfAuditId] = useState<string | null>(null)
+  const [selectedAioAuditId, setSelectedAioAuditId] = useState<string | null>(null)
   const [validation, setValidation] = useState<ReportValidationResult | null>(null)
   const [isValidating, setIsValidating] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -100,36 +96,83 @@ export function NewReportClient({
     return inProgressAioAudits.filter((a) => extractDomain(a.url).includes(query))
   }, [inProgressAioAudits, searchQuery])
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+  // Transform audits to AuditItem format
+  const siteAuditItems: AuditItem[] = useMemo(
+    () =>
+      filteredSiteAudits.map((a) => ({
+        id: a.id,
+        domain: extractDomain(a.url),
+        date: a.created_at,
+        score: a.overall_score,
+      })),
+    [filteredSiteAudits]
+  )
 
-  const getScoreBadge = (score: number | null) => {
-    if (score === null) return null
-    const status = getScoreStatus(score)
-    const variant = getScoreBadgeVariant(status)
-    return (
-      <Badge variant={variant} className="font-mono text-xs">
-        {score}
-      </Badge>
-    )
-  }
+  const inProgressSiteItems: AuditItem[] = useMemo(
+    () =>
+      filteredInProgressSiteAudits.map((a) => ({
+        id: a.id,
+        domain: extractDomain(a.url),
+        date: a.created_at,
+      })),
+    [filteredInProgressSiteAudits]
+  )
+
+  const perfAuditItems: AuditItem[] = useMemo(
+    () =>
+      filteredPerfAudits.map((a) => ({
+        id: a.id,
+        domain: a.domain ?? 'Unknown domain',
+        date: a.created_at,
+        score: a.avg_performance_score ?? null,
+        subtitle: `${a.completed_count} URLs`,
+      })),
+    [filteredPerfAudits]
+  )
+
+  const inProgressPerfItems: AuditItem[] = useMemo(
+    () =>
+      filteredInProgressPerfAudits.map((a) => ({
+        id: a.id,
+        domain: a.domain ?? 'Unknown domain',
+        date: a.created_at,
+      })),
+    [filteredInProgressPerfAudits]
+  )
+
+  const aioAuditItems: AuditItem[] = useMemo(
+    () =>
+      filteredAioAudits.map((a) => ({
+        id: a.id,
+        domain: extractDomain(a.url),
+        date: a.created_at,
+        score: a.overall_aio_score,
+      })),
+    [filteredAioAudits]
+  )
+
+  const inProgressAioItems: AuditItem[] = useMemo(
+    () =>
+      filteredInProgressAioAudits.map((a) => ({
+        id: a.id,
+        domain: extractDomain(a.url),
+        date: a.created_at,
+      })),
+    [filteredInProgressAioAudits]
+  )
 
   // Validate when all three audits are selected
   const handleValidate = async () => {
-    if (!selectedSiteAudit || !selectedPerfAudit || !selectedAioAudit) return
+    if (!selectedSiteAuditId || !selectedPerfAuditId || !selectedAioAuditId) return
 
     setIsValidating(true)
     setError(null)
 
     try {
       const result = await validateAuditsForReport(
-        selectedSiteAudit.id,
-        selectedPerfAudit.id,
-        selectedAioAudit.id
+        selectedSiteAuditId,
+        selectedPerfAuditId,
+        selectedAioAuditId
       )
       setValidation(result)
     } catch {
@@ -140,16 +183,16 @@ export function NewReportClient({
   }
 
   const handleCreateReport = async () => {
-    if (!selectedSiteAudit || !selectedPerfAudit || !selectedAioAudit) return
+    if (!selectedSiteAuditId || !selectedPerfAuditId || !selectedAioAuditId) return
 
     setIsCreating(true)
     setError(null)
 
     try {
       const result = await createReport({
-        site_audit_id: selectedSiteAudit.id,
-        performance_audit_id: selectedPerfAudit.id,
-        aio_audit_id: selectedAioAudit.id,
+        site_audit_id: selectedSiteAuditId,
+        performance_audit_id: selectedPerfAuditId,
+        aio_audit_id: selectedAioAuditId,
       })
 
       if (result.success && result.reportId) {
@@ -164,7 +207,12 @@ export function NewReportClient({
     }
   }
 
-  const allSelected = selectedSiteAudit && selectedPerfAudit && selectedAioAudit
+  const handleSelect = (setter: (id: string | null) => void, id: string) => {
+    setter(id)
+    setValidation(null)
+  }
+
+  const allSelected = selectedSiteAuditId && selectedPerfAuditId && selectedAioAuditId
   const canCreate = allSelected && validation?.is_valid
 
   return (
@@ -201,220 +249,44 @@ export function NewReportClient({
 
       {/* Audit Selection Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* SEO Audit Selection */}
-        <Card data-testid="seo-audit-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileSearch className="h-5 w-5" />
-              SEO Audit
-            </CardTitle>
-            <CardDescription>Select a completed site audit</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {filteredSiteAudits.length === 0 && filteredInProgressSiteAudits.length === 0 ? (
-              <EmptyState
-                icon={FileSearch}
-                title="No SEO audits"
-                description="Run a site audit first"
-                className="py-4"
-              />
-            ) : (
-              <div className="max-h-64 space-y-2 overflow-y-auto">
-                {/* In-progress audits (shown first, disabled) */}
-                {filteredInProgressSiteAudits.map((audit) => (
-                  <div
-                    key={audit.id}
-                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium text-neutral-500">
-                        {extractDomain(audit.url)}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
-                        <Badge variant="outline" className="text-xs">
-                          In Progress
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)}
-                    </div>
-                  </div>
-                ))}
-                {/* Completed audits (selectable) */}
-                {filteredSiteAudits.map((audit) => (
-                  <button
-                    key={audit.id}
-                    onClick={() => {
-                      setSelectedSiteAudit(audit)
-                      setValidation(null)
-                    }}
-                    className={cn(
-                      'w-full rounded-lg border p-3 text-left transition-colors',
-                      selectedSiteAudit?.id === audit.id
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium">
-                        {extractDomain(audit.url)}
-                      </span>
-                      {getScoreBadge(audit.overall_score)}
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <AuditSelectionCard
+          icon={FileSearch}
+          title="SEO Audit"
+          description="Select a completed site audit"
+          emptyTitle="No SEO audits"
+          emptyDescription="Run a site audit first"
+          audits={siteAuditItems}
+          inProgressAudits={inProgressSiteItems}
+          selectedId={selectedSiteAuditId}
+          onSelect={(id) => handleSelect(setSelectedSiteAuditId, id)}
+          data-testid="seo-audit-card"
+        />
 
-        {/* PageSpeed Audit Selection */}
-        <Card data-testid="pagespeed-audit-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gauge className="h-5 w-5" />
-              PageSpeed Audit
-            </CardTitle>
-            <CardDescription>Select a completed performance audit</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {filteredPerfAudits.length === 0 && filteredInProgressPerfAudits.length === 0 ? (
-              <EmptyState
-                icon={Gauge}
-                title="No PageSpeed audits"
-                description="Run a performance audit first"
-                className="py-4"
-              />
-            ) : (
-              <div className="max-h-64 space-y-2 overflow-y-auto">
-                {/* In-progress audits (shown first, disabled) */}
-                {filteredInProgressPerfAudits.map((audit) => (
-                  <div
-                    key={audit.id}
-                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium text-neutral-500">
-                        {audit.domain ?? 'Unknown domain'}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
-                        <Badge variant="outline" className="text-xs">
-                          In Progress
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)}
-                    </div>
-                  </div>
-                ))}
-                {/* Completed audits (selectable) */}
-                {filteredPerfAudits.map((audit) => (
-                  <button
-                    key={audit.id}
-                    onClick={() => {
-                      setSelectedPerfAudit(audit)
-                      setValidation(null)
-                    }}
-                    className={cn(
-                      'w-full rounded-lg border p-3 text-left transition-colors',
-                      selectedPerfAudit?.id === audit.id
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium">
-                        {audit.domain ?? 'Unknown domain'}
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)} · {audit.completed_count} URLs
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <AuditSelectionCard
+          icon={Gauge}
+          title="PageSpeed Audit"
+          description="Select a completed performance audit"
+          emptyTitle="No PageSpeed audits"
+          emptyDescription="Run a performance audit first"
+          audits={perfAuditItems}
+          inProgressAudits={inProgressPerfItems}
+          selectedId={selectedPerfAuditId}
+          onSelect={(id) => handleSelect(setSelectedPerfAuditId, id)}
+          data-testid="pagespeed-audit-card"
+        />
 
-        {/* AIO Audit Selection */}
-        <Card data-testid="aio-audit-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              AIO Audit
-            </CardTitle>
-            <CardDescription>Select a completed AI optimization audit</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {filteredAioAudits.length === 0 && filteredInProgressAioAudits.length === 0 ? (
-              <EmptyState
-                icon={Bot}
-                title="No AIO audits"
-                description="Run an AIO audit first"
-                className="py-4"
-              />
-            ) : (
-              <div className="max-h-64 space-y-2 overflow-y-auto">
-                {/* In-progress audits (shown first, disabled) */}
-                {filteredInProgressAioAudits.map((audit) => (
-                  <div
-                    key={audit.id}
-                    className="w-full cursor-not-allowed rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3 opacity-70"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium text-neutral-500">
-                        {extractDomain(audit.url)}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
-                        <Badge variant="outline" className="text-xs">
-                          In Progress
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)}
-                    </div>
-                  </div>
-                ))}
-                {/* Completed audits (selectable) */}
-                {filteredAioAudits.map((audit) => (
-                  <button
-                    key={audit.id}
-                    onClick={() => {
-                      setSelectedAioAudit(audit)
-                      setValidation(null)
-                    }}
-                    className={cn(
-                      'w-full rounded-lg border p-3 text-left transition-colors',
-                      selectedAioAudit?.id === audit.id
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-sm font-medium">
-                        {extractDomain(audit.url)}
-                      </span>
-                      {getScoreBadge(audit.overall_aio_score)}
-                    </div>
-                    <div className="text-muted-foreground mt-1 text-xs">
-                      {formatDate(audit.created_at)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <AuditSelectionCard
+          icon={Bot}
+          title="AIO Audit"
+          description="Select a completed AI optimization audit"
+          emptyTitle="No AIO audits"
+          emptyDescription="Run an AIO audit first"
+          audits={aioAuditItems}
+          inProgressAudits={inProgressAioItems}
+          selectedId={selectedAioAuditId}
+          onSelect={(id) => handleSelect(setSelectedAioAuditId, id)}
+          data-testid="aio-audit-card"
+        />
       </div>
 
       {/* Validation & Create Section */}

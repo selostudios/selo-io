@@ -18,6 +18,8 @@ export interface PerformanceAudit {
   completed_count: number
   // First URL (for one-time audits display)
   first_url?: string
+  // Average performance score across all results (computed, not in DB)
+  avg_performance_score?: number | null
 }
 
 export interface PerformanceAuditResult {

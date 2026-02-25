@@ -1,17 +1,19 @@
-import type { SiteAudit } from '@/lib/audit/types'
 import { formatDate } from '@/lib/utils'
 
-interface ScoreTrendChartProps {
-  audits: SiteAudit[]
+export interface ScoreDataPoint {
+  score: number
+  completedAt: string | null
 }
 
-export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
-  // Filter to only completed audits with scores, then reverse to show oldest to newest
-  const completedAudits = audits
-    .filter((audit) => audit.status === 'completed' && audit.overall_score !== null)
-    .reverse()
+interface ScoreTrendChartProps {
+  dataPoints: ScoreDataPoint[]
+}
 
-  if (completedAudits.length === 0) {
+export function ScoreTrendChart({ dataPoints }: ScoreTrendChartProps) {
+  // Filter to only entries with valid scores, show oldest to newest
+  const validPoints = dataPoints.filter((p) => p.score !== null).reverse()
+
+  if (validPoints.length === 0) {
     return (
       <div className="text-muted-foreground flex h-24 items-center justify-center">
         No score data yet
@@ -19,19 +21,18 @@ export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
     )
   }
 
-  // Single audit - show simple display instead of a chart
-  if (completedAudits.length === 1) {
-    const audit = completedAudits[0]
-    const score = audit.overall_score as number
+  // Single data point - show simple display instead of a chart
+  if (validPoints.length === 1) {
+    const point = validPoints[0]
     return (
       <div className="flex items-center gap-6">
         <div className="flex items-baseline">
-          <span className="text-4xl font-bold tabular-nums">{score}</span>
+          <span className="text-4xl font-bold tabular-nums">{Math.round(point.score)}</span>
           <span className="text-muted-foreground text-lg">/100</span>
         </div>
         <div className="text-muted-foreground text-sm">
           <p>
-            First audit completed {audit.completed_at ? formatDate(audit.completed_at, false) : ''}
+            First audit completed {point.completedAt ? formatDate(point.completedAt, false) : ''}
           </p>
           <p className="text-xs">Run more audits to see score trends over time</p>
         </div>
@@ -39,12 +40,12 @@ export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
     )
   }
 
-  const scores = completedAudits.map((audit) => audit.overall_score as number)
+  const scores = validPoints.map((p) => p.score)
   const minScore = Math.min(...scores)
   const maxScore = Math.max(...scores)
   const latestScore = scores[scores.length - 1]
   const previousScore = scores[scores.length - 2]
-  const change = latestScore - previousScore
+  const change = Math.round(latestScore - previousScore)
 
   // Add padding to the range
   const range = maxScore - minScore
@@ -88,12 +89,16 @@ export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
     return { x, y, score }
   })
 
+  const roundedLatest = Math.round(latestScore)
+  const roundedMin = Math.round(minScore)
+  const roundedMax = Math.round(maxScore)
+
   return (
     <div className="flex items-center gap-6">
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="h-20 w-full max-w-[400px]"
-        aria-label={`Score trend from ${scores[0]} to ${latestScore}`}
+        aria-label={`Score trend from ${Math.round(scores[0])} to ${roundedLatest}`}
         role="img"
       >
         {/* Area fill */}
@@ -113,7 +118,7 @@ export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
       </svg>
       <div className="flex flex-col gap-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold tabular-nums">{latestScore}</span>
+          <span className="text-2xl font-bold tabular-nums">{roundedLatest}</span>
           <span className="text-muted-foreground">/100</span>
           {change !== 0 && (
             <span
@@ -125,7 +130,7 @@ export function ScoreTrendChart({ audits }: ScoreTrendChartProps) {
           )}
         </div>
         <span className="text-muted-foreground text-xs tabular-nums">
-          {completedAudits.length} audits · Range: {minScore}–{maxScore}
+          {validPoints.length} audits · Range: {roundedMin}–{roundedMax}
         </span>
       </div>
     </div>

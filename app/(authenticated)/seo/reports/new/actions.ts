@@ -89,18 +89,37 @@ export async function getNewReportData(
 
   const { data: perfAudits } = await perfQuery
 
-  // Get domains for performance audits from their results
+  // Get domains and average performance scores for performance audits from their results
   const performanceAudits: (PerformanceAudit & { domain: string | null })[] = []
   if (perfAudits) {
-    for (const audit of perfAudits) {
-      const { data: results } = await supabase
-        .from('performance_audit_results')
-        .select('url')
-        .eq('audit_id', audit.id)
-        .limit(1)
+    // Batch fetch all results for completed audits
+    const auditIds = perfAudits.map((a) => a.id)
+    const { data: allResults } = await supabase
+      .from('performance_audit_results')
+      .select('audit_id, url, performance_score')
+      .in('audit_id', auditIds)
 
-      const domain = results?.[0]?.url ? extractDomain(results[0].url) : null
-      performanceAudits.push({ ...audit, domain } as PerformanceAudit & { domain: string | null })
+    // Group results by audit_id
+    const resultsByAudit: Record<string, { url: string; performance_score: number | null }[]> = {}
+    for (const result of allResults ?? []) {
+      if (!resultsByAudit[result.audit_id]) {
+        resultsByAudit[result.audit_id] = []
+      }
+      resultsByAudit[result.audit_id].push(result)
+    }
+
+    for (const audit of perfAudits) {
+      const results = resultsByAudit[audit.id] ?? []
+      const domain = results[0]?.url ? extractDomain(results[0].url) : null
+      const scores = results.map((r) => r.performance_score).filter((s): s is number => s !== null)
+      const avgScore =
+        scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null
+
+      performanceAudits.push({
+        ...audit,
+        domain,
+        avg_performance_score: avgScore,
+      } as PerformanceAudit & { domain: string | null })
     }
   }
 

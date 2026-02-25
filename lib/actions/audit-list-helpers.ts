@@ -256,21 +256,48 @@ export async function getPerformanceAuditListData(
     }
   }
 
-  // Add first_url to one-time audits
-  const auditsWithUrls = (audits ?? []).map((audit) => {
-    if (audit.organization_id === null && firstUrlsMap[audit.id]) {
-      return {
-        ...audit,
-        first_url: firstUrlsMap[audit.id],
+  // Fetch average performance scores for completed audits
+  const completedAuditIds = (audits ?? [])
+    .filter((audit) => audit.status === 'completed')
+    .map((audit) => audit.id)
+
+  const avgScoresMap: Record<string, number> = {}
+
+  if (completedAuditIds.length > 0) {
+    const { data: results } = await supabase
+      .from('performance_audit_results')
+      .select('audit_id, performance_score')
+      .in('audit_id', completedAuditIds)
+      .not('performance_score', 'is', null)
+
+    if (results) {
+      // Group scores by audit_id and compute average
+      const scoresByAudit: Record<string, number[]> = {}
+      for (const result of results) {
+        if (!scoresByAudit[result.audit_id]) {
+          scoresByAudit[result.audit_id] = []
+        }
+        scoresByAudit[result.audit_id].push(result.performance_score as number)
+      }
+      for (const [auditId, scores] of Object.entries(scoresByAudit)) {
+        avgScoresMap[auditId] = Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
       }
     }
-    return audit
-  })
+  }
+
+  // Add first_url and avg_performance_score to audits
+  const enrichedAudits = (audits ?? []).map((audit) => ({
+    ...audit,
+    ...(audit.organization_id === null && firstUrlsMap[audit.id]
+      ? { first_url: firstUrlsMap[audit.id] }
+      : {}),
+    avg_performance_score: avgScoresMap[audit.id] ?? null,
+  }))
 
   const organizations = await getOrganizationsForSelector()
 
   return {
-    audits: auditsWithUrls as PerformanceAudit[],
+    audits: enrichedAudits as PerformanceAudit[],
     organizations,
     isInternal,
     selectedOrganizationId: filterOrgId,
