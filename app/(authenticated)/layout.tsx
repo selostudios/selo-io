@@ -30,7 +30,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <NavigationShell isInternal={isInternal} />
+        <NavigationShell isInternal={isInternal} userRole={userRecord.role} />
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">{children}</main>

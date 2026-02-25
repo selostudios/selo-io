@@ -163,9 +163,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
           <CardContent>
             <div className="space-y-4">
               {pendingInvites.length === 0 ? (
-                <p className="text-muted-foreground py-8 text-center text-sm">
-                  No pending invites
-                </p>
+                <p className="text-muted-foreground py-8 text-center text-sm">No pending invites</p>
               ) : (
                 pendingInvites.map((invite) => {
                   const expiresAt = new Date(invite.expires_at)

@@ -20,10 +20,11 @@ export async function sendInvite(formData: FormData) {
   }
 
   // Validate role
-  const validRoles: Array<'admin' | 'team_member' | 'client_viewer'> = [
+  const validRoles: Array<'admin' | 'team_member' | 'client_viewer' | 'external_developer'> = [
     'admin',
     'team_member',
     'client_viewer',
+    'external_developer',
   ]
   if (!validRoles.includes(role)) {
     console.error('[Send Invite Error]', {

@@ -96,6 +96,7 @@ export enum UserRole {
   Developer = 'developer',
   TeamMember = 'team_member',
   ClientViewer = 'client_viewer',
+  ExternalDeveloper = 'external_developer',
 }
 
 // =============================================================================

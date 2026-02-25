@@ -305,6 +305,7 @@ The application uses a comprehensive role-based access control (RBAC) system def
 - **`developer`** - Internal Selo employee with support/debugging access
 - **`team_member`** - Standard team member with campaign management
 - **`client_viewer`** - Read-only client access
+- **`external_developer`** - External agency partner with audit access (org-scoped only)
 
 #### Permission Types
 
@@ -337,20 +338,23 @@ The application uses a comprehensive role-based access control (RBAC) system def
 - `canManageFeedback(role)` - Support ticket access
 - `isInternalUser(userRecord)` - Selo employee check
 - `canAccessAllAudits(userRecord)` - Cross-org audit access
+- `canViewDashboard(role)` - Dashboard visibility (false for external_developer)
+- `canViewCampaigns(role)` - Campaign visibility (admin, team_member only)
 
 #### Role-Based Access Matrix
 
-| Feature                   | Admin                | Developer              | Team Member          | Client Viewer         |
-| ------------------------- | -------------------- | ---------------------- | -------------------- | --------------------- |
-| **Dashboard**             | ✓ Full Access        | ✗ No Access            | ✓ Full Access        | ✓ Limited View        |
-| **Campaigns**             | ✓ Create/Edit/Delete | ✗ No Access            | ✓ Create/Edit/Delete | ✗ View Only (via RLS) |
-| **Organization Settings** | ✓ Full Management    | ✓ View/Update          | ✗ No Access          | ✗ No Access           |
-| **Team Management**       | ✓ View + Invite      | ✓ View Only            | ✓ View Only          | ✓ View Only           |
-| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access            | ✗ No Access          | ✗ No Access           |
-| **Support/Feedback**      | ✓ Manage Tickets     | ✓ Manage Tickets       | ✗ No Access          | ✗ No Access           |
-| **Site Audits**           | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
-| **Page Speed Audits**     | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
-| **AIO Audits**            | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           |
+| Feature                   | Admin                | Developer              | Team Member          | Client Viewer         | External Developer      |
+| ------------------------- | -------------------- | ---------------------- | -------------------- | --------------------- | ----------------------- |
+| **Dashboard**             | ✓ Full Access        | ✗ No Access            | ✓ Full Access        | ✓ Limited View        | ✗ No Access             |
+| **Campaigns**             | ✓ Create/Edit/Delete | ✗ No Access            | ✓ Create/Edit/Delete | ✗ View Only (via RLS) | ✗ No Access             |
+| **Organization Settings** | ✓ Full Management    | ✓ View/Update          | ✗ No Access          | ✗ No Access           | ✗ No Access             |
+| **Team Management**       | ✓ View + Invite      | ✓ View Only            | ✓ View Only          | ✓ View Only           | ✓ View Only             |
+| **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access            | ✗ No Access          | ✗ No Access           | ✗ No Access             |
+| **Support/Feedback**      | ✓ Manage Tickets     | ✓ Manage Tickets       | ✗ No Access          | ✗ No Access           | ✗ No Access             |
+| **Site Audits**           | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           | ✓ Create/View (own org) |
+| **Page Speed Audits**     | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           | ✓ Create/View (own org) |
+| **AIO Audits**            | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           | ✓ Create/View (own org) |
+| **Combined Reports**      | ✓ View               | ✓ View All Orgs        | ✓ View               | ✓ View                | ✓ View (own org)        |
 
 #### Special Access: Internal Users
 

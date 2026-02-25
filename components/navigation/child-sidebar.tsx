@@ -16,6 +16,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { canViewDashboard, canViewCampaigns } from '@/lib/permissions'
 import type { ParentSection } from './parent-sidebar'
 
 interface NavigationItem {
@@ -90,6 +91,7 @@ interface ChildSidebarProps {
   hasSiteAudit?: boolean
   hasPerformanceAudit?: boolean
   hasAioAudit?: boolean
+  userRole?: string
 }
 
 export function ChildSidebar({
@@ -99,10 +101,23 @@ export function ChildSidebar({
   hasSiteAudit,
   hasPerformanceAudit,
   hasAioAudit,
+  userRole,
 }: ChildSidebarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const navigation = navigationConfig[activeSection]
+
+  // Filter home navigation items based on user role
+  const navigation = navigationConfig[activeSection].map((group) => ({
+    ...group,
+    items:
+      activeSection === 'home'
+        ? group.items.filter((item) => {
+            if (item.href === '/dashboard') return canViewDashboard(userRole)
+            if (item.href === '/dashboard/campaigns') return canViewCampaigns(userRole)
+            return true
+          })
+        : group.items,
+  }))
 
   // Get current org parameter to preserve across navigation
   const orgParam = searchParams.get('org')

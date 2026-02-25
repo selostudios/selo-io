@@ -46,6 +46,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'campaigns:delete',
   ],
   [UserRole.ClientViewer]: ['org:view', 'team:view'],
+  [UserRole.ExternalDeveloper]: ['org:view', 'team:view'],
 }
 
 /**
@@ -114,6 +115,23 @@ export function canManageCampaigns(role: string | undefined): boolean {
  */
 export function canManageFeedback(role: string | undefined): boolean {
   return hasPermission(role, 'feedback:manage')
+}
+
+/**
+ * Check if user can view the dashboard.
+ * External developers don't have dashboard access.
+ */
+export function canViewDashboard(role: string | undefined): boolean {
+  if (!role) return false
+  return role !== UserRole.ExternalDeveloper
+}
+
+/**
+ * Check if user can view campaigns.
+ * Only roles with campaign permissions can view them.
+ */
+export function canViewCampaigns(role: string | undefined): boolean {
+  return hasPermission(role, 'campaigns:create')
 }
 
 /**

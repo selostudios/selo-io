@@ -34,9 +34,10 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
 
 interface NavigationShellProps {
   isInternal?: boolean
+  userRole?: string
 }
 
-export function NavigationShell({ isInternal = false }: NavigationShellProps) {
+export function NavigationShell({ isInternal = false, userRole }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -111,6 +112,7 @@ export function NavigationShell({ isInternal = false }: NavigationShellProps) {
         hasSiteAudit={hasSiteAudit}
         hasPerformanceAudit={hasPerformanceAudit}
         hasAioAudit={hasAioAudit}
+        userRole={userRole}
       />
       {/* Expand button when child sidebar is collapsed */}
       {collapsed && (
