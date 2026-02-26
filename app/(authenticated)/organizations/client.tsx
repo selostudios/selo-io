@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Building2, Plus, Pencil, Trash2, RotateCcw, ExternalLink, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -193,7 +194,12 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                   <TableRow key={org.id}>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">{org.name}</span>
+                        <Link
+                          href={`/settings/organization?org=${org.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {org.name}
+                        </Link>
                         {org.website_url && (
                           <a
                             href={org.website_url}
