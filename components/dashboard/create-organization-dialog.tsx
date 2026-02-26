@@ -209,7 +209,7 @@ export function CreateOrganizationDialog({
               variant="outline"
               size="sm"
               onClick={addInviteRow}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !inviteRows[inviteRows.length - 1]?.email.trim()}
             >
               <Plus className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
               Add Another
