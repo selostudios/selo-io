@@ -22,13 +22,14 @@ import {
 } from '@/components/ui/select'
 import { sendInvite } from '@/app/(authenticated)/settings/team/actions'
 import { useRouter } from 'next/navigation'
+import { UserRole } from '@/lib/enums'
 
 export function InviteUserDialog() {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [role, setRole] = useState('client_viewer')
+  const [role, setRole] = useState<UserRole>(UserRole.ClientViewer)
   const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
@@ -50,7 +51,7 @@ export function InviteUserDialog() {
       setTimeout(() => {
         setOpen(false)
         setSuccess(null)
-        setRole('client_viewer')
+        setRole(UserRole.ClientViewer)
         router.refresh()
       }, 1500)
     }
@@ -83,15 +84,15 @@ export function InviteUserDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={setRole} disabled={isLoading}>
+            <Select value={role} onValueChange={(role) => setRole(role as UserRole)} disabled={isLoading}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="team_member">Team Member</SelectItem>
-                <SelectItem value="client_viewer">Client Viewer</SelectItem>
-                <SelectItem value="external_developer">External Developer</SelectItem>
+                <SelectItem value={UserRole.Admin}>Admin</SelectItem>
+                <SelectItem value={UserRole.TeamMember}>Team Member</SelectItem>
+                <SelectItem value={UserRole.ClientViewer}>Client Viewer</SelectItem>
+                <SelectItem value={UserRole.ExternalDeveloper}>External Developer</SelectItem>
               </SelectContent>
             </Select>
           </div>

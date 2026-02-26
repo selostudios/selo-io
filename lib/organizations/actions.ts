@@ -1,9 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Organization } from './types'
 import { OrganizationStatus } from './types'
+import { UserRole } from '@/lib/enums'
+
+export interface InviteInput {
+  email: string
+  role: UserRole
+}
 
 /**
  * Check if the current user is an internal Selo employee
@@ -115,11 +121,13 @@ export async function getOrganization(
 
 /**
  * Create a new prospect organization (internal users only)
+ * Optionally sends invites to team members for the new organization.
  */
 export async function createOrganization(
   name: string,
-  websiteUrl: string
-): Promise<{ success: boolean; organization?: Organization; error?: string }> {
+  websiteUrl: string,
+  invites?: InviteInput[]
+): Promise<{ success: boolean; organization?: Organization; error?: string; inviteErrors?: string[] }> {
   const supabase = await createClient()
 
   // Verify user is internal
@@ -155,6 +163,15 @@ export async function createOrganization(
     return { success: false, error: 'Website URL must be a valid URL (e.g., https://example.com)' }
   }
 
+  // Validate invite emails if provided
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const validInvites = (invites || []).filter((inv) => inv.email.trim())
+  for (const inv of validInvites) {
+    if (!emailRegex.test(inv.email.trim())) {
+      return { success: false, error: `Invalid email address: ${inv.email}` }
+    }
+  }
+
   // Create organization with prospect status
   const { data, error } = await supabase
     .from('organizations')
@@ -175,11 +192,86 @@ export async function createOrganization(
     return { success: false, error: 'Failed to create organization' }
   }
 
+  // Send invites using service client (creator is internal, not a member of new org)
+  const inviteErrors: string[] = []
+  if (validInvites.length > 0) {
+    const serviceClient = createServiceClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    for (const inv of validInvites) {
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7)
+
+      const { data: invite, error: inviteError } = await serviceClient
+        .from('invites')
+        .upsert(
+          {
+            email: inv.email.trim().toLowerCase(),
+            organization_id: data.id,
+            role: inv.role,
+            invited_by: user?.id ?? null,
+            status: 'pending',
+            expires_at: expiresAt.toISOString(),
+          },
+          { onConflict: 'email' }
+        )
+        .select()
+        .single()
+
+      if (inviteError) {
+        console.error('[Organizations Error]', {
+          type: 'create_invite',
+          email: inv.email,
+          timestamp: new Date().toISOString(),
+          error: inviteError.message,
+        })
+        inviteErrors.push(`Failed to invite ${inv.email}`)
+        continue
+      }
+
+      // Send invite email (best-effort, don't block org creation)
+      try {
+        const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite/${invite.id}`
+        const { sendEmail, FROM_EMAIL } = await import('@/lib/email/client')
+        const InviteEmail = (await import('@/emails/invite-email')).default
+
+        await sendEmail({
+          from: FROM_EMAIL,
+          to: inv.email.trim().toLowerCase(),
+          subject: `You've been invited to join ${data.name} on Selo IO`,
+          react: InviteEmail({
+            inviteLink,
+            organizationName: data.name,
+            invitedByEmail: user?.email || 'a team member',
+            role: inv.role,
+            logoUrl: null,
+          }),
+        })
+      } catch (emailErr) {
+        console.error('[Organizations Error]', {
+          type: 'invite_email',
+          email: inv.email,
+          timestamp: new Date().toISOString(),
+          error: emailErr instanceof Error ? emailErr.message : 'Unknown error',
+        })
+        inviteErrors.push(`Invite created for ${inv.email} but email failed to send`)
+      }
+    }
+  }
+
   revalidatePath('/seo')
   revalidatePath('/seo/site-audit')
   revalidatePath('/seo/page-speed')
+  revalidatePath('/organizations')
 
-  return { success: true, organization: data as Organization }
+  return {
+    success: true,
+    organization: data as Organization,
+    inviteErrors: inviteErrors.length > 0 ? inviteErrors : undefined,
+  }
 }
 
 /**

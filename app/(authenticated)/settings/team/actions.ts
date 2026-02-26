@@ -3,10 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageTeam } from '@/lib/permissions'
+import { UserRole } from '@/lib/enums'
 
 export async function sendInvite(formData: FormData) {
   const email = formData.get('email') as string
-  const role = formData.get('role') as 'admin' | 'team_member' | 'client_viewer'
+  const role = formData.get('role') as UserRole
 
   // Input validation
   if (!email || !email.trim()) {
@@ -20,11 +21,11 @@ export async function sendInvite(formData: FormData) {
   }
 
   // Validate role
-  const validRoles: Array<'admin' | 'team_member' | 'client_viewer' | 'external_developer'> = [
-    'admin',
-    'team_member',
-    'client_viewer',
-    'external_developer',
+  const validRoles: UserRole[] = [
+    UserRole.Admin,
+    UserRole.TeamMember,
+    UserRole.ClientViewer,
+    UserRole.ExternalDeveloper,
   ]
   if (!validRoles.includes(role)) {
     console.error('[Send Invite Error]', {

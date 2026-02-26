@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationsClient } from './client'
+import { OrganizationStatus } from '@/lib/enums'
+
+const STATUS_SORT_ORDER: Record<string, number> = {
+  [OrganizationStatus.Customer]: 0,
+  [OrganizationStatus.Prospect]: 1,
+  [OrganizationStatus.Inactive]: 2,
+}
 
 export default async function OrganizationsPage() {
   const supabase = await createClient()
@@ -29,7 +36,14 @@ export default async function OrganizationsPage() {
       updated_at
     `
     )
-    .order('created_at', { ascending: false })
+    .order('name', { ascending: true })
+
+  // Sort: customers first, then prospects, then inactive — alphabetical within each group
+  const sortedOrganizations = (organizations || []).sort((a, b) => {
+    const statusDiff = (STATUS_SORT_ORDER[a.status] ?? 99) - (STATUS_SORT_ORDER[b.status] ?? 99)
+    if (statusDiff !== 0) return statusDiff
+    return a.name.localeCompare(b.name)
+  })
 
   // Fetch industries for the edit dialog
   const { data: industries } = await supabase
@@ -37,5 +51,5 @@ export default async function OrganizationsPage() {
     .select('id, name')
     .order('name', { ascending: true })
 
-  return <OrganizationsClient organizations={organizations || []} industries={industries || []} />
+  return <OrganizationsClient organizations={sortedOrganizations} industries={industries || []} />
 }
