@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isInternalUser } from '@/lib/permissions'
+import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export interface SettingsAuthContext {
   organizationId: string
@@ -47,7 +48,7 @@ export async function withSettingsAuth<T>(
   }
 
   const isInternal = isInternalUser(userRecord)
-  const organizationId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
+  const organizationId = await resolveOrganizationId(selectedOrgId, userRecord.organization_id, isInternal)
 
   if (!organizationId) {
     return { type: 'no-org', message: noOrgMessage }
