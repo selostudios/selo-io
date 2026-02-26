@@ -11,22 +11,18 @@ export async function GET(request: NextRequest) {
   // Get optional org parameter from query string
   const requestedOrgId = request.nextUrl.searchParams.get('org')
 
-  // Use getSession() for this frequently-polled endpoint to avoid rate limits
-  // (called every 30 seconds - getUser() would exhaust Supabase auth rate limits)
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getUser()
 
-  if (error || !session?.user) {
+  if (error || !user) {
     return NextResponse.json({
       hasSiteAudit: false,
       hasPerformanceAudit: false,
       hasAioAudit: false,
     })
   }
-
-  const user = session.user
 
   // Get user's organization and internal status
   const { data: userRecord } = await supabase
