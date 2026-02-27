@@ -1,13 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { canManageTeam } from '@/lib/permissions'
+import { canManageTeam, isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
+import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export async function sendInvite(formData: FormData) {
   const email = formData.get('email') as string
   const role = formData.get('role') as UserRole
+  const targetOrgId = formData.get('organizationId') as string | null
 
   // Input validation
   if (!email || !email.trim()) {
@@ -45,15 +47,24 @@ export async function sendInvite(formData: FormData) {
     return { error: 'Not authenticated' }
   }
 
-  // Get user's organization
+  // Get user's record
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
   if (!userRecord || !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can send invites' }
+  }
+
+  // Resolve the target organization: use explicit ID if provided, otherwise resolve from cookie/user
+  const isInternal = isInternalUser(userRecord)
+  const organizationId = targetOrgId
+    || await resolveOrganizationId(undefined, userRecord.organization_id, isInternal)
+
+  if (!organizationId) {
+    return { error: 'No organization selected' }
   }
 
   // Check if there's an existing accepted invite for this email
@@ -71,13 +82,16 @@ export async function sendInvite(formData: FormData) {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7)
 
+  // Use service client for internal users inviting to orgs they don't belong to
+  const insertClient = isInternal ? createServiceClient() : supabase
+
   // Upsert invite - create new or update existing (extends expiry)
-  const { data: invite, error } = await supabase
+  const { data: invite, error } = await insertClient
     .from('invites')
     .upsert(
       {
         email: email.toLowerCase(),
-        organization_id: userRecord.organization_id,
+        organization_id: organizationId,
         role,
         invited_by: user.id,
         status: 'pending',
@@ -101,7 +115,7 @@ export async function sendInvite(formData: FormData) {
   const { data: org } = await supabase
     .from('organizations')
     .select('name, logo_url')
-    .eq('id', userRecord.organization_id)
+    .eq('id', organizationId)
     .single()
 
   // Send email using Resend
@@ -172,10 +186,10 @@ export async function resendInvite(inviteId: string) {
     return { error: 'Not authenticated' }
   }
 
-  // Get user's organization and role
+  // Get user's record
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -183,23 +197,27 @@ export async function resendInvite(inviteId: string) {
     return { error: 'Only admins can resend invites' }
   }
 
-  // Get the invite
-  const { data: invite } = await supabase
-    .from('invites')
-    .select('*')
-    .eq('id', inviteId)
-    .eq('organization_id', userRecord.organization_id)
-    .single()
+  const isInternal = isInternalUser(userRecord)
+
+  // Get the invite — internal users can access any org's invites
+  const query = isInternal
+    ? supabase.from('invites').select('*').eq('id', inviteId)
+    : supabase.from('invites').select('*').eq('id', inviteId).eq('organization_id', userRecord.organization_id)
+
+  const { data: invite } = await query.single()
 
   if (!invite) {
     return { error: 'Invite not found' }
   }
 
+  // Use service client for internal users to bypass RLS
+  const updateClient = isInternal ? createServiceClient() : supabase
+
   // Update expires_at to extend the invite
   const newExpiresAt = new Date()
   newExpiresAt.setDate(newExpiresAt.getDate() + 7)
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await updateClient
     .from('invites')
     .update({ expires_at: newExpiresAt.toISOString() })
     .eq('id', inviteId)
@@ -213,11 +231,11 @@ export async function resendInvite(inviteId: string) {
     return { error: 'Failed to update invite expiration' }
   }
 
-  // Get organization name and logo
+  // Get organization name and logo from the invite's org
   const { data: org } = await supabase
     .from('organizations')
     .select('name, logo_url')
-    .eq('id', userRecord.organization_id)
+    .eq('id', invite.organization_id)
     .single()
 
   // Send invite email
@@ -267,10 +285,10 @@ export async function deleteInvite(inviteId: string) {
     return { error: 'Not authenticated' }
   }
 
-  // Get user's organization and role
+  // Get user's record
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('organization_id, role, is_internal')
     .eq('id', user.id)
     .single()
 
@@ -283,11 +301,15 @@ export async function deleteInvite(inviteId: string) {
     return { error: 'Only admins can delete invites' }
   }
 
-  const { error } = await supabase
-    .from('invites')
-    .delete()
-    .eq('id', inviteId)
-    .eq('organization_id', userRecord.organization_id) // Ensure invite belongs to user's org
+  const isInternal = isInternalUser(userRecord)
+  const deleteClient = isInternal ? createServiceClient() : supabase
+
+  // Internal users can delete any org's invites; external users scoped to their org
+  const query = isInternal
+    ? deleteClient.from('invites').delete().eq('id', inviteId)
+    : deleteClient.from('invites').delete().eq('id', inviteId).eq('organization_id', userRecord.organization_id)
+
+  const { error } = await query
 
   if (error) {
     console.error('[Delete Invite Error]', {

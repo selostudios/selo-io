@@ -87,7 +87,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
         pendingInvites = invites || []
       }
 
-      return { org, teamMembersWithEmails, pendingInvites, isAdmin }
+      return { org, teamMembersWithEmails, pendingInvites, isAdmin, organizationId }
     },
     'Select an organization to view team members.'
   )
@@ -96,7 +96,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
     return <NoOrgSelected message={result.message} />
   }
 
-  const { org, teamMembersWithEmails, pendingInvites, isAdmin } = result.data
+  const { org, teamMembersWithEmails, pendingInvites, isAdmin, organizationId } = result.data
 
   async function handleDeleteInvite(formData: FormData) {
     'use server'
@@ -113,7 +113,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
             Manage team members for {org?.name || 'your organization'}
           </p>
         </div>
-        {isAdmin && <InviteUserDialog />}
+        {isAdmin && <InviteUserDialog organizationId={organizationId} />}
       </div>
 
       <Card>

@@ -24,7 +24,11 @@ import { sendInvite } from '@/app/(authenticated)/settings/team/actions'
 import { useRouter } from 'next/navigation'
 import { UserRole } from '@/lib/enums'
 
-export function InviteUserDialog() {
+interface InviteUserDialogProps {
+  organizationId: string
+}
+
+export function InviteUserDialog({ organizationId }: InviteUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -38,6 +42,7 @@ export function InviteUserDialog() {
     setSuccess(null)
 
     formData.append('role', role)
+    formData.append('organizationId', organizationId)
 
     const result = await sendInvite(formData)
 
