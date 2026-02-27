@@ -12,6 +12,16 @@ import {
   Text,
   Tailwind,
 } from '@react-email/components'
+import { UserRole } from '@/lib/enums'
+
+function getRoleDescription(role: string): string {
+  switch (role) {
+    case UserRole.ExternalDeveloper:
+      return 'Selo IO gives you access to run SEO site audits, PageSpeed audits, AI readiness checks, and generate combined reports for your clients.'
+    default:
+      return 'Selo IO helps marketing teams track campaign performance across HubSpot, Google Analytics, LinkedIn, and more.'
+  }
+}
 
 interface InviteEmailProps {
   inviteLink: string
@@ -65,10 +75,7 @@ export default function InviteEmail({
               {invitedByEmail} has invited you to join {organizationName} on Selo IO as a{' '}
               <strong>{role.replace('_', ' ')}</strong>.
             </Text>
-            <Text className="mb-6 text-neutral-700">
-              Selo IO helps marketing teams track campaign performance across HubSpot, Google
-              Analytics, LinkedIn, and more.
-            </Text>
+            <Text className="mb-6 text-neutral-700">{getRoleDescription(role)}</Text>
             <Section className="mb-6">
               <Button
                 href={inviteLink}
