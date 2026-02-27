@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { InviteStatus } from '@/lib/enums'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
         .from('invites')
         .select('*')
         .eq('email', user.email.toLowerCase())
-        .eq('status', 'pending')
+        .eq('status', InviteStatus.Pending)
         .gt('expires_at', new Date().toISOString())
         .single()
 
@@ -67,11 +68,11 @@ export async function GET(request: Request) {
         const { error: inviteError } = await supabase
           .from('invites')
           .update({
-            status: 'accepted',
+            status: InviteStatus.Accepted,
             accepted_at: new Date().toISOString(),
           })
           .eq('id', invite.id)
-          .eq('status', 'pending')
+          .eq('status', InviteStatus.Pending)
 
         if (inviteError) {
           console.error('[Auth Callback] Failed to update invite status:', inviteError)

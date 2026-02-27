@@ -3,7 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function signInWithEmail(formData: FormData): Promise<{ error: string } | undefined> {
+export async function signInWithEmail(
+  formData: FormData,
+  redirectTo?: string
+): Promise<{ error: string } | undefined> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
@@ -27,11 +30,12 @@ export async function signInWithEmail(formData: FormData): Promise<{ error: stri
     return { error: 'Invalid email or password' }
   }
 
-  redirect('/dashboard')
+  redirect(redirectTo || '/dashboard')
 }
 
 export async function signInWithOAuth(
-  provider: 'google' | 'azure'
+  provider: 'google' | 'azure',
+  redirectTo?: string
 ): Promise<{ error: string } | undefined> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (!siteUrl) {
@@ -39,11 +43,17 @@ export async function signInWithOAuth(
     return { error: 'Server configuration error. Please contact support.' }
   }
 
+  // Pass the redirect path through to the auth callback via the `next` query param
+  const callbackUrl = new URL(`${siteUrl}/auth/callback`)
+  if (redirectTo) {
+    callbackUrl.searchParams.set('next', redirectTo)
+  }
+
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: callbackUrl.toString(),
     },
   })
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { signInWithEmail, signInWithOAuth } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,8 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || undefined
 
   // Simple email validation
   const isValidEmail = (email: string) => {
@@ -26,7 +29,7 @@ export function LoginForm() {
     setIsLoading(true)
     setError(null)
 
-    const result = await signInWithEmail(formData)
+    const result = await signInWithEmail(formData, redirectTo)
 
     if (result?.error) {
       setError(result.error)
@@ -40,7 +43,7 @@ export function LoginForm() {
     setIsLoading(true)
     setError(null)
 
-    const result = await signInWithOAuth(provider)
+    const result = await signInWithOAuth(provider, redirectTo)
 
     if (result?.error) {
       setError(result.error)
