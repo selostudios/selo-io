@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { InviteStatus } from '@/lib/enums'
 
 export async function acceptInvite(inviteId: string) {
   const supabase = await createClient()
@@ -37,7 +38,7 @@ export async function acceptInvite(inviteId: string) {
   }
 
   // Check if status is not pending (could be accepted or expired)
-  if (invite.status !== 'pending') {
+  if (invite.status !== InviteStatus.Pending) {
     console.error('[Accept Invite Error]', {
       type: 'already_used',
       inviteId,
@@ -99,11 +100,11 @@ export async function acceptInvite(inviteId: string) {
   const { error: updateError } = await supabase
     .from('invites')
     .update({
-      status: 'accepted',
+      status: InviteStatus.Accepted,
       accepted_at: new Date().toISOString(),
     })
     .eq('id', inviteId)
-    .eq('status', 'pending') // Critical: only update if status is still pending
+    .eq('status', InviteStatus.Pending) // Critical: only update if status is still pending
 
   if (updateError) {
     // If update failed, it might be because another request already accepted it
@@ -120,7 +121,7 @@ export async function acceptInvite(inviteId: string) {
       .eq('id', inviteId)
       .single()
 
-    if (checkInvite?.status === 'accepted') {
+    if (checkInvite?.status === InviteStatus.Accepted) {
       return { error: 'This invite has already been accepted' }
     }
 

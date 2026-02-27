@@ -32,15 +32,3 @@ export function getPeriodLabel(period: Period): string {
 export function formatNumber(value: number): string {
   return value.toLocaleString()
 }
-
-/**
- * Format a currency value.
- */
-export function formatCurrency(value: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}

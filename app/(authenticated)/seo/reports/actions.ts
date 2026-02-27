@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/organizations/actions'
 import { revalidatePath } from 'next/cache'
+import { UserRole } from '@/lib/enums'
 import { notFound } from 'next/navigation'
 import type { SiteAudit, SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
@@ -425,7 +426,7 @@ export async function deleteReport(
   }
 
   // Only admins and internal users (developers) can delete reports
-  const isAdmin = userRecord.role === 'admin'
+  const isAdmin = userRecord.role === UserRole.Admin
   const isInternal = userRecord.is_internal
 
   if (!isAdmin && !isInternal) {

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProfilePageForm } from './profile-page-form'
+import { UserRole } from '@/lib/enums'
 
 export default async function ProfileSettingsPage() {
   const supabase = await createClient()
@@ -26,7 +27,7 @@ export default async function ProfileSettingsPage() {
         email={user.email || ''}
         firstName={userRecord?.first_name || ''}
         lastName={userRecord?.last_name || ''}
-        role={userRecord?.role || 'team_member'}
+        role={userRecord?.role || UserRole.TeamMember}
       />
     </div>
   )

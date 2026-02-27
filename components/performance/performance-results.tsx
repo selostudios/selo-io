@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScoreCard } from '@/components/audit/score-cards'
@@ -26,15 +25,6 @@ interface PerformanceResultsProps {
 }
 
 export function PerformanceResults({ results, device }: PerformanceResultsProps) {
-  // Log full PageSpeed API response data
-  useEffect(() => {
-    if (results.length > 0) {
-      results.forEach((result) => {
-        console.log(`[PageSpeed API] ${result.url} (${result.device}):`, result.raw_response)
-      })
-    }
-  }, [results])
-
   // Group results by URL
   const resultsByUrl = results.reduce(
     (acc, result) => {

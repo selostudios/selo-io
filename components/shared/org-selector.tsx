@@ -4,6 +4,7 @@ import { useState, useEffect, startTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { OrganizationStatus } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -70,7 +71,7 @@ export function OrgSelector({
   const isOneTimeMode = isSeoRoute && !selectedOrganizationId
 
   const selectedOrg = organizations.find((o) => o.id === selectedOrganizationId)
-  const activeOrganizations = organizations.filter((o) => o.status !== 'inactive')
+  const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
   const handleSelectOrganization = (orgId: string) => {
     localStorage.setItem(LAST_ORG_KEY, orgId)

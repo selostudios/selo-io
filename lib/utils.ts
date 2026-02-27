@@ -85,3 +85,28 @@ export function calculateDuration(
   const end = new Date(completedAt).getTime()
   return end - start
 }
+
+/**
+ * Extracts the hostname from a URL string.
+ * Returns the original string if parsing fails, or a fallback for nullish values.
+ */
+export function getDomain(url: string | null | undefined, fallback = ''): string {
+  if (!url) return fallback
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
+/**
+ * Formats an ISO date string for audit display (e.g., "Feb 27, 2026").
+ */
+export function formatAuditDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}

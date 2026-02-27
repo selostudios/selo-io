@@ -89,7 +89,11 @@ export function InviteUserDialog({ organizationId }: InviteUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(role) => setRole(role as UserRole)} disabled={isLoading}>
+            <Select
+              value={role}
+              onValueChange={(role) => setRole(role as UserRole)}
+              disabled={isLoading}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

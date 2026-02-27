@@ -10,17 +10,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
 import { ScoreTrendChart, type ScoreDataPoint } from '@/components/audit/score-trend-chart'
 import type { PerformanceAudit } from '@/lib/performance/types'
-import { formatDuration, calculateDuration } from '@/lib/utils'
+import { formatDuration, calculateDuration, formatAuditDate } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
-
-function formatAuditDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
 
 function isInProgress(status: PerformanceAudit['status']): boolean {
   return status === 'pending' || status === 'running'

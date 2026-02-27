@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Clock, FileSearch, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { SiteAudit } from '@/lib/audit/types'
-import { formatDuration, calculateDuration } from '@/lib/utils'
+import { formatDuration, calculateDuration, formatAuditDate, getDomain } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
 import { useState } from 'react'
 
@@ -16,25 +16,8 @@ interface AuditHistoryListProps {
   showUrl?: boolean
 }
 
-function formatAuditDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 function isInProgress(status: SiteAudit['status']): boolean {
   return status === 'pending' || status === 'crawling' || status === 'checking'
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
 }
 
 export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListProps) {

@@ -3,7 +3,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageTeam, isInternalUser } from '@/lib/permissions'
-import { UserRole } from '@/lib/enums'
+import { UserRole, InviteStatus } from '@/lib/enums'
 import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export async function sendInvite(formData: FormData) {
@@ -60,8 +60,8 @@ export async function sendInvite(formData: FormData) {
 
   // Resolve the target organization: use explicit ID if provided, otherwise resolve from cookie/user
   const isInternal = isInternalUser(userRecord)
-  const organizationId = targetOrgId
-    || await resolveOrganizationId(undefined, userRecord.organization_id, isInternal)
+  const organizationId =
+    targetOrgId || (await resolveOrganizationId(undefined, userRecord.organization_id, isInternal))
 
   if (!organizationId) {
     return { error: 'No organization selected' }
@@ -74,7 +74,7 @@ export async function sendInvite(formData: FormData) {
     .eq('email', email.toLowerCase())
     .single()
 
-  if (existingInvite?.status === 'accepted') {
+  if (existingInvite?.status === InviteStatus.Accepted) {
     return { error: 'This email has already accepted an invite' }
   }
 
@@ -94,7 +94,7 @@ export async function sendInvite(formData: FormData) {
         organization_id: organizationId,
         role,
         invited_by: user.id,
-        status: 'pending',
+        status: InviteStatus.Pending,
         expires_at: expiresAt.toISOString(),
       },
       {
@@ -126,9 +126,6 @@ export async function sendInvite(formData: FormData) {
     const { sendEmail, FROM_EMAIL } = await import('@/lib/email/client')
     const InviteEmail = (await import('@/emails/invite-email')).default
 
-    console.log('[Email Debug] Sending invite email to:', email)
-    console.log('[Email Debug] From:', FROM_EMAIL)
-
     const result = await sendEmail({
       from: FROM_EMAIL,
       to: email,
@@ -142,16 +139,12 @@ export async function sendInvite(formData: FormData) {
       }),
     })
 
-    console.log('[Email Debug] Result:', JSON.stringify(result, null, 2))
-
     if (result.error) {
       console.error('Email API error:', result.error)
       emailError = result.error.message
     } else if (result.data?.id) {
-      console.log('[Email Debug] Email sent successfully, ID:', result.data.id)
       emailSent = true
     } else {
-      console.error('[Email Debug] No error but no ID returned')
       emailError = 'Email service returned unexpected response'
     }
   } catch (err) {
@@ -202,7 +195,11 @@ export async function resendInvite(inviteId: string) {
   // Get the invite — internal users can access any org's invites
   const query = isInternal
     ? supabase.from('invites').select('*').eq('id', inviteId)
-    : supabase.from('invites').select('*').eq('id', inviteId).eq('organization_id', userRecord.organization_id)
+    : supabase
+        .from('invites')
+        .select('*')
+        .eq('id', inviteId)
+        .eq('organization_id', userRecord.organization_id)
 
   const { data: invite } = await query.single()
 
@@ -307,7 +304,11 @@ export async function deleteInvite(inviteId: string) {
   // Internal users can delete any org's invites; external users scoped to their org
   const query = isInternal
     ? deleteClient.from('invites').delete().eq('id', inviteId)
-    : deleteClient.from('invites').delete().eq('id', inviteId).eq('organization_id', userRecord.organization_id)
+    : deleteClient
+        .from('invites')
+        .delete()
+        .eq('id', inviteId)
+        .eq('organization_id', userRecord.organization_id)
 
   const { error } = await query
 

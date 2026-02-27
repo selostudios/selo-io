@@ -20,7 +20,7 @@ import { CreateOrganizationDialog } from '@/components/dashboard/create-organiza
 import { EditOrganizationDialog } from './edit-organization-dialog'
 import { DeleteOrganizationDialog } from './delete-organization-dialog'
 import { RestoreOrganizationDialog } from './restore-organization-dialog'
-import { cn } from '@/lib/utils'
+import { cn, getDomain } from '@/lib/utils'
 import { OrganizationStatus } from '@/lib/enums'
 import type { Industry } from '@/lib/organizations/types'
 
@@ -45,15 +45,6 @@ const statusColors: Record<OrganizationStatus, string> = {
   [OrganizationStatus.Prospect]: 'bg-amber-100 text-amber-700',
   [OrganizationStatus.Customer]: 'bg-green-100 text-green-700',
   [OrganizationStatus.Inactive]: 'bg-neutral-100 text-neutral-600',
-}
-
-function getDomain(url: string | null): string {
-  if (!url) return ''
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
 }
 
 function formatDate(dateString: string): string {

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { UserRole } from '@/lib/enums'
 
 export async function createOrganization(formData: FormData): Promise<{ error: string } | never> {
   const name = formData.get('name') as string
@@ -94,7 +95,7 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   const { error: userRecordError } = await supabase.from('users').insert({
     id: user.id,
     organization_id: org.id,
-    role: 'admin',
+    role: UserRole.Admin,
   })
 
   if (userRecordError) {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/server'
-import { canManageOrg } from '@/lib/permissions'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { canManageOrg, canAccessAllAudits } from '@/lib/permissions'
+import { UserRole, PerformanceAuditStatus } from '@/lib/enums'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,20 +15,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's role
-  const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single()
+  // Get user's record
+  const { data: userData } = await supabase
+    .from('users')
+    .select('organization_id, is_internal, role')
+    .eq('id', user.id)
+    .single()
 
   const role = userData?.role
 
   // Check permission: canManageOrg or developer
-  if (!canManageOrg(role) && role !== 'developer') {
+  if (!canManageOrg(role) && role !== UserRole.Developer) {
     return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
   }
 
   // Verify the audit exists
   const { data: audit, error: fetchError } = await supabase
     .from('performance_audits')
-    .select('id, status')
+    .select('id, status, organization_id, created_by')
     .eq('id', id)
     .single()
 
@@ -36,8 +40,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
   }
 
+  // Verify org access
+  if (userData) {
+    const hasAccess =
+      audit.organization_id === userData.organization_id ||
+      (audit.organization_id === null && audit.created_by === user.id) ||
+      canAccessAllAudits(userData)
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
+    }
+  }
+
   // Only allow stopping audits that are in progress
-  if (!['pending', 'running'].includes(audit.status)) {
+  if (
+    ![PerformanceAuditStatus.Pending, PerformanceAuditStatus.Running].includes(
+      audit.status as PerformanceAuditStatus
+    )
+  ) {
     return NextResponse.json(
       { error: 'Audit is not in progress and cannot be stopped' },
       { status: 400 }
@@ -64,7 +84,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { error: updateError } = await serviceClient
     .from('performance_audits')
     .update({
-      status: 'stopped',
+      status: PerformanceAuditStatus.Stopped,
       current_url: null,
       current_device: null,
       completed_at: new Date().toISOString(),

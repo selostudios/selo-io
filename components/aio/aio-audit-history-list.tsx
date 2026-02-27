@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Clock, Sparkles, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { AIOAudit } from '@/lib/aio/types'
-import { formatDuration, calculateDuration } from '@/lib/utils'
+import { formatDuration, calculateDuration, formatAuditDate, getDomain } from '@/lib/utils'
 import { useState } from 'react'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
@@ -16,25 +16,8 @@ interface AIOAuditHistoryListProps {
   showUrl?: boolean
 }
 
-function formatAuditDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 function isInProgress(status: AIOAudit['status']): boolean {
   return status === 'pending' || status === 'running'
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
 }
 
 export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistoryListProps) {

@@ -9,8 +9,7 @@ import { ScoreCard } from '@/components/audit/score-cards'
 import { CheckItem } from '@/components/audit/check-item'
 import { AIAnalysisCard } from '@/components/aio/ai-analysis-card'
 import { QualityDimensionCards } from '@/components/aio/quality-dimension-cards'
-import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate, getDomain } from '@/lib/utils'
 import type { AIOAudit, AIOCheck, AIOAIAnalysis } from '@/lib/aio/types'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { AIOPageAnalysis } from '@/lib/aio/types'
@@ -19,14 +18,6 @@ interface AIOAuditReportProps {
   audit: AIOAudit
   checks: AIOCheck[]
   aiAnalyses: AIOAIAnalysis[]
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
 }
 
 export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProps) {

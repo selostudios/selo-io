@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuditPolling } from '@/hooks/use-audit-polling'
-import { formatDuration } from '@/lib/utils'
+import { formatDuration, getDomain } from '@/lib/utils'
 import type { AuditStatus, CheckStatus, CheckType } from '@/lib/audit/types'
 
 type NotificationPermission = 'default' | 'granted' | 'denied'
@@ -43,15 +43,6 @@ const checkDescriptions = [
   'Inspecting image optimization...',
   'Checking page load performance...',
 ]
-
-function getDomain(url: string | undefined): string {
-  if (!url) return 'site'
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
-}
 
 const statusIcons: Record<CheckStatus, React.ReactNode> = {
   passed: <CheckCircle2 className="h-4 w-4 text-green-600" />,
@@ -347,7 +338,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
                 ? 'Running Checks...'
                 : status === 'batch_complete' || isContinuing
                   ? 'Continuing...'
-                  : `Crawling ${getDomain(progress?.url)}...`}
+                  : `Crawling ${getDomain(progress?.url, 'site')}...`}
           </CardTitle>
           <p className="text-muted-foreground text-sm text-pretty transition-opacity duration-300">
             {status === 'checking'

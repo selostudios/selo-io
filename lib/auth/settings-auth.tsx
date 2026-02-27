@@ -48,7 +48,11 @@ export async function withSettingsAuth<T>(
   }
 
   const isInternal = isInternalUser(userRecord)
-  const organizationId = await resolveOrganizationId(selectedOrgId, userRecord.organization_id, isInternal)
+  const organizationId = await resolveOrganizationId(
+    selectedOrgId,
+    userRecord.organization_id,
+    isInternal
+  )
 
   if (!organizationId) {
     return { type: 'no-org', message: noOrgMessage }

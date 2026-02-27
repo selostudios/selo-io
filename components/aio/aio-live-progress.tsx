@@ -7,18 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckItem } from '@/components/audit/check-item'
 import { useAIOAuditPolling } from '@/hooks/use-aio-audit-polling'
 import type { SiteAuditCheck } from '@/lib/audit/types'
+import { getDomain } from '@/lib/utils'
 
 interface AIOLiveProgressProps {
   auditId: string
   initialStatus: 'pending' | 'running'
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
 }
 
 export function AIOLiveProgress({ auditId, initialStatus }: AIOLiveProgressProps) {

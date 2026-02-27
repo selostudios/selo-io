@@ -11,7 +11,7 @@ import { PerformanceDashboard } from '@/components/performance/performance-dashb
 import { AuditRunControl } from '@/components/audit/audit-run-control'
 import type { PerformanceAudit } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
-import { formatDuration, calculateDuration } from '@/lib/utils'
+import { formatDuration, calculateDuration, formatAuditDate } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 interface PageSpeedClientProps {
@@ -19,15 +19,6 @@ interface PageSpeedClientProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
-}
-
-function formatAuditDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }
 
 function isInProgress(status: PerformanceAudit['status']): boolean {

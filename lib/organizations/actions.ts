@@ -4,7 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Organization } from './types'
 import { OrganizationStatus } from './types'
-import { UserRole } from '@/lib/enums'
+import { UserRole, InviteStatus } from '@/lib/enums'
 
 export interface InviteInput {
   email: string
@@ -127,7 +127,12 @@ export async function createOrganization(
   name: string,
   websiteUrl: string,
   invites?: InviteInput[]
-): Promise<{ success: boolean; organization?: Organization; error?: string; inviteErrors?: string[] }> {
+): Promise<{
+  success: boolean
+  organization?: Organization
+  error?: string
+  inviteErrors?: string[]
+}> {
   const supabase = await createClient()
 
   // Verify user is internal
@@ -178,7 +183,7 @@ export async function createOrganization(
     .insert({
       name: name.trim(),
       website_url: websiteUrl.trim(),
-      status: 'prospect' as OrganizationStatus,
+      status: OrganizationStatus.Prospect,
     })
     .select()
     .single()
@@ -213,7 +218,7 @@ export async function createOrganization(
             organization_id: data.id,
             role: inv.role,
             invited_by: user?.id ?? null,
-            status: 'pending',
+            status: InviteStatus.Pending,
             expires_at: expiresAt.toISOString(),
           },
           { onConflict: 'email' }
@@ -314,7 +319,7 @@ export async function convertToCustomer(
   const { data, error } = await supabase
     .from('organizations')
     .update({
-      status: 'customer' as OrganizationStatus,
+      status: OrganizationStatus.Customer,
       industry: industry.trim(),
       contact_email: contactEmail.trim().toLowerCase(),
       updated_at: new Date().toISOString(),
@@ -505,7 +510,7 @@ export async function archiveOrganization(
   const { error } = await supabase
     .from('organizations')
     .update({
-      status: 'inactive' as OrganizationStatus,
+      status: OrganizationStatus.Inactive,
       updated_at: new Date().toISOString(),
     })
     .eq('id', organizationId)
@@ -550,7 +555,7 @@ export async function restoreOrganization(
   const { error } = await supabase
     .from('organizations')
     .update({
-      status: 'prospect' as OrganizationStatus,
+      status: OrganizationStatus.Prospect,
       updated_at: new Date().toISOString(),
     })
     .eq('id', organizationId)

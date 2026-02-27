@@ -3,7 +3,7 @@ import { UserMenu } from '@/components/dashboard/user-menu'
 import { OrgSelector } from '@/components/shared/org-selector'
 import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
 import { resolveOrganizationId } from '@/lib/auth/resolve-org'
-import { isInternalUser } from '@/lib/permissions'
+import { isInternalUser, UserRole } from '@/lib/permissions'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 export async function Header() {
@@ -20,7 +20,7 @@ export async function Header() {
   const userEmail = user.email || ''
   const firstName = userRecord.first_name || userEmail.split('@')[0]
   const lastName = userRecord.last_name || ''
-  const role = userRecord.role || 'team_member'
+  const role = userRecord.role || UserRole.TeamMember
   const isInternal = isInternalUser(userRecord)
 
   // Resolve org from cookie for server-side pre-selection
