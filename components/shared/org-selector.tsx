@@ -3,7 +3,6 @@
 import { useState, useEffect, startTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -182,21 +181,9 @@ export function OrgSelector({
       return <span className="text-neutral-500">Select organization</span>
     }
 
-    // Show logo or name, plus status badge
     return (
       <>
-        {selectedOrg.logo_url ? (
-          <Image
-            src={selectedOrg.logo_url}
-            alt={selectedOrg.name}
-            width={0}
-            height={0}
-            sizes="100px"
-            className="h-7 w-auto max-w-24 rounded object-contain"
-          />
-        ) : (
-          <span className="font-medium">{selectedOrg.name}</span>
-        )}
+        <span className="font-medium">{selectedOrg.name}</span>
         <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
           {selectedOrg.status}
         </Badge>
@@ -216,21 +203,9 @@ export function OrgSelector({
       )
     }
 
-    // If logo exists, show only logo; otherwise show name
     return (
       <div className="flex items-center gap-2 px-3 py-2">
-        {org.logo_url ? (
-          <Image
-            src={org.logo_url}
-            alt={org.name}
-            width={0}
-            height={0}
-            sizes="100px"
-            className="h-7 w-auto max-w-24 rounded object-contain"
-          />
-        ) : (
-          <span className="font-medium">{org.name}</span>
-        )}
+        <span className="font-medium">{org.name}</span>
       </div>
     )
   }
