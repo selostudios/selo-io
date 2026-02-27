@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { InviteUserDialog } from '@/components/settings/invite-user-dialog'
 import { ResendInviteButton } from '@/components/settings/resend-invite-button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -70,6 +70,7 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
       })
 
       // Get pending invites (only if admin)
+      // Internal users need service client to bypass RLS (they don't belong to this org)
       let pendingInvites: Array<{
         id: string
         email: string
@@ -77,7 +78,8 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
         expires_at: string
       }> = []
       if (isAdmin) {
-        const { data: invites } = await supabase
+        const inviteClient = isInternal ? createServiceClient() : supabase
+        const { data: invites } = await inviteClient
           .from('invites')
           .select('*')
           .eq('organization_id', organizationId)
