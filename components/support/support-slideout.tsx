@@ -37,9 +37,16 @@ interface SupportSlideoutProps {
   open: boolean
   onClose: () => void
   onUpdate: () => void
+  readOnly?: boolean
 }
 
-export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSlideoutProps) {
+export function SupportSlideout({
+  feedback,
+  open,
+  onClose,
+  onUpdate,
+  readOnly = false,
+}: SupportSlideoutProps) {
   const [status, setStatus] = useState<FeedbackStatus | undefined>(undefined)
   const [priority, setPriority] = useState<FeedbackPriority | undefined>(undefined)
   const [note, setNote] = useState('')
@@ -181,58 +188,87 @@ export function SupportSlideout({ feedback, open, onClose, onUpdate }: SupportSl
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={(value) => setStatus(value as FeedbackStatus)}>
-                <SelectTrigger id="status" className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {readOnly ? (
+                <p className="text-sm">
+                  {STATUS_OPTIONS.find((o) => o.value === feedback.status)?.label ??
+                    feedback.status}
+                </p>
+              ) : (
+                <Select
+                  value={status}
+                  onValueChange={(value) => setStatus(value as FeedbackStatus)}
+                >
+                  <SelectTrigger id="status" className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="flex-1 space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={priority ?? ''}
-                onValueChange={(value) =>
-                  setPriority(value ? (value as FeedbackPriority) : undefined)
-                }
-              >
-                <SelectTrigger id="priority" className="w-full">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {readOnly ? (
+                <p className="text-sm">
+                  {PRIORITY_OPTIONS.find((o) => o.value === feedback.priority)?.label ??
+                    feedback.priority ??
+                    'Not set'}
+                </p>
+              ) : (
+                <Select
+                  value={priority ?? ''}
+                  onValueChange={(value) =>
+                    setPriority(value ? (value as FeedbackPriority) : undefined)
+                  }
+                >
+                  <SelectTrigger id="priority" className="w-full">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORITY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
-          {/* Note Textarea */}
-          <div className="space-y-2">
-            <Label htmlFor="note">Note</Label>
-            <Textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note about this feedback..."
-              rows={3}
-            />
-          </div>
+          {/* Note */}
+          {readOnly ? (
+            feedback.status_note && (
+              <div className="space-y-2">
+                <Label>Note</Label>
+                <p className="text-sm whitespace-pre-wrap">{feedback.status_note}</p>
+              </div>
+            )
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="note">Note</Label>
+                <Textarea
+                  id="note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Add a note about this feedback..."
+                  rows={3}
+                />
+              </div>
 
-          {/* Save Button */}
-          <Button onClick={handleSave} disabled={!hasChanges || isSaving} className="w-full">
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </Button>
+              {/* Save Button */}
+              <Button onClick={handleSave} disabled={!hasChanges || isSaving} className="w-full">
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

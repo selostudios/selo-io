@@ -35,9 +35,14 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
 interface NavigationShellProps {
   isInternal?: boolean
   userRole?: string
+  canViewFeedback?: boolean
 }
 
-export function NavigationShell({ isInternal = false, userRole }: NavigationShellProps) {
+export function NavigationShell({
+  isInternal = false,
+  userRole,
+  canViewFeedback = false,
+}: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -104,6 +109,7 @@ export function NavigationShell({ isInternal = false, userRole }: NavigationShel
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
         isInternal={isInternal}
+        canViewFeedback={canViewFeedback}
       />
       <ChildSidebar
         activeSection={activeSection}

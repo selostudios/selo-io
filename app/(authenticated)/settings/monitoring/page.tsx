@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { MonitoredSitesManager } from '@/components/settings/monitored-sites'
+import { UserRole } from '@/lib/enums'
 
 export default async function MonitoringSettingsPage() {
   const supabase = await createClient()
@@ -15,12 +16,17 @@ export default async function MonitoringSettingsPage() {
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('organization_id, role')
     .eq('id', user.id)
     .single()
 
   if (!userRecord) {
     redirect('/login')
+  }
+
+  // Guard: external developers cannot access monitoring settings
+  if (userRecord.role === UserRole.ExternalDeveloper) {
+    redirect('/settings/team')
   }
 
   // Get organization website URL

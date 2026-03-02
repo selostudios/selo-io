@@ -1,5 +1,8 @@
+import { redirect } from 'next/navigation'
 import { withSettingsAuth, NoOrgSelected } from '@/lib/auth/settings-auth'
 import { createClient } from '@/lib/supabase/server'
+import { canManageIntegrations } from '@/lib/permissions'
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { OAuthToastHandler } from './oauth-toast-handler'
 import { IntegrationsPageContent } from './integrations-page-content'
 
@@ -10,6 +13,15 @@ interface PageProps {
 }
 
 export default async function IntegrationsPage({ searchParams }: PageProps) {
+  // Guard: only users with integrations:manage can access
+  const user = await getAuthUser()
+  if (user) {
+    const record = await getUserRecord(user.id)
+    if (!canManageIntegrations(record?.role)) {
+      redirect('/settings/team')
+    }
+  }
+
   const result = await withSettingsAuth(
     searchParams,
     async (organizationId) => {

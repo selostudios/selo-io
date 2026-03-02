@@ -13,6 +13,7 @@ interface ParentSidebarProps {
   activeSection: ParentSection
   onSectionChange: (section: ParentSection) => void
   isInternal?: boolean
+  canViewFeedback?: boolean
 }
 
 type SectionItem = {
@@ -46,12 +47,16 @@ export function ParentSidebar({
   activeSection,
   onSectionChange,
   isInternal = false,
+  canViewFeedback = false,
 }: ParentSidebarProps) {
   const searchParams = useSearchParams()
   const orgParam = searchParams.get('org')
 
-  // Filter sections based on internal status
-  const visibleSections = sections.filter((section) => !section.internalOnly || isInternal)
+  // Filter sections based on internal status and permissions
+  const visibleSections = sections.filter((section) => {
+    if (section.id === 'support') return isInternal || canViewFeedback
+    return !section.internalOnly || isInternal
+  })
 
   // Preserve org parameter in logo link
   const logoHref = orgParam ? `/dashboard?org=${orgParam}` : '/dashboard'

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { canManageFeedback } from '@/lib/permissions'
 import { SupportPageClient } from './page-client'
 
 export default async function SupportPage({
@@ -8,6 +9,19 @@ export default async function SupportPage({
 }) {
   const params = await searchParams
   const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Get user role for permission check
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user!.id)
+    .single()
+
+  const canEdit = canManageFeedback(userRecord?.role)
 
   // Fetch all feedback with relations
   // Note: email is in auth.users, not public.users - would need a view or function to access
@@ -30,5 +44,7 @@ export default async function SupportPage({
     })
   }
 
-  return <SupportPageClient feedback={feedback || []} initialIssueId={params.issue} />
+  return (
+    <SupportPageClient feedback={feedback || []} initialIssueId={params.issue} canEdit={canEdit} />
+  )
 }

@@ -5,7 +5,7 @@ import { HeaderMinimal } from '@/components/dashboard/header-minimal'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
-import { canManageFeedback, isInternalUser } from '@/lib/permissions'
+import { canViewFeedback, isInternalUser } from '@/lib/permissions'
 
 export default async function SupportLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -25,7 +25,7 @@ export default async function SupportLayout({ children }: { children: React.Reac
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !canManageFeedback(userRecord.role)) {
+  if (!userRecord || !canViewFeedback(userRecord.role)) {
     redirect('/dashboard')
   }
 
@@ -34,7 +34,11 @@ export default async function SupportLayout({ children }: { children: React.Reac
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <NavigationShell isInternal={isInternal} />
+        <NavigationShell
+          isInternal={isInternal}
+          userRole={userRecord.role}
+          canViewFeedback={canViewFeedback(userRecord.role)}
+        />
         <div className="flex flex-1 flex-col">
           <HeaderMinimal />
           <main className="flex-1">

@@ -18,9 +18,14 @@ import type {
 interface SupportPageClientProps {
   feedback: FeedbackWithRelations[]
   initialIssueId?: string
+  canEdit?: boolean
 }
 
-export function SupportPageClient({ feedback, initialIssueId }: SupportPageClientProps) {
+export function SupportPageClient({
+  feedback,
+  initialIssueId,
+  canEdit = true,
+}: SupportPageClientProps) {
   const router = useRouter()
   const { openFeedback } = useFeedback()
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | undefined>(undefined)
@@ -103,6 +108,7 @@ export function SupportPageClient({ feedback, initialIssueId }: SupportPageClien
         open={slideoutOpen}
         onClose={handleClose}
         onUpdate={handleUpdate}
+        readOnly={!canEdit}
       />
     </div>
   )

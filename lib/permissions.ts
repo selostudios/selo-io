@@ -22,6 +22,7 @@ export type Permission =
   | 'campaigns:create'
   | 'campaigns:update'
   | 'campaigns:delete'
+  | 'feedback:view'
   | 'feedback:manage'
 
 // Role-permission mapping - single source of truth
@@ -35,9 +36,10 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'campaigns:create',
     'campaigns:update',
     'campaigns:delete',
+    'feedback:view',
     'feedback:manage',
   ],
-  [UserRole.Developer]: ['org:update', 'org:view', 'team:view', 'feedback:manage'],
+  [UserRole.Developer]: ['org:update', 'org:view', 'team:view', 'feedback:view', 'feedback:manage'],
   [UserRole.TeamMember]: [
     'org:view',
     'team:view',
@@ -46,7 +48,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'campaigns:delete',
   ],
   [UserRole.ClientViewer]: ['org:view', 'team:view'],
-  [UserRole.ExternalDeveloper]: ['org:view', 'team:view'],
+  [UserRole.ExternalDeveloper]: ['org:view', 'team:view', 'feedback:view'],
 }
 
 /**
@@ -111,7 +113,14 @@ export function canManageCampaigns(role: string | undefined): boolean {
 }
 
 /**
- * Check if user can manage feedback/support features.
+ * Check if user can view feedback/support tickets (read-only access).
+ */
+export function canViewFeedback(role: string | undefined): boolean {
+  return hasPermission(role, 'feedback:view')
+}
+
+/**
+ * Check if user can manage feedback/support features (edit status/priority/notes).
  */
 export function canManageFeedback(role: string | undefined): boolean {
   return hasPermission(role, 'feedback:manage')

@@ -4,7 +4,7 @@ import { Header } from '@/components/dashboard/header'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
-import { isInternalUser } from '@/lib/permissions'
+import { isInternalUser, canViewFeedback } from '@/lib/permissions'
 import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +30,11 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   return (
     <FeedbackProvider>
       <div className="flex min-h-screen bg-neutral-50">
-        <NavigationShell isInternal={isInternal} userRole={userRecord.role} />
+        <NavigationShell
+          isInternal={isInternal}
+          userRole={userRecord.role}
+          canViewFeedback={canViewFeedback(userRecord.role)}
+        />
         <div className="flex flex-1 flex-col">
           <Header />
           <main className="flex-1">{children}</main>
