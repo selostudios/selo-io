@@ -20,6 +20,7 @@ import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type { AIOAudit } from '@/lib/aio/types'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 interface AIOAuditClientProps {
   organizations: OrganizationForSelector[]
@@ -35,6 +36,7 @@ export function AIOAuditClient({
   audits,
 }: AIOAuditClientProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [sampleSize, setSampleSize] = useState(5)
   const aioAudit = useAIOAuditStream()
 
@@ -66,7 +68,7 @@ export function AIOAuditClient({
 
     const data = await response.json()
     notifyAuditStarted()
-    router.push(`/seo/aio/${data.auditId}`)
+    router.push(buildOrgHref(`/seo/aio/${data.auditId}`))
   }
 
   const isRunning = aioAudit.status === 'running_programmatic' || aioAudit.status === 'running_ai'

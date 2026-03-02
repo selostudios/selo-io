@@ -10,6 +10,7 @@ import type { AIOAudit } from '@/lib/aio/types'
 import { formatDuration, calculateDuration, formatAuditDate, getDomain } from '@/lib/utils'
 import { useState } from 'react'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 interface AIOAuditHistoryListProps {
   audits: AIOAudit[]
@@ -22,6 +23,7 @@ function isInProgress(status: AIOAudit['status']): boolean {
 
 export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistoryListProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   const handleDeleteAudit = async (auditId: string) => {
@@ -55,7 +57,7 @@ export function AIOAuditHistoryList({ audits, showUrl = false }: AIOAuditHistory
 
       const data = await response.json()
       notifyAuditStarted()
-      router.push(`/seo/aio/${data.auditId}`)
+      router.push(buildOrgHref(`/seo/aio/${data.auditId}`))
     } catch (error) {
       console.error('Failed to start audit:', error)
     } finally {

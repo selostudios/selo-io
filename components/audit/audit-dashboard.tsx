@@ -9,6 +9,7 @@ import { ScoreTrendChart, type ScoreDataPoint } from './score-trend-chart'
 import { AuditHistoryList } from './audit-history-list'
 import { DismissedChecksList } from './dismissed-checks-list'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import type { SiteAudit } from '@/lib/audit/types'
 
 interface AuditDashboardProps {
@@ -29,6 +30,7 @@ export function AuditDashboard({
   searchInput,
 }: AuditDashboardProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [isPending, startTransition] = useTransition()
   const [showArchived, setShowArchived] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +53,7 @@ export function AuditDashboard({
 
         const data = await response.json()
         notifyAuditStarted()
-        router.push(`/seo/site-audit/${data.auditId}`)
+        router.push(buildOrgHref(`/seo/site-audit/${data.auditId}`))
       } catch (err) {
         console.error('[Audit Dashboard] Failed to start audit:', err)
         setError('Failed to start audit')

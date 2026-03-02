@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { LifeBuoy, Plus } from 'lucide-react'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
 import { useFeedback } from '@/components/feedback/feedback-provider'
 import { SupportTable } from '@/components/support/support-table'
@@ -27,6 +28,7 @@ export function SupportPageClient({
   canEdit = true,
 }: SupportPageClientProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const { openFeedback } = useFeedback()
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | undefined>(undefined)
   const [categoryFilter, setCategoryFilter] = useState<FeedbackCategory | undefined>(undefined)
@@ -53,13 +55,13 @@ export function SupportPageClient({
   const handleRowClick = (item: FeedbackWithRelations) => {
     setSelectedFeedback(item)
     setSlideoutOpen(true)
-    router.push(`/support?issue=${item.id}`, { scroll: false })
+    router.push(buildOrgHref(`/support?issue=${item.id}`), { scroll: false })
   }
 
   const handleClose = () => {
     setSlideoutOpen(false)
     setSelectedFeedback(null)
-    router.push('/support', { scroll: false })
+    router.push(buildOrgHref('/support'), { scroll: false })
   }
 
   const handleUpdate = () => {

@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label'
 import { createCampaign } from '@/app/(authenticated)/dashboard/campaigns/actions'
 import { useRouter } from 'next/navigation'
 import { showSuccess, showError } from '@/components/ui/sonner'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 const CAMPAIGN_TYPES = [
   { value: 'thought_leadership', label: 'Thought Leadership' },
@@ -47,6 +48,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
 
   const MAX_DESCRIPTION_LENGTH = 500
   const descriptionLength = description.length
@@ -73,7 +75,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
       showSuccess('Campaign created successfully!')
       setOpen(false)
       resetForm()
-      router.push(`/dashboard/campaigns/${result.campaign.id}`)
+      router.push(buildOrgHref(`/dashboard/campaigns/${result.campaign.id}`))
     }
   }
 

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Share2, Printer, X, Maximize2, Minimize2 } from 'lucide-react'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
 import { ProgressDots } from './progress-dots'
 import type { ReportPresentationData } from '@/lib/reports/types'
@@ -27,6 +28,7 @@ interface ReportPresentationProps {
 
 export function ReportPresentation({ data, isPublic = false, onShare }: ReportPresentationProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -66,7 +68,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           break
         case 'Escape':
           if (!isPublic) {
-            router.push('/seo/reports')
+            router.push(buildOrgHref('/seo/reports'))
           }
           break
         case 'Home':
@@ -82,7 +84,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextSlide, prevSlide, goToSlide, totalSlides, router, isPublic])
+  }, [nextSlide, prevSlide, goToSlide, totalSlides, router, isPublic, buildOrgHref])
 
   // Touch/swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -295,7 +297,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push('/seo/reports')}
+            onClick={() => router.push(buildOrgHref('/seo/reports'))}
             className="h-9 w-9"
           >
             <X className="h-4 w-4" />

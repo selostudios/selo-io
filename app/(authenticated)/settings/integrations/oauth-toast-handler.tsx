@@ -4,10 +4,12 @@ import { useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { getPlatformDisplayName } from '@/lib/oauth/utils'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 export function OAuthToastHandler() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
 
   useEffect(() => {
     const error = searchParams.get('error')
@@ -30,7 +32,7 @@ export function OAuthToastHandler() {
             closeButton: true,
           })
         }
-        router.replace('/settings/integrations')
+        router.replace(buildOrgHref('/settings/integrations'))
         return
       }
 
@@ -40,7 +42,7 @@ export function OAuthToastHandler() {
         toast.success(`${platformName} connected successfully`, {
           duration: 5000,
         })
-        router.replace('/settings/integrations')
+        router.replace(buildOrgHref('/settings/integrations'))
         return
       }
     } catch (err) {
@@ -50,7 +52,7 @@ export function OAuthToastHandler() {
         timestamp: new Date().toISOString(),
       })
     }
-  }, [searchParams, router])
+  }, [searchParams, router, buildOrgHref])
 
   return null
 }

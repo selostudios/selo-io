@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { OrganizationStatus } from '@/lib/enums'
+import { useSetOrgId } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -58,6 +59,7 @@ export function OrgSelector({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const setOrgId = useSetOrgId()
   const [dialogOpen, setDialogOpen] = useState(false)
 
   // Determine if we're on an SEO route
@@ -78,6 +80,7 @@ export function OrgSelector({
     localStorage.setItem(LAST_VIEW_KEY, 'organization')
     localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
     setOrgCookie(orgId)
+    setOrgId(orgId)
     window.dispatchEvent(new Event('sidebar-expand'))
 
     // Update URL and refresh to re-fetch server data
@@ -95,6 +98,7 @@ export function OrgSelector({
     localStorage.removeItem(LAST_ORG_KEY)
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
     clearOrgCookie()
+    setOrgId(null)
 
     // Remove org param from URL and refresh to re-fetch server data
     startTransition(() => {

@@ -24,6 +24,7 @@ import type { AIOAudit } from '@/lib/aio/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { createReport, validateAuditsForReport } from '../actions'
 import { extractDomain } from '@/lib/reports'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import type { ReportValidationResult } from '@/lib/reports/types'
 
 interface NewReportClientProps {
@@ -50,6 +51,7 @@ export function NewReportClient({
   preselectedDomain,
 }: NewReportClientProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [searchQuery, setSearchQuery] = useState(preselectedDomain ?? '')
   const [selectedSiteAuditId, setSelectedSiteAuditId] = useState<string | null>(null)
   const [selectedPerfAuditId, setSelectedPerfAuditId] = useState<string | null>(null)
@@ -196,7 +198,7 @@ export function NewReportClient({
       })
 
       if (result.success && result.reportId) {
-        router.push(`/seo/reports/${result.reportId}`)
+        router.push(buildOrgHref(`/seo/reports/${result.reportId}`))
       } else {
         setError(result.error ?? 'Failed to create report')
       }

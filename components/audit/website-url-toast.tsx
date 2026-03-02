@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 interface WebsiteUrlToastProps {
   websiteUrl: string | null
@@ -10,6 +11,7 @@ interface WebsiteUrlToastProps {
 
 export function WebsiteUrlToast({ websiteUrl }: WebsiteUrlToastProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const hasShown = useRef(false)
 
   useEffect(() => {
@@ -27,10 +29,10 @@ export function WebsiteUrlToast({ websiteUrl }: WebsiteUrlToastProps) {
       duration: 10000, // 10 seconds
       action: {
         label: 'Set Up',
-        onClick: () => router.push('/settings/organization'),
+        onClick: () => router.push(buildOrgHref('/settings/organization')),
       },
     })
-  }, [websiteUrl, router])
+  }, [websiteUrl, router, buildOrgHref])
 
   return null // This component only shows a toast, no visual output
 }

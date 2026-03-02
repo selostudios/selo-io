@@ -9,6 +9,7 @@ import { Clock, FileSearch, Loader2, Trash2, RefreshCw } from 'lucide-react'
 import type { SiteAudit } from '@/lib/audit/types'
 import { formatDuration, calculateDuration, formatAuditDate, getDomain } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { useState } from 'react'
 
 interface AuditHistoryListProps {
@@ -22,6 +23,7 @@ function isInProgress(status: SiteAudit['status']): boolean {
 
 export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
   const handleDeleteAudit = async (auditId: string) => {
@@ -51,7 +53,7 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
 
       const data = await response.json()
       notifyAuditStarted()
-      router.push(`/seo/site-audit/${data.auditId}`)
+      router.push(buildOrgHref(`/seo/site-audit/${data.auditId}`))
     } catch (error) {
       console.error('Failed to start audit:', error)
     } finally {

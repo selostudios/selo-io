@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 export function CreateCampaignForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -23,7 +25,7 @@ export function CreateCampaignForm() {
       setError(result.error)
       setIsLoading(false)
     } else {
-      router.push(`/dashboard/campaigns/${result.campaign.id}`)
+      router.push(buildOrgHref(`/dashboard/campaigns/${result.campaign.id}`))
     }
   }
 

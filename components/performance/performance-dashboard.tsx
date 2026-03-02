@@ -12,6 +12,7 @@ import { ScoreTrendChart, type ScoreDataPoint } from '@/components/audit/score-t
 import type { PerformanceAudit } from '@/lib/performance/types'
 import { formatDuration, calculateDuration, formatAuditDate } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 function isInProgress(status: PerformanceAudit['status']): boolean {
   return status === 'pending' || status === 'running'
@@ -29,6 +30,7 @@ export function PerformanceDashboard({
   organizationId,
 }: PerformanceDashboardProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [isPending, startTransition] = useTransition()
 
   const handleRunAudit = async (url: string, orgId?: string) => {
@@ -49,7 +51,7 @@ export function PerformanceDashboard({
 
           const data = await response.json()
           notifyAuditStarted()
-          router.push(`/seo/page-speed/${data.auditId}`)
+          router.push(buildOrgHref(`/seo/page-speed/${data.auditId}`))
           resolve()
         } catch (err) {
           console.error('[Performance Dashboard] Failed to start audit:', err)

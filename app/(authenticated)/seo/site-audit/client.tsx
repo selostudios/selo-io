@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AuditDashboard } from '@/components/audit/audit-dashboard'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import type { SiteAudit } from '@/lib/audit/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
@@ -26,6 +27,7 @@ export function SiteAuditClient({
   selectedOrganizationId,
 }: SiteAuditClientProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [searchQuery, setSearchQuery] = useState('')
   const [oneTimeUrl, setOneTimeUrl] = useState('')
 
@@ -67,7 +69,7 @@ export function SiteAuditClient({
 
       const data = await response.json()
       notifyAuditStarted()
-      router.push(`/seo/site-audit/${data.auditId}`)
+      router.push(buildOrgHref(`/seo/site-audit/${data.auditId}`))
     } catch (error) {
       console.error('Failed to start audit:', error)
     }

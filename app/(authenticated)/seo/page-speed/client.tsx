@@ -13,6 +13,7 @@ import type { PerformanceAudit } from '@/lib/performance/types'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import { formatDuration, calculateDuration, formatAuditDate } from '@/lib/utils'
 import { notifyAuditStarted } from '@/hooks/use-active-audit'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 
 interface PageSpeedClientProps {
   audits: PerformanceAudit[]
@@ -31,6 +32,7 @@ export function PageSpeedClient({
   selectedOrganizationId,
 }: PageSpeedClientProps) {
   const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
   const [searchQuery, setSearchQuery] = useState('')
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
 
@@ -79,7 +81,7 @@ export function PageSpeedClient({
 
       const data = await response.json()
       notifyAuditStarted()
-      router.push(`/seo/page-speed/${data.auditId}`)
+      router.push(buildOrgHref(`/seo/page-speed/${data.auditId}`))
     } catch (error) {
       console.error('Failed to start audit:', error)
     } finally {
@@ -186,7 +188,7 @@ export function PageSpeedClient({
               if (!response.ok) throw new Error('Failed to start audit')
               const data = await response.json()
               notifyAuditStarted()
-              router.push(`/seo/page-speed/${data.auditId}`)
+              router.push(buildOrgHref(`/seo/page-speed/${data.auditId}`))
             }}
           />
 
