@@ -1,15 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { PanelLeft } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ParentSidebar, type ParentSection } from './parent-sidebar'
 import { ChildSidebar } from './child-sidebar'
 import { useActiveAudit } from '@/hooks/use-active-audit'
-
-const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
 
 function getSectionFromPathname(pathname: string): ParentSection {
   if (pathname.startsWith('/seo')) {
@@ -49,27 +44,10 @@ export function NavigationShell({
   const orgParam = searchParams.get('org')
   const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit(orgParam)
 
+  const [isChildCollapsed, setIsChildCollapsed] = useState(false)
+
   // Derive active section from current pathname
   const activeSection = getSectionFromPathname(pathname)
-
-  const [isChildCollapsed, setIsChildCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  // Load collapsed state from localStorage on mount
-  // This is a legitimate pattern for hydrating persisted UI state
-  useEffect(() => {
-    const saved = localStorage.getItem(CHILD_SIDEBAR_COLLAPSED_KEY)
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating persisted state on mount
-    setIsChildCollapsed(saved === 'true')
-    setMounted(true)
-
-    // Listen for sidebar expand events (e.g., when selecting an organization)
-    const handleExpand = () => {
-      setIsChildCollapsed(false)
-    }
-    window.addEventListener('sidebar-expand', handleExpand)
-    return () => window.removeEventListener('sidebar-expand', handleExpand)
-  }, [])
 
   // Handle section change - navigate to section's default route
   const handleSectionChange = useCallback(
@@ -91,20 +69,8 @@ export function NavigationShell({
     [activeSection, router, searchParams]
   )
 
-  // Toggle child sidebar collapsed state
-  const handleToggleCollapse = useCallback(() => {
-    setIsChildCollapsed((prev) => {
-      const newValue = !prev
-      localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, String(newValue))
-      return newValue
-    })
-  }, [])
-
-  // Prevent hydration mismatch
-  const collapsed = mounted ? isChildCollapsed : false
-
   return (
-    <div className="sticky top-0 flex h-screen">
+    <div className="sticky top-0 flex h-full border-r bg-white">
       <ParentSidebar
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
@@ -113,35 +79,13 @@ export function NavigationShell({
       />
       <ChildSidebar
         activeSection={activeSection}
-        isCollapsed={collapsed}
-        onToggleCollapse={handleToggleCollapse}
         hasSiteAudit={hasSiteAudit}
         hasPerformanceAudit={hasPerformanceAudit}
         hasAioAudit={hasAioAudit}
         userRole={userRole}
+        isCollapsed={isChildCollapsed}
+        onToggleCollapse={() => setIsChildCollapsed(!isChildCollapsed)}
       />
-      {/* Expand button when child sidebar is collapsed */}
-      {collapsed && (
-        <div className="flex h-screen w-12 flex-col items-center border-r bg-white">
-          <div className="flex h-16 w-full items-center justify-center border-b">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleToggleCollapse}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-md transition-colors',
-                    'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
-                  )}
-                  aria-label="Expand sidebar"
-                >
-                  <PanelLeft className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

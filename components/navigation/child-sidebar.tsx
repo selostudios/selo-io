@@ -8,14 +8,15 @@ import {
   Settings,
   FileSearch,
   Gauge,
-  PanelLeftClose,
   Loader2,
   Building2,
   MessageSquare,
   Sparkles,
   FileText,
+  PanelLeftClose,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { canViewDashboard, canViewCampaigns } from '@/lib/permissions'
 import type { ParentSection } from './parent-sidebar'
 
@@ -42,19 +43,16 @@ const homeNavigation: NavigationGroup[] = [
 
 const seoNavigation: NavigationGroup[] = [
   {
-    header: 'SEO & Performance',
+    header: 'Audits',
     items: [
-      { name: 'SEO Site Audit', href: '/seo/site-audit', icon: FileSearch },
-      { name: 'PageSpeed Audit', href: '/seo/page-speed', icon: Gauge },
+      { name: 'Search Engine Optimization', href: '/seo/site-audit', icon: FileSearch },
+      { name: 'Page Speed & Performance', href: '/seo/page-speed', icon: Gauge },
+      { name: 'AI Optimization', href: '/seo/aio', icon: Sparkles },
     ],
   },
   {
-    header: 'AIO',
-    items: [{ name: 'AI Audit', href: '/seo/aio', icon: Sparkles }],
-  },
-  {
-    header: 'Report',
-    items: [{ name: 'Combined Reports', href: '/seo/reports', icon: FileText }],
+    header: 'Reports',
+    items: [{ name: 'Full Site Report', href: '/seo/reports', icon: FileText }],
   },
 ]
 
@@ -77,31 +75,24 @@ const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
   support: supportNavigation,
 }
 
-const sectionTitles: Record<ParentSection, string> = {
-  home: 'Home',
-  seo: 'SEO',
-  organizations: 'Organizations',
-  support: 'Support',
-}
-
 interface ChildSidebarProps {
   activeSection: ParentSection
-  isCollapsed: boolean
-  onToggleCollapse: () => void
   hasSiteAudit?: boolean
   hasPerformanceAudit?: boolean
   hasAioAudit?: boolean
   userRole?: string
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
 }
 
 export function ChildSidebar({
   activeSection,
-  isCollapsed,
-  onToggleCollapse,
   hasSiteAudit,
   hasPerformanceAudit,
   hasAioAudit,
   userRole,
+  isCollapsed = false,
+  onToggleCollapse,
 }: ChildSidebarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -122,34 +113,18 @@ export function ChildSidebar({
   // Get current org parameter to preserve across navigation
   const orgParam = searchParams.get('org')
 
-  if (isCollapsed) {
-    return null
-  }
-
   return (
-    <div className="flex h-screen w-60 flex-col border-r bg-white">
-      {/* Header with section title and collapse button */}
-      <div className="flex h-16 items-center justify-between border-b px-4">
-        <h2 className="text-sm font-semibold text-neutral-900">{sectionTitles[activeSection]}</h2>
-        <button
-          onClick={onToggleCollapse}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
-          aria-label="Collapse sidebar"
-        >
-          <PanelLeftClose className="h-4 w-4" />
-        </button>
-      </div>
-
+    <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[304px]')}>
       {/* Navigation */}
-      <nav className="flex-1 space-y-4 px-3 pt-3">
+      <nav className={cn('flex-1 pt-3', isCollapsed ? 'px-1 space-y-2' : 'px-3 space-y-4')}>
         {navigation.map((group, groupIndex) => (
           <div key={groupIndex}>
-            {group.header && (
+            {!isCollapsed && group.header && (
               <h3 className="mb-2 px-3 text-xs font-medium tracking-wider text-neutral-500 uppercase">
                 {group.header}
               </h3>
             )}
-            <div className="space-y-1">
+            <div className={cn(isCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-1')}>
               {group.items.map((item) => {
                 const Icon = item.icon
 
@@ -180,6 +155,31 @@ export function ChildSidebar({
                   href = `${item.href}?org=${orgParam}`
                 }
 
+                if (isCollapsed) {
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={href}
+                          className={cn(
+                            'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                            isActive
+                              ? 'text-neutral-900'
+                              : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
+                          )}
+                        >
+                          {showSpinner ? (
+                            <Loader2 className="h-5 w-5 motion-safe:animate-spin" />
+                          ) : (
+                            <Icon className="h-5 w-5" />
+                          )}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">{item.name}</TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
                 return (
                   <Link
                     key={item.href}
@@ -203,6 +203,18 @@ export function ChildSidebar({
           </div>
         ))}
       </nav>
+      {/* Collapse/Expand button at bottom-right */}
+      {onToggleCollapse && (
+        <div className={cn('flex items-center border-t px-3 py-2', isCollapsed ? 'justify-center' : 'justify-end')}>
+          <button
+            onClick={onToggleCollapse}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <PanelLeftClose className={cn('h-4 w-4', isCollapsed && 'rotate-180')} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

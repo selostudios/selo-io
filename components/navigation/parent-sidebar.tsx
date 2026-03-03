@@ -1,8 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
 import { House, LineChart, Building2, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -49,36 +46,16 @@ export function ParentSidebar({
   isInternal = false,
   canViewFeedback = false,
 }: ParentSidebarProps) {
-  const searchParams = useSearchParams()
-  const orgParam = searchParams.get('org')
-
   // Filter sections based on internal status and permissions
   const visibleSections = sections.filter((section) => {
     if (section.id === 'support') return isInternal || canViewFeedback
     return !section.internalOnly || isInternal
   })
 
-  // Preserve org parameter in logo link
-  const logoHref = orgParam ? `/dashboard?org=${orgParam}` : '/dashboard'
-
   return (
-    <div className="flex h-screen w-16 flex-col border-r bg-white">
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b">
-        <Link href={logoHref}>
-          <Image
-            src="/selo-logo.jpg.webp"
-            alt="Selo"
-            width={40}
-            height={40}
-            priority
-            className="object-contain"
-          />
-        </Link>
-      </div>
-
+    <div className="flex w-16 flex-col border-r bg-white">
       {/* Navigation Icons */}
-      <nav className="flex flex-1 flex-col items-center gap-2 py-4">
+      <nav className="flex flex-1 flex-col items-center gap-2 pt-3">
         {visibleSections.map((section) => {
           const Icon = section.icon
           const isActive = activeSection === section.id

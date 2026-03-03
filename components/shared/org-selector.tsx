@@ -20,7 +20,6 @@ import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 const LAST_ORG_KEY = 'selo-last-organization-id'
 const LAST_VIEW_KEY = 'selo-last-view-type'
-const CHILD_SIDEBAR_COLLAPSED_KEY = 'child-sidebar-collapsed'
 const SELO_ORG_COOKIE = 'selo-org'
 
 function setOrgCookie(orgId: string) {
@@ -78,10 +77,8 @@ export function OrgSelector({
   const handleSelectOrganization = (orgId: string) => {
     localStorage.setItem(LAST_ORG_KEY, orgId)
     localStorage.setItem(LAST_VIEW_KEY, 'organization')
-    localStorage.setItem(CHILD_SIDEBAR_COLLAPSED_KEY, 'false')
     setOrgCookie(orgId)
     setOrgId(orgId)
-    window.dispatchEvent(new Event('sidebar-expand'))
 
     // Update URL and refresh to re-fetch server data
     const url = new URL(window.location.href)
