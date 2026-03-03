@@ -66,7 +66,17 @@ export function OrgSelector({
 
   // Read org from URL searchParams, falling back to prop
   const urlOrgId = searchParams.get('org')
-  const selectedOrganizationId = urlOrgId || initialSelectedOrgId
+  const serverSelectedOrgId = urlOrgId || initialSelectedOrgId
+
+  // Local state for immediate UI updates (before server refresh completes)
+  const [localOrgId, setLocalOrgId] = useState<string | null>(serverSelectedOrgId ?? null)
+
+  // Sync local state when server props or URL change
+  useEffect(() => {
+    setLocalOrgId(serverSelectedOrgId ?? null)
+  }, [serverSelectedOrgId])
+
+  const selectedOrganizationId = localOrgId
 
   // Check if one-time mode is active (only relevant on SEO routes)
   const isOneTimeMode = isSeoRoute && !selectedOrganizationId
@@ -75,6 +85,7 @@ export function OrgSelector({
   const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
   const handleSelectOrganization = (orgId: string) => {
+    setLocalOrgId(orgId) // Immediate UI update
     localStorage.setItem(LAST_ORG_KEY, orgId)
     localStorage.setItem(LAST_VIEW_KEY, 'organization')
     setOrgCookie(orgId)
@@ -92,6 +103,7 @@ export function OrgSelector({
   }
 
   const handleSelectOneTime = () => {
+    setLocalOrgId(null) // Immediate UI update
     localStorage.removeItem(LAST_ORG_KEY)
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
     clearOrgCookie()
