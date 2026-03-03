@@ -5,6 +5,7 @@ import { fetchPage } from './fetcher'
 import { generateExecutiveSummary } from './summary'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { cleanupOlderAuditDetails, cleanupCrawlQueue } from './cleanup'
+import { isCheckablePage } from './utils'
 import { AuditStatus, CheckStatus } from '@/lib/enums'
 import type {
   SiteAuditCheck,
@@ -87,8 +88,8 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
           .update({ pages_crawled: pagesCrawledCount, updated_at: new Date().toISOString() })
           .eq('id', auditId)
 
-        // Skip page-specific checks for resources (PDFs, images, etc.)
-        if (page.is_resource) {
+        // Skip page-specific checks for resources (PDFs, images, etc.) and error pages
+        if (page.is_resource || !isCheckablePage(page)) {
           return
         }
 
@@ -760,8 +761,8 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
       }
     }
 
-    // Run page-specific checks on each HTML page (skip resources)
-    const htmlPages = pages.filter((p) => !p.is_resource)
+    // Run page-specific checks on each HTML page (skip resources and error pages)
+    const htmlPages = pages.filter((p) => !p.is_resource && isCheckablePage(p))
 
     console.log(`[Audit Resume] Running page-specific checks for ${htmlPages.length} HTML pages`)
 

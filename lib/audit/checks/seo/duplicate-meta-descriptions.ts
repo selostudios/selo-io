@@ -1,4 +1,5 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { isCheckablePage } from '@/lib/audit/utils'
 import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const duplicateMetaDescriptions: AuditCheckDefinition = {
@@ -16,8 +17,9 @@ export const duplicateMetaDescriptions: AuditCheckDefinition = {
     const descriptionToUrls: Record<string, string[]> = {}
 
     for (const page of context.allPages) {
-      // Skip resources (PDFs, images, etc.)
+      // Skip resources (PDFs, images, etc.) and error pages
       if (page.is_resource) continue
+      if (!isCheckablePage(page)) continue
 
       const description = page.meta_description?.trim()
       if (!description) continue // Skip pages without meta descriptions (handled by missing_meta_description check)

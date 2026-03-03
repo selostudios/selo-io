@@ -1,4 +1,5 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/audit/types'
+import { isCheckablePage } from '@/lib/audit/utils'
 import { CheckType, CheckPriority, CheckStatus } from '@/lib/enums'
 
 export const duplicateTitles: AuditCheckDefinition = {
@@ -16,6 +17,7 @@ export const duplicateTitles: AuditCheckDefinition = {
     const titleToUrls: Record<string, string[]> = {}
 
     for (const page of context.allPages) {
+      if (!isCheckablePage(page)) continue // Skip error pages and soft 404s
       const title = page.title?.trim()
       if (!title) continue // Skip pages without titles (handled by missing_title check)
 

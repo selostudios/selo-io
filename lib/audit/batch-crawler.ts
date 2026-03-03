@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { fetchPage, extractLinks } from './fetcher'
 import { pageSpecificChecks } from './checks'
+import { isCheckablePage } from './utils'
 import { AuditStatus } from '@/lib/enums'
 import type { SiteAuditPage, SiteAuditCheck, CheckContext, DismissedCheck } from './types'
 
@@ -229,8 +230,8 @@ export async function crawlBatch(
       })
       .eq('id', auditId)
 
-    // Run page-specific checks (skip for resources)
-    if (!isResource) {
+    // Run page-specific checks (skip for resources and error pages)
+    if (!isResource && isCheckablePage(page)) {
       const context: CheckContext = {
         url: page.url,
         html,
