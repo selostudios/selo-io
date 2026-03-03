@@ -55,7 +55,6 @@ export function NavigationShell({
       // Only navigate if we're changing to a different section
       if (section !== activeSection) {
         const baseRoute = sectionDefaultRoutes[section]
-        const orgParam = searchParams.get('org')
 
         // Preserve org parameter for home and seo sections
         const href =
@@ -66,7 +65,7 @@ export function NavigationShell({
         router.push(href)
       }
     },
-    [activeSection, router, searchParams]
+    [activeSection, router, orgParam]
   )
 
   return (

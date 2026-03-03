@@ -116,7 +116,7 @@ export function ChildSidebar({
   return (
     <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[304px]')}>
       {/* Navigation */}
-      <nav className={cn('flex-1 pt-3', isCollapsed ? 'px-1 space-y-2' : 'px-3 space-y-4')}>
+      <nav className={cn('flex-1 pt-3', isCollapsed ? 'space-y-2 px-1' : 'space-y-4 px-3')}>
         {navigation.map((group, groupIndex) => (
           <div key={groupIndex}>
             {!isCollapsed && group.header && (
@@ -205,7 +205,12 @@ export function ChildSidebar({
       </nav>
       {/* Collapse/Expand button at bottom-right */}
       {onToggleCollapse && (
-        <div className={cn('flex items-center border-t px-3 py-2', isCollapsed ? 'justify-center' : 'justify-end')}>
+        <div
+          className={cn(
+            'flex items-center border-t px-3 py-2',
+            isCollapsed ? 'justify-center' : 'justify-end'
+          )}
+        >
           <button
             onClick={onToggleCollapse}
             className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"

@@ -8,8 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-
-const LAST_ORG_KEY = 'selo-last-organization-id'
+import { LAST_ORG_KEY } from '@/lib/constants/org-storage'
 
 interface OrgContextValue {
   orgId: string | null

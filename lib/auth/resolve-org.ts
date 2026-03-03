@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
-
-const SELO_ORG_COOKIE = 'selo-org'
+import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 /**
  * Resolve the active organization ID on the server.

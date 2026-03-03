@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, startTransition } from 'react'
+import { useState, useEffect, useCallback, startTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,10 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CreateOrganizationDialog } from '@/components/dashboard/create-organization-dialog'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
-
-const LAST_ORG_KEY = 'selo-last-organization-id'
-const LAST_VIEW_KEY = 'selo-last-view-type'
-const SELO_ORG_COOKIE = 'selo-org'
+import { LAST_ORG_KEY, LAST_VIEW_KEY, SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 function setOrgCookie(orgId: string) {
   document.cookie = `${SELO_ORG_COOKIE}=${orgId}; path=/; max-age=31536000; SameSite=Lax`
@@ -46,10 +43,10 @@ interface OrgSelectorProps {
 // SEO routes where "One-time URL" option should appear
 const SEO_ROUTES = ['/seo/site-audit', '/seo/page-speed', '/seo/aio', '/seo/reports']
 
-const statusColors: Record<string, string> = {
-  prospect: 'bg-amber-100 text-amber-700',
-  customer: 'bg-green-100 text-green-700',
-  inactive: 'bg-neutral-100 text-neutral-600',
+const statusColors: Record<OrganizationStatus, string> = {
+  [OrganizationStatus.Prospect]: 'bg-amber-100 text-amber-700',
+  [OrganizationStatus.Customer]: 'bg-green-100 text-green-700',
+  [OrganizationStatus.Inactive]: 'bg-neutral-100 text-neutral-600',
 }
 
 export function OrgSelector({
@@ -73,10 +70,12 @@ export function OrgSelector({
   // Local state for immediate UI updates (before server refresh completes)
   const [localOrgId, setLocalOrgId] = useState<string | null>(serverSelectedOrgId ?? null)
 
-  // Sync local state when server props or URL change
-  useEffect(() => {
+  // Sync local state when server value changes (adjust-during-render pattern)
+  const [prevServerOrgId, setPrevServerOrgId] = useState(serverSelectedOrgId)
+  if (serverSelectedOrgId !== prevServerOrgId) {
+    setPrevServerOrgId(serverSelectedOrgId)
     setLocalOrgId(serverSelectedOrgId ?? null)
-  }, [serverSelectedOrgId])
+  }
 
   const selectedOrganizationId = localOrgId
 
@@ -86,23 +85,35 @@ export function OrgSelector({
   const selectedOrg = organizations.find((o) => o.id === selectedOrganizationId)
   const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
-  const handleSelectOrganization = (orgId: string) => {
-    setLocalOrgId(orgId) // Immediate UI update
-    localStorage.setItem(LAST_ORG_KEY, orgId)
-    localStorage.setItem(LAST_VIEW_KEY, 'organization')
-    setOrgCookie(orgId)
-    setOrgId(orgId)
+  // Navigate to an org — updates external systems (localStorage, cookie, URL) without React state.
+  // Safe to call from effects since it only touches external systems.
+  const navigateToOrg = useCallback(
+    (orgId: string) => {
+      localStorage.setItem(LAST_ORG_KEY, orgId)
+      localStorage.setItem(LAST_VIEW_KEY, 'organization')
+      setOrgCookie(orgId)
+      setOrgId(orgId)
 
-    // Update URL and refresh to re-fetch server data
-    const url = new URL(window.location.href)
-    url.searchParams.set('org', orgId)
-    const newUrl = pathname + url.search
+      const url = new URL(window.location.href)
+      url.searchParams.set('org', orgId)
+      const newUrl = pathname + url.search
 
-    startTransition(() => {
-      router.push(newUrl)
-      router.refresh()
-    })
-  }
+      startTransition(() => {
+        router.push(newUrl)
+        router.refresh()
+      })
+    },
+    [pathname, router, setOrgId]
+  )
+
+  // User-initiated org selection — immediate UI update + navigation
+  const handleSelectOrganization = useCallback(
+    (orgId: string) => {
+      setLocalOrgId(orgId)
+      navigateToOrg(orgId)
+    },
+    [navigateToOrg]
+  )
 
   const handleSelectOneTime = () => {
     setLocalOrgId(null) // Immediate UI update
@@ -114,9 +125,7 @@ export function OrgSelector({
     setOrgId(null) // React context
 
     // Notify useSyncExternalStore listeners (same-tab storage changes don't fire automatically)
-    window.dispatchEvent(
-      new StorageEvent('storage', { key: LAST_ORG_KEY, newValue: null })
-    )
+    window.dispatchEvent(new StorageEvent('storage', { key: LAST_ORG_KEY, newValue: null }))
 
     // Remove org param from URL and refresh to re-fetch server data
     startTransition(() => {
@@ -160,9 +169,9 @@ export function OrgSelector({
       // Non-SEO route with no org resolved server-side — pick one and navigate
       const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
       if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
-        handleSelectOrganization(lastOrgId)
+        navigateToOrg(lastOrgId)
       } else {
-        handleSelectOrganization(activeOrganizations[0].id)
+        navigateToOrg(activeOrganizations[0].id)
       }
       return
     }
@@ -176,10 +185,10 @@ export function OrgSelector({
     if (lastOrgId) {
       const org = activeOrganizations.find((o) => o.id === lastOrgId)
       if (org?.website_url) {
-        handleSelectOrganization(lastOrgId)
+        navigateToOrg(lastOrgId)
       }
     }
-  }, [selectedOrganizationId, activeOrganizations.length, isSeoRoute]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedOrganizationId, activeOrganizations, isSeoRoute, navigateToOrg])
 
   const getDomain = (url: string | null): string => {
     if (!url) return ''

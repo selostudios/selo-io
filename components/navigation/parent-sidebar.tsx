@@ -17,27 +17,14 @@ type SectionItem = {
   id: ParentSection
   name: string
   icon: React.ComponentType<{ className?: string }>
-  href: string
   internalOnly?: boolean
 }
 
 const sections: SectionItem[] = [
-  { id: 'home', name: 'Home', icon: House, href: '/dashboard' },
-  { id: 'seo', name: 'SEO', icon: LineChart, href: '/seo/site-audit' },
-  {
-    id: 'organizations',
-    name: 'Organizations',
-    icon: Building2,
-    href: '/organizations',
-    internalOnly: true,
-  },
-  {
-    id: 'support',
-    name: 'Support',
-    icon: LifeBuoy,
-    href: '/support',
-    internalOnly: true,
-  },
+  { id: 'home', name: 'Home', icon: House },
+  { id: 'seo', name: 'SEO', icon: LineChart },
+  { id: 'organizations', name: 'Organizations', icon: Building2, internalOnly: true },
+  { id: 'support', name: 'Support', icon: LifeBuoy, internalOnly: true },
 ]
 
 export function ParentSidebar({
