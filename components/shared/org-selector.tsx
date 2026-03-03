@@ -27,7 +27,9 @@ function setOrgCookie(orgId: string) {
 }
 
 function clearOrgCookie() {
-  document.cookie = `${SELO_ORG_COOKIE}=; path=/; max-age=0; SameSite=Lax`
+  // Set to empty string (not delete) so the server can distinguish
+  // "no org selected" from "no cookie at all" (which falls back to user's org)
+  document.cookie = `${SELO_ORG_COOKIE}=; path=/; max-age=31536000; SameSite=Lax`
 }
 
 function getOrgCookie(): string | null {
@@ -104,10 +106,17 @@ export function OrgSelector({
 
   const handleSelectOneTime = () => {
     setLocalOrgId(null) // Immediate UI update
+
+    // Wipe org from all storage locations
     localStorage.removeItem(LAST_ORG_KEY)
     localStorage.setItem(LAST_VIEW_KEY, 'one-time')
     clearOrgCookie()
-    setOrgId(null)
+    setOrgId(null) // React context
+
+    // Notify useSyncExternalStore listeners (same-tab storage changes don't fire automatically)
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: LAST_ORG_KEY, newValue: null })
+    )
 
     // Remove org param from URL and refresh to re-fetch server data
     startTransition(() => {
