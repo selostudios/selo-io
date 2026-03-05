@@ -8,8 +8,27 @@ interface FetchPageSpeedOptions {
   device: DeviceType
 }
 
-// Timeout for PageSpeed API requests (45 seconds - allows buffer before Vercel timeout)
-const PAGESPEED_TIMEOUT_MS = 45000
+// Timeout for PageSpeed API requests (90 seconds - the API frequently takes 30-60s+)
+const PAGESPEED_TIMEOUT_MS = 90_000
+const MAX_RETRIES = 1
+const RETRY_DELAY_MS = 3_000
+
+async function fetchWithTimeout(fullUrl: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(fullUrl, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
+}
 
 export async function fetchPageSpeedInsights({
   url,
@@ -27,35 +46,43 @@ export async function fetchPageSpeedInsights({
 
   const fullUrl = `${PAGESPEED_API_URL}?url=${encodeURIComponent(url)}&key=${apiKey}&strategy=${device}&${categoryParams}`
 
-  // Add timeout to prevent hanging requests
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS)
+  let lastError: Error | null = null
 
-  try {
-    const response = await fetch(fullUrl, {
-      headers: {
-        Accept: 'application/json',
-      },
-      signal: controller.signal,
-    })
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`[Performance] Retry ${attempt}/${MAX_RETRIES} for ${url} (${device})`)
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+      }
 
-    clearTimeout(timeoutId)
+      const response = await fetchWithTimeout(fullUrl, PAGESPEED_TIMEOUT_MS)
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`PageSpeed API error (${response.status}): ${errorText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`PageSpeed API error (${response.status}): ${errorText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+
+      // Retry on timeout or 5xx errors; don't retry client errors (4xx)
+      const isRetryable =
+        lastError.name === 'AbortError' || lastError.message.includes('PageSpeed API error (5')
+
+      if (!isRetryable || attempt >= MAX_RETRIES) {
+        if (lastError.name === 'AbortError') {
+          throw new Error(
+            `PageSpeed API timeout after ${PAGESPEED_TIMEOUT_MS / 1000}s for ${url} (${device})`
+          )
+        }
+        throw lastError
+      }
     }
-
-    return response.json()
-  } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(
-        `PageSpeed API timeout after ${PAGESPEED_TIMEOUT_MS / 1000}s for ${url} (${device})`
-      )
-    }
-    throw error
   }
+
+  // Should not reach here, but satisfy TypeScript
+  throw lastError ?? new Error('PageSpeed API request failed')
 }
 
 export function mapCategoryToRating(category: string | undefined): CWVRating | null {
