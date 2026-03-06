@@ -106,6 +106,7 @@ export function AuditDashboard({
         <Card>
           <CardHeader>
             <CardTitle>Score History</CardTitle>
+            <CardDescription>Higher is better — fewer issues found on site</CardDescription>
           </CardHeader>
           <CardContent>
             <ScoreTrendChart

@@ -4,7 +4,7 @@ import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Clock, Gauge, Loader2, Trash2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
@@ -88,6 +88,7 @@ export function PerformanceDashboard({
         <Card>
           <CardHeader>
             <CardTitle>Score History</CardTitle>
+            <CardDescription>Higher is better — faster page load and better UX</CardDescription>
           </CardHeader>
           <CardContent>
             <ScoreTrendChart

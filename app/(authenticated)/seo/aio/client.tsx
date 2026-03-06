@@ -348,6 +348,9 @@ export function AIOAuditClient({
           <Card>
             <CardHeader>
               <CardTitle>Score History</CardTitle>
+              <CardDescription>
+                Higher is better — more AI-ready content and structure
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ScoreTrendChart
