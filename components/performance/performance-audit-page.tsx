@@ -12,12 +12,11 @@ import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance
 import { DeviceType } from '@/lib/enums'
 
 interface PerformanceAuditPageProps {
-  id: string
   audit: PerformanceAudit
   results: PerformanceAuditResult[]
 }
 
-export function PerformanceAuditPage({ id, audit, results }: PerformanceAuditPageProps) {
+export function PerformanceAuditPage({ audit, results }: PerformanceAuditPageProps) {
   const [device, setDevice] = useState<DeviceType>(DeviceType.Mobile)
 
   // Check which devices have results

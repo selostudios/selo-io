@@ -19,5 +19,5 @@ export default async function PerformanceAuditResultsPage({ params }: Props) {
     )
   }
 
-  return <PerformanceAuditPage id={id} audit={audit} results={results} />
+  return <PerformanceAuditPage audit={audit} results={results} />
 }

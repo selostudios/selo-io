@@ -30,11 +30,6 @@ export async function resolveOrganizationId(
   const cookieStore = await cookies()
   const cookieOrgId = cookieStore.get(SELO_ORG_COOKIE)?.value
 
-  // One-time mode: cookie explicitly set to empty string
-  if (cookieOrgId === '') {
-    return null
-  }
-
   if (cookieOrgId) {
     return cookieOrgId
   }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { ChevronDown, Plus, Building2, Check, Link2 } from 'lucide-react'
+import { ChevronDown, Plus, Building2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { OrganizationStatus } from '@/lib/enums'
 import { useSetOrgId } from '@/hooks/use-org-context'
@@ -17,16 +17,10 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CreateOrganizationDialog } from '@/components/dashboard/create-organization-dialog'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
-import { LAST_ORG_KEY, LAST_VIEW_KEY, SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
+import { LAST_ORG_KEY, SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 function setOrgCookie(orgId: string) {
   document.cookie = `${SELO_ORG_COOKIE}=${orgId}; path=/; max-age=31536000; SameSite=Lax`
-}
-
-function clearOrgCookie() {
-  // Set to empty string (not delete) so the server can distinguish
-  // "no org selected" from "no cookie at all" (which falls back to user's org)
-  document.cookie = `${SELO_ORG_COOKIE}=; path=/; max-age=31536000; SameSite=Lax`
 }
 
 function getOrgCookie(): string | null {
@@ -39,9 +33,6 @@ interface OrgSelectorProps {
   isInternal: boolean
   selectedOrganizationId?: string | null
 }
-
-// SEO routes where "One-time URL" option should appear
-const SEO_ROUTES = ['/seo/site-audit', '/seo/page-speed', '/seo/aio', '/seo/reports']
 
 const statusColors: Record<OrganizationStatus, string> = {
   [OrganizationStatus.Prospect]: 'bg-amber-100 text-amber-700',
@@ -60,9 +51,6 @@ export function OrgSelector({
   const setOrgId = useSetOrgId()
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  // Determine if we're on an SEO route
-  const isSeoRoute = SEO_ROUTES.some((route) => pathname.startsWith(route))
-
   // Read org from URL searchParams, falling back to prop
   const urlOrgId = searchParams.get('org')
   const serverSelectedOrgId = urlOrgId || initialSelectedOrgId
@@ -79,9 +67,6 @@ export function OrgSelector({
 
   const selectedOrganizationId = localOrgId
 
-  // Check if one-time mode is active (only relevant on SEO routes)
-  const isOneTimeMode = isSeoRoute && !selectedOrganizationId
-
   const selectedOrg = organizations.find((o) => o.id === selectedOrganizationId)
   const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
@@ -90,7 +75,6 @@ export function OrgSelector({
   const navigateToOrg = useCallback(
     (orgId: string) => {
       localStorage.setItem(LAST_ORG_KEY, orgId)
-      localStorage.setItem(LAST_VIEW_KEY, 'organization')
       setOrgCookie(orgId)
       setOrgId(orgId)
 
@@ -114,25 +98,6 @@ export function OrgSelector({
     },
     [navigateToOrg]
   )
-
-  const handleSelectOneTime = () => {
-    setLocalOrgId(null) // Immediate UI update
-
-    // Wipe org from all storage locations
-    localStorage.removeItem(LAST_ORG_KEY)
-    localStorage.setItem(LAST_VIEW_KEY, 'one-time')
-    clearOrgCookie()
-    setOrgId(null) // React context
-
-    // Notify useSyncExternalStore listeners (same-tab storage changes don't fire automatically)
-    window.dispatchEvent(new StorageEvent('storage', { key: LAST_ORG_KEY, newValue: null }))
-
-    // Remove org param from URL and refresh to re-fetch server data
-    startTransition(() => {
-      router.push(pathname)
-      router.refresh()
-    })
-  }
 
   const handleOrganizationCreated = (organization: OrganizationForSelector) => {
     setDialogOpen(false)
@@ -159,56 +124,19 @@ export function OrgSelector({
     }
   }, [])
 
-  // For SEO routes with no org selected: handle one-time mode and restore last org.
-  // For non-SEO routes: the server already resolves the org from the cookie,
-  // so we only need to handle the edge case where there's no cookie AND no server-resolved org.
+  // If no org is selected, restore the last used org or pick the first active one.
   useEffect(() => {
     if (selectedOrganizationId || activeOrganizations.length === 0) return
 
-    if (!isSeoRoute) {
-      // Non-SEO route with no org resolved server-side — pick one and navigate
-      const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-      if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
-        navigateToOrg(lastOrgId)
-      } else {
-        navigateToOrg(activeOrganizations[0].id)
-      }
-      return
-    }
-
-    // SEO routes: check if we should restore one-time mode
-    const lastViewType = localStorage.getItem(LAST_VIEW_KEY)
-    if (lastViewType === 'one-time') return
-
-    // Try to restore last org if it has a website URL
     const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-    if (lastOrgId) {
-      const org = activeOrganizations.find((o) => o.id === lastOrgId)
-      if (org?.website_url) {
-        navigateToOrg(lastOrgId)
-      }
+    if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
+      navigateToOrg(lastOrgId)
+    } else {
+      navigateToOrg(activeOrganizations[0].id)
     }
-  }, [selectedOrganizationId, activeOrganizations, isSeoRoute, navigateToOrg])
-
-  const getDomain = (url: string | null): string => {
-    if (!url) return ''
-    try {
-      return new URL(url).hostname
-    } catch {
-      return url
-    }
-  }
+  }, [selectedOrganizationId, activeOrganizations, navigateToOrg])
 
   const getDisplayLabel = (): React.ReactNode => {
-    if (isOneTimeMode) {
-      return (
-        <span className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-neutral-500" aria-hidden="true" />
-          <span className="truncate">One-time Audits</span>
-        </span>
-      )
-    }
-
     if (!selectedOrg) {
       return <span className="text-neutral-500">Select organization</span>
     }
@@ -256,52 +184,24 @@ export function OrgSelector({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[300px]">
-          {/* One-time URL option (only on SEO routes) */}
-          {isSeoRoute && (
-            <>
-              <DropdownMenuItem onClick={handleSelectOneTime}>
-                <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                Enter one-time URL…
-                {isOneTimeMode && (
-                  <Check className="ml-auto h-4 w-4 text-green-600" aria-hidden="true" />
-                )}
-              </DropdownMenuItem>
-              {activeOrganizations.length > 0 && <DropdownMenuSeparator />}
-            </>
-          )}
-
           {/* Organizations list */}
-          {activeOrganizations.map((org) => {
-            const isDisabled = isSeoRoute && !org.website_url
-            return (
-              <DropdownMenuItem
-                key={org.id}
-                onClick={() => !isDisabled && handleSelectOrganization(org.id)}
-                className="flex items-center justify-between py-2"
-                disabled={isDisabled}
-              >
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate font-medium">{org.name}</span>
-                    <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
-                      {org.status}
-                    </Badge>
-                  </div>
-                  {isSeoRoute &&
-                    (org.website_url ? (
-                      <span className="text-muted-foreground truncate text-xs">
-                        {getDomain(org.website_url)}
-                      </span>
-                    ) : (
-                      <span className="truncate text-xs text-neutral-400">No website URL</span>
-                    ))}
-                </div>
-                {org.id === selectedOrganizationId && (
-                  <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
-                )}
-              </DropdownMenuItem>
-            )
-          })}
+          {activeOrganizations.map((org) => (
+            <DropdownMenuItem
+              key={org.id}
+              onClick={() => handleSelectOrganization(org.id)}
+              className="flex items-center justify-between py-2"
+            >
+              <div className="flex items-center gap-2">
+                <span className="truncate font-medium">{org.name}</span>
+                <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
+                  {org.status}
+                </Badge>
+              </div>
+              {org.id === selectedOrganizationId && (
+                <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
+              )}
+            </DropdownMenuItem>
+          ))}
 
           {activeOrganizations.length > 0 && <DropdownMenuSeparator />}
           <DropdownMenuItem onClick={() => setDialogOpen(true)}>
