@@ -18,8 +18,13 @@ export async function POST(request: Request) {
   }
 
   // Get request body
-  const body = await request.json().catch(() => ({}))
-  const { organizationId, url } = body as { organizationId?: string; url?: string }
+  let body: { organizationId?: string; url?: string }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+  }
+  const { organizationId, url } = body
 
   // Get user record with is_internal flag
   const { data: userRecord } = await supabase
@@ -99,6 +104,13 @@ export async function POST(request: Request) {
     )
   }
 
+  // Validate URL format
+  try {
+    new URL(websiteUrl)
+  } catch {
+    return NextResponse.json({ error: `Invalid URL: ${websiteUrl}` }, { status: 400 })
+  }
+
   // Create audit record
   const { data: audit, error } = await supabase
     .from('site_audits')
@@ -123,6 +135,13 @@ export async function POST(request: Request) {
       await runAuditBatch(audit.id, websiteUrl)
     } catch (err) {
       console.error('[Audit API] Background audit batch failed:', err)
+      // Update audit status to failed so it doesn't stay stuck as 'pending'
+      const serviceClient = (await import('@/lib/supabase/server')).createServiceClient()
+      await serviceClient
+        .from('site_audits')
+        .update({ status: 'failed' })
+        .eq('id', audit.id)
+        .in('status', ['pending', 'crawling', 'checking'])
     }
   })
 

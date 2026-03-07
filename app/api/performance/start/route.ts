@@ -18,8 +18,13 @@ export async function POST(request: Request) {
   const { isInternal, organizationId: userOrgId } = currentUser
 
   // Get request body
-  const body = await request.json().catch(() => ({}))
-  const { urls, organizationId } = body as { urls?: string[]; organizationId?: string }
+  let body: { urls?: string[]; organizationId?: string }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+  }
+  const { urls, organizationId } = body
 
   if (!urls || !Array.isArray(urls) || urls.length === 0) {
     return NextResponse.json({ error: 'URLs are required' }, { status: 400 })
@@ -86,6 +91,12 @@ export async function POST(request: Request) {
       await runPerformanceAudit(audit.id, urls)
     } catch (err) {
       console.error('[Performance API] Background audit failed:', err)
+      // Update audit status to failed so it doesn't stay stuck as 'pending'
+      await supabase
+        .from('performance_audits')
+        .update({ status: 'failed' })
+        .eq('id', audit.id)
+        .in('status', ['pending', 'running'])
     }
   })
 

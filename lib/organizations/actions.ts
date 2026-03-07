@@ -4,7 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Organization } from './types'
 import { OrganizationStatus } from './types'
-import { UserRole, InviteStatus } from '@/lib/enums'
+import { UserRole, InviteStatus, INVITE_EXPIRY_DAYS } from '@/lib/enums'
 
 export interface InviteInput {
   email: string
@@ -105,7 +105,13 @@ export async function getOrganization(
 ): Promise<{ success: boolean; organization?: Organization; error?: string }> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from('organizations').select('*').eq('id', id).single()
+  const { data, error } = await supabase
+    .from('organizations')
+    .select(
+      'id, name, website_url, status, industry, contact_email, contact_info, logo_url, primary_color, secondary_color, accent_color, created_at, updated_at'
+    )
+    .eq('id', id)
+    .single()
 
   if (error) {
     console.error('[Organizations Error]', {
@@ -208,7 +214,7 @@ export async function createOrganization(
 
     for (const inv of validInvites) {
       const expiresAt = new Date()
-      expiresAt.setDate(expiresAt.getDate() + 7)
+      expiresAt.setDate(expiresAt.getDate() + INVITE_EXPIRY_DAYS)
 
       const { data: invite, error: inviteError } = await serviceClient
         .from('invites')

@@ -14,8 +14,7 @@ const VALID_CAMPAIGN_TYPES = [
   'other',
 ] as const
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type CreateCampaignResult = { error: string } | { success: true; campaign: any }
+type CreateCampaignResult = { error: string } | { success: true; campaign: Record<string, unknown> }
 type ActionResult = { error: string } | { success: true }
 
 export async function createCampaign(formData: FormData): Promise<CreateCampaignResult> {

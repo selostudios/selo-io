@@ -1,52 +1,25 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { encryptCredentials } from '@/lib/utils/crypto'
-import { canManageIntegrations } from '@/lib/permissions'
+import { withIntegrationsAuth } from '@/lib/actions/with-auth'
+import { PlatformType } from '@/lib/enums'
 
 export async function connectPlatform(formData: FormData) {
   const platform_type = formData.get('platform_type') as string
   const credentials = formData.get('credentials') as string
 
-  enum PlatformType {
-    HUBSPOT = 'hubspot',
-    GOOGLE_ANALYTICS = 'google_analytics',
-    LINKEDIN = 'linkedin',
-    META = 'meta',
-    INSTAGRAM = 'instagram',
-  }
-
   // Validate platform type
   const validPlatforms: Array<PlatformType> = [
-    PlatformType.HUBSPOT,
-    PlatformType.GOOGLE_ANALYTICS,
-    PlatformType.LINKEDIN,
-    PlatformType.META,
-    PlatformType.INSTAGRAM,
+    PlatformType.HubSpot,
+    PlatformType.GoogleAnalytics,
+    PlatformType.LinkedIn,
+    PlatformType.Meta,
+    PlatformType.Instagram,
   ]
 
   if (!platform_type || !validPlatforms.includes(platform_type as PlatformType)) {
     return { error: 'Invalid platform type' }
-  }
-
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: 'Not authenticated' }
-  }
-
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!userRecord || !canManageIntegrations(userRecord.role)) {
-    return { error: 'Only admins can connect platforms' }
   }
 
   // Parse credentials
@@ -71,113 +44,74 @@ export async function connectPlatform(formData: FormData) {
     return { error: 'Missing required credentials for this platform' }
   }
 
-  // Encrypt credentials before storing
-  const encryptedCredentials = encryptCredentials(credentialsObj)
+  return withIntegrationsAuth(async (ctx) => {
+    // Encrypt credentials before storing
+    const encryptedCredentials = encryptCredentials(credentialsObj)
 
-  const { error } = await supabase.from('platform_connections').upsert(
-    {
-      organization_id: userRecord.organization_id,
-      platform_type,
-      credentials: { encrypted: encryptedCredentials },
-      status: 'active',
-    },
-    {
-      onConflict: 'organization_id,platform_type',
+    const { error } = await ctx.supabase.from('platform_connections').upsert(
+      {
+        organization_id: ctx.organizationId,
+        platform_type,
+        credentials: { encrypted: encryptedCredentials },
+        status: 'active',
+      },
+      {
+        onConflict: 'organization_id,platform_type',
+      }
+    )
+
+    if (error) {
+      console.error('[Connect Platform Error]', {
+        type: 'database_error',
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to connect platform. Please try again.' }
     }
-  )
 
-  if (error) {
-    console.error('[Connect Platform Error]', {
-      type: 'database_error',
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'Failed to connect platform. Please try again.' }
-  }
-
-  revalidatePath('/settings/integrations')
-  return { success: true }
+    revalidatePath('/settings/integrations')
+    return { success: true }
+  })
 }
 
 export async function disconnectPlatform(connectionId: string) {
-  const supabase = await createClient()
+  return withIntegrationsAuth(async (ctx) => {
+    // Delete with organization check for defense in depth
+    const { error } = await ctx.supabase
+      .from('platform_connections')
+      .delete()
+      .eq('id', connectionId)
+      .eq('organization_id', ctx.organizationId!)
 
-  // Authentication check
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: 'Not authenticated' }
-  }
+    if (error) {
+      console.error('[Disconnect Platform Error]', {
+        type: 'database_error',
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to disconnect platform. Please try again.' }
+    }
 
-  // Authorization check - verify admin role
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!userRecord || !canManageIntegrations(userRecord.role)) {
-    console.error('[Disconnect Platform Error]', {
-      type: 'unauthorized',
-      userId: user.id,
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'Only admins can disconnect platforms' }
-  }
-
-  // Delete with organization check for defense in depth
-  const { error } = await supabase
-    .from('platform_connections')
-    .delete()
-    .eq('id', connectionId)
-    .eq('organization_id', userRecord.organization_id)
-
-  if (error) {
-    console.error('[Disconnect Platform Error]', {
-      type: 'database_error',
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'Failed to disconnect platform. Please try again.' }
-  }
-
-  revalidatePath('/settings/integrations')
-  return { success: true }
+    revalidatePath('/settings/integrations')
+    return { success: true }
+  })
 }
 
 export async function updateConnectionDisplayName(connectionId: string, displayName: string) {
-  const supabase = await createClient()
+  return withIntegrationsAuth(async (ctx) => {
+    const { error } = await ctx.supabase
+      .from('platform_connections')
+      .update({ display_name: displayName.trim() || null })
+      .eq('id', connectionId)
+      .eq('organization_id', ctx.organizationId!)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: 'Not authenticated' }
-  }
+    if (error) {
+      console.error('[Update Display Name Error]', {
+        type: 'database_error',
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to update display name' }
+    }
 
-  const { data: userRecord } = await supabase
-    .from('users')
-    .select('organization_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!userRecord || !canManageIntegrations(userRecord.role)) {
-    return { error: 'Only admins can update integrations' }
-  }
-
-  const { error } = await supabase
-    .from('platform_connections')
-    .update({ display_name: displayName.trim() || null })
-    .eq('id', connectionId)
-    .eq('organization_id', userRecord.organization_id)
-
-  if (error) {
-    console.error('[Update Display Name Error]', {
-      type: 'database_error',
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'Failed to update display name' }
-  }
-
-  revalidatePath('/settings/integrations')
-  return { success: true }
+    revalidatePath('/settings/integrations')
+    return { success: true }
+  })
 }

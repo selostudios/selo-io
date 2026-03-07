@@ -3,7 +3,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageTeam, isInternalUser } from '@/lib/permissions'
-import { UserRole, InviteStatus } from '@/lib/enums'
+import { UserRole, InviteStatus, INVITE_EXPIRY_DAYS } from '@/lib/enums'
 import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export async function sendInvite(formData: FormData) {
@@ -80,7 +80,7 @@ export async function sendInvite(formData: FormData) {
 
   // Calculate new expiry (7 days from now)
   const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + 7)
+  expiresAt.setDate(expiresAt.getDate() + INVITE_EXPIRY_DAYS)
 
   // Use service client for internal users inviting to orgs they don't belong to
   const insertClient = isInternal ? createServiceClient() : supabase
@@ -212,7 +212,7 @@ export async function resendInvite(inviteId: string) {
 
   // Update expires_at to extend the invite
   const newExpiresAt = new Date()
-  newExpiresAt.setDate(newExpiresAt.getDate() + 7)
+  newExpiresAt.setDate(newExpiresAt.getDate() + INVITE_EXPIRY_DAYS)
 
   const { error: updateError } = await updateClient
     .from('invites')

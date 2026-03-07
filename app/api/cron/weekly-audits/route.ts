@@ -50,13 +50,18 @@ export async function POST(request: Request) {
         }
 
         if (audit) {
-          runAudit(audit.id, site.url).catch((err) => {
+          runAudit(audit.id, site.url).catch(async (err) => {
             console.error('[Cron Error]', {
               type: 'site_audit_failed',
               url: site.url,
               timestamp: new Date().toISOString(),
               error: err.message,
             })
+            await supabase
+              .from('site_audits')
+              .update({ status: 'failed' })
+              .eq('id', audit.id)
+              .in('status', ['pending', 'crawling', 'checking'])
           })
           results.site_audits_started++
 
@@ -93,13 +98,18 @@ export async function POST(request: Request) {
         }
 
         if (audit) {
-          runPerformanceAudit(audit.id, urls).catch((err) => {
+          runPerformanceAudit(audit.id, urls).catch(async (err) => {
             console.error('[Cron Error]', {
               type: 'performance_audit_failed',
               url: site.url,
               timestamp: new Date().toISOString(),
               error: err.message,
             })
+            await supabase
+              .from('performance_audits')
+              .update({ status: 'failed' })
+              .eq('id', audit.id)
+              .in('status', ['pending', 'running'])
           })
           results.performance_audits_started++
 

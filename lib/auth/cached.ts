@@ -49,7 +49,19 @@ export const getUserRecord = cache(async (userId: string): Promise<CachedUserRec
     .single()
 
   if (error || !data) return null
-  return data as unknown as CachedUserRecord
+
+  // The Supabase query returns nested organization as an object (from join),
+  // which matches CachedUserRecord shape but TypeScript can't infer it
+  const record = data as Record<string, unknown>
+  return {
+    id: record.id as string,
+    organization_id: record.organization_id as string | null,
+    role: record.role as string,
+    first_name: record.first_name as string | null,
+    last_name: record.last_name as string | null,
+    is_internal: record.is_internal as boolean | null,
+    organization: record.organization as CachedUserRecord['organization'],
+  }
 })
 
 /**

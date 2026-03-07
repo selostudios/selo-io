@@ -139,17 +139,25 @@ export async function getNewReportData(
 
   const { data: inProgressPerfAudits } = await inProgressPerfQuery
 
-  // Get domains for in-progress performance audits
+  // Get domains for in-progress performance audits (batch fetch to avoid N+1)
   const inProgressPerformanceAudits: (PerformanceAudit & { domain: string | null })[] = []
-  if (inProgressPerfAudits) {
-    for (const audit of inProgressPerfAudits) {
-      const { data: results } = await supabase
-        .from('performance_audit_results')
-        .select('url')
-        .eq('audit_id', audit.id)
-        .limit(1)
+  if (inProgressPerfAudits && inProgressPerfAudits.length > 0) {
+    const inProgressIds = inProgressPerfAudits.map((a) => a.id)
+    const { data: inProgressResults } = await supabase
+      .from('performance_audit_results')
+      .select('audit_id, url')
+      .in('audit_id', inProgressIds)
 
-      const domain = results?.[0]?.url ? extractDomain(results[0].url) : null
+    const firstUrlByAudit: Record<string, string> = {}
+    for (const result of inProgressResults ?? []) {
+      if (!firstUrlByAudit[result.audit_id]) {
+        firstUrlByAudit[result.audit_id] = result.url
+      }
+    }
+
+    for (const audit of inProgressPerfAudits) {
+      const url = firstUrlByAudit[audit.id]
+      const domain = url ? extractDomain(url) : null
       inProgressPerformanceAudits.push({
         ...audit,
         domain,

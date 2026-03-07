@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { paginateQuery } from '@/lib/supabase/paginate'
 import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types'
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/seo/reports/[id]/transform'
@@ -37,75 +38,43 @@ export async function getSharedSiteAuditData(auditId: string): Promise<SharedSit
     return null
   }
 
-  // Fetch all checks (paginate to overcome 1000 row limit)
-  const allChecks: SiteAuditCheck[] = []
-  const pageSize = 1000
-  let offset = 0
-  let hasMore = true
+  try {
+    const [checks, pages] = await Promise.all([
+      paginateQuery<SiteAuditCheck>(
+        (sb, range) =>
+          sb
+            .from('site_audit_checks')
+            .select('*')
+            .eq('audit_id', auditId)
+            .order('created_at', { ascending: true })
+            .range(range.from, range.to),
+        supabase
+      ),
+      paginateQuery<SiteAuditPage>(
+        (sb, range) =>
+          sb
+            .from('site_audit_pages')
+            .select('*')
+            .eq('audit_id', auditId)
+            .order('crawled_at', { ascending: true })
+            .range(range.from, range.to),
+        supabase
+      ),
+    ])
 
-  while (hasMore) {
-    const { data: checksPage, error: checksError } = await supabase
-      .from('site_audit_checks')
-      .select('*')
-      .eq('audit_id', auditId)
-      .order('created_at', { ascending: true })
-      .range(offset, offset + pageSize - 1)
-
-    if (checksError) {
-      console.error('[Shared Site Audit Error]', {
-        type: 'checks_fetch_failed',
-        auditId,
-        error: checksError.message,
-        timestamp: new Date().toISOString(),
-      })
-      return null
+    return {
+      audit: audit as SiteAudit,
+      checks,
+      pages,
     }
-
-    if (checksPage && checksPage.length > 0) {
-      allChecks.push(...(checksPage as SiteAuditCheck[]))
-      offset += pageSize
-      hasMore = checksPage.length === pageSize
-    } else {
-      hasMore = false
-    }
-  }
-
-  // Fetch all pages (paginate to overcome 1000 row limit)
-  const allPages: SiteAuditPage[] = []
-  offset = 0
-  hasMore = true
-
-  while (hasMore) {
-    const { data: pagesPage, error: pagesError } = await supabase
-      .from('site_audit_pages')
-      .select('*')
-      .eq('audit_id', auditId)
-      .order('crawled_at', { ascending: true })
-      .range(offset, offset + pageSize - 1)
-
-    if (pagesError) {
-      console.error('[Shared Site Audit Error]', {
-        type: 'pages_fetch_failed',
-        auditId,
-        error: pagesError.message,
-        timestamp: new Date().toISOString(),
-      })
-      return null
-    }
-
-    if (pagesPage && pagesPage.length > 0) {
-      allPages.push(...(pagesPage as SiteAuditPage[]))
-      offset += pageSize
-      hasMore = pagesPage.length === pageSize
-    } else {
-      hasMore = false
-    }
-  }
-
-  return {
-    audit: audit as SiteAudit,
-    checks: allChecks,
-    pages: allPages,
+  } catch (err) {
+    console.error('[Shared Site Audit Error]', {
+      type: 'paginated_fetch_failed',
+      auditId,
+      error: err instanceof Error ? err.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
+    return null
   }
 }
 
