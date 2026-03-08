@@ -34,7 +34,7 @@ interface NavigationGroup {
 
 const homeNavigation: NavigationGroup[] = [
   {
-    header: 'Dashboard',
+    header: 'Marketing',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Campaigns', href: '/dashboard/campaigns', icon: Megaphone },
@@ -53,7 +53,6 @@ const homeNavigation: NavigationGroup[] = [
     items: [{ name: 'Full Site Report', href: '/seo/reports', icon: FileText }],
   },
   {
-    header: 'Settings',
     items: [{ name: 'Settings', href: '/settings/organization', icon: Settings }],
   },
 ]

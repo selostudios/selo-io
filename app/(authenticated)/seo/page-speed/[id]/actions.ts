@@ -49,9 +49,11 @@ export async function getPerformanceAuditData(id: string): Promise<{
     notFound()
   }
 
-  // Verify organization ownership or admin/developer access
+  // Verify organization ownership, one-time audit creator, or admin/developer access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id || canAccessAllAudits(userRecord)
+    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id === null && audit.created_by === user.id) ||
+    canAccessAllAudits(userRecord)
 
   if (!hasAccess) {
     console.error('[Performance Error]', {

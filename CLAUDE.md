@@ -249,6 +249,33 @@ tests/
   helpers/              # Test utilities (db.ts, mocks.ts, seed.ts)
 ```
 
+### Navigation Architecture
+
+Two-tier sidebar: **ParentSidebar** (64px icon strip) + **ChildSidebar** (304px menu, collapsible). Config-driven via `components/navigation/`.
+
+**Parent sections:**
+
+- **Home** (all users) — Marketing (Dashboard, Campaigns), Audits (SEO, Page Speed, AIO), Reports, Settings
+- **Quick Audit** (internal only) — One-time URL audits without an organization
+- **Organizations** (internal only) — Manage all organizations
+- **Support** (internal + external_developer with feedback permission)
+
+**Route-to-section mapping:** `/seo/*` and `/dashboard/*` routes map to the Home section. `/quick-audit` maps to Quick Audit. Section is derived from pathname in `navigation-shell.tsx`.
+
+**Org parameter (`?org=`):** Preserved across navigation for `/seo/*`, `/settings/*`, and `/dashboard/*` routes.
+
+### Quick Audit (One-Time URL Audits)
+
+**Business purpose:** Selo employees use Quick Audit to run audits on prospective clients' websites _before_ converting them to an organization. This lets them understand what a business needs and present findings as a sales tool. Once the prospect sees value, they become an organization in the system.
+
+**How it works:**
+
+- `/quick-audit` page with URL input + 3 audit type cards (SEO, Page Speed, AIO)
+- Calls existing API endpoints with `organizationId: null`
+- All audit tables have nullable `organization_id` + `created_by` for ownership
+- RLS policies allow access via `(organization_id IS NULL AND created_by = auth.uid())`
+- Action-layer access checks must also handle one-time audits (check `created_by` when `organization_id` is null)
+
 ### Testing Strategy
 
 - **Unit (60%)**: Components, utilities with Vitest + Testing Library
