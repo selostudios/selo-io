@@ -7,8 +7,8 @@ import { ChildSidebar } from './child-sidebar'
 import { useActiveAudit } from '@/hooks/use-active-audit'
 
 function getSectionFromPathname(pathname: string): ParentSection {
-  if (pathname.startsWith('/seo')) {
-    return 'seo'
+  if (pathname.startsWith('/quick-audit')) {
+    return 'quick-audit'
   }
   if (pathname.startsWith('/organizations')) {
     return 'organizations'
@@ -22,7 +22,7 @@ function getSectionFromPathname(pathname: string): ParentSection {
 
 const sectionDefaultRoutes: Record<ParentSection, string> = {
   home: '/dashboard',
-  seo: '/seo/site-audit',
+  'quick-audit': '/quick-audit',
   organizations: '/organizations',
   support: '/support',
 }
@@ -56,11 +56,8 @@ export function NavigationShell({
       if (section !== activeSection) {
         const baseRoute = sectionDefaultRoutes[section]
 
-        // Preserve org parameter for home and seo sections
-        const href =
-          orgParam && (section === 'home' || section === 'seo')
-            ? `${baseRoute}?org=${orgParam}`
-            : baseRoute
+        // Preserve org parameter for home section
+        const href = orgParam && section === 'home' ? `${baseRoute}?org=${orgParam}` : baseRoute
 
         router.push(href)
       }

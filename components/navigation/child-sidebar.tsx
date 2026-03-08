@@ -14,6 +14,7 @@ import {
   Sparkles,
   FileText,
   PanelLeftClose,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -33,15 +34,12 @@ interface NavigationGroup {
 
 const homeNavigation: NavigationGroup[] = [
   {
+    header: 'Dashboard',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Campaigns', href: '/dashboard/campaigns', icon: Megaphone },
-      { name: 'Settings', href: '/settings/organization', icon: Settings },
     ],
   },
-]
-
-const seoNavigation: NavigationGroup[] = [
   {
     header: 'Audits',
     items: [
@@ -53,6 +51,16 @@ const seoNavigation: NavigationGroup[] = [
   {
     header: 'Reports',
     items: [{ name: 'Full Site Report', href: '/seo/reports', icon: FileText }],
+  },
+  {
+    header: 'Settings',
+    items: [{ name: 'Settings', href: '/settings/organization', icon: Settings }],
+  },
+]
+
+const quickAuditNavigation: NavigationGroup[] = [
+  {
+    items: [{ name: 'Run Audit', href: '/quick-audit', icon: Zap }],
   },
 ]
 
@@ -70,7 +78,7 @@ const supportNavigation: NavigationGroup[] = [
 
 const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
   home: homeNavigation,
-  seo: seoNavigation,
+  'quick-audit': quickAuditNavigation,
   organizations: organizationsNavigation,
   support: supportNavigation,
 }
@@ -148,7 +156,7 @@ export function ChildSidebar({
                 let href = item.href
                 if (
                   orgParam &&
-                  (activeSection === 'seo' ||
+                  (item.href.startsWith('/seo') ||
                     item.href.startsWith('/settings') ||
                     item.href.startsWith('/dashboard'))
                 ) {

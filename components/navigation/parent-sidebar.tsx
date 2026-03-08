@@ -1,10 +1,10 @@
 'use client'
 
-import { House, LineChart, Building2, LifeBuoy } from 'lucide-react'
+import { House, Zap, Building2, LifeBuoy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export type ParentSection = 'home' | 'seo' | 'organizations' | 'support'
+export type ParentSection = 'home' | 'quick-audit' | 'organizations' | 'support'
 
 interface ParentSidebarProps {
   activeSection: ParentSection
@@ -22,7 +22,7 @@ type SectionItem = {
 
 const sections: SectionItem[] = [
   { id: 'home', name: 'Home', icon: House },
-  { id: 'seo', name: 'SEO', icon: LineChart },
+  { id: 'quick-audit', name: 'Quick Audit', icon: Zap, internalOnly: true },
   { id: 'organizations', name: 'Organizations', icon: Building2, internalOnly: true },
   { id: 'support', name: 'Support', icon: LifeBuoy, internalOnly: true },
 ]
