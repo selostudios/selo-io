@@ -13,6 +13,7 @@
 ### Task 1: Update Parent Sidebar — replace SEO with Quick Audit
 
 **Files:**
+
 - Modify: `components/navigation/parent-sidebar.tsx`
 
 **Step 1: Update the ParentSection type and sections array**
@@ -46,6 +47,7 @@ Expected: PASS
 ### Task 2: Update Child Sidebar — merge SEO nav into Home
 
 **Files:**
+
 - Modify: `components/navigation/child-sidebar.tsx`
 
 **Step 1: Restructure the navigation config**
@@ -139,6 +141,7 @@ Expected: PASS
 ### Task 3: Update Navigation Shell — route mapping
 
 **Files:**
+
 - Modify: `components/navigation/navigation-shell.tsx`
 
 **Step 1: Update `getSectionFromPathname`**
@@ -179,10 +182,7 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
 The current code preserves org for `section === 'home' || section === 'seo'`. Since there's no `seo` section anymore, simplify:
 
 ```tsx
-const href =
-  orgParam && section === 'home'
-    ? `${baseRoute}?org=${orgParam}`
-    : baseRoute
+const href = orgParam && section === 'home' ? `${baseRoute}?org=${orgParam}` : baseRoute
 ```
 
 **Step 4: Run lint**
@@ -195,6 +195,7 @@ Expected: PASS
 ### Task 4: Create Quick Audit page
 
 **Files:**
+
 - Create: `app/(authenticated)/quick-audit/page.tsx`
 
 **Step 1: Create the Quick Audit page**
@@ -347,7 +348,9 @@ export function QuickAuditClient() {
         <CardContent>
           <div className="flex gap-3">
             <div className="flex-1">
-              <Label htmlFor="url" className="sr-only">URL</Label>
+              <Label htmlFor="url" className="sr-only">
+                URL
+              </Label>
               <Input
                 id="url"
                 placeholder="example.com"
@@ -443,13 +446,13 @@ git commit -m "refactor: restructure navigation — move audits/reports into Hom
 
 ## Summary of Changes
 
-| File | Change |
-|------|--------|
-| `components/navigation/parent-sidebar.tsx` | Replace `seo` section with `quick-audit` (internal only) |
-| `components/navigation/child-sidebar.tsx` | Merge SEO nav groups into Home, add Settings group, add quick-audit nav |
-| `components/navigation/navigation-shell.tsx` | Map `/seo/*` to `home`, add `/quick-audit` mapping |
-| `app/(authenticated)/quick-audit/page.tsx` | New page — server component with internal-only guard |
-| `app/(authenticated)/quick-audit/client.tsx` | New page — URL input + 3 audit type cards |
+| File                                         | Change                                                                  |
+| -------------------------------------------- | ----------------------------------------------------------------------- |
+| `components/navigation/parent-sidebar.tsx`   | Replace `seo` section with `quick-audit` (internal only)                |
+| `components/navigation/child-sidebar.tsx`    | Merge SEO nav groups into Home, add Settings group, add quick-audit nav |
+| `components/navigation/navigation-shell.tsx` | Map `/seo/*` to `home`, add `/quick-audit` mapping                      |
+| `app/(authenticated)/quick-audit/page.tsx`   | New page — server component with internal-only guard                    |
+| `app/(authenticated)/quick-audit/client.tsx` | New page — URL input + 3 audit type cards                               |
 
 **No route changes:** All existing `/seo/*` URLs continue to work. The SEO layout (`app/(authenticated)/seo/layout.tsx`) is unchanged.
 
