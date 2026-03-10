@@ -16,7 +16,7 @@ export function UnifiedScoreCards({
   aiReadiness,
 }: UnifiedScoreCardsProps) {
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4" data-testid="audit-score-cards">
       <ScoreCard
         label="Overall"
         score={overall}

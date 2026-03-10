@@ -1,0 +1,142 @@
+import { test, expect } from '@playwright/test'
+import { testUsers } from '../fixtures'
+
+test.describe('Unified Audit', () => {
+  test.beforeEach(async ({ page }) => {
+    // Login as admin user
+    await page.goto('/login')
+    await page.fill('input[name="email"]', testUsers.admin.email)
+    await page.fill('input[name="password"]', testUsers.admin.password)
+    await page.click('button[type="submit"]')
+    await expect(page).toHaveURL(/\/dashboard/)
+  })
+
+  test('navigates to unified audit page', async ({ page }) => {
+    await page.goto('/seo/audit')
+
+    await expect(page).toHaveURL(/\/seo\/audit/)
+    await expect(page.locator('[data-testid="unified-audit-page-title"]')).toHaveText(
+      'Unified Audit'
+    )
+  })
+
+  test('shows URL input for one-time audit', async ({ page }) => {
+    await page.goto('/seo/audit')
+
+    // Should show URL input and run button
+    await expect(page.locator('[data-testid="audit-url-input"]')).toBeVisible()
+    await expect(page.locator('[data-testid="audit-run-button"]')).toBeVisible()
+  })
+
+  test('run button is disabled without URL', async ({ page }) => {
+    await page.goto('/seo/audit')
+
+    await expect(page.locator('[data-testid="audit-run-button"]')).toBeDisabled()
+  })
+
+  test('run button is enabled with URL', async ({ page }) => {
+    await page.goto('/seo/audit')
+
+    await page.locator('[data-testid="audit-url-input"]').fill('https://example.com')
+    await expect(page.locator('[data-testid="audit-run-button"]')).toBeEnabled()
+  })
+
+  test('starts audit and shows progress', async ({ page }) => {
+    await page.goto('/seo/audit')
+
+    await page.locator('[data-testid="audit-url-input"]').fill('https://example.com')
+    await page.locator('[data-testid="audit-run-button"]').click()
+
+    // Should navigate to audit detail page with progress view
+    await expect(page).toHaveURL(/\/seo\/audit\/[a-f0-9-]+/)
+    await expect(page.locator('[data-testid="audit-progress"]')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('completed audit shows score cards and tabs', async ({ page }) => {
+    // This test requires a completed audit to exist in the database
+    // Navigate to audit list and click the first completed audit
+    await page.goto('/seo/audit')
+
+    // Look for a "View" link to a completed audit
+    const viewButton = page.locator('a:has-text("View")').first()
+    const hasCompletedAudit = await viewButton.isVisible().catch(() => false)
+
+    if (!hasCompletedAudit) {
+      test.skip()
+      return
+    }
+
+    await viewButton.click()
+    await expect(page).toHaveURL(/\/seo\/audit\/[a-f0-9-]+/)
+
+    // Verify score cards are displayed
+    await expect(page.locator('[data-testid="audit-score-cards"]')).toBeVisible()
+    await expect(page.locator('[data-testid="audit-report-title"]')).toBeVisible()
+
+    // Verify tabs are present
+    await expect(page.locator('[data-testid="tab-overview"]')).toBeVisible()
+    await expect(page.locator('[data-testid="tab-seo"]')).toBeVisible()
+    await expect(page.locator('[data-testid="tab-performance"]')).toBeVisible()
+    await expect(page.locator('[data-testid="tab-ai-readiness"]')).toBeVisible()
+
+    // Switch to SEO tab
+    await page.locator('[data-testid="tab-seo"]').click()
+    await expect(page).toHaveURL(/tab=seo/)
+
+    // Switch to Performance tab
+    await page.locator('[data-testid="tab-performance"]').click()
+    await expect(page).toHaveURL(/tab=performance/)
+
+    // Switch to AI Readiness tab
+    await page.locator('[data-testid="tab-ai-readiness"]').click()
+    await expect(page).toHaveURL(/tab=ai-readiness/)
+
+    // Switch back to Overview tab
+    await page.locator('[data-testid="tab-overview"]').click()
+    // Overview removes the tab param
+    await expect(page).not.toHaveURL(/tab=/)
+  })
+
+  test('old site-audit page shows deprecation banner', async ({ page }) => {
+    await page.goto('/seo/site-audit')
+
+    await expect(page.getByText('has been replaced by the')).toBeVisible()
+    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+  })
+
+  test('old page-speed page shows deprecation banner', async ({ page }) => {
+    await page.goto('/seo/page-speed')
+
+    await expect(page.getByText('has been replaced by the')).toBeVisible()
+    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+  })
+
+  test('old aio page shows deprecation banner', async ({ page }) => {
+    await page.goto('/seo/aio')
+
+    await expect(page.getByText('has been replaced by the')).toBeVisible()
+    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+  })
+})
+
+test.describe('Quick Audit (Unified)', () => {
+  test.beforeEach(async ({ page }) => {
+    // Login as developer (internal) user
+    await page.goto('/login')
+    await page.fill('input[name="email"]', testUsers.developer.email)
+    await page.fill('input[name="password"]', testUsers.developer.password)
+    await page.click('button[type="submit"]')
+    await expect(page).toHaveURL(/\/dashboard/)
+  })
+
+  test('quick audit page has unified audit flow', async ({ page }) => {
+    await page.goto('/quick-audit')
+
+    // Should show single URL input and Run Audit button
+    await expect(page.locator('[data-testid="quick-audit-url-input"]')).toBeVisible()
+    await expect(page.locator('[data-testid="quick-audit-run-button"]')).toBeVisible()
+
+    // Should mention "Unified Audit" in the description
+    await expect(page.getByText('Comprehensive analysis')).toBeVisible()
+  })
+})

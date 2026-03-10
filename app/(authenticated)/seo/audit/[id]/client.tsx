@@ -107,7 +107,9 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
         {/* Site Info */}
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Audit Report:</h1>
+            <h1 className="text-2xl font-bold" data-testid="audit-report-title">
+              Audit Report:
+            </h1>
             <a
               href={audit.url}
               target="_blank"
@@ -198,12 +200,20 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
         </div>
 
         {/* Tabbed Content */}
-        <Tabs value={currentTab} onValueChange={handleTabChange}>
+        <Tabs value={currentTab} onValueChange={handleTabChange} data-testid="audit-tabs">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="seo">SEO ({seoChecks.length})</TabsTrigger>
-            <TabsTrigger value="performance">Performance ({performanceChecks.length})</TabsTrigger>
-            <TabsTrigger value="ai-readiness">AI Readiness ({aiChecks.length})</TabsTrigger>
+            <TabsTrigger value="overview" data-testid="tab-overview">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="seo" data-testid="tab-seo">
+              SEO ({seoChecks.length})
+            </TabsTrigger>
+            <TabsTrigger value="performance" data-testid="tab-performance">
+              Performance ({performanceChecks.length})
+            </TabsTrigger>
+            <TabsTrigger value="ai-readiness" data-testid="tab-ai-readiness">
+              AI Readiness ({aiChecks.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">

@@ -276,7 +276,7 @@ export function UnifiedLiveProgress({ auditId, initialStatus }: UnifiedLiveProgr
   const currentPhaseIndex = phases.findIndex((p) => p.key === effectiveStatus)
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center p-4">
+    <div className="flex min-h-[60vh] items-center justify-center p-4" data-testid="audit-progress">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           {/* Phase indicator */}

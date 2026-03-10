@@ -124,7 +124,9 @@ export function UnifiedAuditClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Unified Audit</h1>
+        <h1 className="text-3xl font-bold" data-testid="unified-audit-page-title">
+          Unified Audit
+        </h1>
         <p className="text-muted-foreground mt-1">
           Comprehensive site analysis across SEO, Performance, and AI Readiness
         </p>
@@ -189,10 +191,12 @@ export function UnifiedAuditClient({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && oneTimeUrl.trim()) handleStartAudit()
                   }}
+                  data-testid="audit-url-input"
                 />
                 <Button
                   onClick={() => handleStartAudit()}
                   disabled={!oneTimeUrl.trim() || isStarting}
+                  data-testid="audit-run-button"
                 >
                   {isStarting ? (
                     <>
