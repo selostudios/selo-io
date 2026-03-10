@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { paginateQuery } from '@/lib/supabase/paginate'
 import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types'
+import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/seo/reports/[id]/transform'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
@@ -12,6 +13,12 @@ export interface SharedSiteAuditData {
   audit: SiteAudit
   checks: SiteAuditCheck[]
   pages: SiteAuditPage[]
+}
+
+export interface SharedUnifiedAuditData {
+  audit: UnifiedAudit
+  checks: AuditCheck[]
+  pages: AuditPage[]
 }
 
 /**
@@ -147,4 +154,69 @@ export async function getSharedReportData(
   }
 
   return transformToPresentation(reportWithAudits, auditData)
+}
+
+/**
+ * Fetch unified audit data for a shared link
+ * Uses service client to bypass RLS for public access
+ */
+export async function getSharedUnifiedAuditData(
+  auditId: string
+): Promise<SharedUnifiedAuditData | null> {
+  const supabase = await createServiceClient()
+
+  const { data: audit, error: auditError } = await supabase
+    .from('audits')
+    .select('*')
+    .eq('id', auditId)
+    .single()
+
+  if (auditError || !audit) {
+    console.error('[Shared Unified Audit Error]', {
+      type: 'audit_fetch_failed',
+      auditId,
+      error: auditError?.message,
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
+
+  try {
+    const [checks, pages] = await Promise.all([
+      paginateQuery<AuditCheck>(
+        (sb, range) =>
+          sb
+            .from('audit_checks')
+            .select('*')
+            .eq('audit_id', auditId)
+            .order('created_at', { ascending: true })
+            .range(range.from, range.to),
+        supabase
+      ),
+      paginateQuery<AuditPage>(
+        (sb, range) =>
+          sb
+            .from('audit_pages')
+            .select('*')
+            .eq('audit_id', auditId)
+            .order('created_at', { ascending: true })
+            .range(range.from, range.to),
+        supabase
+      ),
+    ])
+
+    return {
+      audit: audit as UnifiedAudit,
+      checks,
+      pages,
+    }
+  } catch (err) {
+    console.error('[Shared Unified Audit Error]', {
+      type: 'paginated_fetch_failed',
+      auditId,
+      error: err instanceof Error ? err.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
 }

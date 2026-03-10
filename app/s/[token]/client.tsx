@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ReportPresentation } from '@/components/reports/report-presentation'
 import { AuditReport } from '@/components/audit/audit-report'
+import { UnifiedAuditDetailClient } from '@/app/(authenticated)/seo/audit/[id]/client'
 import { accessSharedLink } from '@/lib/share/actions'
-import { getSharedReportData, getSharedSiteAuditData } from './actions'
+import { getSharedReportData, getSharedSiteAuditData, getSharedUnifiedAuditData } from './actions'
 import { getShareErrorMessage, getResourceTypeLabel } from '@/lib/share/utils'
 import { SharedResourceType } from '@/lib/enums'
 import type { ReportPresentationData } from '@/lib/reports/types'
-import type { SharedSiteAuditData } from './actions'
+import type { SharedSiteAuditData, SharedUnifiedAuditData } from './actions'
 
 interface SharedResourceClientProps {
   token: string
@@ -24,6 +25,7 @@ interface SharedResourceClientProps {
 type ResourceData =
   | { type: 'report'; data: ReportPresentationData }
   | { type: 'site_audit'; data: SharedSiteAuditData }
+  | { type: 'unified_audit'; data: SharedUnifiedAuditData }
 
 export function SharedResourceClient({
   token,
@@ -74,6 +76,16 @@ export function SharedResourceClient({
               return
             }
             setResourceData({ type: 'site_audit', data: auditData })
+            break
+          }
+          case SharedResourceType.UnifiedAudit: {
+            const unifiedData = await getSharedUnifiedAuditData(result.resource_id!)
+            if (!unifiedData) {
+              setError('Failed to load audit data')
+              setIsLoading(false)
+              return
+            }
+            setResourceData({ type: 'unified_audit', data: unifiedData })
             break
           }
           default:
@@ -187,6 +199,16 @@ export function SharedResourceClient({
               checks={resourceData.data.checks}
               pages={resourceData.data.pages}
               isPublic
+            />
+          </div>
+        )
+      case 'unified_audit':
+        return (
+          <div className="p-6">
+            <UnifiedAuditDetailClient
+              audit={resourceData.data.audit}
+              checks={resourceData.data.checks}
+              pages={resourceData.data.pages}
             />
           </div>
         )

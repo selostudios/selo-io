@@ -42,7 +42,7 @@ export function NavigationShell({
   const router = useRouter()
   const searchParams = useSearchParams()
   const orgParam = searchParams.get('org')
-  const { hasSiteAudit, hasPerformanceAudit, hasAioAudit } = useActiveAudit(orgParam)
+  const { hasActiveAudit } = useActiveAudit(orgParam)
 
   const [isChildCollapsed, setIsChildCollapsed] = useState(false)
 
@@ -75,9 +75,7 @@ export function NavigationShell({
       />
       <ChildSidebar
         activeSection={activeSection}
-        hasSiteAudit={hasSiteAudit}
-        hasPerformanceAudit={hasPerformanceAudit}
-        hasAioAudit={hasAioAudit}
+        hasActiveAudit={hasActiveAudit}
         userRole={userRole}
         isCollapsed={isChildCollapsed}
         onToggleCollapse={() => setIsChildCollapsed(!isChildCollapsed)}

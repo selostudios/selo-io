@@ -2,42 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileSearch, Gauge, Sparkles, Loader2, ExternalLink } from 'lucide-react'
+import { ClipboardCheck, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
-type AuditType = 'site-audit' | 'page-speed' | 'aio'
-
-const auditTypes = [
-  {
-    id: 'site-audit' as AuditType,
-    name: 'SEO Audit',
-    description: 'Comprehensive site crawl checking SEO, AI-readiness, and technical issues',
-    icon: FileSearch,
-  },
-  {
-    id: 'page-speed' as AuditType,
-    name: 'Page Speed',
-    description: 'Core Web Vitals and performance analysis via PageSpeed Insights',
-    icon: Gauge,
-  },
-  {
-    id: 'aio' as AuditType,
-    name: 'AI Optimization',
-    description: 'Check how well your site is optimized for AI search engines',
-    icon: Sparkles,
-  },
-]
+import { notifyAuditStarted } from '@/hooks/use-active-audit'
 
 export function QuickAuditClient() {
   const router = useRouter()
   const [url, setUrl] = useState('')
-  const [loading, setLoading] = useState<AuditType | null>(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleRunAudit = async (type: AuditType) => {
+  const handleRunAudit = async () => {
     if (!url.trim()) {
       setError('Please enter a URL')
       return
@@ -55,36 +33,14 @@ export function QuickAuditClient() {
       return
     }
 
-    setLoading(type)
+    setLoading(true)
     setError(null)
 
     try {
-      let endpoint: string
-      let body: Record<string, unknown>
-      let redirectPath: string
-
-      switch (type) {
-        case 'site-audit':
-          endpoint = '/api/audit/start'
-          body = { url: normalizedUrl }
-          redirectPath = '/seo/site-audit'
-          break
-        case 'page-speed':
-          endpoint = '/api/performance/start'
-          body = { urls: [normalizedUrl] }
-          redirectPath = '/seo/page-speed'
-          break
-        case 'aio':
-          endpoint = '/api/aio/audit/start'
-          body = { url: normalizedUrl, organizationId: null, sampleSize: 5 }
-          redirectPath = '/seo/aio'
-          break
-      }
-
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/unified-audit/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ url: normalizedUrl, organizationId: null }),
       })
 
       if (!response.ok) {
@@ -93,24 +49,26 @@ export function QuickAuditClient() {
       }
 
       const data = await response.json()
-      const auditId = data.auditId
-
-      // Navigate to the audit detail page
-      router.push(`${redirectPath}/${auditId}`)
+      notifyAuditStarted()
+      router.push(`/seo/audit/${data.auditId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start audit')
     } finally {
-      setLoading(null)
+      setLoading(false)
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* URL Input */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Website URL</CardTitle>
-          <CardDescription>Enter the URL you want to audit</CardDescription>
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="h-5 w-5 text-neutral-500" />
+            <CardTitle className="text-base">Run Unified Audit</CardTitle>
+          </div>
+          <CardDescription>
+            Comprehensive analysis covering SEO, Performance, and AI Readiness in a single audit
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
@@ -128,12 +86,27 @@ export function QuickAuditClient() {
                   setError(null)
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && url.trim()) {
                     e.preventDefault()
+                    handleRunAudit()
                   }
                 }}
               />
             </div>
+            <Button
+              data-testid="quick-audit-run-button"
+              onClick={handleRunAudit}
+              disabled={loading || !url.trim()}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Starting...
+                </>
+              ) : (
+                'Run Audit'
+              )}
+            </Button>
           </div>
           {error && (
             <p className="mt-2 text-sm text-red-600" data-testid="quick-audit-error">
@@ -142,52 +115,6 @@ export function QuickAuditClient() {
           )}
         </CardContent>
       </Card>
-
-      {/* Audit Type Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {auditTypes.map((audit) => {
-          const Icon = audit.icon
-          const isLoading = loading === audit.id
-          const isDisabled = loading !== null
-
-          return (
-            <Card
-              key={audit.id}
-              className="flex flex-col"
-              data-testid={`quick-audit-${audit.id}-card`}
-            >
-              <CardHeader className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-5 w-5 text-neutral-500" />
-                  <CardTitle className="text-base">{audit.name}</CardTitle>
-                </div>
-                <CardDescription className="text-sm">{audit.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  data-testid={`quick-audit-${audit.id}-button`}
-                  onClick={() => handleRunAudit(audit.id)}
-                  disabled={isDisabled || !url.trim()}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Starting...
-                    </>
-                  ) : (
-                    <>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Run Audit
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
     </div>
   )
 }

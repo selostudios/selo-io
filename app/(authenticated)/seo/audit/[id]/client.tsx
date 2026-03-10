@@ -227,7 +227,7 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
       <ShareModal
         open={shareModalOpen}
         onOpenChange={setShareModalOpen}
-        resourceType={SharedResourceType.SiteAudit}
+        resourceType={SharedResourceType.UnifiedAudit}
         resourceId={audit.id}
       />
     </>

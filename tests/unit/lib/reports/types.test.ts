@@ -139,15 +139,12 @@ describe('DEFAULT_SCORE_WEIGHTS', () => {
     expect(total).toBe(1.0)
   })
 
-  it('SEO has highest weight (0.5)', () => {
-    expect(DEFAULT_SCORE_WEIGHTS.seo).toBe(0.5)
+  it('SEO has highest weight (0.4)', () => {
+    expect(DEFAULT_SCORE_WEIGHTS.seo).toBe(0.4)
   })
 
-  it('PageSpeed has second highest weight (0.3)', () => {
+  it('PageSpeed and AIO share equal weight (0.3)', () => {
     expect(DEFAULT_SCORE_WEIGHTS.page_speed).toBe(0.3)
-  })
-
-  it('AIO has lowest weight (0.2)', () => {
-    expect(DEFAULT_SCORE_WEIGHTS.aio).toBe(0.2)
+    expect(DEFAULT_SCORE_WEIGHTS.aio).toBe(0.3)
   })
 })

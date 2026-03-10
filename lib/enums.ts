@@ -228,6 +228,7 @@ export enum SharedResourceType {
   SiteAudit = 'site_audit',
   PerformanceAudit = 'performance_audit',
   AIOAudit = 'aio_audit',
+  UnifiedAudit = 'unified_audit',
 }
 
 export enum ScoreStatus {

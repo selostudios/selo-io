@@ -3,18 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface ActiveAuditStatus {
-  hasSiteAudit: boolean
-  hasPerformanceAudit: boolean
-  hasAioAudit: boolean
+  hasActiveAudit: boolean
 }
 
 const POLL_INTERVAL = 30000 // 30 seconds
 
 export function useActiveAudit(organizationId?: string | null) {
   const [status, setStatus] = useState<ActiveAuditStatus>({
-    hasSiteAudit: false,
-    hasPerformanceAudit: false,
-    hasAioAudit: false,
+    hasActiveAudit: false,
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isPolling, setIsPolling] = useState(false)
@@ -44,8 +40,7 @@ export function useActiveAudit(organizationId?: string | null) {
         setStatus(data)
         setIsLoading(false)
 
-        // Return true if any audit is active (should continue polling)
-        return data.hasSiteAudit || data.hasPerformanceAudit || data.hasAioAudit
+        return data.hasActiveAudit
       } else if (!response.ok) {
         console.error('[Active Audit Polling Error]', {
           type: 'http_error',

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { runAudit } from '@/lib/audit/runner'
-import { runPerformanceAudit } from '@/lib/performance/runner'
+import { runUnifiedAudit } from '@/lib/unified-audit/runner'
+import { UnifiedAuditStatus } from '@/lib/enums'
 
 export async function POST(request: Request) {
   // Verify cron secret
@@ -25,103 +25,67 @@ export async function POST(request: Request) {
   }
 
   const results = {
-    site_audits_started: 0,
-    performance_audits_started: 0,
+    audits_started: 0,
     errors: [] as string[],
   }
 
   for (const site of sites || []) {
-    // Run Site Audit if enabled
-    if (site.run_site_audit) {
+    // Run unified audit if any audit type is enabled
+    if (site.run_site_audit || site.run_performance_audit) {
       try {
         const { data: audit, error: insertError } = await supabase
-          .from('site_audits')
+          .from('audits')
           .insert({
             organization_id: site.organization_id,
             url: site.url,
-            status: 'pending',
+            domain: new URL(site.url).hostname.replace(/^www\./, ''),
+            status: UnifiedAuditStatus.Pending,
+            crawl_mode: 'full',
           })
           .select()
           .single()
 
         if (insertError) {
-          results.errors.push(`Site audit insert for ${site.url}: ${insertError.message}`)
+          results.errors.push(`Audit insert for ${site.url}: ${insertError.message}`)
           continue
         }
 
         if (audit) {
-          runAudit(audit.id, site.url).catch(async (err) => {
+          runUnifiedAudit(audit.id, site.url).catch(async (err) => {
             console.error('[Cron Error]', {
-              type: 'site_audit_failed',
+              type: 'unified_audit_failed',
               url: site.url,
               timestamp: new Date().toISOString(),
               error: err.message,
             })
             await supabase
-              .from('site_audits')
-              .update({ status: 'failed' })
+              .from('audits')
+              .update({
+                status: UnifiedAuditStatus.Failed,
+                error_message: err.message,
+                completed_at: new Date().toISOString(),
+              })
               .eq('id', audit.id)
-              .in('status', ['pending', 'crawling', 'checking'])
+              .in('status', [
+                UnifiedAuditStatus.Pending,
+                UnifiedAuditStatus.Crawling,
+                UnifiedAuditStatus.Checking,
+              ])
           })
-          results.site_audits_started++
+          results.audits_started++
 
-          // Update last audit timestamp
+          // Update last audit timestamps
           await supabase
             .from('monitored_sites')
-            .update({ last_site_audit_at: new Date().toISOString() })
-            .eq('id', site.id)
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-        results.errors.push(`Site audit for ${site.url}: ${errorMessage}`)
-      }
-    }
-
-    // Run Performance Audit if enabled
-    if (site.run_performance_audit) {
-      try {
-        // Test single domain URL
-        const urls = [site.url]
-
-        const { data: audit, error: insertError } = await supabase
-          .from('performance_audits')
-          .insert({
-            organization_id: site.organization_id,
-            status: 'pending',
-          })
-          .select()
-          .single()
-
-        if (insertError) {
-          results.errors.push(`Performance audit insert for ${site.url}: ${insertError.message}`)
-          continue
-        }
-
-        if (audit) {
-          runPerformanceAudit(audit.id, urls).catch(async (err) => {
-            console.error('[Cron Error]', {
-              type: 'performance_audit_failed',
-              url: site.url,
-              timestamp: new Date().toISOString(),
-              error: err.message,
+            .update({
+              last_site_audit_at: new Date().toISOString(),
+              last_performance_audit_at: new Date().toISOString(),
             })
-            await supabase
-              .from('performance_audits')
-              .update({ status: 'failed' })
-              .eq('id', audit.id)
-              .in('status', ['pending', 'running'])
-          })
-          results.performance_audits_started++
-
-          // Update last audit timestamp
-          await supabase
-            .from('monitored_sites')
-            .update({ last_performance_audit_at: new Date().toISOString() })
             .eq('id', site.id)
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-        results.errors.push(`Performance audit for ${site.url}: ${errorMessage}`)
+        results.errors.push(`Audit for ${site.url}: ${errorMessage}`)
       }
     }
   }

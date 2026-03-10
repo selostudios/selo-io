@@ -165,9 +165,9 @@ export interface ScoreWeights {
 }
 
 export const DEFAULT_SCORE_WEIGHTS: ScoreWeights = {
-  seo: 0.5,
+  seo: 0.4,
   page_speed: 0.3,
-  aio: 0.2,
+  aio: 0.3,
 }
 
 export interface ScoreBreakdown {

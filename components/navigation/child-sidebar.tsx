@@ -6,13 +6,11 @@ import {
   LayoutDashboard,
   Megaphone,
   Settings,
-  FileSearch,
-  Gauge,
   Loader2,
   Building2,
   MessageSquare,
-  Sparkles,
   FileText,
+  ClipboardCheck,
   PanelLeftClose,
   Zap,
 } from 'lucide-react'
@@ -42,11 +40,7 @@ const homeNavigation: NavigationGroup[] = [
   },
   {
     header: 'Audits',
-    items: [
-      { name: 'Search Engine Optimization', href: '/seo/site-audit', icon: FileSearch },
-      { name: 'Page Speed & Performance', href: '/seo/page-speed', icon: Gauge },
-      { name: 'AI Optimization', href: '/seo/aio', icon: Sparkles },
-    ],
+    items: [{ name: 'Unified Audit', href: '/seo/audit', icon: ClipboardCheck }],
   },
   {
     header: 'Reports',
@@ -84,9 +78,7 @@ const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
 
 interface ChildSidebarProps {
   activeSection: ParentSection
-  hasSiteAudit?: boolean
-  hasPerformanceAudit?: boolean
-  hasAioAudit?: boolean
+  hasActiveAudit?: boolean
   userRole?: string
   isCollapsed?: boolean
   onToggleCollapse?: () => void
@@ -94,9 +86,7 @@ interface ChildSidebarProps {
 
 export function ChildSidebar({
   activeSection,
-  hasSiteAudit,
-  hasPerformanceAudit,
-  hasAioAudit,
+  hasActiveAudit,
   userRole,
   isCollapsed = false,
   onToggleCollapse,
@@ -145,11 +135,8 @@ export function ChildSidebar({
                   isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 }
 
-                // Show spinner for Site Audit, Page Speed, or AI Audit based on active audit type
-                const showSpinner =
-                  (item.href === '/seo/site-audit' && hasSiteAudit) ||
-                  (item.href === '/seo/page-speed' && hasPerformanceAudit) ||
-                  (item.href === '/seo/aio' && hasAioAudit)
+                // Show spinner for active unified audit
+                const showSpinner = item.href === '/seo/audit' && hasActiveAudit
 
                 // Preserve org parameter for SEO, Settings, and Dashboard links
                 let href = item.href

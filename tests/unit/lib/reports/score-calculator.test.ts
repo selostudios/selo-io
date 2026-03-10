@@ -22,12 +22,12 @@ import { ScoreStatus } from '@/lib/enums'
 
 describe('calculateCombinedScore', () => {
   it('calculates weighted average with default weights', () => {
-    // SEO: 80 * 0.5 = 40
+    // SEO: 80 * 0.4 = 32
     // PageSpeed: 90 * 0.3 = 27
-    // AIO: 70 * 0.2 = 14
-    // Total: 81
+    // AIO: 70 * 0.3 = 21
+    // Total: 80
     const score = calculateCombinedScore(80, 90, 70)
-    expect(score).toBe(81)
+    expect(score).toBe(80)
   })
 
   it('returns null if any score is null', () => {
@@ -57,9 +57,9 @@ describe('calculateCombinedScore', () => {
   })
 
   it('rounds to nearest integer', () => {
-    // 85 * 0.5 + 90 * 0.3 + 72 * 0.2 = 42.5 + 27 + 14.4 = 83.9 -> 84
+    // 85 * 0.4 + 90 * 0.3 + 72 * 0.3 = 34 + 27 + 21.6 = 82.6 -> 83
     const score = calculateCombinedScore(85, 90, 72)
-    expect(score).toBe(84)
+    expect(score).toBe(83)
     expect(Number.isInteger(score)).toBe(true)
   })
 })
@@ -73,12 +73,12 @@ describe('getScoreBreakdown', () => {
     const breakdown = getScoreBreakdown(80, 90, 70)
 
     expect(breakdown.seo_score).toBe(80)
-    expect(breakdown.seo_weight).toBe(0.5)
+    expect(breakdown.seo_weight).toBe(0.4)
     expect(breakdown.page_speed_score).toBe(90)
     expect(breakdown.page_speed_weight).toBe(0.3)
     expect(breakdown.aio_score).toBe(70)
-    expect(breakdown.aio_weight).toBe(0.2)
-    expect(breakdown.combined_score).toBe(81)
+    expect(breakdown.aio_weight).toBe(0.3)
+    expect(breakdown.combined_score).toBe(80)
   })
 
   it('returns 0 for combined when any score is null', () => {
@@ -146,11 +146,11 @@ describe('calculatePotentialImprovement', () => {
   it('calculates improvement for SEO category', () => {
     const result = calculatePotentialImprovement({ seo: 70, pageSpeed: 80, aio: 75 }, 'seo', 90)
 
-    // Current: 70*0.5 + 80*0.3 + 75*0.2 = 35 + 24 + 15 = 74
-    // Target:  90*0.5 + 80*0.3 + 75*0.2 = 45 + 24 + 15 = 84
-    expect(result.currentCombined).toBe(74)
-    expect(result.targetCombined).toBe(84)
-    expect(result.improvement).toBe(10)
+    // Current: 70*0.4 + 80*0.3 + 75*0.3 = 28 + 24 + 22.5 = 74.5 -> 75
+    // Target:  90*0.4 + 80*0.3 + 75*0.3 = 36 + 24 + 22.5 = 82.5 -> 83
+    expect(result.currentCombined).toBe(75)
+    expect(result.targetCombined).toBe(83)
+    expect(result.improvement).toBe(8)
   })
 
   it('returns null improvement when scores are null', () => {
@@ -278,13 +278,13 @@ describe('getScoreContributions', () => {
   it('calculates contributions for each category', () => {
     const contributions = getScoreContributions(80, 90, 70)
 
-    // SEO: 80 * 0.5 = 40 points
+    // SEO: 80 * 0.4 = 32 points
     // PageSpeed: 90 * 0.3 = 27 points
-    // AIO: 70 * 0.2 = 14 points
-    // Combined: 81
-    expect(contributions.seo.points).toBe(40)
+    // AIO: 70 * 0.3 = 21 points
+    // Combined: 80
+    expect(contributions.seo.points).toBe(32)
     expect(contributions.pageSpeed.points).toBe(27)
-    expect(contributions.aio.points).toBe(14)
+    expect(contributions.aio.points).toBe(21)
 
     // Percentages should roughly add up to 100
     const totalPercent =

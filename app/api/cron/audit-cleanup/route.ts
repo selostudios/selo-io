@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { runPeriodicCleanup } from '@/lib/audit/cleanup'
+import { runUnifiedAuditCleanup } from '@/lib/unified-audit/cleanup'
 
 /**
  * Periodic cleanup cron job for audit data.
- * - Deletes checks/pages from audits older than 6 months (keeps audit record)
- * - Deletes one-time audits older than 30 days entirely
- * - Cleans up orphaned crawl queue entries
+ * - Old audit system: runs cleanup via database function
+ * - Unified audit system: cleans up audit_checks/audit_pages for older audits
  *
  * Schedule: Weekly (recommended)
  */
@@ -17,17 +17,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const results = await runPeriodicCleanup()
+    // Run cleanup for both old and unified audit systems
+    const [legacyResults, unifiedResults] = await Promise.all([
+      runPeriodicCleanup(),
+      runUnifiedAuditCleanup(),
+    ])
 
     console.log('[Cron Info]', {
       type: 'audit_cleanup_completed',
       timestamp: new Date().toISOString(),
-      results,
+      legacyResults,
+      unifiedResults,
     })
 
     return NextResponse.json({
       success: true,
-      ...results,
+      legacy: legacyResults,
+      unified: unifiedResults,
     })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'

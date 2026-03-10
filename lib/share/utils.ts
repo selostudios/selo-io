@@ -37,6 +37,8 @@ export function getResourceTypeLabel(type: SharedResourceType): string {
       return 'Performance Audit'
     case SharedResourceType.AIOAudit:
       return 'AIO Audit'
+    case SharedResourceType.UnifiedAudit:
+      return 'Audit Report'
   }
 }
 
