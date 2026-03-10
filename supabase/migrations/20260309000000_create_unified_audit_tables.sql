@@ -34,6 +34,8 @@ CREATE TABLE audits (
   ai_readiness_score integer,
   overall_score integer,
   pages_crawled integer NOT NULL DEFAULT 0,
+  urls_discovered integer NOT NULL DEFAULT 0,
+  current_batch integer NOT NULL DEFAULT 0,
   crawl_mode text NOT NULL DEFAULT 'standard',
   max_pages integer NOT NULL DEFAULT 50,
   soft_cap_reached boolean NOT NULL DEFAULT false,
@@ -96,7 +98,8 @@ CREATE TABLE audit_crawl_queue (
   url text NOT NULL,
   depth integer NOT NULL DEFAULT 0,
   status text NOT NULL DEFAULT 'pending',
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (audit_id, url)
 );
 
 -- Audit AI analyses

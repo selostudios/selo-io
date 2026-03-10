@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { crawlSite } from '@/lib/audit/crawler'
-import { initializeCrawlQueue, crawlBatch } from '@/lib/audit/batch-crawler'
+import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { siteWideChecks, pageSpecificChecks } from './checks'
 import {
