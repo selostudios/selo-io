@@ -132,10 +132,10 @@ export interface AuditCheckDefinition {
   priority: CheckPriority
   description: string
   displayName: string
-  displayNamePassed: string
-  learnMoreUrl: string | null
-  isSiteWide: boolean
-  fixGuidance: string | null
+  displayNamePassed?: string
+  learnMoreUrl?: string | null
+  isSiteWide?: boolean
+  fixGuidance?: string | null
   feedsScores: ScoreDimension[]
   run: (context: CheckContext) => Promise<CheckResult>
 }

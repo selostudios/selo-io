@@ -284,6 +284,27 @@ Two-tier sidebar: **ParentSidebar** (64px icon strip) + **ChildSidebar** (304px 
 
 Integration and E2E tests require local Supabase running via Docker.
 
+#### Test Philosophy
+
+**Tests must validate application behavior, not framework or language features.** Every test should exercise our code and verify a meaningful outcome.
+
+**Do NOT write tests that:**
+
+- Assert enum values equal their string literals (`expect(Status.Pending).toBe('pending')`)
+- Verify TypeScript interfaces compile or have certain properties
+- Test that a framework API works as documented (e.g., testing that `useState` updates state)
+- Assert trivial type coercions or constant values
+
+**DO write tests that:**
+
+- Verify business logic produces correct results given specific inputs (e.g., "Given these check results, the score should be 73")
+- Confirm check implementations detect the right issues in real HTML
+- Validate that components render the correct UI based on application state
+- Test that server actions enforce auth, return correct data, and handle edge cases
+- Verify integration between modules (e.g., "Runner calls scoring after all checks complete")
+
+**Rule of thumb:** If deleting the test wouldn't reduce confidence in the application working correctly, the test has no value. Every test should be able to catch a real bug.
+
 #### E2E Testing Conventions
 
 **Always add `data-testid` attributes** to components that will be targeted in E2E tests:
