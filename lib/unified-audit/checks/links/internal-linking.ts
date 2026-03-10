@@ -6,7 +6,8 @@ export const internalLinking: AuditCheckDefinition = {
   name: 'internal_linking',
   category: CheckCategory.Links,
   priority: CheckPriority.Recommended,
-  description: 'Internal links help search engines and AI discover and understand content relationships',
+  description:
+    'Internal links help search engines and AI discover and understand content relationships',
   displayName: 'Poor Internal Linking',
   displayNamePassed: 'Good Internal Linking',
   learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/links-crawlable',

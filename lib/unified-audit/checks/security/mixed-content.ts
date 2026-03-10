@@ -6,7 +6,8 @@ export const mixedContent: AuditCheckDefinition = {
   name: 'mixed_content',
   category: CheckCategory.Security,
   priority: CheckPriority.Recommended,
-  description: 'HTTP resources on HTTPS pages cause security warnings and may be blocked by browsers',
+  description:
+    'HTTP resources on HTTPS pages cause security warnings and may be blocked by browsers',
   displayName: 'Mixed Content',
   displayNamePassed: 'Secure Resources',
   learnMoreUrl: 'https://web.dev/articles/what-is-mixed-content',

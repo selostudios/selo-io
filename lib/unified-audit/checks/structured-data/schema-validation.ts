@@ -204,8 +204,7 @@ export const schemaValidation: AuditCheckDefinition = {
           totalSchemas: 0,
           validCount: 0,
           invalidCount: 0,
-          message:
-            'JSON-LD found but no valid schemas with @type could be parsed.',
+          message: 'JSON-LD found but no valid schemas with @type could be parsed.',
         } satisfies SchemaValidationDetails & { message: string },
       }
     }

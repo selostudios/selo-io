@@ -33,7 +33,8 @@ describe('schema-markup', () => {
   })
 
   it('fails when JSON-LD script exists but contains invalid JSON', async () => {
-    const html = '<html><head><script type="application/ld+json">not valid json</script></head><body></body></html>'
+    const html =
+      '<html><head><script type="application/ld+json">not valid json</script></head><body></body></html>'
     const result = await schemaMarkup.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Failed)
   })
@@ -248,9 +249,7 @@ describe('speakable-schema', () => {
   })
 
   it('fails when no JSON-LD at all', async () => {
-    const result = await speakableSchema.run(
-      makeContext('<html><head></head><body></body></html>')
-    )
+    const result = await speakableSchema.run(makeContext('<html><head></head><body></body></html>'))
     expect(result.status).toBe(CheckStatus.Failed)
   })
 

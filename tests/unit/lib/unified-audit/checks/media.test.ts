@@ -59,7 +59,7 @@ describe('images-missing-alt', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Passed)
-    expect((result.details?.message as string)).toContain('No images found')
+    expect(result.details?.message as string).toContain('No images found')
   })
 
   it('correctly counts mixed images (some with alt, some without)', async () => {
@@ -101,7 +101,7 @@ describe('media-richness', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Warning)
-    expect((result.details?.message as string)).toContain('No images or videos')
+    expect(result.details?.message as string).toContain('No images or videos')
   })
 
   it('passes when short content has no media', async () => {
@@ -155,7 +155,7 @@ describe('media-richness', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Failed)
-    expect((result.details?.altTextCoverage as number)).toBeLessThan(50)
+    expect(result.details?.altTextCoverage as number).toBeLessThan(50)
   })
 
   it('counts videos including YouTube iframes', async () => {
@@ -195,8 +195,8 @@ describe('media-richness', () => {
 
     // Alt text exists (100% coverage) but not "good" (< 5 words)
     expect(result.status).toBe(CheckStatus.Warning)
-    expect((result.details?.altTextCoverage as number)).toBe(100)
-    expect((result.details?.imagesWithGoodAlt as number)).toBe(0)
+    expect(result.details?.altTextCoverage as number).toBe(100)
+    expect(result.details?.imagesWithGoodAlt as number).toBe(0)
   })
 
   it('has correct category and score dimensions', () => {

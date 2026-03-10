@@ -38,9 +38,7 @@ describe('broken-internal-links', () => {
     const result = await brokenInternalLinks.run({
       url: 'https://example.com',
       html: '',
-      allPages: [
-        { url: 'https://example.com/error', title: null, statusCode: 500 },
-      ],
+      allPages: [{ url: 'https://example.com/error', title: null, statusCode: 500 }],
     })
 
     expect(result.status).toBe(CheckStatus.Failed)
@@ -127,7 +125,7 @@ describe('non-descriptive-url', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Warning)
-    expect((result.details?.message as string)).toContain('underscores')
+    expect(result.details?.message as string).toContain('underscores')
   })
 
   it('warns for slugs with uppercase characters', async () => {
@@ -137,18 +135,19 @@ describe('non-descriptive-url', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Warning)
-    expect((result.details?.message as string)).toContain('uppercase')
+    expect(result.details?.message as string).toContain('uppercase')
   })
 
   it('warns for very long URL paths', async () => {
-    const longSlug = 'this-is-a-very-long-url-slug-that-goes-on-and-on-and-really-should-be-shortened-for-usability'
+    const longSlug =
+      'this-is-a-very-long-url-slug-that-goes-on-and-on-and-really-should-be-shortened-for-usability'
     const result = await nonDescriptiveUrl.run({
       url: `https://example.com/${longSlug}`,
       html: '',
     })
 
     expect(result.status).toBe(CheckStatus.Warning)
-    expect((result.details?.message as string)).toContain('characters')
+    expect(result.details?.message as string).toContain('characters')
   })
 })
 
@@ -170,7 +169,9 @@ describe('internal-linking', () => {
 
   it('passes with good contextual internal links', async () => {
     // Need enough words so density stays reasonable but enough contextual links
-    const filler = Array(60).fill('lorem ipsum dolor sit amet consectetur adipiscing elit').join(' ')
+    const filler = Array(60)
+      .fill('lorem ipsum dolor sit amet consectetur adipiscing elit')
+      .join(' ')
     const html = `
       <html><body>
         <main>
@@ -186,7 +187,7 @@ describe('internal-linking', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Passed)
-    expect((result.details?.contextualInternalLinks as number)).toBeGreaterThanOrEqual(2)
+    expect(result.details?.contextualInternalLinks as number).toBeGreaterThanOrEqual(2)
   })
 
   it('warns when links exist but none are contextual', async () => {

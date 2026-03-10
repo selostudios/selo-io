@@ -64,8 +64,12 @@ export const citability: AuditCheckDefinition = {
         ? $('main')
         : $('body')
 
-    const passages: { text: string; wordCount: number; score: number; signals: CitabilitySignals }[] =
-      []
+    const passages: {
+      text: string
+      wordCount: number
+      score: number
+      signals: CitabilitySignals
+    }[] = []
 
     contentContainer.find('p, li, blockquote').each((_, el) => {
       const text = $(el).text().trim()

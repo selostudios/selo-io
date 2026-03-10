@@ -111,10 +111,7 @@ describe('pageResponseTime', () => {
   })
 
   it('falls back to fetch when no PSI data', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response('OK', { status: 200 }))
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('OK', { status: 200 })))
 
     const context = makeContext({ psiData: undefined })
     const result = await pageResponseTime.run(context)
@@ -124,10 +121,7 @@ describe('pageResponseTime', () => {
   })
 
   it('fails on fetch timeout', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValue(new Error('The operation was aborted'))
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('The operation was aborted')))
 
     const context = makeContext({ psiData: undefined })
     const result = await pageResponseTime.run(context)

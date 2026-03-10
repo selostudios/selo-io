@@ -118,8 +118,7 @@ export const nonDescriptiveUrl: AuditCheckDefinition = {
   displayName: 'Non-Descriptive URL',
   displayNamePassed: 'Descriptive URL',
   learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/url-structure',
-  fixGuidance:
-    'Use keyword-rich, hyphenated, lowercase URL slugs that describe the page content.',
+  fixGuidance: 'Use keyword-rich, hyphenated, lowercase URL slugs that describe the page content.',
   feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {

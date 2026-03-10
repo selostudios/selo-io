@@ -52,17 +52,13 @@ export const schemaMarkup: AuditCheckDefinition = {
             for (const subItem of item) {
               if (subItem['@type']) {
                 schemas.push(
-                  Array.isArray(subItem['@type'])
-                    ? subItem['@type'].join(', ')
-                    : subItem['@type']
+                  Array.isArray(subItem['@type']) ? subItem['@type'].join(', ') : subItem['@type']
                 )
                 validCount++
               }
             }
           } else if (item['@type']) {
-            schemas.push(
-              Array.isArray(item['@type']) ? item['@type'].join(', ') : item['@type']
-            )
+            schemas.push(Array.isArray(item['@type']) ? item['@type'].join(', ') : item['@type'])
             validCount++
           }
         }

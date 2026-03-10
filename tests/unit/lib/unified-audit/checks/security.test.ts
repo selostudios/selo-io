@@ -48,7 +48,7 @@ describe('mixed-content', () => {
     })
 
     expect(result.status).toBe(CheckStatus.Passed)
-    expect((result.details?.message as string)).toContain('not applicable')
+    expect(result.details?.message as string).toContain('not applicable')
   })
 
   it('detects HTTP scripts', async () => {
@@ -141,7 +141,7 @@ describe('ssl-certificate', () => {
 
     expect(result.status).toBe(CheckStatus.Failed)
     expect(result.details?.issue).toBe('missing_https')
-    expect((result.details?.message as string)).toContain('HTTP instead of HTTPS')
+    expect(result.details?.message as string).toContain('HTTP instead of HTTPS')
   })
 
   it('has correct category, priority, and score dimensions', () => {

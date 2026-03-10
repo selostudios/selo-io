@@ -97,11 +97,7 @@ function rateMetric(value: number, thresholds: { good: number; poor: number }): 
 function extractCoreWebVitals(psi: Record<string, unknown>): CoreWebVitalsData | null {
   try {
     // Try direct properties (pre-normalized)
-    if (
-      typeof psi.lcp === 'number' &&
-      typeof psi.inp === 'number' &&
-      typeof psi.cls === 'number'
-    ) {
+    if (typeof psi.lcp === 'number' && typeof psi.inp === 'number' && typeof psi.cls === 'number') {
       return { lcp: psi.lcp as number, inp: psi.inp as number, cls: psi.cls as number }
     }
 

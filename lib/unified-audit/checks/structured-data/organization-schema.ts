@@ -65,8 +65,7 @@ export const organizationSchema: AuditCheckDefinition = {
   description: 'Organization schema helps search engines and AI understand your business identity',
   displayName: 'Missing Organization Schema',
   displayNamePassed: 'Organization Schema',
-  learnMoreUrl:
-    'https://developers.google.com/search/docs/appearance/structured-data/organization',
+  learnMoreUrl: 'https://developers.google.com/search/docs/appearance/structured-data/organization',
   isSiteWide: true,
   fixGuidance:
     'Add Organization JSON-LD structured data to your homepage with name, url, logo, description, and sameAs links to social profiles.',
@@ -111,9 +110,7 @@ export const organizationSchema: AuditCheckDefinition = {
             hasDescription = Boolean(item.description)
 
             if (Array.isArray(item.sameAs)) {
-              sameAsLinks = item.sameAs.filter(
-                (link: unknown) => typeof link === 'string'
-              )
+              sameAsLinks = item.sameAs.filter((link: unknown) => typeof link === 'string')
             } else if (typeof item.sameAs === 'string') {
               sameAsLinks = [item.sameAs]
             }
