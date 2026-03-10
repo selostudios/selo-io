@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isInternalUser } from '@/lib/permissions'
-import { runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
+import { runUnifiedAudit, runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
 
 // Extend function timeout for long-running audits
 export const maxDuration = 800
@@ -108,11 +108,13 @@ export async function POST(request: Request) {
   }
 
   // Create audit record in unified `audits` table
+  const domain = new URL(websiteUrl).hostname.replace(/^www\./, '')
   const { data: audit, error } = await supabase
     .from('audits')
     .insert({
       organization_id: auditOrganizationId,
       url: websiteUrl,
+      domain,
       status: 'pending',
       created_by: user.id,
       crawl_mode: crawlMode,
@@ -127,9 +129,11 @@ export async function POST(request: Request) {
   }
 
   // Start audit in background
+  // Use batch runner for exhaustive mode, simple runner for standard mode
+  const runner = crawlMode === 'exhaustive' ? runUnifiedAuditBatch : runUnifiedAudit
   after(async () => {
     try {
-      await runUnifiedAuditBatch(audit.id, websiteUrl)
+      await runner(audit.id, websiteUrl)
     } catch (err) {
       console.error('[Unified Audit API] Background audit failed:', err)
       const serviceClient = (await import('@/lib/supabase/server')).createServiceClient()
