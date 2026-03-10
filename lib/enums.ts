@@ -78,6 +78,28 @@ export enum AIOCheckCategory {
 }
 
 // =============================================================================
+// Unified Audit Enums
+// =============================================================================
+
+export enum CheckCategory {
+  MetaContent = 'meta_content',
+  Headings = 'headings',
+  Links = 'links',
+  Images = 'images',
+  Crawlability = 'crawlability',
+  Security = 'security',
+  AIReadiness = 'ai_readiness',
+  ContentQuality = 'content_quality',
+  ContentStructure = 'content_structure',
+}
+
+export enum ScoreDimension {
+  SEO = 'seo',
+  AIO = 'aio',
+  Performance = 'performance',
+}
+
+// =============================================================================
 // Organization Enums
 // =============================================================================
 
