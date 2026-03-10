@@ -10,13 +10,7 @@ import {
   calculateOverallScore,
 } from './scoring'
 import { UnifiedAuditStatus, CheckStatus } from '@/lib/enums'
-import type {
-  AuditPage,
-  AuditCheck,
-  UnifiedAudit,
-  CheckContext,
-  AuditCheckDefinition,
-} from './types'
+import type { AuditPage, AuditCheck, CheckContext, AuditCheckDefinition } from './types'
 
 // Budget for starting new batches: 800s max function timeout minus 300s buffer
 const MAX_FUNCTION_DURATION_MS = 500_000

@@ -1,5 +1,5 @@
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
-import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
+import type { AuditCheckDefinition, CheckResult } from '../../types'
 
 export const platformReadiness: AuditCheckDefinition = {
   name: 'platform_readiness',
@@ -13,7 +13,7 @@ export const platformReadiness: AuditCheckDefinition = {
   isSiteWide: false,
   feedsScores: [ScoreDimension.AIReadiness],
 
-  async run(_context: CheckContext): Promise<CheckResult> {
+  async run(): Promise<CheckResult> {
     return {
       status: CheckStatus.Passed,
       details: {
