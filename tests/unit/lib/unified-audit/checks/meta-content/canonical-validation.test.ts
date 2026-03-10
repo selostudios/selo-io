@@ -6,7 +6,7 @@ function makeContext(html: string, url = 'https://example.com/page'): CheckConte
   return {
     url,
     html,
-    title: null,
+    title: undefined,
     statusCode: 200,
     allPages: [],
   }

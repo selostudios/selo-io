@@ -6,7 +6,7 @@ function makeContext(allPages: CheckContext['allPages']): CheckContext {
   return {
     url: 'https://example.com',
     html: '<html></html>',
-    title: null,
+    title: undefined,
     statusCode: 200,
     allPages,
   }
@@ -14,14 +14,9 @@ function makeContext(allPages: CheckContext['allPages']): CheckContext {
 
 function makePage(url: string, title: string | null, statusCode = 200) {
   return {
-    id: url,
-    audit_id: 'audit-1',
     url,
     title,
-    meta_description: null,
-    status_code: statusCode,
-    last_modified: null,
-    crawled_at: new Date().toISOString(),
+    statusCode,
   }
 }
 

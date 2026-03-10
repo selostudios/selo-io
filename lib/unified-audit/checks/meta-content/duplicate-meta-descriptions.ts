@@ -1,5 +1,4 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
-import { isCheckablePage } from '@/lib/audit/utils'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
 
 export const duplicateMetaDescriptions: AuditCheckDefinition = {
@@ -14,15 +13,19 @@ export const duplicateMetaDescriptions: AuditCheckDefinition = {
   isSiteWide: true,
 
   async run(context: CheckContext): Promise<CheckResult> {
+    if (!context.allPages) {
+      return { status: CheckStatus.Passed, details: { message: 'No pages to compare' } }
+    }
+
     // Group pages by meta description
     const descriptionToUrls: Record<string, string[]> = {}
 
     for (const page of context.allPages) {
       // Skip resources (PDFs, images, etc.) and error pages
-      if (page.is_resource) continue
-      if (!isCheckablePage(page)) continue
+      if (page.isResource) continue
+      if ((page.statusCode ?? 200) >= 400) continue
 
-      const description = page.meta_description?.trim()
+      const description = page.metaDescription?.trim()
       if (!description) continue // Skip pages without meta descriptions (handled by missing_meta_description check)
 
       if (!descriptionToUrls[description]) {

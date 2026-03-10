@@ -6,7 +6,7 @@ function makeContext(html: string): CheckContext {
   return {
     url: 'https://example.com',
     html,
-    title: null,
+    title: undefined,
     statusCode: 200,
     allPages: [],
   }

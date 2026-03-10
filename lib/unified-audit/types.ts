@@ -145,7 +145,13 @@ export interface CheckContext {
   html: string
   title?: string
   statusCode?: number
-  allPages?: { url: string; title: string | null; statusCode: number | null }[]
+  allPages?: {
+    url: string
+    title: string | null
+    statusCode: number | null
+    metaDescription?: string | null
+    isResource?: boolean
+  }[]
   robotsTxt?: string
   /** PageSpeed Insights data for performance checks */
   psiData?: Record<string, unknown>

@@ -1,5 +1,4 @@
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
-import { isCheckablePage } from '@/lib/audit/utils'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
 
 export const duplicateTitles: AuditCheckDefinition = {
@@ -14,11 +13,15 @@ export const duplicateTitles: AuditCheckDefinition = {
   isSiteWide: true,
 
   async run(context: CheckContext): Promise<CheckResult> {
+    if (!context.allPages) {
+      return { status: CheckStatus.Passed, details: { message: 'No pages to compare' } }
+    }
+
     // Group pages by title
     const titleToUrls: Record<string, string[]> = {}
 
     for (const page of context.allPages) {
-      if (!isCheckablePage(page)) continue // Skip error pages and soft 404s
+      if ((page.statusCode ?? 200) >= 400) continue // Skip error pages
       const title = page.title?.trim()
       if (!title) continue // Skip pages without titles (handled by missing_title check)
 

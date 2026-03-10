@@ -7,7 +7,7 @@ function makeContext(metaContent: string | null): CheckContext {
   return {
     url: 'https://example.com',
     html: `<html><head>${metaTag}</head></html>`,
-    title: null,
+    title: undefined,
     statusCode: 200,
     allPages: [],
   }
