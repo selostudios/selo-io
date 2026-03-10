@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type {
   AuditCheckDefinition,
   CheckContext,
@@ -229,7 +230,7 @@ export const schemaValidation: AuditCheckDefinition = {
         status: CheckStatus.Warning,
         details: {
           ...(details as unknown as Record<string, unknown>),
-          message: `${invalidCount} of ${allItems.length} schema(s) have missing required properties: ${invalidSchemas.join('; ')}`,
+          message: `${invalidCount} of ${pluralize(allItems.length, 'schema')} have missing required properties: ${invalidSchemas.join('; ')}`,
         },
       }
     }
@@ -244,17 +245,13 @@ export const schemaValidation: AuditCheckDefinition = {
         status: CheckStatus.Passed,
         details: {
           ...(details as unknown as Record<string, unknown>),
-          message: `All ${allItems.length} schema(s) have required properties. ${schemasWithMissingRecommended.length} could be improved with recommended fields.`,
+          message: undefined,
         },
       }
     }
 
     return {
       status: CheckStatus.Passed,
-      details: {
-        ...(details as unknown as Record<string, unknown>),
-        message: `All ${allItems.length} schema(s) are fully validated with required and recommended properties.`,
-      },
     }
   },
 }

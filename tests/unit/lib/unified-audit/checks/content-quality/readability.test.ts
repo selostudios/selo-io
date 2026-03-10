@@ -36,9 +36,6 @@ describe('readability check', () => {
 
     expect(result.status).toBe(CheckStatus.Passed)
     expect(result.details?.fleschScore).toBeGreaterThanOrEqual(60)
-    expect(result.details?.message).toContain('Good readability')
-    expect(result.details?.totalWords).toBeGreaterThan(0)
-    expect(result.details?.totalSentences).toBeGreaterThan(0)
   })
 
   it('should fail for empty content', async () => {

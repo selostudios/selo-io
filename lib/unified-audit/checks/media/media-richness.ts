@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
 
 export const mediaRichness: AuditCheckDefinition = {
@@ -86,7 +87,7 @@ export const mediaRichness: AuditCheckDefinition = {
       return {
         status: CheckStatus.Failed,
         details: {
-          message: `Found ${images.length} image(s) but only ${Math.round(altTextCoverage)}% have alt text. AI engines need descriptions to understand visual content.`,
+          message: `Found ${pluralize(images.length, 'image')} but only ${Math.round(altTextCoverage)}% have alt text. AI engines need descriptions to understand visual content.`,
           ...details,
         },
       }
@@ -102,7 +103,7 @@ export const mediaRichness: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Media-rich content: ${totalMedia} item(s) with ${Math.round(goodAltCoverage)}% having descriptive alt text`,
+          message: undefined,
           ...details,
         },
       }

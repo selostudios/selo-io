@@ -37,7 +37,6 @@ describe('citationFormat check', () => {
     const result = await citationFormat.run(makeContext(html))
 
     expect(result.status).toBe('passed')
-    expect(result.details?.message).toContain('Strong citation format')
   })
 
   it('should pass with a reference section heading', async () => {
@@ -53,7 +52,6 @@ describe('citationFormat check', () => {
     const result = await citationFormat.run(makeContext(html))
 
     expect(result.status).toBe('passed')
-    expect(result.details?.indicators).toContain('reference section')
   })
 
   it('should warn with few authoritative links and no reference section', async () => {

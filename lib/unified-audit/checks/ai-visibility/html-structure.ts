@@ -48,10 +48,6 @@ export const htmlStructure: AuditCheckDefinition = {
     if (issues.length === 0) {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Clean HTML structure with ${foundSemantic.length} semantic elements`,
-          semanticElements: foundSemantic,
-        },
       }
     } else if (issues.length <= 2) {
       return {

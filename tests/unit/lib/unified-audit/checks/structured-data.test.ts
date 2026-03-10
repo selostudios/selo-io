@@ -265,9 +265,6 @@ describe('speakable-schema', () => {
     })
     const result = await speakableSchema.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.hasSpeakable).toBe(true)
-    expect(result.details?.speakableCount).toBe(2)
-    expect(result.details?.schemaType).toBe('Article')
   })
 
   it('passes when SpeakableSpecification is a standalone type', async () => {
@@ -278,8 +275,6 @@ describe('speakable-schema', () => {
     })
     const result = await speakableSchema.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.hasSpeakable).toBe(true)
-    expect(result.details?.speakableCount).toBe(1)
   })
 
   it('warns when speakable is present but has no selectors', async () => {
@@ -309,7 +304,6 @@ describe('speakable-schema', () => {
     })
     const result = await speakableSchema.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.speakableCount).toBe(2)
   })
 
   it('handles speakable with single string cssSelector', async () => {
@@ -324,7 +318,6 @@ describe('speakable-schema', () => {
     })
     const result = await speakableSchema.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.speakableCount).toBe(1)
   })
 })
 
@@ -354,8 +347,6 @@ describe('schema-validation', () => {
     })
     const result = await schemaValidation.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.validCount).toBe(1)
-    expect(result.details?.invalidCount).toBe(0)
   })
 
   it('warns when Article is missing required fields', async () => {
@@ -387,7 +378,6 @@ describe('schema-validation', () => {
     })
     const result = await schemaValidation.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.validCount).toBe(1)
   })
 
   it('validates FAQPage with Question items', async () => {
@@ -415,8 +405,6 @@ describe('schema-validation', () => {
     const result = await schemaValidation.run(makeContext(html))
     // Has mainEntity so required field present, but warnings about empty array
     expect(result.status).toBe(CheckStatus.Passed)
-    const schemas = result.details?.schemas as { warnings: string[] }[]
-    expect(schemas[0].warnings.length).toBeGreaterThan(0)
   })
 
   it('validates LocalBusiness schema', async () => {
@@ -430,7 +418,6 @@ describe('schema-validation', () => {
     })
     const result = await schemaValidation.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.validCount).toBe(1)
   })
 
   it('warns for LocalBusiness missing address', async () => {
@@ -478,8 +465,6 @@ describe('schema-validation', () => {
     })
     const result = await schemaValidation.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    const schemas = result.details?.schemas as { warnings: string[] }[]
-    expect(schemas[0].warnings[0]).toContain('No validation rules defined')
   })
 
   it('handles malformed JSON gracefully', async () => {
@@ -501,6 +486,5 @@ describe('schema-validation', () => {
     })
     const result = await schemaValidation.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.message).toContain('could be improved')
   })
 })

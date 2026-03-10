@@ -61,9 +61,9 @@ export const duplicateTitles: AuditCheckDefinition = {
         message: `Found ${duplicates.length} duplicate title${duplicates.length > 1 ? 's' : ''} affecting ${totalDuplicatePages} pages. Examples: ${summary}. Each page should have a unique, descriptive title.`,
         duplicateCount: duplicates.length,
         affectedPages: totalDuplicatePages,
-        duplicates: duplicates.slice(0, 10).map((d) => ({
+        duplicates: duplicates.map((d) => ({
           title: d.title,
-          urls: d.urls.slice(0, 5),
+          urls: d.urls,
           count: d.count,
         })),
       },

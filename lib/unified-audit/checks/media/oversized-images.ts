@@ -65,13 +65,27 @@ export const oversizedImages: AuditCheckDefinition = {
     }
 
     if (oversized.length > 0) {
-      const largestImage = oversized.reduce((a, b) => (a.sizeKb > b.sizeKb ? a : b))
+      // Sort by size descending and format each image path with size
+      const sorted = [...oversized].sort((a, b) => b.sizeKb - a.sizeKb)
+      const imageList = sorted
+        .slice(0, 10)
+        .map((img) => {
+          try {
+            const pathname = new URL(img.src).pathname
+            return `${pathname} (${img.sizeKb}KB)`
+          } catch {
+            return `${img.src} (${img.sizeKb}KB)`
+          }
+        })
+        .join(', ')
+      const suffix = sorted.length > 10 ? `, +${sorted.length - 10} more` : ''
+
       return {
         status: CheckStatus.Failed,
         details: {
-          message: `${oversized.length} image${oversized.length === 1 ? '' : 's'} over ${MAX_IMAGE_SIZE_KB}KB. Largest: ${largestImage.sizeKb}KB. Compress images or use modern formats (WebP, AVIF) for faster load times.`,
+          message: `${oversized.length} image${oversized.length === 1 ? '' : 's'} over ${MAX_IMAGE_SIZE_KB}KB: ${imageList}${suffix}`,
           count: oversized.length,
-          images: oversized.slice(0, 5),
+          images: sorted,
         },
       }
     }
@@ -79,10 +93,7 @@ export const oversizedImages: AuditCheckDefinition = {
     return {
       status: CheckStatus.Passed,
       details: {
-        message:
-          checkedImages.length > 0
-            ? `All ${checkedImages.length} images are under ${MAX_IMAGE_SIZE_KB}KB`
-            : 'No images found to check',
+        message: undefined,
       },
     }
   },

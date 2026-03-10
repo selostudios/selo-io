@@ -98,7 +98,6 @@ describe('html-structure', () => {
     `
     const result = await htmlStructure.run(makeContext(html))
     expect(result.status).toBe(CheckStatus.Passed)
-    expect((result.details as Record<string, unknown>).semanticElements).toBeDefined()
   })
 
   it('warns when no semantic elements but headings exist', async () => {
@@ -452,6 +451,5 @@ describe('platform-readiness', () => {
     expect(result.status).toBe(CheckStatus.Passed)
     const details = result.details as Record<string, unknown>
     expect(details.requiresAIAnalysis).toBe(true)
-    expect(details.message).toContain('AI analysis phase')
   })
 })

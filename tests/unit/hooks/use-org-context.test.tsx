@@ -86,7 +86,7 @@ describe('useBuildOrgHref', () => {
     render(
       <OrgProvider>
         <SetOrgIdButton id="org-abc" />
-        <BuildOrgHrefTest path="/seo/reports" />
+        <BuildOrgHrefTest path="/seo/client-reports" />
       </OrgProvider>
     )
 
@@ -94,18 +94,18 @@ describe('useBuildOrgHref', () => {
     await act(async () => {
       screen.getByText('Set Org').click()
     })
-    expect(screen.getByTestId('href')).toHaveTextContent('/seo/reports?org=org-abc')
+    expect(screen.getByTestId('href')).toHaveTextContent('/seo/client-reports?org=org-abc')
 
     // Now render a null setter and click it
     render(
       <OrgProvider>
         <SetOrgIdButton id={null as unknown as string} />
-        <BuildOrgHrefTest path="/seo/reports" />
+        <BuildOrgHrefTest path="/seo/client-reports" />
       </OrgProvider>
     )
 
     // Re-render needed - but since it's a fresh provider, it starts null
-    expect(screen.getAllByTestId('href')[1]).toHaveTextContent('/seo/reports')
+    expect(screen.getAllByTestId('href')[1]).toHaveTextContent('/seo/client-reports')
   })
 
   it('returns identity function outside OrgProvider', () => {

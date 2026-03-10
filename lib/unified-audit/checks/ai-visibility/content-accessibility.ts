@@ -11,6 +11,8 @@ export const contentAccessibility: AuditCheckDefinition = {
   displayNamePassed: 'Good Content Accessibility',
   learnMoreUrl: 'https://web.dev/articles/accessibility',
   isSiteWide: false,
+  fixGuidance:
+    'Add descriptive alt text to all images, use semantic HTML elements, and ensure proper heading hierarchy.',
   feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
@@ -79,8 +81,7 @@ export const contentAccessibility: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Excellent accessibility: ${goodPractices.join(', ')}`,
-          goodPractices,
+          message: undefined,
         },
       }
     } else if (issues.length <= 2) {

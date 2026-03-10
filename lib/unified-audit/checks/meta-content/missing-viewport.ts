@@ -29,7 +29,6 @@ export const missingViewport: AuditCheckDefinition = {
 
     return {
       status: CheckStatus.Passed,
-      details: { message: viewport },
     }
   },
 }

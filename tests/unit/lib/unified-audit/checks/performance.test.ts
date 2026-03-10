@@ -375,7 +375,6 @@ describe('mobileFriendly', () => {
 
     const result = await mobileFriendly.run(context)
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.viewport).toBe('width=device-width, initial-scale=1')
   })
 
   it('warns when viewport is missing', async () => {
@@ -425,7 +424,6 @@ describe('mobileFriendly', () => {
 
     const result = await mobileFriendly.run(context)
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.signals).toContain('media queries')
   })
 
   it('detects apple-mobile-web-app-capable meta tag', async () => {
@@ -435,7 +433,6 @@ describe('mobileFriendly', () => {
 
     const result = await mobileFriendly.run(context)
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.signals).toContain('mobile meta tags')
   })
 
   it('does not flag fixed widths under 1000px', async () => {

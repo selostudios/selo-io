@@ -37,7 +37,7 @@ export async function fetchPage(url: string, options?: FetchOptions): Promise<Fe
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'SeloBot/1.0 (Site Audit)',
+        'User-Agent': 'SeloBot/1.0 (Site Audit; +https://selo.io/bot)',
       },
       redirect: 'follow',
       signal: controller.signal,
@@ -106,7 +106,7 @@ function fetchWithRelaxedSSL(url: string): Promise<FetchResult> {
       path: parsedUrl.pathname + parsedUrl.search,
       method: 'GET',
       headers: {
-        'User-Agent': 'SeloBot/1.0 (Site Audit)',
+        'User-Agent': 'SeloBot/1.0 (Site Audit; +https://selo.io/bot)',
       },
       rejectUnauthorized: false, // Allow self-signed/invalid certificates
     }

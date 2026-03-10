@@ -61,7 +61,7 @@ function calculateExpirationDate(expiresIn: ShareExpiration, customDate?: string
 function getRevalidatePath(resourceType: SharedResourceType, resourceId: string): string {
   switch (resourceType) {
     case SharedResourceType.Report:
-      return `/seo/reports/${resourceId}`
+      return `/seo/client-reports/${resourceId}`
     case SharedResourceType.SiteAudit:
       return `/seo/site-audit/${resourceId}`
     case SharedResourceType.PerformanceAudit:

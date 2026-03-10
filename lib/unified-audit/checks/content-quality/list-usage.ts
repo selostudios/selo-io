@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
 
 export const listUsage: AuditCheckDefinition = {
@@ -79,7 +80,7 @@ export const listUsage: AuditCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: `Found ${totalLists} list(s) but many have few items. Use lists for 3+ related points.`,
+          message: `Found ${pluralize(totalLists, 'list')} but many have few items. Use lists for 3+ related points.`,
           ...details,
           fixGuidance:
             'Consolidate short lists or expand them to at least 3 items for better structure.',
@@ -91,7 +92,7 @@ export const listUsage: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Good list usage: ${totalLists} list(s) with ${totalItems} total items`,
+          message: undefined,
           ...details,
         },
       }
@@ -99,7 +100,7 @@ export const listUsage: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Moderate list usage: ${totalLists} list(s) with ${totalItems} items`,
+          message: undefined,
           ...details,
         },
       }
@@ -107,7 +108,7 @@ export const listUsage: AuditCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: `Limited list usage: ${totalLists} list(s). Consider adding more lists for key points.`,
+          message: `Limited list usage: ${pluralize(totalLists, 'list')}. Consider adding more lists for key points.`,
           ...details,
         },
       }

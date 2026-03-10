@@ -50,7 +50,7 @@ export const jsRendering: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `${renderingType} content available (${wordCount} words in initial HTML)`,
+          message: undefined,
           wordCount,
           paragraphCount,
           headingCount,

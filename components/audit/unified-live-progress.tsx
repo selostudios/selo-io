@@ -50,6 +50,7 @@ export function UnifiedLiveProgress({ auditId, initialStatus }: UnifiedLiveProgr
     initialStatus === UnifiedAuditStatus.Pending ||
     initialStatus === UnifiedAuditStatus.Crawling ||
     initialStatus === UnifiedAuditStatus.Checking ||
+    initialStatus === UnifiedAuditStatus.Analyzing ||
     initialStatus === UnifiedAuditStatus.BatchComplete ||
     initialStatus === UnifiedAuditStatus.AwaitingConfirmation
 
@@ -269,7 +270,8 @@ export function UnifiedLiveProgress({ auditId, initialStatus }: UnifiedLiveProgr
   const phases = [
     { key: UnifiedAuditStatus.Pending, label: 'Starting' },
     { key: UnifiedAuditStatus.Crawling, label: 'Crawling' },
-    { key: UnifiedAuditStatus.Checking, label: 'Analyzing' },
+    { key: UnifiedAuditStatus.Checking, label: 'Checks' },
+    { key: UnifiedAuditStatus.Analyzing, label: 'Analyzing' },
   ]
   const effectiveStatus =
     status === UnifiedAuditStatus.BatchComplete ? UnifiedAuditStatus.Crawling : status
@@ -323,16 +325,20 @@ export function UnifiedLiveProgress({ auditId, initialStatus }: UnifiedLiveProgr
               ? 'Starting Audit...'
               : status === UnifiedAuditStatus.Checking
                 ? 'Running Checks...'
-                : status === UnifiedAuditStatus.BatchComplete || isContinuing
-                  ? 'Continuing...'
-                  : `Crawling ${getDomain(progress?.url, 'site')}...`}
+                : status === UnifiedAuditStatus.Analyzing
+                  ? 'Running Deep Analysis...'
+                  : status === UnifiedAuditStatus.BatchComplete || isContinuing
+                    ? 'Continuing...'
+                    : `Crawling ${getDomain(progress?.url, 'site')}...`}
           </CardTitle>
           <p className="text-muted-foreground text-sm text-pretty transition-opacity duration-300">
             {status === UnifiedAuditStatus.Checking
               ? `Analyzing ${pagesCrawled} page${pagesCrawled !== 1 ? 's' : ''} across 10 categories`
-              : status === UnifiedAuditStatus.BatchComplete || isContinuing
-                ? 'Starting next batch...'
-                : checkDescriptions[descIndex]}
+              : status === UnifiedAuditStatus.Analyzing
+                ? 'Running PageSpeed and AI analysis on key pages...'
+                : status === UnifiedAuditStatus.BatchComplete || isContinuing
+                  ? 'Starting next batch...'
+                  : checkDescriptions[descIndex]}
           </p>
         </CardHeader>
 

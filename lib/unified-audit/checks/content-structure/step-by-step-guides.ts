@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
 import { CheckCategory, ScoreDimension } from '@/lib/enums'
 
@@ -42,8 +43,8 @@ export const stepByStepGuides: AuditCheckDefinition = {
     const indicators = []
     if (hasHowToSchema) indicators.push('HowTo schema')
     if (howToHeadings > 0) indicators.push('how-to heading')
-    if (orderedLists > 0) indicators.push(`${orderedLists} ordered list(s)`)
-    if (stepHeadings > 0) indicators.push(`${stepHeadings} numbered step heading(s)`)
+    if (orderedLists > 0) indicators.push(`${pluralize(orderedLists, 'ordered list')}`)
+    if (stepHeadings > 0) indicators.push(`${pluralize(stepHeadings, 'numbered step heading')}`)
 
     if (indicators.length === 0) {
       return {
@@ -55,11 +56,6 @@ export const stepByStepGuides: AuditCheckDefinition = {
     } else if (hasHowToSchema) {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `How-to content with structured data: ${indicators.join(', ')}`,
-          indicators,
-          orderedListItems,
-        },
       }
     } else if (orderedListItems >= 3 || stepHeadings >= 3) {
       return {
@@ -74,10 +70,6 @@ export const stepByStepGuides: AuditCheckDefinition = {
     } else {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Some procedural content: ${indicators.join(', ')}`,
-          indicators,
-        },
       }
     }
   },

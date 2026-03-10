@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
 import { CheckCategory, ScoreDimension } from '@/lib/enums'
 
@@ -35,13 +36,13 @@ export const definitionBoxes: AuditCheckDefinition = {
 
     const foundDefinitions = []
     if (definitionHeadings.length > 0) {
-      foundDefinitions.push(`${definitionHeadings.length} "What is" heading(s)`)
+      foundDefinitions.push(`${pluralize(definitionHeadings.length, '"What is" heading')}`)
     }
     if (definitionLists > 0) {
-      foundDefinitions.push(`${definitionLists} definition list(s)`)
+      foundDefinitions.push(`${pluralize(definitionLists, 'definition list')}`)
     }
     if (definitionParagraphs.length > 0) {
-      foundDefinitions.push(`${definitionParagraphs.length} definition paragraph(s)`)
+      foundDefinitions.push(`${pluralize(definitionParagraphs.length, 'definition paragraph')}`)
     }
 
     if (foundDefinitions.length === 0) {
@@ -57,10 +58,6 @@ export const definitionBoxes: AuditCheckDefinition = {
     } else {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Definition content found: ${foundDefinitions.join(', ')}`,
-          foundDefinitions,
-        },
       }
     }
   },

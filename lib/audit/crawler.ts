@@ -66,10 +66,67 @@ export async function crawlSite(
     if (visited.has(url)) continue
     visited.add(url)
 
-    const { html, statusCode, lastModified, finalUrl, error, usedRelaxedSSL } = await fetchPage(
-      url,
-      { forceRelaxedSSL }
-    )
+    const isSeedUrl = pages.length === 0 && visited.size === 1
+
+    let html = ''
+    let statusCode = 0
+    let lastModified: string | null = null
+    let finalUrl: string | undefined
+    let usedRelaxedSSL: boolean | undefined
+
+    // Retry logic for the seed URL — if the first page fails, the whole audit fails
+    if (isSeedUrl) {
+      let lastError: string | undefined
+      let succeeded = false
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const result = await fetchPage(url, { forceRelaxedSSL })
+        html = result.html
+        statusCode = result.statusCode
+        lastModified = result.lastModified
+        finalUrl = result.finalUrl
+        usedRelaxedSSL = result.usedRelaxedSSL
+        lastError = result.error
+
+        if (result.error) {
+          console.log(`[Audit Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
+          continue
+        }
+
+        if (statusCode === 403) {
+          console.log(`[Audit Crawler] Seed URL attempt ${attempt}/3 returned 403`)
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
+          continue
+        }
+
+        succeeded = true
+        break
+      }
+
+      if (!succeeded) {
+        const reason =
+          statusCode! === 403
+            ? 'The website is blocking our crawler (HTTP 403 Forbidden). The site may have a firewall or WAF that blocks automated requests. Contact the site owner to whitelist SeloBot.'
+            : lastError
+              ? `Failed to fetch ${url}: ${lastError}`
+              : `The website returned HTTP ${statusCode!}. Unable to crawl.`
+        errors.push(reason)
+        break
+      }
+    } else {
+      const result = await fetchPage(url, { forceRelaxedSSL })
+      html = result.html
+      statusCode = result.statusCode
+      lastModified = result.lastModified
+      finalUrl = result.finalUrl
+      usedRelaxedSSL = result.usedRelaxedSSL
+
+      if (result.error) {
+        errors.push(`Failed to fetch ${url}: ${result.error}`)
+        continue
+      }
+    }
 
     // SSL certs are at domain level - if one page needs relaxed SSL, all will
     if (usedRelaxedSSL && !forceRelaxedSSL) {
@@ -79,8 +136,33 @@ export async function crawlSite(
       forceRelaxedSSL = true
     }
 
-    if (error) {
-      errors.push(`Failed to fetch ${url}: ${error}`)
+    // Detect redirects to a different path
+    let wasRedirected = false
+    if (finalUrl) {
+      try {
+        const originalPath = new URL(url).pathname.replace(/\/+$/, '')
+        const finalPath = new URL(finalUrl).pathname.replace(/\/+$/, '')
+        if (originalPath !== finalPath) {
+          wasRedirected = true
+        }
+      } catch {
+        // If URL parsing fails, continue with the page
+      }
+    }
+
+    // Always extract links from redirected pages before skipping
+    if (wasRedirected) {
+      if (statusCode === 200) {
+        const links = extractLinks(html, url, finalUrl)
+        console.log(
+          `[Audit Crawler] Redirected page ${url} → ${finalUrl}, found ${links.length} links`
+        )
+        for (const link of links) {
+          if (!visited.has(link) && !queue.includes(link)) {
+            queue.push(link)
+          }
+        }
+      }
       continue
     }
 
@@ -138,10 +220,12 @@ export async function crawlSite(
     // Extract and queue new links (only from HTML pages, not resources)
     if (statusCode === 200 && !isResource) {
       const links = extractLinks(html, url, finalUrl)
-      for (const link of links) {
-        if (!visited.has(link) && !queue.includes(link)) {
-          queue.push(link)
-        }
+      const newLinks = links.filter((l) => !visited.has(l) && !queue.includes(l))
+      console.log(
+        `[Audit Crawler] Page ${url}: found ${links.length} links, ${newLinks.length} new`
+      )
+      for (const link of newLinks) {
+        queue.push(link)
       }
     }
 
@@ -149,6 +233,9 @@ export async function crawlSite(
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
 
+  console.log(
+    `[Audit Crawler] Finished: ${pages.length} pages, ${visited.size} visited, ${queue.length} remaining in queue, ${errors.length} errors`
+  )
   return { pages, errors, stopped }
 }
 

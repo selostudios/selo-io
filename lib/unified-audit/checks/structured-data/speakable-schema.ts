@@ -129,10 +129,6 @@ export const speakableSchema: AuditCheckDefinition = {
 
     return {
       status: CheckStatus.Passed,
-      details: {
-        ...(speakableData as unknown as Record<string, unknown>),
-        message: `Speakable schema found on ${speakableData.schemaType} with ${speakableData.speakableCount} selector(s).`,
-      },
     }
   },
 }

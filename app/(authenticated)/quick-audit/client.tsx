@@ -64,7 +64,7 @@ export function QuickAuditClient() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-5 w-5 text-neutral-500" />
-            <CardTitle className="text-base">Run Unified Audit</CardTitle>
+            <CardTitle className="text-base">Run Full Site Audit</CardTitle>
           </div>
           <CardDescription>
             Comprehensive analysis covering SEO, Performance, and AI Readiness in a single audit

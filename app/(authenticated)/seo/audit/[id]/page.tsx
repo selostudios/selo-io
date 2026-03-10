@@ -11,6 +11,7 @@ const IN_PROGRESS_STATUSES = [
   UnifiedAuditStatus.Pending,
   UnifiedAuditStatus.Crawling,
   UnifiedAuditStatus.Checking,
+  UnifiedAuditStatus.Analyzing,
   UnifiedAuditStatus.BatchComplete,
   UnifiedAuditStatus.AwaitingConfirmation,
 ]

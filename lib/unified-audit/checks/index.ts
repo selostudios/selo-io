@@ -29,6 +29,10 @@ export function getChecksByCategory(category: CheckCategory): AuditCheckDefiniti
   return allChecks.filter((c) => c.category === category)
 }
 
+export function getCheckByName(name: string): AuditCheckDefinition | undefined {
+  return allChecks.find((c) => c.name === name)
+}
+
 export function getChecksByScore(dimension: ScoreDimension): AuditCheckDefinition[] {
   return allChecks.filter((c) => c.feedsScores.includes(dimension))
 }

@@ -77,7 +77,7 @@ function analyzeRobotsTxt(content: string, robotsUrl: string): CheckResult {
   return {
     status: CheckStatus.Passed,
     details: {
-      message: `robots.txt is properly configured${features.length > 0 ? ` with ${features.join(' and ')}` : ''}`,
+      message: undefined,
       url: robotsUrl,
       hasSitemap,
       hasCrawlRules: hasDisallow || hasAllow,

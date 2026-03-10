@@ -9,7 +9,7 @@ export const platformReadiness: AuditCheckDefinition = {
     'Assesses readiness for AI platforms — detailed scoring is provided during the AI analysis phase',
   displayName: 'Platform Readiness Pending',
   displayNamePassed: 'Platform Readiness Assessed',
-  learnMoreUrl: null,
+  learnMoreUrl: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content',
   isSiteWide: false,
   feedsScores: [ScoreDimension.AIReadiness],
 
@@ -17,7 +17,6 @@ export const platformReadiness: AuditCheckDefinition = {
     return {
       status: CheckStatus.Passed,
       details: {
-        message: 'Platform readiness assessed during AI analysis phase',
         requiresAIAnalysis: true,
       },
     }

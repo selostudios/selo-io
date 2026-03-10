@@ -57,15 +57,31 @@ export const lighthouseScores: AuditCheckDefinition = {
       else labels[key] = 'poor'
     }
 
+    const opportunities = context.psiOpportunities ?? []
+
+    let message: string | undefined = undefined
+    if (status !== CheckStatus.Passed) {
+      const parts = [
+        `Performance: ${performance}/100, Accessibility: ${accessibility}/100, Best Practices: ${bestPractices}/100, SEO: ${seo}/100`,
+      ]
+      if (opportunities.length > 0) {
+        parts.push(
+          `Top issues: ${opportunities.map((o) => `${o.title} (${o.displayValue})`).join(', ')}.`
+        )
+      }
+      message = parts.join('. ')
+    }
+
     return {
       status,
       details: {
-        message: `Lighthouse performance: ${performance}/100 (${labels.performance}). Accessibility: ${accessibility}/100, Best Practices: ${bestPractices}/100, SEO: ${seo}/100.`,
+        message,
         performance,
         accessibility,
         bestPractices,
         seo,
         labels,
+        ...(status !== CheckStatus.Passed && opportunities.length > 0 && { opportunities }),
       },
     }
   },

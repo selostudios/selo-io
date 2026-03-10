@@ -12,7 +12,7 @@ export function DeprecationBanner({ auditType }: DeprecationBannerProps) {
       <p className="text-sm text-yellow-800">
         {auditType} has been replaced by the{' '}
         <Link href="/seo/audit" className="font-medium underline hover:text-yellow-900">
-          Unified Audit
+          Full Site Audit
         </Link>
         , which combines SEO, Performance, and AI Readiness into a single comprehensive audit.
       </p>
@@ -20,7 +20,7 @@ export function DeprecationBanner({ auditType }: DeprecationBannerProps) {
         href="/seo/audit"
         className="ml-auto flex shrink-0 items-center gap-1 text-sm font-medium text-yellow-700 hover:text-yellow-900"
       >
-        Go to Unified Audit
+        Go to Full Site Audit
         <ArrowRight className="size-4" />
       </Link>
     </div>

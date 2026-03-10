@@ -5,7 +5,8 @@ import { paginateQuery } from '@/lib/supabase/paginate'
 import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types'
 import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
 import type { ReportPresentationData } from '@/lib/reports/types'
-import { transformToPresentation } from '@/app/(authenticated)/seo/reports/[id]/transform'
+import { transformToPresentation } from '@/app/(authenticated)/seo/client-reports/[id]/transform'
+import type { ReportCheck, ReportAuditData } from '@/app/(authenticated)/seo/client-reports/actions'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOCheck } from '@/lib/aio/types'
 
@@ -148,9 +149,10 @@ export async function getSharedReportData(
   }
 
   const auditData = {
-    siteChecks: (siteChecks ?? []) as SiteAuditCheck[],
-    performanceResults: (performanceResults ?? []) as PerformanceAuditResult[],
-    aioChecks: (aioChecks ?? []) as AIOCheck[],
+    siteChecks: (siteChecks ?? []) as unknown as ReportCheck[],
+    performanceResults: (performanceResults ??
+      []) as unknown as ReportAuditData['performanceResults'],
+    aioChecks: (aioChecks ?? []) as unknown as ReportCheck[],
   }
 
   return transformToPresentation(reportWithAudits, auditData)

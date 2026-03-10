@@ -11,6 +11,8 @@ import {
 } from './scoring'
 import { UnifiedAuditStatus, CheckStatus } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext, AuditCheckDefinition } from './types'
+import { runPSIAnalysis } from './psi-runner'
+import { runAIAnalysisPhase } from './ai-runner'
 
 // Budget for starting new batches: 800s max function timeout minus 300s buffer
 const MAX_FUNCTION_DURATION_MS = 500_000
@@ -56,7 +58,7 @@ function toCheckContextPages(pages: AuditPage[]): NonNullable<CheckContext['allP
 /**
  * Build a check result record for insertion into the audit_checks table.
  */
-function buildCheckRecord(
+export function buildCheckRecord(
   auditId: string,
   pageUrl: string | null,
   check: AuditCheckDefinition,
@@ -225,15 +227,31 @@ export async function runUnifiedAudit(auditId: string, url: string): Promise<voi
     }
 
     if (crawlStopped) {
-      await completeAuditScoring(auditId, url, allPages, allCheckResults)
+      await completeAuditScoring(auditId, url, allPages, allCheckResults, null)
       return
     }
 
     // Phase 2: Site-wide checks
     await runSiteWideChecks(auditId, url, allPages, allCheckResults, dismissedChecks)
 
-    // Phase 3: Scoring
-    await completeAuditScoring(auditId, url, allPages, allCheckResults)
+    // Phase 3: PSI + AI analysis (parallel)
+    const analysisResults = await runAnalysisPhase(
+      auditId,
+      url,
+      allPages,
+      allCheckResults,
+      audit.sample_size ?? 5,
+      audit.ai_analysis_enabled ?? true
+    )
+
+    // Phase 4: Scoring
+    await completeAuditScoring(
+      auditId,
+      url,
+      allPages,
+      analysisResults.checkResults,
+      analysisResults.strategicScore
+    )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
 
@@ -440,6 +458,67 @@ async function runSiteWideChecks(
 }
 
 // =============================================================================
+// PSI + AI Analysis Phase
+// =============================================================================
+
+interface AnalysisPhaseResult {
+  checkResults: AuditCheck[]
+  strategicScore: number | null
+}
+
+/**
+ * Run PSI and AI analysis in parallel after site-wide checks.
+ * If PSI upserted checks, re-fetches all checks from DB to get fresh data.
+ */
+async function runAnalysisPhase(
+  auditId: string,
+  url: string,
+  allPages: AuditPage[],
+  currentCheckResults: AuditCheck[],
+  sampleSize: number,
+  aiAnalysisEnabled: boolean
+): Promise<AnalysisPhaseResult> {
+  const supabase = createServiceClient()
+
+  // Set status to Analyzing
+  await supabase.from('audits').update({ status: UnifiedAuditStatus.Analyzing }).eq('id', auditId)
+
+  // Run PSI and AI in parallel
+  const [psiResult, aiResult] = await Promise.allSettled([
+    runPSIAnalysis(auditId, url, allPages, sampleSize),
+    runAIAnalysisPhase(auditId, url, allPages, sampleSize, aiAnalysisEnabled),
+  ])
+
+  const psiData = psiResult.status === 'fulfilled' ? psiResult.value : null
+  const aiData = aiResult.status === 'fulfilled' ? aiResult.value : null
+
+  if (psiResult.status === 'rejected') {
+    console.error('[Unified Audit] PSI analysis failed:', psiResult.reason)
+  }
+  if (aiResult.status === 'rejected') {
+    console.error('[Unified Audit] AI analysis failed:', aiResult.reason)
+  }
+
+  // If PSI upserted checks, re-fetch all checks from DB (in-memory array is stale)
+  let checkResults = currentCheckResults
+  if (psiData && psiData.checksUpserted > 0) {
+    const { data: freshChecks } = await supabase
+      .from('audit_checks')
+      .select('*')
+      .eq('audit_id', auditId)
+
+    if (freshChecks) {
+      checkResults = freshChecks as AuditCheck[]
+    }
+  }
+
+  return {
+    checkResults,
+    strategicScore: aiData?.strategicScore ?? null,
+  }
+}
+
+// =============================================================================
 // Scoring & Completion
 // =============================================================================
 
@@ -447,13 +526,14 @@ async function completeAuditScoring(
   auditId: string,
   _url: string,
   _allPages: AuditPage[],
-  allCheckResults: AuditCheck[]
+  allCheckResults: AuditCheck[],
+  strategicScore: number | null = null
 ): Promise<void> {
   const supabase = createServiceClient()
 
   const seoScore = calculateSEOScore(allCheckResults)
   const performanceScore = calculatePerformanceScore(allCheckResults)
-  const aiReadinessScore = calculateAIReadinessScore(allCheckResults, null)
+  const aiReadinessScore = calculateAIReadinessScore(allCheckResults, strategicScore)
   const overallScore = calculateOverallScore(seoScore, performanceScore, aiReadinessScore)
 
   // Count by status
@@ -545,8 +625,32 @@ async function finishUnifiedAudit(
     await runSiteWideChecks(auditId, url, allPages, allCheckResults, dismissedChecks)
   }
 
+  // Fetch audit config for analysis phase
+  const { data: auditConfig } = await supabase
+    .from('audits')
+    .select('sample_size, ai_analysis_enabled')
+    .eq('id', auditId)
+    .single()
+
+  // Run PSI + AI analysis (skip if stopped)
+  let strategicScore: number | null = null
+  let finalCheckResults = allCheckResults
+
+  if (!wasStopped) {
+    const analysisResults = await runAnalysisPhase(
+      auditId,
+      url,
+      allPages,
+      allCheckResults,
+      auditConfig?.sample_size ?? 5,
+      auditConfig?.ai_analysis_enabled ?? true
+    )
+    strategicScore = analysisResults.strategicScore
+    finalCheckResults = analysisResults.checkResults
+  }
+
   // Scoring
-  await completeAuditScoring(auditId, url, allPages, allCheckResults)
+  await completeAuditScoring(auditId, url, allPages, finalCheckResults, strategicScore)
 }
 
 // =============================================================================
@@ -584,4 +688,4 @@ async function triggerContinuation(auditId: string): Promise<void> {
 // Exports for programmatic check running (used in tests)
 // =============================================================================
 
-export { runSiteWideChecks, completeAuditScoring, buildCheckRecord }
+export { runSiteWideChecks, completeAuditScoring }

@@ -125,7 +125,7 @@ export function UnifiedAuditClient({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold" data-testid="unified-audit-page-title">
-          Unified Audit
+          Full Site Audit
         </h1>
         <p className="text-muted-foreground mt-1">
           Comprehensive site analysis across SEO, Performance, and AI Readiness
@@ -293,7 +293,14 @@ export function UnifiedAuditClient({
                         <Badge variant="outline">In Progress</Badge>
                       </div>
                     ) : audit.status === 'failed' ? (
-                      <Badge variant="destructive">Failed</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive">Failed</Badge>
+                        {audit.error_message && (
+                          <span className="max-w-[300px] truncate text-xs text-red-600">
+                            {audit.error_message}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="font-medium tabular-nums">
                         {audit.overall_score !== null ? `${audit.overall_score}/100` : '-'}

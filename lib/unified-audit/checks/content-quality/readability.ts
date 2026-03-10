@@ -63,10 +63,7 @@ export const readability: AuditCheckDefinition = {
     if (fleschScore >= 60) {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Good readability (Flesch score: ${Math.round(fleschScore)}, avg sentence length: ${Math.round(avgSentenceLength)} words)`,
-          ...details,
-        },
+        details,
       }
     } else if (fleschScore >= 40) {
       return {

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ShareModal } from '@/components/share/share-modal'
 import { UnifiedScoreCards } from '@/components/audit/unified-score-cards'
 import { UnifiedCheckList } from '@/components/audit/unified-check-list'
+import { rerunCheck } from './actions'
 import { SharedResourceType, UnifiedAuditStatus, CheckStatus, ScoreDimension } from '@/lib/enums'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
@@ -46,6 +47,17 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
     },
     [router, pathname, searchParams]
+  )
+
+  const handleRerunCheck = useCallback(
+    async (checkName: string, pageUrls: string[]) => {
+      const result = await rerunCheck(audit.id, checkName, pageUrls)
+      if (result.success) {
+        router.refresh()
+      }
+      return { passed: result.passed, failed: result.failed, warnings: result.warnings }
+    },
+    [audit.id, router]
   )
 
   // Filter checks by search query
@@ -108,7 +120,7 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold" data-testid="audit-report-title">
-              Audit Report:
+              Audit Results:
             </h1>
             <a
               href={audit.url}
@@ -130,6 +142,9 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
               </Badge>
             )}
           </div>
+          {audit.status === UnifiedAuditStatus.Failed && audit.error_message && (
+            <p className="text-sm text-red-600">{audit.error_message}</p>
+          )}
           <p className="text-muted-foreground text-sm">
             {audit.status === UnifiedAuditStatus.Stopped ? 'Stopped' : 'Audited'}{' '}
             {audit.completed_at ? formatDate(audit.completed_at, false) : 'In progress'} &middot;{' '}
@@ -217,19 +232,39 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            <UnifiedCheckList checks={statusFilteredChecks} groupBy="category" />
+            <UnifiedCheckList
+              checks={statusFilteredChecks}
+              groupBy="category"
+              totalPages={audit.pages_crawled}
+              onRerunCheck={handleRerunCheck}
+            />
           </TabsContent>
 
           <TabsContent value="seo" className="space-y-4">
-            <UnifiedCheckList checks={seoChecks} groupBy="category" />
+            <UnifiedCheckList
+              checks={seoChecks}
+              groupBy="category"
+              totalPages={audit.pages_crawled}
+              onRerunCheck={handleRerunCheck}
+            />
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-4">
-            <UnifiedCheckList checks={performanceChecks} groupBy="category" />
+            <UnifiedCheckList
+              checks={performanceChecks}
+              groupBy="category"
+              totalPages={audit.pages_crawled}
+              onRerunCheck={handleRerunCheck}
+            />
           </TabsContent>
 
           <TabsContent value="ai-readiness" className="space-y-4">
-            <UnifiedCheckList checks={aiChecks} groupBy="category" />
+            <UnifiedCheckList
+              checks={aiChecks}
+              groupBy="category"
+              totalPages={audit.pages_crawled}
+              onRerunCheck={handleRerunCheck}
+            />
           </TabsContent>
         </Tabs>
       </div>

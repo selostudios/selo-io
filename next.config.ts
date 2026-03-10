@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
         hostname: '*.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   async redirects() {
@@ -30,6 +36,16 @@ const nextConfig: NextConfig = {
       {
         source: '/audit/performance/:id',
         destination: '/seo/page-speed/:id',
+        permanent: true,
+      },
+      {
+        source: '/seo/reports',
+        destination: '/seo/client-reports',
+        permanent: true,
+      },
+      {
+        source: '/seo/reports/:path*',
+        destination: '/seo/client-reports/:path*',
         permanent: true,
       },
     ]

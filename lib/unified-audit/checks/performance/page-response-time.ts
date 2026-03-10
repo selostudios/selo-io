@@ -22,12 +22,17 @@ export const pageResponseTime: AuditCheckDefinition = {
       const lcpMs = extractLcpFromPsi(psi)
       if (lcpMs !== null) {
         const lcpSeconds = (lcpMs / 1000).toFixed(2)
+        const opportunities = context.psiOpportunities ?? []
+        const opportunitySuffix =
+          opportunities.length > 0
+            ? ` Top issues: ${opportunities.map((o) => `${o.title} (${o.displayValue})`).join(', ')}.`
+            : ''
 
         if (lcpMs <= 3000) {
           return {
             status: CheckStatus.Passed,
             details: {
-              message: `Page LCP is ${lcpSeconds}s — fast enough for users and AI crawlers.`,
+              message: undefined,
               lcp_ms: lcpMs,
               source: 'psi',
             },
@@ -38,9 +43,10 @@ export const pageResponseTime: AuditCheckDefinition = {
           return {
             status: CheckStatus.Warning,
             details: {
-              message: `Page LCP is ${lcpSeconds}s — AI crawlers may experience delays. Aim for under 3s.`,
+              message: `Page LCP is ${lcpSeconds}s — aim for under 3s.${opportunitySuffix}`,
               lcp_ms: lcpMs,
               source: 'psi',
+              opportunities,
             },
           }
         }
@@ -48,9 +54,10 @@ export const pageResponseTime: AuditCheckDefinition = {
         return {
           status: CheckStatus.Failed,
           details: {
-            message: `Page LCP is ${lcpSeconds}s — too slow. AI crawlers may timeout and skip your content.`,
+            message: `Page LCP is ${lcpSeconds}s — too slow for AI crawlers and users.${opportunitySuffix}`,
             lcp_ms: lcpMs,
             source: 'psi',
+            opportunities,
           },
         }
       }
@@ -75,7 +82,7 @@ export const pageResponseTime: AuditCheckDefinition = {
         return {
           status: CheckStatus.Passed,
           details: {
-            message: `Page responds in ${responseTimeSeconds}s.`,
+            message: undefined,
             response_time_ms: responseTimeMs,
             source: 'fetch',
           },

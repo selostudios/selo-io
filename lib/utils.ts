@@ -100,6 +100,14 @@ export function getDomain(url: string | null | undefined, fallback = ''): string
 }
 
 /**
+ * Returns "1 image" or "3 images". Handles simple English plurals.
+ */
+export function pluralize(count: number, singular: string, plural?: string): string {
+  const word = count === 1 ? singular : (plural ?? singular + 's')
+  return `${count} ${word}`
+}
+
+/**
  * Formats an ISO date string for audit display (e.g., "Feb 27, 2026").
  */
 export function formatAuditDate(dateString: string): string {

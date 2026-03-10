@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
 import { CheckCategory, ScoreDimension } from '@/lib/enums'
 
@@ -59,21 +60,21 @@ export const citationFormat: AuditCheckDefinition = {
 
     const indicators = []
     if (authoritativeLinks.length > 0) {
-      indicators.push(`${authoritativeLinks.length} authoritative source link(s)`)
+      indicators.push(`${pluralize(authoritativeLinks.length, 'authoritative source link')}`)
     }
     if (externalLinks.length > authoritativeLinks.length) {
       indicators.push(
-        `${externalLinks.length - authoritativeLinks.length} additional external link(s)`
+        `${pluralize(externalLinks.length - authoritativeLinks.length, 'additional external link')}`
       )
     }
     if (citationElements > 0) {
-      indicators.push(`${citationElements} citation element(s)`)
+      indicators.push(`${pluralize(citationElements, 'citation element')}`)
     }
     if (referenceHeadings.length > 0) {
       indicators.push('reference section')
     }
     if (citationMarkers > 0) {
-      indicators.push(`${citationMarkers} citation marker(s)`)
+      indicators.push(`${pluralize(citationMarkers, 'citation marker')}`)
     }
 
     if (
@@ -94,11 +95,6 @@ export const citationFormat: AuditCheckDefinition = {
     } else if (authoritativeLinks.length >= 3 || referenceHeadings.length > 0) {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Strong citation format: ${indicators.join(', ')}`,
-          indicators,
-          authoritativeLinks: authoritativeLinks.length,
-        },
       }
     } else {
       return {

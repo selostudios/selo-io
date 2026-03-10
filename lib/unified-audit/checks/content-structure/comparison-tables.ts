@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
 import { CheckCategory, ScoreDimension } from '@/lib/enums'
 
@@ -48,14 +49,14 @@ export const comparisonTables: AuditCheckDefinition = {
       return {
         status: CheckStatus.Failed,
         details: {
-          message: `Found ${tables.length} table(s) but none have header rows (<th>). AI engines need structured tables to extract data.`,
+          message: `Found ${pluralize(tables.length, 'table')} but none have header rows (<th>). AI engines need structured tables to extract data.`,
           totalTables: tables.length,
           fixGuidance: 'Add <th> elements to define column/row headers in your tables.',
         },
       }
     } else {
       const features = []
-      features.push(`${tablesWithHeaders.length} table(s) with headers`)
+      features.push(`${pluralize(tablesWithHeaders.length, 'table')} with headers`)
       if (tablesWithCaptions.length > 0) {
         features.push(`${tablesWithCaptions.length} with captions`)
       }
@@ -65,12 +66,6 @@ export const comparisonTables: AuditCheckDefinition = {
 
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Structured tables found: ${features.join(', ')}`,
-          totalTables: tables.length,
-          tablesWithHeaders: tablesWithHeaders.length,
-          features,
-        },
       }
     }
   },

@@ -75,6 +75,24 @@ describe('computeProgress', () => {
     expect(progress.scoring.status).toBe('pending')
   })
 
+  it('returns analyzing phase when status is analyzing', () => {
+    const progress = computeProgress(
+      {
+        status: UnifiedAuditStatus.Analyzing,
+        pages_crawled: 50,
+        max_pages: 50,
+        overall_score: null,
+      },
+      200,
+      200
+    )
+
+    expect(progress.phase).toBe('analyzing')
+    expect(progress.crawl.status).toBe('complete')
+    expect(progress.analysis.checks.status).toBe('complete')
+    expect(progress.scoring.status).toBe('pending')
+  })
+
   it('returns completed phase when status is completed', () => {
     const progress = computeProgress(
       {
@@ -142,7 +160,7 @@ describe('computeProgress', () => {
     expect(progress.crawl.status).toBe('complete')
   })
 
-  it('PSI and AI analysis default to pending with zero counts', () => {
+  it('PSI and AI default to pending with zero counts when no progress data provided', () => {
     const progress = computeProgress(
       {
         status: UnifiedAuditStatus.Checking,
@@ -160,5 +178,76 @@ describe('computeProgress', () => {
     expect(progress.analysis.ai.status).toBe('pending')
     expect(progress.analysis.ai.completed).toBe(0)
     expect(progress.analysis.ai.total).toBe(0)
+  })
+
+  it('shows PSI and AI as running during analyzing status with progress data', () => {
+    const progress = computeProgress(
+      {
+        status: UnifiedAuditStatus.Analyzing,
+        pages_crawled: 50,
+        max_pages: 50,
+        overall_score: null,
+      },
+      200,
+      200,
+      {
+        psiCompleted: 2,
+        psiTotal: 5,
+        aiCompleted: 1,
+        aiTotal: 5,
+      }
+    )
+
+    expect(progress.phase).toBe('analyzing')
+    expect(progress.analysis.psi.status).toBe('running')
+    expect(progress.analysis.psi.completed).toBe(2)
+    expect(progress.analysis.psi.total).toBe(5)
+    expect(progress.analysis.ai.status).toBe('running')
+    expect(progress.analysis.ai.completed).toBe(1)
+    expect(progress.analysis.ai.total).toBe(5)
+  })
+
+  it('shows PSI and AI as complete when completed', () => {
+    const progress = computeProgress(
+      {
+        status: UnifiedAuditStatus.Completed,
+        pages_crawled: 50,
+        max_pages: 50,
+        overall_score: 85,
+      },
+      200,
+      200,
+      {
+        psiCompleted: 5,
+        psiTotal: 5,
+        aiCompleted: 5,
+        aiTotal: 5,
+      }
+    )
+
+    expect(progress.analysis.psi.status).toBe('complete')
+    expect(progress.analysis.ai.status).toBe('complete')
+  })
+
+  it('marks PSI/AI as complete when individual counts match totals during analyzing', () => {
+    const progress = computeProgress(
+      {
+        status: UnifiedAuditStatus.Analyzing,
+        pages_crawled: 50,
+        max_pages: 50,
+        overall_score: null,
+      },
+      200,
+      200,
+      {
+        psiCompleted: 5,
+        psiTotal: 5,
+        aiCompleted: 3,
+        aiTotal: 5,
+      }
+    )
+
+    expect(progress.analysis.psi.status).toBe('complete')
+    expect(progress.analysis.ai.status).toBe('running')
   })
 })

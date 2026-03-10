@@ -66,17 +66,32 @@ export const coreWebVitals: AuditCheckDefinition = {
 
     const lcpSeconds = (lcp / 1000).toFixed(2)
     const inpMs = Math.round(inp)
+    const diagnostics = context.psiDiagnostics ?? []
+
+    let message: string | undefined = undefined
+    if (status !== CheckStatus.Passed) {
+      const parts = [
+        `LCP: ${lcpSeconds}s (${lcpRating}), INP: ${inpMs}ms (${inpRating}), CLS: ${cls.toFixed(3)} (${clsRating})`,
+      ]
+      if (diagnostics.length > 0) {
+        parts.push(
+          `Diagnostics: ${diagnostics.map((d) => `${d.title}: ${d.displayValue}`).join(', ')}.`
+        )
+      }
+      message = parts.join('. ')
+    }
 
     return {
       status,
       details: {
-        message: `LCP: ${lcpSeconds}s (${lcpRating}), INP: ${inpMs}ms (${inpRating}), CLS: ${cls.toFixed(3)} (${clsRating}).`,
+        message,
         lcp,
         inp,
         cls,
         lcpRating,
         inpRating,
         clsRating,
+        ...(status !== CheckStatus.Passed && diagnostics.length > 0 && { diagnostics }),
       },
     }
   },

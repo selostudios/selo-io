@@ -105,7 +105,7 @@ export const contentFreshness: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Content updated ${daysSinceUpdate} day${daysSinceUpdate === 1 ? '' : 's'} ago`,
+          message: undefined,
           daysSinceUpdate,
           lastUpdate: lastModifiedDate.toISOString(),
         },

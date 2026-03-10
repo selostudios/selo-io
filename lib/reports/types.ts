@@ -31,10 +31,13 @@ export interface GeneratedReport {
   organization_id: string | null
   created_by: string | null
 
-  // Audit references
-  site_audit_id: string
-  performance_audit_id: string
-  aio_audit_id: string
+  // Unified audit reference (new reports)
+  audit_id: string | null
+
+  // Legacy audit references (old reports)
+  site_audit_id: string | null
+  performance_audit_id: string | null
+  aio_audit_id: string | null
 
   // Computed data
   combined_score: number | null

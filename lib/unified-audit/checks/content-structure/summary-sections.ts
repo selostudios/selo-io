@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '@/lib/unified-audit/types'
 import { CheckCategory, ScoreDimension } from '@/lib/enums'
 
@@ -42,16 +43,16 @@ export const summarySections: AuditCheckDefinition = {
 
     const indicators = []
     if (summaryHeadings.length > 0) {
-      indicators.push(`${summaryHeadings.length} summary heading(s)`)
+      indicators.push(`${pluralize(summaryHeadings.length, 'summary heading')}`)
     }
     if (summaryElements > 0) {
-      indicators.push(`${summaryElements} summary element(s)`)
+      indicators.push(`${pluralize(summaryElements, 'summary element')}`)
     }
     if (summaryBlocks.length > 0) {
-      indicators.push(`${summaryBlocks.length} summary block(s)`)
+      indicators.push(`${pluralize(summaryBlocks.length, 'summary block')}`)
     }
     if (summaryListItems > 0) {
-      indicators.push(`${summaryListItems} key point(s)`)
+      indicators.push(`${pluralize(summaryListItems, 'key point')}`)
     }
 
     if (indicators.length === 0) {
@@ -67,10 +68,6 @@ export const summarySections: AuditCheckDefinition = {
     } else {
       return {
         status: CheckStatus.Passed,
-        details: {
-          message: `Summary content found: ${indicators.join(', ')}`,
-          indicators,
-        },
       }
     }
   },

@@ -50,8 +50,10 @@ export const citability: AuditCheckDefinition = {
     'Analyzes content passages for citability by AI models — clear, self-contained, factual statements are more likely to be cited',
   displayName: 'Low Citability',
   displayNamePassed: 'Good Citability',
-  learnMoreUrl: null,
+  learnMoreUrl: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content',
   isSiteWide: false,
+  fixGuidance:
+    'Include clear definitions ("X is..."), statistics, and factual claims backed by research to make content citable by AI models.',
   feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
@@ -101,7 +103,7 @@ export const citability: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `${citablePassages.length} of ${passages.length} passages are highly citable`,
+          message: undefined,
           ...(details as unknown as Record<string, unknown>),
         },
       }

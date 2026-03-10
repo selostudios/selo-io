@@ -67,9 +67,9 @@ export const duplicateMetaDescriptions: AuditCheckDefinition = {
         message: `Found ${duplicates.length} duplicate meta description${duplicates.length > 1 ? 's' : ''} affecting ${totalDuplicatePages} pages. Examples: ${summary}. Each page should have a unique meta description to improve click-through rates.`,
         duplicateCount: duplicates.length,
         affectedPages: totalDuplicatePages,
-        duplicates: duplicates.slice(0, 10).map((d) => ({
+        duplicates: duplicates.map((d) => ({
           description: d.description,
-          urls: d.urls.slice(0, 5),
+          urls: d.urls,
           count: d.count,
         })),
       },

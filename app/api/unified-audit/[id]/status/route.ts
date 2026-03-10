@@ -51,6 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (
     audit.status === UnifiedAuditStatus.Crawling ||
     audit.status === UnifiedAuditStatus.Checking ||
+    audit.status === UnifiedAuditStatus.Analyzing ||
     audit.status === UnifiedAuditStatus.BatchComplete
   ) {
     const timestamp = audit.updated_at || audit.created_at
@@ -113,6 +114,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     checkCount || 0
   )
 
+  // Count PSI-enhanced checks (checks with source = 'psi' in details)
+  const { count: psiCheckCount } = await supabase
+    .from('audit_checks')
+    .select('*', { count: 'exact', head: true })
+    .eq('audit_id', id)
+    .eq('details->>source', 'psi')
+
+  // Count distinct pages with PSI data
+  const psiPagesCompleted = psiCheckCount ? Math.floor(psiCheckCount / 3) : 0 // 3 checks per page
+
+  // Count AI analyses
+  const { count: aiAnalysisCount } = await supabase
+    .from('audit_ai_analyses')
+    .select('*', { count: 'exact', head: true })
+    .eq('audit_id', id)
+
+  const sampleSize = audit.sample_size ?? 5
+
   const progress = computeProgress(
     {
       status: audit.status as UnifiedAuditStatus,
@@ -121,7 +140,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       overall_score: audit.overall_score,
     },
     checkCount || 0,
-    totalChecks
+    totalChecks,
+    {
+      psiCompleted: psiPagesCompleted,
+      psiTotal: sampleSize,
+      aiCompleted: aiAnalysisCount || 0,
+      aiTotal: audit.ai_analysis_enabled ? sampleSize : 0,
+    }
   )
 
   return NextResponse.json({

@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type {
   AuditCheckDefinition,
   CheckContext,
@@ -200,7 +201,7 @@ export const organizationSchema: AuditCheckDefinition = {
       status: CheckStatus.Passed,
       details: {
         ...(orgDetails as unknown as Record<string, unknown>),
-        message: `Organization schema found with all key fields. ${sameAsLinks.length} sameAs link(s) detected.`,
+        message: undefined,
         warnings: warnings.length > 0 ? warnings : undefined,
       },
     }

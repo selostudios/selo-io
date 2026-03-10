@@ -53,7 +53,6 @@ export const contentDepth: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Good content depth (${wordCount} words)`,
           wordCount,
         },
       }
@@ -61,7 +60,6 @@ export const contentDepth: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Excellent content depth (${wordCount} words)`,
           wordCount,
         },
       }

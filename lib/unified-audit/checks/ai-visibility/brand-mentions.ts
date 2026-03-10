@@ -53,8 +53,10 @@ export const brandMentions: AuditCheckDefinition = {
     'Checks if your brand has presence in knowledge bases like Wikipedia and Wikidata that AI models rely on',
   displayName: 'Low Brand Visibility',
   displayNamePassed: 'Good Brand Visibility',
-  learnMoreUrl: null,
+  learnMoreUrl: 'https://en.wikipedia.org/wiki/Wikipedia:Notability',
   isSiteWide: true,
+  fixGuidance:
+    'Establish your brand in knowledge bases by creating a Wikidata entity and working towards a Wikipedia article.',
   feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
@@ -148,7 +150,7 @@ export const brandMentions: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Brand "${brandName}" has Wikipedia presence — strong signal for AI knowledge bases`,
+          message: undefined,
           ...(details as unknown as Record<string, unknown>),
         },
       }

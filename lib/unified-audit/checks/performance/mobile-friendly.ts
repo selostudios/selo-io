@@ -51,9 +51,7 @@ export const mobileFriendly: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Mobile-friendly (${mobileSignals.join(', ')})`,
-          viewport,
-          signals: mobileSignals,
+          message: undefined,
         },
       }
     } else if (issues.length === 1) {

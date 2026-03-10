@@ -68,7 +68,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           break
         case 'Escape':
           if (!isPublic) {
-            router.push(buildOrgHref('/seo/reports'))
+            router.push(buildOrgHref('/seo/client-reports'))
           }
           break
         case 'Home':
@@ -297,7 +297,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push(buildOrgHref('/seo/reports'))}
+            onClick={() => router.push(buildOrgHref('/seo/client-reports'))}
             className="h-9 w-9"
           >
             <X className="h-4 w-4" />

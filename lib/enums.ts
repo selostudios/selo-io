@@ -270,6 +270,7 @@ export enum UnifiedAuditStatus {
   Crawling = 'crawling',
   AwaitingConfirmation = 'awaiting_confirmation',
   Checking = 'checking',
+  Analyzing = 'analyzing',
   Completed = 'completed',
   Failed = 'failed',
   Stopped = 'stopped',

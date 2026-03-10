@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
 
 export const schemaMarkup: AuditCheckDefinition = {
@@ -109,10 +110,7 @@ export const schemaMarkup: AuditCheckDefinition = {
     return {
       status: CheckStatus.Passed,
       details: {
-        message:
-          schemas.length > 0
-            ? `Found ${validCount} schema(s): ${schemas.join(', ')}`
-            : 'JSON-LD structured data found',
+        message: undefined,
         schemas,
         totalSchemas: validCount,
       },

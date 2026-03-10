@@ -93,6 +93,7 @@ export function useUnifiedAuditPolling(auditId: string, enabled: boolean) {
           data.status === UnifiedAuditStatus.Pending ||
           data.status === UnifiedAuditStatus.Crawling ||
           data.status === UnifiedAuditStatus.Checking ||
+          data.status === UnifiedAuditStatus.Analyzing ||
           data.status === UnifiedAuditStatus.BatchComplete ||
           data.status === UnifiedAuditStatus.AwaitingConfirmation
         ) {

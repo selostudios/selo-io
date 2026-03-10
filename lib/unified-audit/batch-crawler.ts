@@ -163,11 +163,122 @@ export async function crawlBatch(
     // Mark as crawled immediately to prevent duplicate processing
     await supabase.from('audit_crawl_queue').update({ status: 'crawled' }).eq('id', queueItem.id)
 
-    // Fetch the page
-    const { html, statusCode, lastModified, finalUrl, error } = await fetchPage(url)
+    // Fetch the page (with retry logic for the seed URL)
+    const isSeedUrl = allPages.length === 0 && pagesProcessed === 0
+    let html = ''
+    let statusCode = 0
+    let lastModified: string | null = null
+    let finalUrl: string | undefined
 
-    if (error) {
-      console.error(`[Batch Crawler] Failed to fetch ${url}: ${error}`)
+    if (isSeedUrl) {
+      let succeeded = false
+      let lastError: string | undefined
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const result = await fetchPage(url)
+        html = result.html
+        statusCode = result.statusCode
+        lastModified = result.lastModified
+        finalUrl = result.finalUrl
+        lastError = result.error
+
+        if (result.error) {
+          console.log(`[Batch Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
+          continue
+        }
+
+        if (statusCode === 403) {
+          console.log(`[Batch Crawler] Seed URL attempt ${attempt}/3 returned 403`)
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
+          continue
+        }
+
+        succeeded = true
+        break
+      }
+
+      if (!succeeded) {
+        const reason =
+          statusCode! === 403
+            ? 'The website is blocking our crawler (HTTP 403 Forbidden). The site may have a firewall or WAF that blocks automated requests.'
+            : lastError || `The website returned HTTP ${statusCode!}`
+
+        // Update audit with error and mark as failed
+        await supabase
+          .from('audits')
+          .update({
+            status: UnifiedAuditStatus.Failed,
+            error_message: reason,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', auditId)
+
+        return { pagesProcessed: 0, hasMorePages: false, stopped: false }
+      }
+    } else {
+      const result = await fetchPage(url)
+      html = result.html
+      statusCode = result.statusCode
+      lastModified = result.lastModified
+      finalUrl = result.finalUrl
+
+      if (result.error) {
+        console.error(`[Batch Crawler] Failed to fetch ${url}: ${result.error}`)
+        continue
+      }
+    }
+
+    // Detect redirects to a different path
+    let wasRedirected = false
+    if (finalUrl) {
+      try {
+        const originalPath = new URL(url).pathname.replace(/\/+$/, '')
+        const finalPath = new URL(finalUrl).pathname.replace(/\/+$/, '')
+        if (originalPath !== finalPath) {
+          wasRedirected = true
+          console.log(`[Batch Crawler] ${url} redirected to ${finalUrl}`)
+        }
+      } catch {
+        // If URL parsing fails, continue with the page
+      }
+    }
+
+    // Always extract and queue links (even from redirected pages) to ensure crawl discovery
+    if (statusCode === 200) {
+      const links = extractLinks(html, url, finalUrl)
+      const newUrls: Array<{ audit_id: string; url: string; depth: number }> = []
+
+      for (const link of links) {
+        const normalized = normalizeUrl(link)
+        newUrls.push({
+          audit_id: auditId,
+          url: normalized,
+          depth: queueItem.depth + 1,
+        })
+      }
+
+      if (newUrls.length > 0) {
+        // Upsert to handle duplicates gracefully (unique constraint on audit_id, url)
+        await supabase
+          .from('audit_crawl_queue')
+          .upsert(newUrls, { onConflict: 'audit_id,url', ignoreDuplicates: true })
+
+        // Update urls_discovered count
+        const { count } = await supabase
+          .from('audit_crawl_queue')
+          .select('*', { count: 'exact', head: true })
+          .eq('audit_id', auditId)
+
+        await supabase
+          .from('audits')
+          .update({ urls_discovered: count || 0 })
+          .eq('id', auditId)
+      }
+    }
+
+    // Skip creating page record and running checks for redirected pages
+    if (wasRedirected) {
       continue
     }
 
@@ -286,39 +397,6 @@ export async function crawlBatch(
 
       if (pageCheckResults.length > 0) {
         await supabase.from('audit_checks').insert(pageCheckResults)
-      }
-
-      // Extract and queue new links
-      if (statusCode === 200) {
-        const links = extractLinks(html, url, finalUrl)
-        const newUrls: Array<{ audit_id: string; url: string; depth: number }> = []
-
-        for (const link of links) {
-          const normalized = normalizeUrl(link)
-          newUrls.push({
-            audit_id: auditId,
-            url: normalized,
-            depth: queueItem.depth + 1,
-          })
-        }
-
-        if (newUrls.length > 0) {
-          // Upsert to handle duplicates gracefully (unique constraint on audit_id, url)
-          await supabase
-            .from('audit_crawl_queue')
-            .upsert(newUrls, { onConflict: 'audit_id,url', ignoreDuplicates: true })
-
-          // Update urls_discovered count
-          const { count } = await supabase
-            .from('audit_crawl_queue')
-            .select('*', { count: 'exact', head: true })
-            .eq('audit_id', auditId)
-
-          await supabase
-            .from('audits')
-            .update({ urls_discovered: count || 0 })
-            .eq('id', auditId)
-        }
       }
     }
 

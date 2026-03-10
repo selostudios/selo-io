@@ -39,12 +39,11 @@ const homeNavigation: NavigationGroup[] = [
     ],
   },
   {
-    header: 'Audits',
-    items: [{ name: 'Unified Audit', href: '/seo/audit', icon: ClipboardCheck }],
-  },
-  {
-    header: 'Reports',
-    items: [{ name: 'Full Site Report', href: '/seo/reports', icon: FileText }],
+    header: 'SEO / AIO',
+    items: [
+      { name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck },
+      { name: 'Client Reports', href: '/seo/client-reports', icon: FileText },
+    ],
   },
   {
     items: [{ name: 'Settings', href: '/settings/organization', icon: Settings }],

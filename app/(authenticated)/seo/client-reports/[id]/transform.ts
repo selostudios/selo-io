@@ -239,8 +239,8 @@ function transformRecommendations(auditData: ReportAuditData): ReportRecommendat
   return recommendations.slice(0, 10)
 }
 
-function mapPriorityToReport(priority: CheckPriority): ReportPriority {
-  switch (priority) {
+function mapPriorityToReport(priority: string): ReportPriority {
+  switch (priority as CheckPriority) {
     case CheckPriority.Critical:
       return ReportPriority.High
     case CheckPriority.Recommended:

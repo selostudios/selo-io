@@ -11,6 +11,8 @@ export const markdownAvailability: AuditCheckDefinition = {
   displayNamePassed: 'Markdown Alternatives Available',
   learnMoreUrl: 'https://llmstxt.org/',
   isSiteWide: false,
+  fixGuidance:
+    'Create an /llms.txt or /llms-full.txt file at your site root to help AI crawlers access your content in a structured format.',
   feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
@@ -62,8 +64,7 @@ export const markdownAvailability: AuditCheckDefinition = {
     return {
       status: CheckStatus.Passed,
       details: {
-        message: `Found ${indicators.length} markdown indicator${indicators.length === 1 ? '' : 's'}: ${indicators.slice(0, 3).join(', ')}${indicators.length > 3 ? '...' : ''}`,
-        indicators,
+        message: undefined,
       },
     }
   },

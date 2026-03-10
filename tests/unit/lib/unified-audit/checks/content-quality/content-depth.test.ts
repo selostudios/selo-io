@@ -88,7 +88,6 @@ describe('contentDepth check', () => {
     expect(result.status).toBe(CheckStatus.Passed)
     expect(result.details?.wordCount).toBeGreaterThanOrEqual(800)
     expect(result.details?.wordCount).toBeLessThan(1500)
-    expect(result.details?.message).toContain('Good content depth')
   })
 
   it('should pass with excellent message for 1500+ words', async () => {
@@ -114,7 +113,6 @@ describe('contentDepth check', () => {
 
     expect(result.status).toBe(CheckStatus.Passed)
     expect(result.details?.wordCount).toBeGreaterThanOrEqual(1500)
-    expect(result.details?.message).toContain('Excellent content depth')
   })
 
   it('should exclude nav, header, footer from word count', async () => {

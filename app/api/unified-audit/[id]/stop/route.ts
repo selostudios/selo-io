@@ -51,6 +51,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     UnifiedAuditStatus.Pending,
     UnifiedAuditStatus.Crawling,
     UnifiedAuditStatus.Checking,
+    UnifiedAuditStatus.Analyzing,
     UnifiedAuditStatus.BatchComplete,
   ]
 

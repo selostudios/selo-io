@@ -28,10 +28,10 @@ export default async function ReportDetailPage({ params, searchParams }: PagePro
 
   // Generate summary if not already generated
   if (!report.executive_summary) {
-    await generateSummaryForReport(id)
-    // Re-fetch to get the summary
-    const updatedReport = await getReportWithAudits(id)
-    Object.assign(report, updatedReport)
+    const result = await generateSummaryForReport(id).catch(() => null)
+    if (result?.success && result.summary) {
+      report.executive_summary = result.summary
+    }
   }
 
   // Transform to presentation data

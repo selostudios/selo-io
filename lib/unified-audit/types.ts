@@ -155,6 +155,10 @@ export interface CheckContext {
   robotsTxt?: string
   /** PageSpeed Insights data for performance checks */
   psiData?: Record<string, unknown>
+  /** Top performance opportunities extracted from PSI (sorted by impact) */
+  psiOpportunities?: { title: string; displayValue: string }[]
+  /** Performance diagnostics extracted from PSI */
+  psiDiagnostics?: { title: string; displayValue: string }[]
 }
 
 export interface CheckResult {

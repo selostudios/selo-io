@@ -108,7 +108,7 @@ export const sitemapDetection: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `XML sitemap found at ${sitemapUrl}`,
+          message: undefined,
           sitemapUrl,
         },
       }

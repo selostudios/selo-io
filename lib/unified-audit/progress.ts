@@ -25,27 +25,42 @@ export interface AuditProgress {
   scoring: { status: PhaseStatus }
 }
 
+export interface AnalysisProgress {
+  psiCompleted: number
+  psiTotal: number
+  aiCompleted: number
+  aiTotal: number
+}
+
 /**
  * Compute the current progress of an audit based on its status and check counts.
  *
  * @param audit - The audit record
  * @param checkCount - Number of checks completed so far
  * @param totalChecks - Expected total number of checks (estimate)
+ * @param analysisProgress - Optional PSI and AI progress data
  */
 export function computeProgress(
   audit: Pick<UnifiedAudit, 'status' | 'pages_crawled' | 'max_pages' | 'overall_score'>,
   checkCount: number,
-  totalChecks: number
+  totalChecks: number,
+  analysisProgress?: AnalysisProgress
 ): AuditProgress {
   const status = audit.status
 
   const crawlComplete =
     status === UnifiedAuditStatus.Checking ||
+    status === UnifiedAuditStatus.Analyzing ||
     status === UnifiedAuditStatus.Completed ||
     status === UnifiedAuditStatus.Stopped ||
     status === UnifiedAuditStatus.AwaitingConfirmation
 
   const checksComplete =
+    status === UnifiedAuditStatus.Analyzing ||
+    status === UnifiedAuditStatus.Completed ||
+    status === UnifiedAuditStatus.Stopped
+
+  const analysisComplete =
     status === UnifiedAuditStatus.Completed || status === UnifiedAuditStatus.Stopped
 
   const scoringComplete =
@@ -61,6 +76,8 @@ export function computeProgress(
     phase = 'awaiting_confirmation'
   } else if (status === UnifiedAuditStatus.Completed) {
     phase = 'completed'
+  } else if (status === UnifiedAuditStatus.Analyzing) {
+    phase = 'analyzing'
   } else if (status === UnifiedAuditStatus.Checking) {
     phase = 'analyzing'
   } else if (
@@ -76,6 +93,28 @@ export function computeProgress(
   // If scoring is complete but checks show analysis phase, adjust
   if (audit.overall_score !== null && status === UnifiedAuditStatus.Completed) {
     phase = 'completed'
+  }
+
+  // Compute PSI/AI status from progress data
+  const psiCompleted = analysisProgress?.psiCompleted ?? 0
+  const psiTotal = analysisProgress?.psiTotal ?? 0
+  const aiCompleted = analysisProgress?.aiCompleted ?? 0
+  const aiTotal = analysisProgress?.aiTotal ?? 0
+
+  const isAnalyzing = status === UnifiedAuditStatus.Analyzing
+
+  let psiStatus: PhaseStatus = 'pending'
+  if (analysisComplete || (psiTotal > 0 && psiCompleted >= psiTotal)) {
+    psiStatus = 'complete'
+  } else if (isAnalyzing && psiTotal > 0) {
+    psiStatus = 'running'
+  }
+
+  let aiStatus: PhaseStatus = 'pending'
+  if (analysisComplete || (aiTotal > 0 && aiCompleted >= aiTotal)) {
+    aiStatus = 'complete'
+  } else if (isAnalyzing && aiTotal > 0) {
+    aiStatus = 'running'
   }
 
   return {
@@ -96,18 +135,18 @@ export function computeProgress(
         total: totalChecks,
       },
       psi: {
-        status: 'pending',
-        completed: 0,
-        total: 0,
+        status: psiStatus,
+        completed: psiCompleted,
+        total: psiTotal,
       },
       ai: {
-        status: 'pending',
-        completed: 0,
-        total: 0,
+        status: aiStatus,
+        completed: aiCompleted,
+        total: aiTotal,
       },
     },
     scoring: {
-      status: scoringComplete ? 'complete' : checksComplete ? 'running' : 'pending',
+      status: scoringComplete ? 'complete' : analysisComplete ? 'running' : 'pending',
     },
   }
 }

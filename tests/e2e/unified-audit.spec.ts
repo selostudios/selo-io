@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { testUsers } from '../fixtures'
 
-test.describe('Unified Audit', () => {
+test.describe('Full Site Audit', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin user
     await page.goto('/login')
@@ -16,7 +16,7 @@ test.describe('Unified Audit', () => {
 
     await expect(page).toHaveURL(/\/seo\/audit/)
     await expect(page.locator('[data-testid="unified-audit-page-title"]')).toHaveText(
-      'Unified Audit'
+      'Full Site Audit'
     )
   })
 
@@ -101,21 +101,21 @@ test.describe('Unified Audit', () => {
     await page.goto('/seo/site-audit')
 
     await expect(page.getByText('has been replaced by the')).toBeVisible()
-    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+    await expect(page.getByText('Go to Full Site Audit')).toBeVisible()
   })
 
   test('old page-speed page shows deprecation banner', async ({ page }) => {
     await page.goto('/seo/page-speed')
 
     await expect(page.getByText('has been replaced by the')).toBeVisible()
-    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+    await expect(page.getByText('Go to Full Site Audit')).toBeVisible()
   })
 
   test('old aio page shows deprecation banner', async ({ page }) => {
     await page.goto('/seo/aio')
 
     await expect(page.getByText('has been replaced by the')).toBeVisible()
-    await expect(page.getByText('Go to Unified Audit')).toBeVisible()
+    await expect(page.getByText('Go to Full Site Audit')).toBeVisible()
   })
 })
 
@@ -136,7 +136,7 @@ test.describe('Quick Audit (Unified)', () => {
     await expect(page.locator('[data-testid="quick-audit-url-input"]')).toBeVisible()
     await expect(page.locator('[data-testid="quick-audit-run-button"]')).toBeVisible()
 
-    // Should mention "Unified Audit" in the description
+    // Should mention "Full Site Audit" in the description
     await expect(page.getByText('Comprehensive analysis')).toBeVisible()
   })
 })

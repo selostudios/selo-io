@@ -74,7 +74,7 @@ export const paragraphStructure: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Scannable paragraphs: ${strengths.join(', ')} (${paragraphs.length} paragraphs, avg ${Math.round(avgParagraphLength)} words)`,
+          message: undefined,
           ...details,
         },
       }

@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
+import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
 
 export const internalLinking: AuditCheckDefinition = {
@@ -103,7 +104,7 @@ export const internalLinking: AuditCheckDefinition = {
       return {
         status: CheckStatus.Warning,
         details: {
-          message: `Found ${internalLinks.length} internal link(s) but none are contextual (within content). Add links within paragraphs.`,
+          message: `Found ${pluralize(internalLinks.length, 'internal link')} but none are contextual (within content). Add links within paragraphs.`,
           ...details,
         },
       }
@@ -127,7 +128,7 @@ export const internalLinking: AuditCheckDefinition = {
       return {
         status: CheckStatus.Passed,
         details: {
-          message: `Good internal linking: ${contextualInternalLinks.length} contextual link(s) (${Math.round(internalLinkDensity)}% density)`,
+          message: undefined,
           ...details,
         },
       }

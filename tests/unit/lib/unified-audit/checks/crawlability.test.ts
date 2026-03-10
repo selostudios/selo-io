@@ -404,7 +404,6 @@ describe('js-rendering', () => {
     const result = await jsRendering.run(context)
 
     expect(result.status).toBe(CheckStatus.Passed)
-    expect(result.details?.message).toContain('Server-rendered')
   })
 })
 
