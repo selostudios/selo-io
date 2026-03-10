@@ -259,3 +259,42 @@ export enum AuditSource {
   PageSpeed = 'page_speed',
   AIO = 'aio',
 }
+
+// =============================================================================
+// Unified Audit Enums
+// =============================================================================
+
+export enum UnifiedAuditStatus {
+  Pending = 'pending',
+  Crawling = 'crawling',
+  AwaitingConfirmation = 'awaiting_confirmation',
+  Checking = 'checking',
+  Completed = 'completed',
+  Failed = 'failed',
+  Stopped = 'stopped',
+  BatchComplete = 'batch_complete',
+}
+
+export enum CheckCategory {
+  Crawlability = 'crawlability',
+  MetaContent = 'meta_content',
+  ContentStructure = 'content_structure',
+  ContentQuality = 'content_quality',
+  Links = 'links',
+  Media = 'media',
+  StructuredData = 'structured_data',
+  Security = 'security',
+  Performance = 'performance',
+  AIVisibility = 'ai_visibility',
+}
+
+export enum CrawlMode {
+  Standard = 'standard',
+  Exhaustive = 'exhaustive',
+}
+
+export enum ScoreDimension {
+  SEO = 'seo',
+  Performance = 'performance',
+  AIReadiness = 'ai_readiness',
+}
