@@ -116,7 +116,9 @@ export async function crawlBatch(
   // Get all already-crawled pages for context (needed for page-specific checks)
   const { data: existingPages } = await supabase
     .from('audit_pages')
-    .select('url, title, meta_description, status_code, last_modified, is_resource, resource_type, depth')
+    .select(
+      'url, title, meta_description, status_code, last_modified, is_resource, resource_type, depth'
+    )
     .eq('audit_id', auditId)
 
   const allPages: AuditPage[] = (existingPages as AuditPage[]) || []
@@ -159,10 +161,7 @@ export async function crawlBatch(
     const url = queueItem.url
 
     // Mark as crawled immediately to prevent duplicate processing
-    await supabase
-      .from('audit_crawl_queue')
-      .update({ status: 'crawled' })
-      .eq('id', queueItem.id)
+    await supabase.from('audit_crawl_queue').update({ status: 'crawled' }).eq('id', queueItem.id)
 
     // Fetch the page
     const { html, statusCode, lastModified, finalUrl, error } = await fetchPage(url)
