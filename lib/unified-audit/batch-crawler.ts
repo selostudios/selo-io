@@ -201,7 +201,7 @@ export async function crawlBatch(
       if (!succeeded) {
         const reason =
           statusCode! === 403
-            ? 'The website is blocking our crawler (HTTP 403 Forbidden). The site may have a firewall or WAF that blocks automated requests.'
+            ? 'Website blocked our crawler (HTTP 403). The site may have a firewall that blocks automated requests.'
             : lastError || `The website returned HTTP ${statusCode!}`
 
         // Update audit with error and mark as failed

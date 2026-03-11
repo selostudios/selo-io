@@ -292,23 +292,28 @@ export function UnifiedAuditClient({
                         <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
                         <Badge variant="outline">In Progress</Badge>
                       </div>
-                    ) : audit.status === 'failed' ? (
-                      <div className="flex items-center gap-2">
-                        <Badge variant="destructive">Failed</Badge>
-                        {audit.error_message && (
-                          <span className="max-w-[300px] truncate text-xs text-red-600">
-                            {audit.error_message}
-                          </span>
-                        )}
-                      </div>
                     ) : (
                       <span className="font-medium tabular-nums">
-                        {audit.overall_score !== null ? `${audit.overall_score}/100` : '-'}
+                        {audit.status === 'failed'
+                          ? '00/100'
+                          : audit.overall_score !== null
+                            ? `${audit.overall_score}/100`
+                            : '-'}
                       </span>
                     )}
                     <span className="text-muted-foreground text-sm">
                       {audit.pages_crawled} {audit.pages_crawled === 1 ? 'page' : 'pages'}
                     </span>
+                    {audit.status === 'failed' && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive">Failed</Badge>
+                        {audit.error_message && (
+                          <span className="text-xs text-red-600">
+                            {audit.error_message}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     {(audit.status === 'completed' || audit.status === 'stopped') &&
