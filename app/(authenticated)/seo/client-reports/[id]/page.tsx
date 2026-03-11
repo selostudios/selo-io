@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { ReportDetailClient } from './client'
-import { getReportWithAudits, getReportAuditData, generateSummaryForReport } from '../actions'
+import { getReportWithAudits, getReportAuditData } from '../actions'
 import { transformToPresentation } from './transform'
 
 export const dynamic = 'force-dynamic'
@@ -26,14 +26,6 @@ export default async function ReportDetailPage({ params, searchParams }: PagePro
 
   const auditData = await getReportAuditData(report)
 
-  // Generate summary if not already generated
-  if (!report.executive_summary) {
-    const result = await generateSummaryForReport(id).catch(() => null)
-    if (result?.success && result.summary) {
-      report.executive_summary = result.summary
-    }
-  }
-
   // Transform to presentation data
   const presentationData = transformToPresentation(report, auditData)
 
@@ -43,6 +35,7 @@ export default async function ReportDetailPage({ params, searchParams }: PagePro
       presentationData={presentationData}
       showShareModal={share === 'true'}
       showSettings={settings === 'true'}
+      needsSummary={!report.executive_summary}
     />
   )
 }

@@ -42,19 +42,29 @@ import { showError } from '@/components/ui/sonner'
 import { createReportFromAudit, deleteReport } from './actions'
 import type { UnifiedAudit } from '@/lib/unified-audit/types'
 import type { GeneratedReport } from '@/lib/reports/types'
+import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 interface ClientReportsClientProps {
   audits: UnifiedAudit[]
   auditReportMap: Record<string, string>
   legacyReports: GeneratedReport[]
+  organizations: OrganizationForSelector[]
   isInternal: boolean
   selectedOrganizationId: string | null
+}
+
+interface AuditGroup {
+  orgId: string | null
+  orgName: string
+  orgUrl: string | null
+  audits: UnifiedAudit[]
 }
 
 export function ClientReportsClient({
   audits,
   auditReportMap,
   legacyReports,
+  organizations,
   selectedOrganizationId,
 }: ClientReportsClientProps) {
   const router = useRouter()
@@ -67,19 +77,75 @@ export function ClientReportsClient({
     domain: string
   } | null>(null)
 
-  const filteredAudits = useMemo(() => {
-    let result = audits
-    if (!selectedOrganizationId) {
-      result = result.filter((a) => a.organization_id === null)
+  const orgMap = useMemo(() => {
+    const map: Record<string, OrganizationForSelector> = {}
+    for (const org of organizations) {
+      map[org.id] = org
     }
+    return map
+  }, [organizations])
+
+  const auditGroups = useMemo(() => {
+    let filtered = audits
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      result = result.filter(
+      filtered = filtered.filter(
         (a) => a.url.toLowerCase().includes(query) || a.domain.toLowerCase().includes(query)
       )
     }
+
+    // When viewing a specific org or one-time audits, no grouping needed
+    if (selectedOrganizationId) {
+      return [
+        {
+          orgId: selectedOrganizationId,
+          orgName: orgMap[selectedOrganizationId]?.name ?? '',
+          orgUrl: orgMap[selectedOrganizationId]?.website_url ?? null,
+          audits: filtered,
+        },
+      ] as AuditGroup[]
+    }
+
+    // Group by organization
+    const groups: Map<string | null, UnifiedAudit[]> = new Map()
+    for (const audit of filtered) {
+      const key = audit.organization_id
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(audit)
+    }
+
+    // Sort: orgs first (alphabetically), then one-time at the end
+    const result: AuditGroup[] = []
+    const orgEntries = [...groups.entries()]
+      .filter(([key]) => key !== null)
+      .sort(([a], [b]) => {
+        const nameA = orgMap[a!]?.name ?? ''
+        const nameB = orgMap[b!]?.name ?? ''
+        return nameA.localeCompare(nameB)
+      })
+
+    for (const [orgId, groupAudits] of orgEntries) {
+      const org = orgMap[orgId!]
+      result.push({
+        orgId,
+        orgName: org?.name ?? getDomain(groupAudits[0].url),
+        orgUrl: org?.website_url ?? null,
+        audits: groupAudits,
+      })
+    }
+
+    const oneTimeAudits = groups.get(null)
+    if (oneTimeAudits?.length) {
+      result.push({
+        orgId: null,
+        orgName: 'One-Time Audits',
+        orgUrl: null,
+        audits: oneTimeAudits,
+      })
+    }
+
     return result
-  }, [audits, selectedOrganizationId, searchQuery])
+  }, [audits, selectedOrganizationId, searchQuery, orgMap])
 
   const filteredLegacyReports = useMemo(() => {
     let result = legacyReports
@@ -142,13 +208,13 @@ export function ClientReportsClient({
       )}
 
       {/* Audits Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Completed Audits</CardTitle>
-          <CardDescription>Create a client report from any completed audit</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredAudits.length === 0 ? (
+      {auditGroups.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Completed Audits</CardTitle>
+            <CardDescription>Create a client report from any completed audit</CardDescription>
+          </CardHeader>
+          <CardContent>
             <EmptyState
               icon={FileText}
               title={searchQuery ? 'No audits match your search' : 'No completed audits'}
@@ -158,130 +224,152 @@ export function ClientReportsClient({
                   : 'Run a Full Site Audit first, then create a client report from the results.'
               }
             />
-          ) : (
-            <div className="divide-y">
-              {filteredAudits.map((audit) => {
-                const reportId = auditReportMap[audit.id]
-                const isCreating = creatingForAudit === audit.id
+          </CardContent>
+        </Card>
+      ) : (
+        auditGroups.map((group) => (
+          <Card key={group.orgId ?? 'one-time'} className="gap-3">
+            <CardHeader>
+              <CardTitle>
+                {group.orgName}
+                {group.orgUrl && (
+                  <span className="text-muted-foreground ml-2 text-sm font-normal">
+                    {getDomain(group.orgUrl)}
+                    <span className="ml-2">
+                      &middot; {group.audits.length} completed{' '}
+                      {group.audits.length === 1 ? 'audit' : 'audits'}
+                    </span>
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {group.audits.map((audit) => {
+                  const reportId = auditReportMap[audit.id]
+                  const isCreating = creatingForAudit === audit.id
 
-                return (
-                  <div
-                    key={audit.id}
-                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-6">
-                      <span className="text-muted-foreground w-28 text-sm">
-                        {formatAuditDate(audit.created_at ?? '')}
-                      </span>
-                      {!selectedOrganizationId && (
-                        <span className="max-w-[200px] truncate text-sm font-medium">
-                          {getDomain(audit.url)}
+                  return (
+                    <div
+                      key={audit.id}
+                      className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-6">
+                        <span className="text-muted-foreground w-28 text-sm">
+                          {formatAuditDate(audit.created_at ?? '')}
                         </span>
-                      )}
-                      <span className="font-medium tabular-nums">
-                        {audit.overall_score !== null ? `${audit.overall_score}/100` : '-'}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        {audit.pages_crawled} {audit.pages_crawled === 1 ? 'page' : 'pages'}
-                      </span>
-                      <div className="flex items-center gap-2 text-xs">
-                        {audit.failed_count > 0 && (
-                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700 tabular-nums">
-                            {audit.failed_count} failed
+                        {!group.orgId && (
+                          <span className="max-w-[200px] truncate text-sm font-medium">
+                            {getDomain(audit.url)}
                           </span>
                         )}
-                        {audit.warning_count > 0 && (
-                          <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-700 tabular-nums">
-                            {audit.warning_count} warnings
-                          </span>
-                        )}
-                        {audit.passed_count > 0 && (
-                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-green-700 tabular-nums">
-                            {audit.passed_count} passed
-                          </span>
+                        <span className="font-medium tabular-nums">
+                          {audit.overall_score !== null ? `${audit.overall_score}/100` : '-'}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          {audit.pages_crawled} {audit.pages_crawled === 1 ? 'page' : 'pages'}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs">
+                          {audit.failed_count > 0 && (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700 tabular-nums">
+                              {audit.failed_count} failed
+                            </span>
+                          )}
+                          {audit.warning_count > 0 && (
+                            <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-700 tabular-nums">
+                              {audit.warning_count} warnings
+                            </span>
+                          )}
+                          {audit.passed_count > 0 && (
+                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-green-700 tabular-nums">
+                              {audit.passed_count} passed
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {reportId ? (
+                          <>
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={buildOrgHref(`/seo/client-reports/${reportId}`)}>
+                                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                                View Report
+                              </Link>
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={buildOrgHref(
+                                      `/seo/client-reports/${reportId}?share=true`
+                                    )}
+                                  >
+                                    <Share2 className="mr-2 h-4 w-4" />
+                                    Share Report
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={buildOrgHref(
+                                      `/seo/client-reports/${reportId}?settings=true`
+                                    )}
+                                  >
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    Report Settings
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    setReportToDelete({
+                                      id: reportId,
+                                      domain: audit.domain,
+                                    })
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Report
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCreateReport(audit.id)}
+                            disabled={isCreating}
+                          >
+                            {isCreating ? (
+                              <>
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                Creating...
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                Create Report
+                              </>
+                            )}
+                          </Button>
                         )}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      {reportId ? (
-                        <>
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={buildOrgHref(`/seo/client-reports/${reportId}`)}>
-                              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                              View Report
-                            </Link>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={buildOrgHref(`/seo/client-reports/${reportId}?share=true`)}
-                                >
-                                  <Share2 className="mr-2 h-4 w-4" />
-                                  Share Report
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={buildOrgHref(
-                                    `/seo/client-reports/${reportId}?settings=true`
-                                  )}
-                                >
-                                  <Settings className="mr-2 h-4 w-4" />
-                                  Report Settings
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setReportToDelete({
-                                    id: reportId,
-                                    domain: audit.domain,
-                                  })
-                                  setDeleteDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Report
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCreateReport(audit.id)}
-                          disabled={isCreating}
-                        >
-                          {isCreating ? (
-                            <>
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              Creating...
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="mr-1.5 h-3.5 w-3.5" />
-                              Create Report
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
 
       {/* Legacy Reports (from old separate audit system) */}
       {filteredLegacyReports.length > 0 && (

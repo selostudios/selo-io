@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ReportPresentation } from '@/components/reports/report-presentation'
 import { ShareModal } from '@/components/share/share-modal'
 import { SharedResourceType } from '@/lib/enums'
 import { SettingsDialog } from '@/components/reports/settings-dialog'
+import { generateSummaryForReport } from '../actions'
 import type { GeneratedReportWithAudits, ReportPresentationData } from '@/lib/reports/types'
 
 interface ReportDetailClientProps {
@@ -13,6 +14,7 @@ interface ReportDetailClientProps {
   presentationData: ReportPresentationData
   showShareModal?: boolean
   showSettings?: boolean
+  needsSummary?: boolean
 }
 
 export function ReportDetailClient({
@@ -20,10 +22,23 @@ export function ReportDetailClient({
   presentationData,
   showShareModal = false,
   showSettings = false,
+  needsSummary = false,
 }: ReportDetailClientProps) {
   const router = useRouter()
   const [shareModalOpen, setShareModalOpen] = useState(showShareModal)
   const [settingsOpen, setSettingsOpen] = useState(showSettings)
+  const summaryTriggered = useRef(false)
+
+  useEffect(() => {
+    if (needsSummary && !summaryTriggered.current) {
+      summaryTriggered.current = true
+      generateSummaryForReport(report.id).then((result) => {
+        if (result?.success) {
+          router.refresh()
+        }
+      })
+    }
+  }, [needsSummary, report.id, router])
 
   const handleShare = () => {
     setShareModalOpen(true)
