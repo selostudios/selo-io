@@ -58,24 +58,7 @@ export async function acceptInvite(inviteId: string) {
     return { error: 'This invite was sent to a different email address' }
   }
 
-  // Check if user already has an organization
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('organization_id')
-    .eq('id', user.id)
-    .single()
-
-  if (existingUser?.organization_id) {
-    console.error('[Accept Invite Error]', {
-      type: 'already_has_org',
-      inviteId,
-      userId: user.id,
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'You already belong to an organization' }
-  }
-
-  // Use upsert for user record (safer than insert)
+  // Update user record with new organization and role
   const { error: userError } = await supabase.from('users').upsert(
     {
       id: user.id,

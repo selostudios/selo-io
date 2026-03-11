@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { acceptInvite } from './actions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { displayName } from '@/lib/utils'
+import { AcceptButton } from './accept-button'
 
 interface AcceptInvitePageProps {
   params: Promise<{ id: string }>
@@ -86,8 +86,8 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
     )
   }
 
-  // Check if email matches
-  if (user.email !== invite.email) {
+  // Check if email matches (case-insensitive)
+  if (user.email?.toLowerCase() !== invite.email.toLowerCase()) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -101,11 +101,6 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
         </Card>
       </div>
     )
-  }
-
-  async function handleAccept() {
-    'use server'
-    await acceptInvite(id)
   }
 
   return (
@@ -130,11 +125,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
             </p>
           </div>
 
-          <form action={handleAccept}>
-            <Button type="submit" className="w-full">
-              Accept Invitation
-            </Button>
-          </form>
+          <AcceptButton inviteId={id} />
         </CardContent>
       </Card>
     </div>
