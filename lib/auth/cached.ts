@@ -42,35 +42,31 @@ export const getUserRecord = cache(async (userId: string): Promise<CachedUserRec
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('users')
-    .select('id, first_name, last_name, is_internal, team_members(organization_id, role)')
+    .select(
+      'id, first_name, last_name, is_internal, team_members(organization_id, role, organization:organizations(id, name, logo_url, website_url, status))'
+    )
     .eq('id', userId)
     .single()
 
   if (error || !data) return null
 
   const record = data as Record<string, unknown>
-  const membership = (record.team_members as { organization_id: string; role: string }[])?.[0]
-  const organizationId = membership?.organization_id ?? null
-
-  // Fetch organization details if user has a membership
-  let organization: CachedUserRecord['organization'] = null
-  if (organizationId) {
-    const { data: orgData } = await supabase
-      .from('organizations')
-      .select('id, name, logo_url, website_url, status')
-      .eq('id', organizationId)
-      .single()
-    organization = orgData as CachedUserRecord['organization']
-  }
+  const membership = (
+    record.team_members as {
+      organization_id: string
+      role: string
+      organization: CachedUserRecord['organization']
+    }[]
+  )?.[0]
 
   return {
     id: record.id as string,
-    organization_id: organizationId,
+    organization_id: membership?.organization_id ?? null,
     role: membership?.role ?? 'client_viewer',
     first_name: record.first_name as string | null,
     last_name: record.last_name as string | null,
     is_internal: record.is_internal as boolean | null,
-    organization,
+    organization: membership?.organization ?? null,
   }
 })
 
