@@ -380,7 +380,7 @@ The application uses a comprehensive role-based access control (RBAC) system def
 | **Organization Settings** | ✓ Full Management    | ✓ View/Update          | ✗ No Access          | ✗ No Access           | ✗ No Access             |
 | **Team Management**       | ✓ View + Invite      | ✓ View Only            | ✓ View Only          | ✓ View Only           | ✓ View Only             |
 | **Platform Integrations** | ✓ Connect/Disconnect | ✗ No Access            | ✗ No Access          | ✗ No Access           | ✗ No Access             |
-| **Support/Feedback**      | ✓ Manage Tickets     | ✓ Manage Tickets       | ✗ No Access          | ✗ No Access           | ✗ No Access             |
+| **Support/Feedback**      | ✓ Manage Tickets     | ✓ Manage Tickets       | ✗ No Access          | ✗ No Access           | ✓ View Only             |
 | **Unified Audits**        | ✓ Create/View/Delete | ✓ View/Delete All Orgs | ✓ View Only          | ✓ View Only           | ✓ Create/View (own org) |
 | **Combined Reports**      | ✓ View               | ✓ View All Orgs        | ✓ View               | ✓ View                | ✓ View (own org)        |
 
