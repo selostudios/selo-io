@@ -11,7 +11,9 @@ CREATE TABLE team_members (
   UNIQUE(user_id, organization_id)
 );
 
-CREATE INDEX idx_team_members_user ON team_members(user_id);
+-- Covering index: most queries look up by user_id and need organization_id + role
+CREATE INDEX idx_team_members_user ON team_members(user_id) INCLUDE (organization_id, role);
+-- Foreign key index for org-scoped queries (e.g. list members of an org)
 CREATE INDEX idx_team_members_org ON team_members(organization_id);
 
 -- 2. Backfill from existing users
@@ -24,29 +26,34 @@ ON CONFLICT (user_id, organization_id) DO NOTHING;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own memberships + same-org members + internal sees all
+-- Note: wrap auth.uid() in (select ...) for per-statement caching (Supabase best practice)
+-- Note: avoid get_user_organization_id() here to prevent circular dependency
 CREATE POLICY "Users can view team members"
   ON team_members FOR SELECT
   USING (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     OR public.is_internal_user()
-    OR organization_id = public.get_user_organization_id()
+    OR organization_id IN (
+      SELECT tm.organization_id FROM public.team_members tm
+      WHERE tm.user_id = (select auth.uid())
+    )
   );
 
 -- Users can insert their own membership (for invite acceptance)
 CREATE POLICY "Users can insert own membership"
   ON team_members FOR INSERT
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = (select auth.uid()));
 
 -- Users can update their own membership
 CREATE POLICY "Users can update own membership"
   ON team_members FOR UPDATE
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  USING (user_id = (select auth.uid()))
+  WITH CHECK (user_id = (select auth.uid()));
 
 -- Users can delete their own membership (for leaving org)
 CREATE POLICY "Users can delete own membership"
   ON team_members FOR DELETE
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 -- Service role bypass for cron jobs and admin operations
 CREATE POLICY "Service role full access to team_members"
@@ -56,6 +63,7 @@ CREATE POLICY "Service role full access to team_members"
   WITH CHECK (true);
 
 -- 4. Update get_user_organization_id() to read from team_members
+-- SECURITY DEFINER bypasses RLS, so no circular dependency
 CREATE OR REPLACE FUNCTION public.get_user_organization_id()
 RETURNS UUID
 LANGUAGE SQL
@@ -64,7 +72,7 @@ STABLE
 SET search_path = ''
 AS $$
   SELECT organization_id FROM public.team_members
-  WHERE user_id = auth.uid()
+  WHERE user_id = (select auth.uid())
   LIMIT 1;
 $$;
 
@@ -78,7 +86,7 @@ SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.team_members
-    WHERE user_id = auth.uid()
+    WHERE user_id = (select auth.uid())
     AND role = 'developer'
   );
 $$;
@@ -92,11 +100,11 @@ STABLE
 SET search_path = ''
 AS $$
   SELECT
-    audit_created_by = auth.uid()
+    audit_created_by = (select auth.uid())
     OR public.is_internal_user()
     OR EXISTS (
       SELECT 1 FROM public.team_members
-      WHERE user_id = auth.uid()
+      WHERE user_id = (select auth.uid())
       AND organization_id = audit_org_id
     );
 $$;
