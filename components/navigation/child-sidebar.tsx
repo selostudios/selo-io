@@ -127,7 +127,9 @@ export function ChildSidebar({
     <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[304px]')}>
       {/* Navigation */}
       <nav className={cn('flex-1 pt-3', isCollapsed ? 'space-y-2 px-1' : 'space-y-4 px-3')}>
-        {navigation.map((group, groupIndex) => (
+        {navigation
+          .filter((group) => group.items.length > 0)
+          .map((group, groupIndex) => (
           <div key={groupIndex}>
             {!isCollapsed && group.header && (
               <h3 className="mb-2 px-3 text-xs font-medium tracking-wider text-neutral-500 uppercase">
