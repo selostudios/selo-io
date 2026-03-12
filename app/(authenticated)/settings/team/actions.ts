@@ -48,11 +48,21 @@ export async function sendInvite(formData: FormData) {
   }
 
   // Get user's record
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('organization_id, role, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  // Prefer team_members data, fall back to users columns (backward compat)
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        ...rawUser,
+        organization_id: membership?.organization_id ?? rawUser.organization_id,
+        role: membership?.role ?? rawUser.role,
+      }
+    : null
 
   if (!userRecord || !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can send invites' }
@@ -180,11 +190,21 @@ export async function resendInvite(inviteId: string) {
   }
 
   // Get user's record
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('organization_id, role, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  // Prefer team_members data, fall back to users columns (backward compat)
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        ...rawUser,
+        organization_id: membership?.organization_id ?? rawUser.organization_id,
+        role: membership?.role ?? rawUser.role,
+      }
+    : null
 
   if (!userRecord || !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can resend invites' }
@@ -283,11 +303,21 @@ export async function deleteInvite(inviteId: string) {
   }
 
   // Get user's record
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('organization_id, role, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  // Prefer team_members data, fall back to users columns (backward compat)
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        ...rawUser,
+        organization_id: membership?.organization_id ?? rawUser.organization_id,
+        role: membership?.role ?? rawUser.role,
+      }
+    : null
 
   if (!userRecord || !canManageTeam(userRecord.role)) {
     console.error('[Delete Invite Error]', {

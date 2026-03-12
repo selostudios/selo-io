@@ -23,7 +23,20 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/access-denied`)
       }
 
-      // Check if user already exists in users table with an organization
+      // Check if user already has a membership
+      const { data: existingMembership } = await supabase
+        .from('team_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+
+      if (existingMembership) {
+        // User already belongs to an organization, allow access
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+
+      // Fallback: check users table (backward compat)
       const { data: existingUser } = await supabase
         .from('users')
         .select('organization_id')
@@ -31,7 +44,6 @@ export async function GET(request: Request) {
         .single()
 
       if (existingUser?.organization_id) {
-        // User already belongs to an organization, allow access
         return NextResponse.redirect(`${origin}${next}`)
       }
 
@@ -45,23 +57,35 @@ export async function GET(request: Request) {
         .single()
 
       if (invite) {
-        // Auto-accept the invite
-        // Create/update user record with organization from invite
+        // Auto-accept the invite — insert membership + dual-write to users
+        const { error: memberError } = await supabase.from('team_members').upsert(
+          {
+            user_id: user.id,
+            organization_id: invite.organization_id,
+            role: invite.role,
+          },
+          { onConflict: 'user_id,organization_id' }
+        )
+
+        if (memberError) {
+          console.error('[Auth Callback] Failed to create team membership:', memberError)
+          await supabase.auth.signOut()
+          return NextResponse.redirect(`${origin}/access-denied`)
+        }
+
+        // Dual-write to users table (backward compat — removed in Phase 2)
         const { error: userError } = await supabase.from('users').upsert(
           {
             id: user.id,
             organization_id: invite.organization_id,
             role: invite.role,
           },
-          {
-            onConflict: 'id',
-          }
+          { onConflict: 'id' }
         )
 
         if (userError) {
-          console.error('[Auth Callback] Failed to create user record:', userError)
-          await supabase.auth.signOut()
-          return NextResponse.redirect(`${origin}/access-denied`)
+          console.error('[Auth Callback] Failed to update user record:', userError)
+          // Non-fatal: membership already created, continue
         }
 
         // Mark invite as accepted

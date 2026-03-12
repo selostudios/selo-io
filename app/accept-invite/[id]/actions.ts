@@ -58,43 +58,34 @@ export async function acceptInvite(inviteId: string) {
     return { error: 'This invite was sent to a different email address' }
   }
 
-  // Check if user already has an organization
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('organization_id')
-    .eq('id', user.id)
-    .single()
+  // Insert membership into team_members
+  const { error: memberError } = await supabase.from('team_members').upsert(
+    {
+      user_id: user.id,
+      organization_id: invite.organization_id,
+      role: invite.role,
+    },
+    { onConflict: 'user_id,organization_id' }
+  )
 
-  if (existingUser?.organization_id) {
+  if (memberError) {
     console.error('[Accept Invite Error]', {
-      type: 'already_has_org',
-      inviteId,
-      userId: user.id,
+      type: 'membership_creation',
+      error: memberError.message,
       timestamp: new Date().toISOString(),
     })
-    return { error: 'You already belong to an organization' }
+    return { error: 'Failed to join organization. Please try again.' }
   }
 
-  // Use upsert for user record (safer than insert)
-  const { error: userError } = await supabase.from('users').upsert(
+  // Dual-write to users table (backward compat — removed in Phase 2)
+  await supabase.from('users').upsert(
     {
       id: user.id,
       organization_id: invite.organization_id,
       role: invite.role,
     },
-    {
-      onConflict: 'id',
-    }
+    { onConflict: 'id' }
   )
-
-  if (userError) {
-    console.error('[Accept Invite Error]', {
-      type: 'user_record_creation',
-      error: userError.message,
-      timestamp: new Date().toISOString(),
-    })
-    return { error: 'Failed to join organization. Please try again.' }
-  }
 
   // Mark invite as accepted - only update if still pending (prevents race condition)
   const { error: updateError } = await supabase
