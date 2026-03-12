@@ -13,14 +13,15 @@ export default async function OnboardingPage() {
     redirect('/login')
   }
 
-  // Check if user already has an organization
-  const { data: userRecord } = await supabase
-    .from('users')
+  // Check if user already has an organization (via team_members)
+  const { data: membership } = await supabase
+    .from('team_members')
     .select('organization_id')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
+    .limit(1)
     .single()
 
-  if (userRecord?.organization_id) {
+  if (membership?.organization_id) {
     redirect('/dashboard')
   }
 

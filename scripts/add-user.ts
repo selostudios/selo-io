@@ -118,7 +118,7 @@ async function addUser() {
       process.exit(1)
     }
 
-    // Dual-write to team_members (primary source of truth)
+    // Create team membership (primary source of truth for org + role)
     const { error: memberError } = await supabase.from('team_members').insert({
       user_id: authData.user.id,
       organization_id: orgData.id,
@@ -127,7 +127,6 @@ async function addUser() {
 
     if (memberError) {
       console.error('⚠️  Warning: Failed to create team_members record:', memberError.message)
-      // Non-fatal: users table already has the data
     }
 
     console.log(`✅ User linked to organization with admin role`)
