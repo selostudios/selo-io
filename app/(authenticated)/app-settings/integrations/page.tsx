@@ -1,15 +1,11 @@
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { redirect } from 'next/navigation'
-import { isInternalUser } from '@/lib/permissions'
 import { getAppSettings } from './actions'
 import { IntegrationsClient } from './client'
 
 export default async function AppSettingsIntegrationsPage() {
   const user = await getAuthUser()
-  if (!user) redirect('/login')
-
-  const userRecord = await getUserRecord(user.id)
-  if (!userRecord || !isInternalUser(userRecord)) redirect('/dashboard')
+  const userRecord = await getUserRecord(user!.id)
+  const isAdmin = userRecord?.role === 'admin'
 
   const settings = await getAppSettings()
   if ('error' in settings) {
@@ -19,8 +15,6 @@ export default async function AppSettingsIntegrationsPage() {
       </div>
     )
   }
-
-  const isAdmin = userRecord.role === 'admin'
 
   return (
     <div className="space-y-6 p-6">

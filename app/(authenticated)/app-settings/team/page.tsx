@@ -1,15 +1,11 @@
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { redirect } from 'next/navigation'
-import { isInternalUser } from '@/lib/permissions'
 import { getInternalEmployees } from './actions'
 import { TeamClient } from './client'
 
 export default async function AppSettingsTeamPage() {
   const user = await getAuthUser()
-  if (!user) redirect('/login')
-
-  const userRecord = await getUserRecord(user.id)
-  if (!userRecord || !isInternalUser(userRecord)) redirect('/dashboard')
+  const userRecord = await getUserRecord(user!.id)
+  const isAdmin = userRecord?.role === 'admin'
 
   const employees = await getInternalEmployees()
   if ('error' in employees) {
@@ -19,8 +15,6 @@ export default async function AppSettingsTeamPage() {
       </div>
     )
   }
-
-  const isAdmin = userRecord.role === 'admin'
 
   return (
     <div className="space-y-6 p-6">

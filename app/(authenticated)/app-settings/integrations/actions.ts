@@ -1,10 +1,10 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { encryptCredentials, decryptCredentials } from '@/lib/utils/crypto'
-import { isInternalUser } from '@/lib/permissions'
 import { maskCredential } from '@/lib/app-settings/credentials'
+import { requireInternalUser } from '@/lib/app-settings/auth'
 
 interface AppSettingDisplay {
   key: string
@@ -20,38 +20,6 @@ const CREDENTIAL_FIELD: Record<string, string> = {
   pagespeed: 'api_key',
   cron_secret: 'secret',
   email_config: '__plaintext__',
-}
-
-async function requireInternalUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user)
-    return { error: 'Not authenticated' as const, user: null, supabase: null, userRecord: null }
-
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, is_internal, team_members(organization_id, role)')
-    .eq('id', user.id)
-    .single()
-
-  if (!rawUser)
-    return { error: 'User not found' as const, user: null, supabase: null, userRecord: null }
-
-  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
-  const userRecord = {
-    id: rawUser.id,
-    organization_id: membership?.organization_id ?? null,
-    role: membership?.role ?? 'client_viewer',
-    is_internal: rawUser.is_internal,
-  }
-
-  if (!isInternalUser(userRecord)) {
-    return { error: 'Not authorized' as const, user: null, supabase: null, userRecord: null }
-  }
-
-  return { error: null, user, supabase, userRecord }
 }
 
 export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: string }> {
@@ -79,10 +47,12 @@ export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: s
   const emailMap: Record<string, string> = {}
   if (updaterIds.length > 0) {
     const serviceClient = createServiceClient()
-    for (const uid of updaterIds) {
-      const { data: authUser } = await serviceClient.auth.admin.getUserById(uid!)
-      if (authUser?.user?.email) {
-        emailMap[uid!] = authUser.user.email
+    const emailResults = await Promise.all(
+      updaterIds.map((uid) => serviceClient.auth.admin.getUserById(uid!))
+    )
+    for (const { data: authUser } of emailResults) {
+      if (authUser?.user?.email && authUser.user.id) {
+        emailMap[authUser.user.id] = authUser.user.email
       }
     }
   }

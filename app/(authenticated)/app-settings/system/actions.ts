@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { isInternalUser } from '@/lib/permissions'
+import { createServiceClient } from '@/lib/supabase/server'
 import { ENV_VAR_MAP } from '@/lib/app-settings/credentials'
+import { requireInternalUser } from '@/lib/app-settings/auth'
 
 interface HealthStatus {
   service: string
@@ -33,38 +33,6 @@ interface UsageSummary {
   byOrganization: OrgUsage[]
 }
 
-async function requireInternalUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user)
-    return { error: 'Not authenticated' as const, user: null, supabase: null, userRecord: null }
-
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, is_internal, team_members(organization_id, role)')
-    .eq('id', user.id)
-    .single()
-
-  if (!rawUser)
-    return { error: 'User not found' as const, user: null, supabase: null, userRecord: null }
-
-  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
-  const userRecord = {
-    id: rawUser.id,
-    organization_id: membership?.organization_id ?? null,
-    role: membership?.role ?? 'client_viewer',
-    is_internal: rawUser.is_internal,
-  }
-
-  if (!isInternalUser(userRecord)) {
-    return { error: 'Not authorized' as const, user: null, supabase: null, userRecord: null }
-  }
-
-  return { error: null, user, supabase, userRecord }
-}
-
 export async function getSystemHealth(): Promise<HealthStatus[] | { error: string }> {
   const { error, supabase } = await requireInternalUser()
   if (error) return { error }
@@ -76,20 +44,56 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
   const { data: settings } = await supabase!.from('app_settings').select('key').order('key')
   const configuredKeys = new Set((settings ?? []).map((s) => s.key))
 
-  // Get last activity from usage_logs per service
-  const apiServices = ['anthropic', 'resend', 'pagespeed']
-  const healthResults: HealthStatus[] = []
+  // Get last activity from usage_logs per service + cron/sync health in parallel
+  const apiServices = ['anthropic', 'resend', 'pagespeed'] as const
+  const nameMap: Record<string, string> = {
+    anthropic: 'Anthropic API',
+    resend: 'Email (Resend)',
+    pagespeed: 'PageSpeed Insights',
+  }
 
-  for (const service of apiServices) {
-    const isConfigured = configuredKeys.has(service) || !!process.env[ENV_VAR_MAP[service]]
-
-    const { data: lastLog } = await serviceClient
+  const [anthropicLog, resendLog, pagespeedLog, lastCronAudit, lastSync] = await Promise.all([
+    serviceClient
       .from('usage_logs')
       .select('created_at')
-      .eq('service', service)
+      .eq('service', 'anthropic')
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .single(),
+    serviceClient
+      .from('usage_logs')
+      .select('created_at')
+      .eq('service', 'resend')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    serviceClient
+      .from('usage_logs')
+      .select('created_at')
+      .eq('service', 'pagespeed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    serviceClient
+      .from('audits')
+      .select('created_at')
+      .is('created_by', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    serviceClient
+      .from('platform_connections')
+      .select('last_sync_at')
+      .not('last_sync_at', 'is', null)
+      .order('last_sync_at', { ascending: false })
+      .limit(1)
+      .single(),
+  ])
+
+  const logResults = [anthropicLog, resendLog, pagespeedLog]
+  const healthResults: HealthStatus[] = apiServices.map((service, i) => {
+    const isConfigured = configuredKeys.has(service) || !!process.env[ENV_VAR_MAP[service]]
+    const lastLog = logResults[i].data
 
     let status: HealthStatus['status'] = 'unconfigured'
     if (isConfigured) {
@@ -100,58 +104,34 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
       }
     }
 
-    const nameMap: Record<string, string> = {
-      anthropic: 'Anthropic API',
-      resend: 'Email (Resend)',
-      pagespeed: 'PageSpeed Insights',
-    }
-
-    healthResults.push({
+    return {
       service,
       name: nameMap[service] ?? service,
       status,
       lastActivity: lastLog?.created_at ?? null,
-    })
-  }
-
-  // Cron health: last audit created by cron (weekly audits)
-  const { data: lastCronAudit } = await serviceClient
-    .from('audits')
-    .select('created_at')
-    .is('created_by', null)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+    }
+  })
 
   healthResults.push({
     service: 'weekly_audits',
     name: 'Weekly Audits Cron',
-    status: lastCronAudit
-      ? new Date(lastCronAudit.created_at) > new Date(sevenDaysAgo)
+    status: lastCronAudit.data
+      ? new Date(lastCronAudit.data.created_at) > new Date(sevenDaysAgo)
         ? 'healthy'
         : 'inactive'
       : 'inactive',
-    lastActivity: lastCronAudit?.created_at ?? null,
+    lastActivity: lastCronAudit.data?.created_at ?? null,
   })
-
-  // Daily metrics sync: most recent last_sync_at
-  const { data: lastSync } = await serviceClient
-    .from('platform_connections')
-    .select('last_sync_at')
-    .not('last_sync_at', 'is', null)
-    .order('last_sync_at', { ascending: false })
-    .limit(1)
-    .single()
 
   healthResults.push({
     service: 'daily_metrics',
     name: 'Daily Metrics Sync',
-    status: lastSync
-      ? new Date(lastSync.last_sync_at) > new Date(sevenDaysAgo)
+    status: lastSync.data
+      ? new Date(lastSync.data.last_sync_at) > new Date(sevenDaysAgo)
         ? 'healthy'
         : 'inactive'
       : 'inactive',
-    lastActivity: lastSync?.last_sync_at ?? null,
+    lastActivity: lastSync.data?.last_sync_at ?? null,
   })
 
   return healthResults

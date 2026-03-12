@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { isInternalUser } from '@/lib/permissions'
+import { requireInternalUser } from '@/lib/app-settings/auth'
 
 interface InternalEmployee {
   id: string
@@ -12,38 +12,6 @@ interface InternalEmployee {
   lastName: string | null
   lastSignIn: string | null
   createdAt: string
-}
-
-async function requireInternalUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user)
-    return { error: 'Not authenticated' as const, user: null, supabase: null, userRecord: null }
-
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, is_internal, team_members(organization_id, role)')
-    .eq('id', user.id)
-    .single()
-
-  if (!rawUser)
-    return { error: 'User not found' as const, user: null, supabase: null, userRecord: null }
-
-  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
-  const userRecord = {
-    id: rawUser.id,
-    organization_id: membership?.organization_id ?? null,
-    role: membership?.role ?? 'client_viewer',
-    is_internal: rawUser.is_internal,
-  }
-
-  if (!isInternalUser(userRecord)) {
-    return { error: 'Not authorized' as const, user: null, supabase: null, userRecord: null }
-  }
-
-  return { error: null, user, supabase, userRecord }
 }
 
 export async function getInternalEmployees(): Promise<InternalEmployee[] | { error: string }> {
@@ -66,12 +34,13 @@ export async function getInternalEmployees(): Promise<InternalEmployee[] | { err
 
   // Fetch emails and last sign-in from auth admin API
   const serviceClient = createServiceClient()
-  const results: InternalEmployee[] = []
-
-  for (const emp of employees ?? []) {
-    const { data: authUser } = await serviceClient.auth.admin.getUserById(emp.user_id)
+  const authResults = await Promise.all(
+    (employees ?? []).map((emp) => serviceClient.auth.admin.getUserById(emp.user_id))
+  )
+  const results: InternalEmployee[] = (employees ?? []).map((emp, i) => {
+    const authUser = authResults[i].data
     const user = (emp.users as { first_name: string | null; last_name: string | null }) ?? {}
-    results.push({
+    return {
       id: emp.id,
       userId: emp.user_id,
       email: authUser?.user?.email ?? 'unknown',
@@ -79,8 +48,8 @@ export async function getInternalEmployees(): Promise<InternalEmployee[] | { err
       lastName: user.last_name ?? null,
       lastSignIn: authUser?.user?.last_sign_in_at ?? null,
       createdAt: emp.created_at,
-    })
-  }
+    }
+  })
 
   return results
 }
@@ -94,25 +63,21 @@ export async function inviteInternalEmployee(
 
   const serviceClient = createServiceClient()
 
-  // Check if already an internal employee
-  const { data: existingUser } = await serviceClient
-    .from('users')
-    .select('id, is_internal')
-    .ilike('email', email)
-    .single()
+  // Check if already an internal employee and for existing pending invite in parallel
+  const [{ data: existingUser }, { data: existingInvite }] = await Promise.all([
+    serviceClient.from('users').select('id, is_internal').ilike('email', email).single(),
+    serviceClient
+      .from('invites')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .eq('type', 'internal_invite')
+      .eq('status', 'pending')
+      .single(),
+  ])
 
   if (existingUser?.is_internal) {
     return { success: false, error: 'User is already an internal employee' }
   }
-
-  // Check for existing pending invite
-  const { data: existingInvite } = await serviceClient
-    .from('invites')
-    .select('id')
-    .eq('email', email.toLowerCase())
-    .eq('type', 'internal_invite')
-    .eq('status', 'pending')
-    .single()
 
   if (existingInvite) {
     return { success: false, error: 'An internal invite is already pending for this email' }
