@@ -13,6 +13,9 @@ function getSectionFromPathname(pathname: string): ParentSection {
   if (pathname.startsWith('/organizations')) {
     return 'organizations'
   }
+  if (pathname.startsWith('/app-settings')) {
+    return 'app-settings'
+  }
   if (pathname.startsWith('/support')) {
     return 'support'
   }
@@ -24,6 +27,7 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
   home: '/dashboard',
   'quick-audit': '/quick-audit',
   organizations: '/organizations',
+  'app-settings': '/app-settings/team',
   support: '/support',
 }
 

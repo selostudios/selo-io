@@ -13,6 +13,9 @@ import {
   ClipboardCheck,
   PanelLeftClose,
   Zap,
+  Users,
+  Plug,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -62,6 +65,16 @@ const organizationsNavigation: NavigationGroup[] = [
   },
 ]
 
+const appSettingsNavigation: NavigationGroup[] = [
+  {
+    items: [
+      { name: 'Team', href: '/app-settings/team', icon: Users },
+      { name: 'Integrations', href: '/app-settings/integrations', icon: Plug },
+      { name: 'System', href: '/app-settings/system', icon: Activity },
+    ],
+  },
+]
+
 const supportNavigation: NavigationGroup[] = [
   {
     items: [{ name: 'Feedback', href: '/support', icon: MessageSquare }],
@@ -72,6 +85,7 @@ const navigationConfig: Record<ParentSection, NavigationGroup[]> = {
   home: homeNavigation,
   'quick-audit': quickAuditNavigation,
   organizations: organizationsNavigation,
+  'app-settings': appSettingsNavigation,
   support: supportNavigation,
 }
 
