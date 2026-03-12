@@ -167,18 +167,18 @@ The unified audit system (`lib/unified-audit/`) replaces the previous separate S
 
 **Check categories** (10 categories, ~60 checks in `lib/unified-audit/checks/`):
 
-| Category | Directory | Examples |
-|----------|-----------|---------|
-| Crawlability | `crawlability/` | robots.txt, sitemap, HTTPS redirect, noindex, AI crawler access, llms.txt |
-| Meta Content | `meta-content/` | title, meta description, canonical, OG tags, favicon, duplicates |
-| Content Structure | `content-structure/` | H1, heading hierarchy, FAQ sections, comparison tables, step-by-step guides |
-| Content Quality | `content-quality/` | readability, content depth, freshness, paragraph structure |
-| Links | `links/` | broken links, internal linking, redirect chains, URL structure |
-| Media | `media/` | alt text, oversized images, media richness |
-| Structured Data | `structured-data/` | schema markup, organization schema, speakable schema, validation |
-| Security | `security/` | SSL certificate, mixed content |
-| Performance | `performance/` | Core Web Vitals, Lighthouse scores, mobile-friendly, response time |
-| AI Visibility | `ai-visibility/` | brand mentions, citability, content accessibility, HTML structure, platform readiness |
+| Category          | Directory            | Examples                                                                              |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------- |
+| Crawlability      | `crawlability/`      | robots.txt, sitemap, HTTPS redirect, noindex, AI crawler access, llms.txt             |
+| Meta Content      | `meta-content/`      | title, meta description, canonical, OG tags, favicon, duplicates                      |
+| Content Structure | `content-structure/` | H1, heading hierarchy, FAQ sections, comparison tables, step-by-step guides           |
+| Content Quality   | `content-quality/`   | readability, content depth, freshness, paragraph structure                            |
+| Links             | `links/`             | broken links, internal linking, redirect chains, URL structure                        |
+| Media             | `media/`             | alt text, oversized images, media richness                                            |
+| Structured Data   | `structured-data/`   | schema markup, organization schema, speakable schema, validation                      |
+| Security          | `security/`          | SSL certificate, mixed content                                                        |
+| Performance       | `performance/`       | Core Web Vitals, Lighthouse scores, mobile-friendly, response time                    |
+| AI Visibility     | `ai-visibility/`     | brand mentions, citability, content accessibility, HTML structure, platform readiness |
 
 **Check types:**
 
