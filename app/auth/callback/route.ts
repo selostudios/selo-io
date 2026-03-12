@@ -23,49 +23,60 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/access-denied`)
       }
 
-      // Check if user already has a membership
-      const { data: existingMembership } = await supabase
-        .from('team_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .single()
+      // Check membership, user record, and pending invite in parallel
+      const [{ data: existingMembership }, { data: existingUser }, { data: invite }] =
+        await Promise.all([
+          supabase
+            .from('team_members')
+            .select('organization_id')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single(),
+          supabase.from('users').select('organization_id').eq('id', user.id).single(),
+          supabase
+            .from('invites')
+            .select('*')
+            .eq('email', user.email.toLowerCase())
+            .eq('status', InviteStatus.Pending)
+            .gt('expires_at', new Date().toISOString())
+            .single(),
+        ])
 
-      if (existingMembership) {
-        // User already belongs to an organization, allow access
+      // User already has a membership — allow access
+      if (existingMembership || existingUser?.organization_id) {
         return NextResponse.redirect(`${origin}${next}`)
       }
-
-      // Fallback: check users table (backward compat)
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('organization_id')
-        .eq('id', user.id)
-        .single()
-
-      if (existingUser?.organization_id) {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
-
-      // Check for a pending invite for this email
-      const { data: invite } = await supabase
-        .from('invites')
-        .select('*')
-        .eq('email', user.email.toLowerCase())
-        .eq('status', InviteStatus.Pending)
-        .gt('expires_at', new Date().toISOString())
-        .single()
 
       if (invite) {
-        // Auto-accept the invite — insert membership + dual-write to users
-        const { error: memberError } = await supabase.from('team_members').upsert(
-          {
-            user_id: user.id,
-            organization_id: invite.organization_id,
-            role: invite.role,
-          },
-          { onConflict: 'user_id,organization_id' }
-        )
+        // Auto-accept: insert membership + dual-write to users + mark invite accepted
+        const [{ error: memberError }, { error: userError }, { error: inviteError }] =
+          await Promise.all([
+            supabase.from('team_members').upsert(
+              {
+                user_id: user.id,
+                organization_id: invite.organization_id,
+                role: invite.role,
+              },
+              { onConflict: 'user_id,organization_id' }
+            ),
+            // Dual-write to users table (backward compat — removed in Phase 2)
+            supabase.from('users').upsert(
+              {
+                id: user.id,
+                organization_id: invite.organization_id,
+                role: invite.role,
+              },
+              { onConflict: 'id' }
+            ),
+            supabase
+              .from('invites')
+              .update({
+                status: InviteStatus.Accepted,
+                accepted_at: new Date().toISOString(),
+              })
+              .eq('id', invite.id)
+              .eq('status', InviteStatus.Pending),
+          ])
 
         if (memberError) {
           console.error('[Auth Callback] Failed to create team membership:', memberError)
@@ -73,34 +84,12 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/access-denied`)
         }
 
-        // Dual-write to users table (backward compat — removed in Phase 2)
-        const { error: userError } = await supabase.from('users').upsert(
-          {
-            id: user.id,
-            organization_id: invite.organization_id,
-            role: invite.role,
-          },
-          { onConflict: 'id' }
-        )
-
         if (userError) {
           console.error('[Auth Callback] Failed to update user record:', userError)
-          // Non-fatal: membership already created, continue
         }
-
-        // Mark invite as accepted
-        const { error: inviteError } = await supabase
-          .from('invites')
-          .update({
-            status: InviteStatus.Accepted,
-            accepted_at: new Date().toISOString(),
-          })
-          .eq('id', invite.id)
-          .eq('status', InviteStatus.Pending)
 
         if (inviteError) {
           console.error('[Auth Callback] Failed to update invite status:', inviteError)
-          // User is already created, so we can continue
         }
 
         console.log('[Auth Callback] Auto-accepted invite for:', user.email)
