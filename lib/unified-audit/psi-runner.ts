@@ -13,6 +13,7 @@ import { buildCheckRecord } from './runner'
 import { DeviceType } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext } from './types'
 import type { SiteAuditPage } from '@/lib/audit/types'
+import { logUsage } from '@/lib/app-settings/usage'
 
 const PERFORMANCE_CHECK_NAMES = [lighthouseScores.name, coreWebVitals.name, pageResponseTime.name]
 
@@ -78,6 +79,13 @@ export async function runPSIAnalysis(
   let pagesAnalyzed = 0
   let checksUpserted = 0
 
+  // Fetch organization_id for usage logging
+  const { data: audit } = await supabase
+    .from('audits')
+    .select('organization_id')
+    .eq('id', auditId)
+    .single()
+
   // Process pages sequentially to respect rate limits
   for (const pageImportance of topPages) {
     try {
@@ -86,6 +94,11 @@ export async function runPSIAnalysis(
       const psiResult = await fetchPageSpeedInsights({
         url: pageImportance.url,
         device: DeviceType.Mobile,
+      })
+
+      await logUsage('pagespeed', 'psi_fetch', {
+        organizationId: audit?.organization_id,
+        metadata: { auditId, pageUrl: pageImportance.url },
       })
 
       // Delete existing placeholder performance checks for this page
