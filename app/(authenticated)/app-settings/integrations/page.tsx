@@ -1,8 +1,36 @@
-export default function AppSettingsIntegrationsPage() {
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { redirect } from 'next/navigation'
+import { isInternalUser } from '@/lib/permissions'
+import { getAppSettings } from './actions'
+import { IntegrationsClient } from './client'
+
+export default async function AppSettingsIntegrationsPage() {
+  const user = await getAuthUser()
+  if (!user) redirect('/login')
+
+  const userRecord = await getUserRecord(user.id)
+  if (!userRecord || !isInternalUser(userRecord)) redirect('/dashboard')
+
+  const settings = await getAppSettings()
+  if ('error' in settings) {
+    return (
+      <div className="p-6">
+        <p className="text-destructive">Failed to load settings: {settings.error}</p>
+      </div>
+    )
+  }
+
+  const isAdmin = userRecord.role === 'admin'
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">App Integrations</h1>
-      <p className="text-muted-foreground mt-2">Coming soon.</p>
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold">App Integrations</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage API keys and credentials for platform services.
+        </p>
+      </div>
+      <IntegrationsClient settings={settings} isAdmin={isAdmin} />
     </div>
   )
 }
