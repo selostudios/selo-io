@@ -24,23 +24,39 @@ export async function GET(request: Request) {
       }
 
       // Check membership, user record, and pending invite in parallel
-      const [{ data: existingMembership }, { data: existingUser }, { data: invite }] =
-        await Promise.all([
-          supabase
-            .from('team_members')
-            .select('organization_id')
-            .eq('user_id', user.id)
-            .limit(1)
-            .single(),
-          supabase.from('users').select('organization_id').eq('id', user.id).single(),
-          supabase
-            .from('invites')
-            .select('*')
-            .eq('email', user.email.toLowerCase())
-            .eq('status', InviteStatus.Pending)
-            .gt('expires_at', new Date().toISOString())
-            .single(),
-        ])
+      const [
+        { data: existingMembership, error: membershipError },
+        { data: existingUser, error: userError },
+        { data: invite, error: inviteError },
+      ] = await Promise.all([
+        supabase
+          .from('team_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single(),
+        supabase.from('users').select('organization_id').eq('id', user.id).single(),
+        supabase
+          .from('invites')
+          .select('*')
+          .eq('email', user.email.toLowerCase())
+          .eq('status', InviteStatus.Pending)
+          .gt('expires_at', new Date().toISOString())
+          .single(),
+      ])
+
+      // Handle database errors on membership/user queries (deny on error for safety)
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        console.error('[Auth Callback] Failed to check team membership:', membershipError)
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/access-denied`)
+      }
+
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('[Auth Callback] Failed to check user record:', userError)
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/access-denied`)
+      }
 
       // User already has a membership — allow access
       if (existingMembership || existingUser?.organization_id) {
@@ -66,7 +82,7 @@ export async function GET(request: Request) {
         }
 
         // Dual-write to users table + mark invite accepted (non-critical, parallel OK)
-        const [{ error: userError }, { error: inviteError }] = await Promise.all([
+        const [{ error: userUpdateError }, { error: inviteUpdateError }] = await Promise.all([
           supabase.from('users').upsert(
             {
               id: user.id,
@@ -85,12 +101,12 @@ export async function GET(request: Request) {
             .eq('status', InviteStatus.Pending),
         ])
 
-        if (userError) {
-          console.error('[Auth Callback] Failed to update user record:', userError)
+        if (userUpdateError) {
+          console.error('[Auth Callback] Failed to update user record:', userUpdateError)
         }
 
-        if (inviteError) {
-          console.error('[Auth Callback] Failed to update invite status:', inviteError)
+        if (inviteUpdateError) {
+          console.error('[Auth Callback] Failed to update invite status:', inviteUpdateError)
         }
 
         console.log('[Auth Callback] Auto-accepted invite for:', user.email)
