@@ -106,7 +106,7 @@ export async function seedTestData() {
     },
   ])
 
-  // Dual-write to team_members (primary source of truth)
+  // Create team memberships (primary source of truth for org + role)
   await supabase.from('team_members').insert([
     {
       user_id: adminUser.data.user!.id,

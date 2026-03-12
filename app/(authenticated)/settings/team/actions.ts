@@ -50,7 +50,7 @@ export async function sendInvite(formData: FormData) {
   // Get user's record
   const { data: rawUser, error: userError } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal, team_members(organization_id, role)')
+    .select('is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -68,12 +68,11 @@ export async function sendInvite(formData: FormData) {
     return { error: 'Failed to fetch user permissions' }
   }
 
-  // Prefer team_members data, fall back to users columns (backward compat)
   const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
   const userRecord = {
     ...rawUser,
-    organization_id: membership?.organization_id ?? rawUser.organization_id,
-    role: membership?.role ?? rawUser.role,
+    organization_id: membership?.organization_id ?? null,
+    role: membership?.role ?? 'client_viewer',
   }
 
   if (!canManageTeam(userRecord.role)) {
@@ -223,7 +222,7 @@ export async function resendInvite(inviteId: string) {
   // Get user's record
   const { data: rawUser, error: userError } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal, team_members(organization_id, role)')
+    .select('is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -241,12 +240,11 @@ export async function resendInvite(inviteId: string) {
     return { error: 'Failed to fetch user permissions' }
   }
 
-  // Prefer team_members data, fall back to users columns (backward compat)
   const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
   const userRecord = {
     ...rawUser,
-    organization_id: membership?.organization_id ?? rawUser.organization_id,
-    role: membership?.role ?? rawUser.role,
+    organization_id: membership?.organization_id ?? null,
+    role: membership?.role ?? 'client_viewer',
   }
 
   if (!canManageTeam(userRecord.role)) {
@@ -367,7 +365,7 @@ export async function deleteInvite(inviteId: string) {
   // Get user's record
   const { data: rawUser, error: userError } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal, team_members(organization_id, role)')
+    .select('is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -385,12 +383,11 @@ export async function deleteInvite(inviteId: string) {
     return { error: 'Failed to fetch user permissions' }
   }
 
-  // Prefer team_members data, fall back to users columns (backward compat)
   const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
   const userRecord = {
     ...rawUser,
-    organization_id: membership?.organization_id ?? rawUser.organization_id,
-    role: membership?.role ?? rawUser.role,
+    organization_id: membership?.organization_id ?? null,
+    role: membership?.role ?? 'client_viewer',
   }
 
   if (!canManageTeam(userRecord.role)) {

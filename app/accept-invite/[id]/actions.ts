@@ -77,7 +77,7 @@ export async function acceptInvite(inviteId: string) {
     return { error: 'Failed to join organization. Please try again.' }
   }
 
-  // Dual-write to users table (backward compat — removed in Phase 2)
+  // Sync users table (required until RLS policies on other tables are migrated to team_members)
   await supabase.from('users').upsert(
     {
       id: user.id,

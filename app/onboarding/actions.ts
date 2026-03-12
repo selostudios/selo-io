@@ -30,36 +30,29 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   }
 
   // Check if user already has an organization (prevent race conditions)
-  const { data: existingUser, error: existingUserError } = await supabase
-    .from('users')
+  const { data: existingMembership, error: membershipError } = await supabase
+    .from('team_members')
     .select('organization_id')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
+    .limit(1)
     .single()
 
-  console.error('[Onboarding Debug]', {
-    type: 'existing_user_check',
-    userId: user.id,
-    existingUser,
-    existingUserError,
-    timestamp: new Date().toISOString(),
-  })
-
   // If the query failed (not just no results), it might be an RLS issue
-  if (existingUserError && existingUserError.code !== 'PGRST116') {
+  if (membershipError && membershipError.code !== 'PGRST116') {
     console.error('[Onboarding Error]', {
-      type: 'user_query_failed',
-      error: existingUserError,
+      type: 'membership_query_failed',
+      error: membershipError,
       timestamp: new Date().toISOString(),
     })
     return {
-      error: `Could not check existing user: ${existingUserError.message} (${existingUserError.code})`,
+      error: `Could not check existing membership: ${membershipError.message} (${membershipError.code})`,
     }
   }
 
-  if (existingUser?.organization_id) {
+  if (existingMembership?.organization_id) {
     console.error('[Onboarding Error]', {
       type: 'already_has_org',
-      orgId: existingUser.organization_id,
+      orgId: existingMembership.organization_id,
     })
     return { error: 'You already have an organization' }
   }
@@ -91,7 +84,7 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     }
   }
 
-  // Create user record linking to organization
+  // Create user record and team membership
   const { error: userRecordError } = await supabase.from('users').insert({
     id: user.id,
     organization_id: org.id,
@@ -108,13 +101,12 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
       timestamp: new Date().toISOString(),
     })
 
-    // Show detailed error for debugging
     return {
       error: `User record creation failed: ${userRecordError.message}${userRecordError.code ? ` (code: ${userRecordError.code})` : ''}`,
     }
   }
 
-  // Dual-write to team_members (primary source of truth — removed in Phase 2)
+  // Create membership in team_members (primary source of truth for org + role)
   const { error: memberError } = await supabase.from('team_members').insert({
     user_id: user.id,
     organization_id: org.id,
@@ -127,7 +119,6 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
       error: memberError,
       timestamp: new Date().toISOString(),
     })
-    // Non-fatal: users table already has the data, team_members is additive
   }
 
   redirect('/dashboard')
