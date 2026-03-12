@@ -193,7 +193,7 @@ The unified audit system (`lib/unified-audit/`) replaces the previous separate S
 - Results include actionable fix guidance and learn-more URLs
 - Checks can be dismissed per organization via `dismissed_checks` table
 
-> **Legacy audit systems** (`lib/audit/`, `lib/performance-audit/`, `lib/aio-audit/`) still exist in the codebase but are deprecated. All new audit work should use the unified system.
+> **Legacy audit systems** (`lib/audit/`, `lib/performance/`, `lib/aio/`) still exist in the codebase but are deprecated. All new audit work should use the unified system.
 
 ### Directory Structure
 
