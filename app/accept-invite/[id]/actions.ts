@@ -58,6 +58,45 @@ export async function acceptInvite(inviteId: string) {
     return { error: 'This invite was sent to a different email address' }
   }
 
+  if (invite.type === 'internal_invite') {
+    // Internal invite: insert into internal_employees, set is_internal
+    const { createServiceClient } = await import('@/lib/supabase/server')
+    const serviceClient = createServiceClient()
+
+    const { error: empError } = await serviceClient.from('internal_employees').upsert(
+      {
+        user_id: user.id,
+        added_by: invite.created_by,
+      },
+      { onConflict: 'user_id' }
+    )
+
+    if (empError) {
+      console.error('[Accept Invite Error]', {
+        type: 'internal_employee_creation',
+        error: empError.message,
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to set up internal access. Please try again.' }
+    }
+
+    // Set is_internal flag
+    await serviceClient.from('users').update({ is_internal: true }).eq('id', user.id)
+
+    // Mark invite as accepted
+    await supabase
+      .from('invites')
+      .update({
+        status: InviteStatus.Accepted,
+        accepted_at: new Date().toISOString(),
+      })
+      .eq('id', inviteId)
+      .eq('status', InviteStatus.Pending)
+
+    revalidatePath('/dashboard')
+    redirect('/dashboard')
+  }
+
   // Insert membership into team_members
   const { error: memberError } = await supabase.from('team_members').upsert(
     {

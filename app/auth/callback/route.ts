@@ -53,7 +53,42 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next}`)
       }
 
+      // Check if user is already internal (allows access even without org membership)
+      const { data: userRecord } = await supabase
+        .from('users')
+        .select('is_internal')
+        .eq('id', user.id)
+        .single()
+
+      if (userRecord?.is_internal) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+
       if (invite) {
+        if (invite.type === 'internal_invite') {
+          // Auto-accept internal invite
+          const { createServiceClient } = await import('@/lib/supabase/server')
+          const serviceClient = createServiceClient()
+
+          await serviceClient
+            .from('internal_employees')
+            .upsert({ user_id: user.id, added_by: invite.created_by }, { onConflict: 'user_id' })
+
+          await serviceClient.from('users').update({ is_internal: true }).eq('id', user.id)
+
+          await supabase
+            .from('invites')
+            .update({
+              status: InviteStatus.Accepted,
+              accepted_at: new Date().toISOString(),
+            })
+            .eq('id', invite.id)
+            .eq('status', InviteStatus.Pending)
+
+          console.log('[Auth Callback] Auto-accepted internal invite for:', user.email)
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+
         // Auto-accept: insert membership first (critical), then dual-write + mark accepted
         // Sequential to ensure membership exists before marking invite as accepted
         const { error: memberError } = await supabase.from('team_members').upsert(

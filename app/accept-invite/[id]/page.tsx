@@ -103,13 +103,17 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
     )
   }
 
+  const isInternalInvite = invite.type === 'internal_invite'
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>You&apos;ve Been Invited!</CardTitle>
           <CardDescription>
-            You&apos;ve been invited to join {invite.organization?.name || 'an organization'}
+            {isInternalInvite
+              ? "You've been invited to join the Selo team"
+              : `You've been invited to join ${invite.organization?.name || 'an organization'}`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -117,9 +121,11 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
             <p className="text-muted-foreground text-sm">
               <strong>Email:</strong> {invite.email}
             </p>
-            <p className="text-muted-foreground text-sm">
-              <strong>Role:</strong> <Badge variant="outline">{displayName(invite.role)}</Badge>
-            </p>
+            {!isInternalInvite && (
+              <p className="text-muted-foreground text-sm">
+                <strong>Role:</strong> <Badge variant="outline">{displayName(invite.role)}</Badge>
+              </p>
+            )}
             <p className="text-muted-foreground text-sm">
               <strong>Expires:</strong> {expiresAt.toLocaleDateString()}
             </p>
