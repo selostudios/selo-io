@@ -15,6 +15,7 @@ describe('logUsage', () => {
   it('inserts a usage log record via service client', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(createServiceClient).mockReturnValue({ from: mockFrom } as any)
 
     await logUsage('anthropic', 'ai_analysis', {
@@ -40,6 +41,7 @@ describe('logUsage', () => {
   it('does not throw on insert failure (fire-and-forget)', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: { message: 'DB down' } })
     const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(createServiceClient).mockReturnValue({ from: mockFrom } as any)
 
     // Should not throw
@@ -58,6 +60,7 @@ describe('logUsage', () => {
   it('uses null defaults when options are omitted', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(createServiceClient).mockReturnValue({ from: mockFrom } as any)
 
     await logUsage('pagespeed', 'psi_fetch')

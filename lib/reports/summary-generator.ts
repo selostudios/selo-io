@@ -5,7 +5,6 @@ import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
 import { CheckPriority, CheckStatus, CWVRating } from '@/lib/enums'
 import { getScoreStatus } from './types'
-import { logUsage } from '@/lib/app-settings/usage'
 
 interface SummaryInput {
   domain: string
@@ -176,6 +175,7 @@ Maximum 150 words. Professional, consultative tone. Plain text only - no asteris
       maxOutputTokens: 400,
     })
 
+    const { logUsage } = await import('@/lib/app-settings/usage')
     await logUsage('anthropic', 'summary_generation', {
       organizationId: input.organizationId,
       tokensInput: usage?.promptTokens,

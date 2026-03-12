@@ -23,7 +23,8 @@ describe('getAppCredential', () => {
     const mockSupabase = {
       rpc: vi.fn().mockResolvedValue({ data: { encrypted: 'encrypted-data' }, error: null }),
     }
-    vi.mocked(createServiceClient).mockResolvedValue(mockSupabase as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(createServiceClient).mockReturnValue(mockSupabase as any)
     vi.mocked(decryptCredentials).mockReturnValue({ api_key: 'sk-ant-real-key' })
 
     const result = await getAppCredential('anthropic')
@@ -34,7 +35,8 @@ describe('getAppCredential', () => {
     const mockSupabase = {
       rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
-    vi.mocked(createServiceClient).mockResolvedValue(mockSupabase as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(createServiceClient).mockReturnValue(mockSupabase as any)
     process.env.ANTHROPIC_API_KEY = 'env-key'
 
     const result = await getAppCredential('anthropic')
@@ -47,7 +49,8 @@ describe('getAppCredential', () => {
     const mockSupabase = {
       rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
-    vi.mocked(createServiceClient).mockResolvedValue(mockSupabase as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(createServiceClient).mockReturnValue(mockSupabase as any)
     delete process.env.ANTHROPIC_API_KEY
 
     const result = await getAppCredential('anthropic')

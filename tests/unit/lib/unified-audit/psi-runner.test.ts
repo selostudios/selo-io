@@ -14,8 +14,17 @@ vi.mock('@/lib/supabase/server', () => ({
         })),
       })),
       insert: vi.fn(() => ({ error: null })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(() => ({ data: { organization_id: 'org-1' }, error: null })),
+        })),
+      })),
     })),
   })),
+}))
+
+vi.mock('@/lib/app-settings/usage', () => ({
+  logUsage: vi.fn(),
 }))
 
 vi.mock('@/lib/performance/api', () => ({

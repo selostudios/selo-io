@@ -22,7 +22,7 @@ const CREDENTIAL_FIELD: Record<string, string> = {
  */
 export async function getAppCredential(key: string): Promise<string | null> {
   try {
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
     const { data } = await supabase.rpc('get_app_credential', { setting_key: key })
 
     if (data) {
