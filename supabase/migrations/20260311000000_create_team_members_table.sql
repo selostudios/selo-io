@@ -62,8 +62,13 @@ CREATE POLICY "Service role full access to team_members"
   USING (true)
   WITH CHECK (true);
 
--- 4. Update get_user_organization_id() to read from team_members
+-- 4. Grant table permissions to authenticated and service_role
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_members TO authenticated;
+GRANT ALL ON public.team_members TO service_role;
+
+-- 5. Update get_user_organization_id() to read from team_members
 -- SECURITY DEFINER bypasses RLS, so no circular dependency
+-- ORDER BY created_at ASC ensures deterministic result (oldest membership = primary org)
 CREATE OR REPLACE FUNCTION public.get_user_organization_id()
 RETURNS UUID
 LANGUAGE SQL
@@ -73,25 +78,16 @@ SET search_path = ''
 AS $$
   SELECT organization_id FROM public.team_members
   WHERE user_id = (select auth.uid())
+  ORDER BY created_at ASC
   LIMIT 1;
 $$;
 
--- 5. Update is_developer() to read role from team_members
-CREATE OR REPLACE FUNCTION public.is_developer()
-RETURNS BOOLEAN
-LANGUAGE SQL
-SECURITY DEFINER
-STABLE
-SET search_path = ''
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.team_members
-    WHERE user_id = (select auth.uid())
-    AND role = 'developer'
-  );
-$$;
+-- 6. Keep is_developer() reading from users.role (NOT team_members)
+-- Developer is an internal Selo role stored on the users table, not a per-org membership role.
+-- Moving it to team_members would require a developer row per org, which is incorrect.
+-- This function stays unchanged from the original definition.
 
--- 6. Update user_in_aio_audit_org() to read from team_members
+-- 7. Update user_in_aio_audit_org() to read from team_members
 CREATE OR REPLACE FUNCTION public.user_in_aio_audit_org(audit_org_id uuid, audit_created_by uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -109,7 +105,7 @@ AS $$
     );
 $$;
 
--- 7. Update get_organization_user_emails() to join team_members
+-- 8. Update get_organization_user_emails() to join team_members
 DROP FUNCTION IF EXISTS public.get_organization_user_emails(UUID);
 CREATE OR REPLACE FUNCTION public.get_organization_user_emails(org_id UUID)
 RETURNS TABLE (

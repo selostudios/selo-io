@@ -48,41 +48,42 @@ export async function GET(request: Request) {
       }
 
       if (invite) {
-        // Auto-accept: insert membership + dual-write to users + mark invite accepted
-        const [{ error: memberError }, { error: userError }, { error: inviteError }] =
-          await Promise.all([
-            supabase.from('team_members').upsert(
-              {
-                user_id: user.id,
-                organization_id: invite.organization_id,
-                role: invite.role,
-              },
-              { onConflict: 'user_id,organization_id' }
-            ),
-            // Dual-write to users table (backward compat — removed in Phase 2)
-            supabase.from('users').upsert(
-              {
-                id: user.id,
-                organization_id: invite.organization_id,
-                role: invite.role,
-              },
-              { onConflict: 'id' }
-            ),
-            supabase
-              .from('invites')
-              .update({
-                status: InviteStatus.Accepted,
-                accepted_at: new Date().toISOString(),
-              })
-              .eq('id', invite.id)
-              .eq('status', InviteStatus.Pending),
-          ])
+        // Auto-accept: insert membership first (critical), then dual-write + mark accepted
+        // Sequential to ensure membership exists before marking invite as accepted
+        const { error: memberError } = await supabase.from('team_members').upsert(
+          {
+            user_id: user.id,
+            organization_id: invite.organization_id,
+            role: invite.role,
+          },
+          { onConflict: 'user_id,organization_id' }
+        )
 
         if (memberError) {
           console.error('[Auth Callback] Failed to create team membership:', memberError)
           await supabase.auth.signOut()
           return NextResponse.redirect(`${origin}/access-denied`)
         }
+
+        // Dual-write to users table + mark invite accepted (non-critical, parallel OK)
+        const [{ error: userError }, { error: inviteError }] = await Promise.all([
+          supabase.from('users').upsert(
+            {
+              id: user.id,
+              organization_id: invite.organization_id,
+              role: invite.role,
+            },
+            { onConflict: 'id' }
+          ),
+          supabase
+            .from('invites')
+            .update({
+              status: InviteStatus.Accepted,
+              accepted_at: new Date().toISOString(),
+            })
+            .eq('id', invite.id)
+            .eq('status', InviteStatus.Pending),
+        ])
 
         if (userError) {
           console.error('[Auth Callback] Failed to update user record:', userError)

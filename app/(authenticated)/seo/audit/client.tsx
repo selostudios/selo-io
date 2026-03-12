@@ -308,9 +308,7 @@ export function UnifiedAuditClient({
                       <div className="flex items-center gap-2">
                         <Badge variant="destructive">Failed</Badge>
                         {audit.error_message && (
-                          <span className="text-xs text-red-600">
-                            {audit.error_message}
-                          </span>
+                          <span className="text-xs text-red-600">{audit.error_message}</span>
                         )}
                       </div>
                     )}
