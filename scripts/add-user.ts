@@ -29,17 +29,16 @@ function parseArgs() {
 }
 
 async function addUser() {
-  const { email, password, orgName, industry } = parseArgs()
+  const params = parseArgs()
 
-  // Validate required parameters
-  if (!email || !password) {
-    console.error('❌ Error: --email and --password are required')
-    console.log('\nUsage:')
-    console.log(
-      '  npm run add-user -- --email=user@example.com --password=secure123 [--org="Org Name"] [--industry="Industry"]'
-    )
-    process.exit(1)
-  }
+  // Default to test credentials if not provided
+  if (!params.email) params.email = 'test@test.com'
+  if (!params.password) params.password = 'password1234'
+
+  const { email, password, orgName, industry } = params as Required<
+    Pick<typeof params, 'email' | 'password'>
+  > &
+    typeof params
 
   // Validate environment variables
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
