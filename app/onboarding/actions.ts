@@ -114,5 +114,21 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     }
   }
 
+  // Dual-write to team_members (primary source of truth — removed in Phase 2)
+  const { error: memberError } = await supabase.from('team_members').insert({
+    user_id: user.id,
+    organization_id: org.id,
+    role: UserRole.Admin,
+  })
+
+  if (memberError) {
+    console.error('[Onboarding Error]', {
+      type: 'team_member_creation',
+      error: memberError,
+      timestamp: new Date().toISOString(),
+    })
+    // Non-fatal: users table already has the data, team_members is additive
+  }
+
   redirect('/dashboard')
 }

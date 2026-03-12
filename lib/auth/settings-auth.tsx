@@ -37,14 +37,22 @@ export async function withSettingsAuth<T>(
     redirect('/login')
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('organization_id, role, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  if (!rawUser) {
     redirect('/onboarding')
+  }
+
+  // Prefer team_members data, fall back to users columns (backward compat)
+  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = {
+    organization_id: membership?.organization_id ?? rawUser.organization_id,
+    role: membership?.role ?? rawUser.role,
+    is_internal: rawUser.is_internal,
   }
 
   const isInternal = isInternalUser(userRecord)

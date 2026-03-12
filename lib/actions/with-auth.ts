@@ -91,15 +91,24 @@ export async function withAuth<T>(
     return { error: 'Not authenticated' }
   }
 
-  // Fetch user record
-  const { data: userRecord } = await supabase
+  // Fetch user record with membership from team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('id, organization_id, role, is_internal')
+    .select('id, organization_id, role, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  if (!rawUser) {
     return { error: 'User not found' }
+  }
+
+  // Prefer team_members data, fall back to users columns (backward compat)
+  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord: UserRecord = {
+    id: rawUser.id,
+    organization_id: membership?.organization_id ?? rawUser.organization_id,
+    role: membership?.role ?? rawUser.role,
+    is_internal: rawUser.is_internal,
   }
 
   const isInternal = checkIsInternal(userRecord)
@@ -108,7 +117,7 @@ export async function withAuth<T>(
   const ctx: AuthContext = {
     userId: user.id,
     userEmail: user.email ?? null,
-    userRecord: userRecord as UserRecord,
+    userRecord,
     supabase,
     isInternal,
     organizationId: userRecord.organization_id,

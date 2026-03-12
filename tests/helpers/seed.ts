@@ -106,6 +106,30 @@ export async function seedTestData() {
     },
   ])
 
+  // Dual-write to team_members (primary source of truth)
+  await supabase.from('team_members').insert([
+    {
+      user_id: adminUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'admin',
+    },
+    {
+      user_id: teamMemberUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'team_member',
+    },
+    {
+      user_id: viewerUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'client_viewer',
+    },
+    {
+      user_id: developerUser.data.user!.id,
+      organization_id: org!.id,
+      role: 'developer',
+    },
+  ])
+
   // Create test campaign
   await supabase.from('campaigns').insert({
     name: testCampaign.name,
@@ -129,6 +153,7 @@ export async function cleanupTestData() {
     }
 
     // Clean up remaining data (in case of orphaned records)
+    await supabase.from('team_members').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('organizations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
