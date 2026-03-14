@@ -44,7 +44,7 @@ export async function getInternalEmployees(): Promise<InternalEmployee[] | { err
       | { first_name: string | null; last_name: string | null }
       | { first_name: string | null; last_name: string | null }[]
       | null
-    const user = Array.isArray(usersRaw) ? usersRaw[0] ?? noName : usersRaw ?? noName
+    const user = Array.isArray(usersRaw) ? (usersRaw[0] ?? noName) : (usersRaw ?? noName)
     return {
       id: emp.id,
       userId: emp.user_id,
