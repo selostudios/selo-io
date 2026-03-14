@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -155,11 +156,11 @@ export function TeamClient({ employees, isAdmin, currentUserId }: TeamClientProp
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="destructive"
-                        size="sm"
+                        size="icon"
                         disabled={employee.userId === currentUserId || isPending}
                         data-testid={`remove-employee-button-${employee.userId}`}
                       >
-                        Remove
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
