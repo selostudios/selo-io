@@ -1,3 +1,5 @@
+'use server'
+
 import { createServiceClient } from '@/lib/supabase/server'
 
 interface UsageOptions {
