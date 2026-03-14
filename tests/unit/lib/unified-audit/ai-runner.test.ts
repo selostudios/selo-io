@@ -15,11 +15,22 @@ vi.mock('@/lib/supabase/server', () => ({
         return { insert: mockInsert }
       }
       if (table === 'audits') {
-        return { update: mockUpdate }
+        return {
+          update: mockUpdate,
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn(() => ({ data: { organization_id: 'org-1' }, error: null })),
+            })),
+          })),
+        }
       }
       return {}
     }),
   })),
+}))
+
+vi.mock('@/lib/app-settings/usage', () => ({
+  logUsage: vi.fn(),
 }))
 
 vi.mock('@/lib/aio/importance', () => ({

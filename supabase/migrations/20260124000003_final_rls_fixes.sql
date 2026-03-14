@@ -10,10 +10,11 @@ DROP POLICY IF EXISTS "Users can view invites" ON invites;
 DROP POLICY IF EXISTS "Admins can manage invites" ON invites;
 
 -- Single SELECT policy with all auth calls wrapped
+-- Use LOWER() on both sides: invites.email is stored lowercase, but JWT email may have mixed case
 CREATE POLICY "Users can view invites"
   ON invites FOR SELECT
   USING (
-    email = (SELECT (SELECT auth.jwt()) ->> 'email')
+    LOWER(email) = LOWER((SELECT (SELECT auth.jwt()) ->> 'email'))
     OR organization_id IN (
       SELECT organization_id FROM users
       WHERE id = (SELECT auth.uid()) AND role = 'admin'
@@ -30,10 +31,11 @@ CREATE POLICY "Admins can insert invites"
     )
   );
 
-CREATE POLICY "Admins can update invites"
+CREATE POLICY "Users can update their own invites"
   ON invites FOR UPDATE
   USING (
-    organization_id IN (
+    LOWER(email) = LOWER((SELECT (SELECT auth.jwt()) ->> 'email'))
+    OR organization_id IN (
       SELECT organization_id FROM users
       WHERE id = (SELECT auth.uid()) AND role = 'admin'
     )

@@ -1,6 +1,5 @@
 import * as cheerio from 'cheerio'
 import { CheckCategory, CheckPriority, CheckStatus, ScoreDimension } from '@/lib/enums'
-import { pluralize } from '@/lib/utils'
 import type { AuditCheckDefinition, CheckContext, CheckResult } from '../../types'
 
 export const schemaMarkup: AuditCheckDefinition = {

@@ -5,6 +5,7 @@ import type { PageContent } from '@/lib/aio/ai-auditor'
 import { fetchPage } from '@/lib/audit/fetcher'
 import type { AuditPage, AuditAIAnalysis } from './types'
 import type { SiteAuditPage } from '@/lib/audit/types'
+import { logUsage } from '@/lib/app-settings/usage'
 
 export interface AIRunnerResult {
   strategicScore: number | null
@@ -103,9 +104,24 @@ export async function runAIAnalysisPhase(
 
   console.log(`[AI Runner] Analyzing ${pageContents.length} pages with Claude`)
 
+  // Fetch organization_id for usage logging
+  const { data: audit } = await supabase
+    .from('audits')
+    .select('organization_id')
+    .eq('id', auditId)
+    .single()
+
   const startTime = Date.now()
   const batchResult = await runAIAnalysis(pageContents)
   const executionTimeMs = Date.now() - startTime
+
+  await logUsage('anthropic', 'ai_analysis', {
+    organizationId: audit?.organization_id,
+    tokensInput: batchResult.totalInputTokens,
+    tokensOutput: batchResult.totalOutputTokens,
+    cost: batchResult.totalCost,
+    metadata: { auditId, pagesAnalyzed: batchResult.analyses.length },
+  })
 
   // Build importance lookup from topPages
   const importanceLookup = new Map(topPages.map((p) => [p.url, p]))

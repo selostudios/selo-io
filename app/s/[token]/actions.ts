@@ -7,8 +7,6 @@ import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/ty
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/seo/client-reports/[id]/transform'
 import type { ReportCheck, ReportAuditData } from '@/app/(authenticated)/seo/client-reports/actions'
-import type { PerformanceAuditResult } from '@/lib/performance/types'
-import type { AIOCheck } from '@/lib/aio/types'
 
 export interface SharedSiteAuditData {
   audit: SiteAudit

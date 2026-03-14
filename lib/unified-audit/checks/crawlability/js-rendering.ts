@@ -46,7 +46,6 @@ export const jsRendering: AuditCheckDefinition = {
 
     // Good server-rendered content: 100+ words with structural elements
     if (wordCount >= 100 && (paragraphCount >= 2 || headingCount >= 1)) {
-      const renderingType = hasSSRIndicators ? 'Server-rendered' : 'Static HTML'
       return {
         status: CheckStatus.Passed,
         details: {

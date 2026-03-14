@@ -17,6 +17,8 @@ interface SummaryInput {
   performanceResults: PerformanceAuditResult[]
   aioAudit: AIOAudit
   aioChecks: AIOCheck[]
+  organizationId?: string | null
+  reportId?: string
 }
 
 /**
@@ -167,10 +169,18 @@ Write 3 short paragraphs in plain text (NO markdown, NO bullet points, NO specia
 Maximum 150 words. Professional, consultative tone. Plain text only - no asterisks, no hashes, no formatting symbols.`
 
   try {
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model: anthropic('claude-sonnet-4-20250514'),
       prompt,
       maxOutputTokens: 400,
+    })
+
+    const { logUsage } = await import('@/lib/app-settings/usage')
+    await logUsage('anthropic', 'summary_generation', {
+      organizationId: input.organizationId,
+      tokensInput: usage?.inputTokens,
+      tokensOutput: usage?.outputTokens,
+      metadata: { reportId: input.reportId, domain },
     })
 
     return text.trim()

@@ -1,3 +1,5 @@
+'use server'
+
 import { cookies } from 'next/headers'
 import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
