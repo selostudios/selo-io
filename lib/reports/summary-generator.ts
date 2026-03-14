@@ -178,8 +178,8 @@ Maximum 150 words. Professional, consultative tone. Plain text only - no asteris
     const { logUsage } = await import('@/lib/app-settings/usage')
     await logUsage('anthropic', 'summary_generation', {
       organizationId: input.organizationId,
-      tokensInput: usage?.promptTokens,
-      tokensOutput: usage?.completionTokens,
+      tokensInput: usage?.inputTokens,
+      tokensOutput: usage?.outputTokens,
       metadata: { reportId: input.reportId, domain },
     })
 

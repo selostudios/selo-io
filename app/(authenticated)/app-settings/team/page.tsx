@@ -4,7 +4,8 @@ import { TeamClient } from './client'
 
 export default async function AppSettingsTeamPage() {
   const user = await getAuthUser()
-  const userRecord = await getUserRecord(user!.id)
+  if (!user) return null
+  const userRecord = await getUserRecord(user.id)
   const isAdmin = userRecord?.role === 'admin'
 
   const employees = await getInternalEmployees()
