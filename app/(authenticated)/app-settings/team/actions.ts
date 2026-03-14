@@ -39,11 +39,12 @@ export async function getInternalEmployees(): Promise<InternalEmployee[] | { err
   )
   const results: InternalEmployee[] = (employees ?? []).map((emp, i) => {
     const authUser = authResults[i].data
+    const noName = { first_name: null, last_name: null }
     const usersRaw = emp.users as unknown as
       | { first_name: string | null; last_name: string | null }
       | { first_name: string | null; last_name: string | null }[]
       | null
-    const user = Array.isArray(usersRaw) ? usersRaw[0] ?? {} : usersRaw ?? {}
+    const user = Array.isArray(usersRaw) ? usersRaw[0] ?? noName : usersRaw ?? noName
     return {
       id: emp.id,
       userId: emp.user_id,
