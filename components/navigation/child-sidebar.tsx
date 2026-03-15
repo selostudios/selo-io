@@ -130,87 +130,87 @@ export function ChildSidebar({
         {navigation
           .filter((group) => group.items.length > 0)
           .map((group, groupIndex) => (
-          <div key={groupIndex}>
-            {!isCollapsed && group.header && (
-              <h3 className="mb-2 px-3 text-xs font-medium tracking-wider text-neutral-500 uppercase">
-                {group.header}
-              </h3>
-            )}
-            <div className={cn(isCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-1')}>
-              {group.items.map((item) => {
-                const Icon = item.icon
+            <div key={groupIndex}>
+              {!isCollapsed && group.header && (
+                <h3 className="mb-2 px-3 text-xs font-medium tracking-wider text-neutral-500 uppercase">
+                  {group.header}
+                </h3>
+              )}
+              <div className={cn(isCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-1')}>
+                {group.items.map((item) => {
+                  const Icon = item.icon
 
-                // Determine if this item is active
-                let isActive = false
-                if (item.href === '/dashboard') {
-                  isActive = pathname === '/dashboard'
-                } else if (item.href.startsWith('/settings')) {
-                  isActive = pathname.startsWith('/settings')
-                } else {
-                  isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-                }
+                  // Determine if this item is active
+                  let isActive = false
+                  if (item.href === '/dashboard') {
+                    isActive = pathname === '/dashboard'
+                  } else if (item.href.startsWith('/settings')) {
+                    isActive = pathname.startsWith('/settings')
+                  } else {
+                    isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                  }
 
-                // Show spinner for active unified audit
-                const showSpinner = item.href === '/seo/audit' && hasActiveAudit
+                  // Show spinner for active unified audit
+                  const showSpinner = item.href === '/seo/audit' && hasActiveAudit
 
-                // Preserve org parameter for SEO, Settings, and Dashboard links
-                let href = item.href
-                if (
-                  orgParam &&
-                  (item.href.startsWith('/seo') ||
-                    item.href.startsWith('/settings') ||
-                    item.href.startsWith('/dashboard'))
-                ) {
-                  href = `${item.href}?org=${orgParam}`
-                }
+                  // Preserve org parameter for SEO, Settings, and Dashboard links
+                  let href = item.href
+                  if (
+                    orgParam &&
+                    (item.href.startsWith('/seo') ||
+                      item.href.startsWith('/settings') ||
+                      item.href.startsWith('/dashboard'))
+                  ) {
+                    href = `${item.href}?org=${orgParam}`
+                  }
 
-                if (isCollapsed) {
+                  if (isCollapsed) {
+                    return (
+                      <Tooltip key={item.href}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={href}
+                            className={cn(
+                              'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                              isActive
+                                ? 'text-neutral-900'
+                                : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
+                            )}
+                          >
+                            {showSpinner ? (
+                              <Loader2 className="h-5 w-5 motion-safe:animate-spin" />
+                            ) : (
+                              <Icon className="h-5 w-5" />
+                            )}
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{item.name}</TooltipContent>
+                      </Tooltip>
+                    )
+                  }
+
                   return (
-                    <Tooltip key={item.href}>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={href}
-                          className={cn(
-                            'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
-                            isActive
-                              ? 'text-neutral-900'
-                              : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
-                          )}
-                        >
-                          {showSpinner ? (
-                            <Loader2 className="h-5 w-5 motion-safe:animate-spin" />
-                          ) : (
-                            <Icon className="h-5 w-5" />
-                          )}
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{item.name}</TooltipContent>
-                    </Tooltip>
+                    <Link
+                      key={item.href}
+                      href={href}
+                      className={cn(
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                        isActive
+                          ? 'font-semibold text-neutral-900'
+                          : 'font-medium text-neutral-600 hover:bg-neutral-100'
+                      )}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="flex-1">{item.name}</span>
+                      {showSpinner && (
+                        <Loader2 className="h-4 w-4 text-neutral-400 motion-safe:animate-spin" />
+                      )}
+                    </Link>
                   )
-                }
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={href}
-                    className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                      isActive
-                        ? 'font-semibold text-neutral-900'
-                        : 'font-medium text-neutral-600 hover:bg-neutral-100'
-                    )}
-                  >
-                    <Icon className="h-5 w-5 flex-shrink-0" />
-                    <span className="flex-1">{item.name}</span>
-                    {showSpinner && (
-                      <Loader2 className="h-4 w-4 text-neutral-400 motion-safe:animate-spin" />
-                    )}
-                  </Link>
-                )
-              })}
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </nav>
       {/* Collapse/Expand button at bottom-right */}
       {onToggleCollapse && (
