@@ -12,7 +12,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
 
   const userRecord = await getUserRecord(user.id)
 
-  if (!userRecord?.organization_id) {
+  if (!userRecord) {
     redirect('/onboarding')
   }
 

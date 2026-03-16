@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -11,16 +13,25 @@ export default async function Home() {
     redirect('/login')
   }
 
-  // Check if user has an organization
-  const { data: userRecord } = await supabase
-    .from('users')
+  // Check selo-org cookie first for fast redirect
+  const cookieStore = await cookies()
+  const cookieOrgId = cookieStore.get(SELO_ORG_COOKIE)?.value
+  if (cookieOrgId) {
+    redirect(`/${cookieOrgId}/dashboard`)
+  }
+
+  // Fall back to team membership
+  const { data: membership } = await supabase
+    .from('team_members')
     .select('organization_id')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
+    .limit(1)
     .single()
 
-  if (userRecord?.organization_id) {
-    redirect('/dashboard')
-  } else {
-    redirect('/onboarding')
+  if (membership?.organization_id) {
+    redirect(`/${membership.organization_id}/dashboard`)
   }
+
+  // No org — send to organizations page to create/pick one
+  redirect('/organizations')
 }

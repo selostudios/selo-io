@@ -121,5 +121,5 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
     })
   }
 
-  redirect('/dashboard')
+  redirect(`/${org.id}/dashboard`)
 }

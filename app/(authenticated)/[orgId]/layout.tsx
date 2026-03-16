@@ -1,8 +1,6 @@
-import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 import { isInternalUser } from '@/lib/permissions'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -34,12 +32,6 @@ export default async function OrgLayout({
     redirect(`/${userRecord.organization_id}/dashboard`)
   }
 
-  const cookieStore = await cookies()
-  cookieStore.set(SELO_ORG_COOKIE, orgId, {
-    path: '/',
-    maxAge: 31536000,
-    sameSite: 'lax',
-  })
-
+  // Cookie is set by the proxy (proxy.ts) on every request with a UUID path segment
   return <>{children}</>
 }

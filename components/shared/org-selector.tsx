@@ -36,6 +36,9 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
   const currentOrgId = useOrgId()
   const [dialogOpen, setDialogOpen] = useState(false)
 
+  // Hide on non-org routes
+  const isOrgRoute = Boolean(currentOrgId)
+
   const selectedOrg = organizations.find((o) => o.id === currentOrgId)
   const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
@@ -50,8 +53,8 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
         // Replace the current org UUID with the new one
         targetPath = pathname.replace(`/${currentOrgId}`, `/${newOrgId}`)
       } else {
-        // No org in path currently, prepend it
-        targetPath = `/${newOrgId}${pathname}`
+        // No org in path — navigate to this org's dashboard
+        targetPath = `/${newOrgId}/dashboard`
       }
 
       // If on a detail page (last segment is a UUID that isn't the org), go to parent
@@ -92,11 +95,18 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
     return (
       <>
         <span className="font-medium">{selectedOrg.name}</span>
-        <Badge variant="secondary" className={cn('text-xs', statusColors[selectedOrg.status])}>
+        <Badge
+          variant="secondary"
+          className={cn('text-xs capitalize', statusColors[selectedOrg.status])}
+        >
           {selectedOrg.status}
         </Badge>
       </>
     )
+  }
+
+  if (!isOrgRoute) {
+    return null
   }
 
   // External users see simple display (no dropdown)
@@ -141,7 +151,10 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
             >
               <div className="flex items-center gap-2">
                 <span className="truncate font-medium">{org.name}</span>
-                <Badge variant="secondary" className={cn('text-xs', statusColors[org.status])}>
+                <Badge
+                  variant="secondary"
+                  className={cn('text-xs capitalize', statusColors[org.status])}
+                >
                   {org.status}
                 </Badge>
               </div>

@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
     .single()
 
   if (membership?.organization_id) {
-    redirect('/dashboard')
+    redirect(`/${membership.organization_id}/dashboard`)
   }
 
   // Fetch industries

@@ -10,7 +10,13 @@ config({ path: resolve(process.cwd(), '.env.local') })
 // Parse command line arguments
 function parseArgs() {
   const args = process.argv.slice(2)
-  const params: { email?: string; password?: string; orgName?: string; industry?: string } = {}
+  const params: {
+    email?: string
+    password?: string
+    orgName?: string
+    industry?: string
+    internal?: boolean
+  } = {}
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -22,6 +28,8 @@ function parseArgs() {
       params.orgName = arg.split('=')[1]
     } else if (arg.startsWith('--industry=')) {
       params.industry = arg.split('=')[1]
+    } else if (arg === '--internal') {
+      params.internal = true
     }
   }
 
@@ -35,7 +43,7 @@ async function addUser() {
   if (!params.email) params.email = 'test@test.com'
   if (!params.password) params.password = 'password1234'
 
-  const { email, password, orgName, industry } = params as Required<
+  const { email, password, orgName, industry, internal } = params as Required<
     Pick<typeof params, 'email' | 'password'>
   > &
     typeof params
@@ -106,6 +114,7 @@ async function addUser() {
       id: authData.user.id,
       organization_id: orgData.id,
       role: 'admin',
+      ...(internal ? { is_internal: true } : {}),
     })
 
     if (userError) {
@@ -128,7 +137,20 @@ async function addUser() {
       console.error('⚠️  Warning: Failed to create team_members record:', memberError.message)
     }
 
-    console.log(`✅ User linked to organization with admin role`)
+    if (internal) {
+      const { error: internalError } = await supabase
+        .from('internal_employees')
+        .upsert({ user_id: authData.user.id }, { onConflict: 'user_id' })
+
+      if (internalError) {
+        console.error(
+          '⚠️  Warning: Failed to create internal_employees record:',
+          internalError.message
+        )
+      }
+    }
+
+    console.log(`✅ User linked to organization with admin role${internal ? ' (internal)' : ''}`)
 
     // Success summary
     console.log('\n✨ User created successfully!\n')
@@ -137,7 +159,7 @@ async function addUser() {
     console.log(`🔑 User ID:      ${authData.user.id}`)
     console.log(`🏢 Organization: ${organizationName}`)
     console.log(`🆔 Org ID:       ${orgData.id}`)
-    console.log(`👤 Role:         admin`)
+    console.log(`👤 Role:         admin${internal ? ' (internal)' : ''}`)
     console.log('═══════════════════════════════════════')
     console.log('\n🎉 User can now sign in at your application!')
   } catch (error) {

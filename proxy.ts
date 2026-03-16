@@ -79,10 +79,16 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Already has org — first path segment is a UUID
+  // 3. Already has org — first path segment is a UUID → sync cookie and pass through
   const firstSegment = pathname.split('/')[1] ?? ''
   if (UUID_RE.test(firstSegment)) {
-    return await refreshSupabaseSession(request)
+    const response = await refreshSupabaseSession(request)
+    response.cookies.set(SELO_ORG_COOKIE, firstSegment, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    })
+    return response
   }
 
   // 4. Org-scoped route without org prefix — redirect
