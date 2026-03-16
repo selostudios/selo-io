@@ -11,6 +11,46 @@ import type {
   ReportAuditData,
 } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
 
+// =============================================================================
+// Explicit column selects (cast as '*' to satisfy Supabase's deep type inference)
+// =============================================================================
+
+const SITE_AUDIT_SELECT = `id, organization_id, created_by, url, status, overall_score, seo_score,
+  ai_readiness_score, technical_score, pages_crawled, failed_count,
+  warning_count, passed_count, executive_summary, error_message,
+  archived_at, started_at, completed_at, created_at` as '*'
+
+const SITE_CHECK_SELECT = `id, audit_id, page_id, check_type, check_name, priority, status,
+  details, created_at, display_name, display_name_passed,
+  learn_more_url, is_site_wide, description, fix_guidance` as '*'
+
+const SITE_PAGE_SELECT = `id, audit_id, url, title, meta_description, status_code,
+  last_modified, crawled_at, is_resource, resource_type` as '*'
+
+const UNIFIED_AUDIT_SELECT = `id, organization_id, created_by, domain, url, status,
+  seo_score, performance_score, ai_readiness_score, overall_score,
+  pages_crawled, crawl_mode, max_pages, soft_cap_reached,
+  passed_count, warning_count, failed_count,
+  ai_analysis_enabled, sample_size,
+  total_input_tokens, total_output_tokens, total_cost,
+  use_relaxed_ssl, executive_summary, error_message,
+  started_at, completed_at, created_at, updated_at` as '*'
+
+const AUDIT_CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, status,
+  display_name, display_name_passed, description, fix_guidance,
+  learn_more_url, details, feeds_scores, created_at` as '*'
+
+const AUDIT_PAGE_SELECT = `id, audit_id, url, title, meta_description, status_code,
+  last_modified, is_resource, resource_type, depth, created_at` as '*'
+
+const PERF_RESULT_SELECT = `id, audit_id, url, device, lcp_ms, lcp_rating, inp_ms, inp_rating,
+  cls_score, cls_rating, performance_score, accessibility_score,
+  best_practices_score, seo_score, created_at` as '*'
+
+// =============================================================================
+// Types
+// =============================================================================
+
 export interface SharedSiteAuditData {
   audit: SiteAudit
   checks: SiteAuditCheck[]
@@ -33,7 +73,7 @@ export async function getSharedSiteAuditData(auditId: string): Promise<SharedSit
   // Fetch audit
   const { data: audit, error: auditError } = await supabase
     .from('site_audits')
-    .select('*')
+    .select(SITE_AUDIT_SELECT)
     .eq('id', auditId)
     .single()
 
@@ -53,7 +93,7 @@ export async function getSharedSiteAuditData(auditId: string): Promise<SharedSit
         (sb, range) =>
           sb
             .from('site_audit_checks')
-            .select('*')
+            .select(SITE_CHECK_SELECT)
             .eq('audit_id', auditId)
             .order('created_at', { ascending: true })
             .range(range.from, range.to),
@@ -63,7 +103,7 @@ export async function getSharedSiteAuditData(auditId: string): Promise<SharedSit
         (sb, range) =>
           sb
             .from('site_audit_pages')
-            .select('*')
+            .select(SITE_PAGE_SELECT)
             .eq('audit_id', auditId)
             .order('crawled_at', { ascending: true })
             .range(range.from, range.to),
@@ -126,16 +166,16 @@ export async function getSharedReportData(
     await Promise.all([
       supabase
         .from('performance_audit_results')
-        .select('*')
+        .select(PERF_RESULT_SELECT)
         .eq('audit_id', report.performance_audit_id),
       supabase
         .from('site_audit_checks')
-        .select('*')
+        .select(SITE_CHECK_SELECT)
         .eq('audit_id', report.site_audit_id)
         .order('created_at', { ascending: true }),
       supabase
         .from('aio_checks')
-        .select('*')
+        .select(SITE_CHECK_SELECT)
         .eq('audit_id', report.aio_audit_id)
         .order('created_at', { ascending: true }),
     ])
@@ -171,7 +211,7 @@ export async function getSharedUnifiedAuditData(
 
   const { data: audit, error: auditError } = await supabase
     .from('audits')
-    .select('*')
+    .select(UNIFIED_AUDIT_SELECT)
     .eq('id', auditId)
     .single()
 
@@ -191,7 +231,7 @@ export async function getSharedUnifiedAuditData(
         (sb, range) =>
           sb
             .from('audit_checks')
-            .select('*')
+            .select(AUDIT_CHECK_SELECT)
             .eq('audit_id', auditId)
             .order('created_at', { ascending: true })
             .range(range.from, range.to),
@@ -201,7 +241,7 @@ export async function getSharedUnifiedAuditData(
         (sb, range) =>
           sb
             .from('audit_pages')
-            .select('*')
+            .select(AUDIT_PAGE_SELECT)
             .eq('audit_id', auditId)
             .order('created_at', { ascending: true })
             .range(range.from, range.to),

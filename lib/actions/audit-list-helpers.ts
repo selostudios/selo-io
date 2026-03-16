@@ -323,10 +323,15 @@ export async function getReportsListData(organizationId?: string): Promise<Repor
   const { isInternal, organizationId: userOrgId } = currentUser
   const filterOrgId = isInternal ? organizationId || null : userOrgId
 
-  // Build reports query
+  // Build reports query — exclude original_executive_summary to reduce payload
+  const REPORT_SELECT = `id, organization_id, created_by, audit_id, site_audit_id,
+    performance_audit_id, aio_audit_id, combined_score, domain,
+    executive_summary, custom_logo_url, custom_company_name,
+    view_count, created_at, updated_at` as '*'
+
   let reportsQuery = supabase
     .from('generated_reports')
-    .select('*')
+    .select(REPORT_SELECT)
     .order('created_at', { ascending: false })
 
   if (filterOrgId) {

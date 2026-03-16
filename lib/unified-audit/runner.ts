@@ -17,6 +17,14 @@ import { runAIAnalysisPhase } from './ai-runner'
 // Budget for starting new batches: 800s max function timeout minus 300s buffer
 const MAX_FUNCTION_DURATION_MS = 500_000
 
+// Explicit column selects to avoid fetching unused columns (cast as '*' for Supabase type inference)
+const AUDIT_CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, status,
+  display_name, display_name_passed, description, fix_guidance,
+  learn_more_url, details, feeds_scores, created_at` as '*'
+
+const AUDIT_PAGE_SELECT = `id, audit_id, url, title, meta_description, status_code,
+  last_modified, is_resource, resource_type, depth, created_at` as '*'
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -110,7 +118,11 @@ export async function runUnifiedAudit(auditId: string, url: string): Promise<voi
 
   try {
     // Fetch audit record
-    const { data: audit } = await supabase.from('audits').select('*').eq('id', auditId).single()
+    const { data: audit } = await supabase
+      .from('audits')
+      .select('id, organization_id, max_pages, sample_size, ai_analysis_enabled')
+      .eq('id', auditId)
+      .single()
 
     if (!audit) {
       throw new Error('Audit not found')
@@ -290,7 +302,13 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
 
   try {
     // Fetch audit data
-    const { data: audit } = await supabase.from('audits').select('*').eq('id', auditId).single()
+    const { data: audit } = await supabase
+      .from('audits')
+      .select(
+        'id, organization_id, current_batch, max_pages, crawl_mode, sample_size, ai_analysis_enabled'
+      )
+      .eq('id', auditId)
+      .single()
 
     if (!audit) {
       throw new Error('Audit not found')
@@ -504,7 +522,7 @@ async function runAnalysisPhase(
   if (psiData && psiData.checksUpserted > 0) {
     const { data: freshChecks } = await supabase
       .from('audit_checks')
-      .select('*')
+      .select(AUDIT_CHECK_SELECT)
       .eq('audit_id', auditId)
 
     if (freshChecks) {
@@ -584,7 +602,10 @@ async function finishUnifiedAudit(
   }
 
   // Get all pages from the audit_pages table
-  const { data: pages } = await supabase.from('audit_pages').select('*').eq('audit_id', auditId)
+  const { data: pages } = await supabase
+    .from('audit_pages')
+    .select(AUDIT_PAGE_SELECT)
+    .eq('audit_id', auditId)
 
   const allPages: AuditPage[] = (pages || []).map((p: Record<string, unknown>) => ({
     id: p.id as string,
@@ -615,7 +636,7 @@ async function finishUnifiedAudit(
   // Get existing page-specific check results
   const { data: existingChecks } = await supabase
     .from('audit_checks')
-    .select('*')
+    .select(AUDIT_CHECK_SELECT)
     .eq('audit_id', auditId)
 
   const allCheckResults: AuditCheck[] = (existingChecks || []) as AuditCheck[]

@@ -37,7 +37,7 @@ export default async function CampaignsPage({ params }: CampaignsPageProps) {
 
   const { data: campaigns } = await supabase
     .from('campaigns')
-    .select('*')
+    .select('id, name, status, start_date, end_date, created_at')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
 
