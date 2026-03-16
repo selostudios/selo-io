@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { canManageIntegrations } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
+import { useOrgId } from '@/hooks/use-org-context'
 
 type SettingsTab = {
   name: string
@@ -32,8 +33,12 @@ interface SettingsTabsProps {
 
 export function SettingsTabs({ userRole }: SettingsTabsProps) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const orgParam = searchParams.get('org')
+  const orgId = useOrgId()
+
+  const strippedPathname = pathname.replace(
+    /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    ''
+  )
 
   const visibleTabs = getVisibleTabs(userRole)
 
@@ -41,8 +46,8 @@ export function SettingsTabs({ userRole }: SettingsTabsProps) {
     <div className="border-b">
       <nav className="flex gap-6">
         {visibleTabs.map((tab) => {
-          const isActive = pathname === tab.href
-          const href = orgParam ? `${tab.href}?org=${orgParam}` : tab.href
+          const isActive = strippedPathname === tab.href
+          const href = orgId ? `/${orgId}${tab.href}` : tab.href
 
           return (
             <Link

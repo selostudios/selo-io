@@ -11,7 +11,6 @@ interface SeoHeaderProps {
   role: string
   organizations: OrganizationForSelector[]
   isInternal: boolean
-  selectedOrganizationId: string | null
 }
 
 export function SeoHeader({
@@ -21,15 +20,10 @@ export function SeoHeader({
   role,
   organizations,
   isInternal,
-  selectedOrganizationId,
 }: SeoHeaderProps) {
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-      <OrgSelector
-        organizations={organizations}
-        isInternal={isInternal}
-        selectedOrganizationId={selectedOrganizationId}
-      />
+      <OrgSelector organizations={organizations} isInternal={isInternal} />
       <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />
     </header>
   )

@@ -1,13 +1,11 @@
 import { isInternalUser, canViewFeedback as canViewFeedbackFn, UserRole } from '@/lib/permissions'
 import { getOrganizationsList } from '@/lib/auth/cached'
 import type { CachedUserRecord } from '@/lib/auth/cached'
-import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 import type { User } from '@supabase/supabase-js'
 
 export interface LayoutData {
   isInternal: boolean
-  resolvedOrgId: string | null
   organizations: OrganizationForSelector[]
   userEmail: string
   firstName: string
@@ -26,12 +24,6 @@ export async function resolveLayoutData(
   userRecord: CachedUserRecord
 ): Promise<LayoutData> {
   const isInternal = isInternalUser(userRecord)
-
-  const resolvedOrgId = await resolveOrganizationId(
-    undefined,
-    userRecord.organization_id,
-    isInternal
-  )
 
   let organizations: OrganizationForSelector[] = []
   if (isInternal) {
@@ -58,7 +50,6 @@ export async function resolveLayoutData(
 
   return {
     isInternal,
-    resolvedOrgId,
     organizations,
     userEmail,
     firstName,

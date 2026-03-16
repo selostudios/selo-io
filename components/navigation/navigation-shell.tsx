@@ -1,24 +1,22 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ParentSidebar, type ParentSection } from './parent-sidebar'
 import { ChildSidebar } from './child-sidebar'
 import { useActiveAudit } from '@/hooks/use-active-audit'
+import { useOrgId } from '@/hooks/use-org-context'
 
 function getSectionFromPathname(pathname: string): ParentSection {
-  if (pathname.startsWith('/quick-audit')) {
-    return 'quick-audit'
-  }
-  if (pathname.startsWith('/organizations')) {
-    return 'organizations'
-  }
-  if (pathname.startsWith('/app-settings')) {
-    return 'app-settings'
-  }
-  if (pathname.startsWith('/support')) {
-    return 'support'
-  }
+  // Strip leading UUID segment if present
+  const stripped = pathname.replace(
+    /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    ''
+  )
+  if (stripped.startsWith('/quick-audit')) return 'quick-audit'
+  if (stripped.startsWith('/organizations')) return 'organizations'
+  if (stripped.startsWith('/app-settings')) return 'app-settings'
+  if (stripped.startsWith('/support')) return 'support'
   // Default to home for /dashboard, /settings, /profile, etc.
   return 'home'
 }
@@ -44,9 +42,8 @@ export function NavigationShell({
 }: NavigationShellProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const orgParam = searchParams.get('org')
-  const { hasActiveAudit } = useActiveAudit(orgParam)
+  const orgId = useOrgId()
+  const { hasActiveAudit } = useActiveAudit(orgId)
 
   const [isChildCollapsed, setIsChildCollapsed] = useState(false)
 
@@ -59,14 +56,14 @@ export function NavigationShell({
       // Only navigate if we're changing to a different section
       if (section !== activeSection) {
         const baseRoute = sectionDefaultRoutes[section]
-
-        // Preserve org parameter for home section
-        const href = orgParam && section === 'home' ? `${baseRoute}?org=${orgParam}` : baseRoute
-
+        const needsOrg = ['/dashboard', '/seo', '/settings', '/support'].some((p) =>
+          baseRoute.startsWith(p)
+        )
+        const href = needsOrg && orgId ? `/${orgId}${baseRoute}` : baseRoute
         router.push(href)
       }
     },
-    [activeSection, router, orgParam]
+    [activeSection, router, orgId]
   )
 
   return (

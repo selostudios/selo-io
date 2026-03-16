@@ -6,7 +6,6 @@ import { UserRole } from '@/lib/enums'
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   usePathname: () => '/settings/team',
-  useSearchParams: () => new URLSearchParams(),
 }))
 
 describe('SettingsTabs', () => {

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Megaphone,
@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { canViewDashboard, canViewCampaigns } from '@/lib/permissions'
+import { useOrgId } from '@/hooks/use-org-context'
 import type { ParentSection } from './parent-sidebar'
 
 interface NavigationItem {
@@ -105,7 +106,13 @@ export function ChildSidebar({
   onToggleCollapse,
 }: ChildSidebarProps) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const orgId = useOrgId()
+
+  // Strip org UUID prefix for matching
+  const strippedPathname = pathname.replace(
+    /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    ''
+  )
 
   // Filter home navigation items based on user role
   const navigation = navigationConfig[activeSection].map((group) => ({
@@ -119,9 +126,6 @@ export function ChildSidebar({
           })
         : group.items,
   }))
-
-  // Get current org parameter to preserve across navigation
-  const orgParam = searchParams.get('org')
 
   return (
     <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[304px]')}>
@@ -143,25 +147,27 @@ export function ChildSidebar({
                   // Determine if this item is active
                   let isActive = false
                   if (item.href === '/dashboard') {
-                    isActive = pathname === '/dashboard'
+                    isActive = strippedPathname === '/dashboard'
                   } else if (item.href.startsWith('/settings')) {
-                    isActive = pathname.startsWith('/settings')
+                    isActive = strippedPathname.startsWith('/settings')
                   } else {
-                    isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    isActive =
+                      strippedPathname === item.href ||
+                      strippedPathname.startsWith(item.href + '/')
                   }
 
                   // Show spinner for active unified audit
                   const showSpinner = item.href === '/seo/audit' && hasActiveAudit
 
-                  // Preserve org parameter for SEO, Settings, and Dashboard links
+                  // Prefix with /{orgId} for org-scoped links
                   let href = item.href
                   if (
-                    orgParam &&
+                    orgId &&
                     (item.href.startsWith('/seo') ||
                       item.href.startsWith('/settings') ||
                       item.href.startsWith('/dashboard'))
                   ) {
-                    href = `${item.href}?org=${orgParam}`
+                    href = `/${orgId}${item.href}`
                   }
 
                   if (isCollapsed) {

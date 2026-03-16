@@ -6,13 +6,11 @@ import { OrgSelector } from '@/components/shared/org-selector'
 import { FeedbackProvider } from '@/components/feedback/feedback-provider'
 import { FeedbackDialog } from '@/components/feedback/feedback-dialog'
 import { FeedbackTrigger } from '@/components/feedback/feedback-trigger'
-import { OrgProvider } from '@/hooks/use-org-context'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
 
 interface AppShellProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
-  resolvedOrgId: string | null
   userEmail: string
   firstName: string
   lastName: string
@@ -25,7 +23,6 @@ interface AppShellProps {
 export function AppShell({
   organizations,
   isInternal,
-  resolvedOrgId,
   userEmail,
   firstName,
   lastName,
@@ -36,41 +33,35 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <FeedbackProvider>
-      <OrgProvider>
-        <div className="flex h-screen flex-col bg-neutral-50">
-          {/* Full-width top bar */}
-          <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b bg-white px-4">
-            <Link href="/dashboard" className="flex-shrink-0">
-              <Image
-                src="/selo-logo.jpg.webp"
-                alt="Selo"
-                width={32}
-                height={32}
-                priority
-                className="object-contain"
-              />
-            </Link>
-            <OrgSelector
-              organizations={organizations}
-              isInternal={isInternal}
-              selectedOrganizationId={resolvedOrgId}
+      <div className="flex h-screen flex-col bg-neutral-50">
+        {/* Full-width top bar */}
+        <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b bg-white px-4">
+          <Link href="/dashboard" className="flex-shrink-0">
+            <Image
+              src="/selo-logo.jpg.webp"
+              alt="Selo"
+              width={32}
+              height={32}
+              priority
+              className="object-contain"
             />
-            <div className="flex-1" />
-            <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />
-          </header>
-          {/* Sidebar + Content */}
-          <div className="flex flex-1 overflow-hidden">
-            <NavigationShell
-              isInternal={isInternal}
-              userRole={userRole}
-              canViewFeedback={canViewFeedback}
-            />
-            <main className="flex-1 overflow-y-auto">{children}</main>
-          </div>
+          </Link>
+          <OrgSelector organizations={organizations} isInternal={isInternal} />
+          <div className="flex-1" />
+          <UserMenu userEmail={userEmail} firstName={firstName} lastName={lastName} role={role} />
+        </header>
+        {/* Sidebar + Content */}
+        <div className="flex flex-1 overflow-hidden">
+          <NavigationShell
+            isInternal={isInternal}
+            userRole={userRole}
+            canViewFeedback={canViewFeedback}
+          />
+          <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
-        <FeedbackDialog />
-        <FeedbackTrigger />
-      </OrgProvider>
+      </div>
+      <FeedbackDialog />
+      <FeedbackTrigger />
     </FeedbackProvider>
   )
 }

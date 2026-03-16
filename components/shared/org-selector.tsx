@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, startTransition } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useState, useCallback, startTransition } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { ChevronDown, Plus, Building2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { OrganizationStatus } from '@/lib/enums'
-import { useSetOrgId } from '@/hooks/use-org-context'
+import { useOrgId } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,21 +17,11 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CreateOrganizationDialog } from '@/components/dashboard/create-organization-dialog'
 import type { OrganizationForSelector } from '@/lib/organizations/types'
-import { LAST_ORG_KEY, SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
-
-function setOrgCookie(orgId: string) {
-  document.cookie = `${SELO_ORG_COOKIE}=${orgId}; path=/; max-age=31536000; SameSite=Lax`
-}
-
-function getOrgCookie(): string | null {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${SELO_ORG_COOKIE}=([^;]*)`))
-  return match ? match[1] : null
-}
+import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 interface OrgSelectorProps {
   organizations: OrganizationForSelector[]
   isInternal: boolean
-  selectedOrganizationId?: string | null
 }
 
 const statusColors: Record<OrganizationStatus, string> = {
@@ -40,67 +30,52 @@ const statusColors: Record<OrganizationStatus, string> = {
   [OrganizationStatus.Inactive]: 'bg-neutral-100 text-neutral-600',
 }
 
-export function OrgSelector({
-  organizations,
-  isInternal,
-  selectedOrganizationId: initialSelectedOrgId,
-}: OrgSelectorProps) {
+export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const setOrgId = useSetOrgId()
+  const currentOrgId = useOrgId()
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  // Read org from URL searchParams, falling back to prop
-  const urlOrgId = searchParams.get('org')
-  const serverSelectedOrgId = urlOrgId || initialSelectedOrgId
-
-  // Local state for immediate UI updates (before server refresh completes)
-  const [localOrgId, setLocalOrgId] = useState<string | null>(serverSelectedOrgId ?? null)
-
-  // Sync local state when server value changes (adjust-during-render pattern)
-  const [prevServerOrgId, setPrevServerOrgId] = useState(serverSelectedOrgId)
-  if (serverSelectedOrgId !== prevServerOrgId) {
-    setPrevServerOrgId(serverSelectedOrgId)
-    setLocalOrgId(serverSelectedOrgId ?? null)
-  }
-
-  const selectedOrganizationId = localOrgId
-
-  const selectedOrg = organizations.find((o) => o.id === selectedOrganizationId)
+  const selectedOrg = organizations.find((o) => o.id === currentOrgId)
   const activeOrganizations = organizations.filter((o) => o.status !== OrganizationStatus.Inactive)
 
-  // Navigate to an org — updates external systems (localStorage, cookie, URL) without React state.
-  // Safe to call from effects since it only touches external systems.
   const navigateToOrg = useCallback(
-    (orgId: string) => {
-      localStorage.setItem(LAST_ORG_KEY, orgId)
-      setOrgCookie(orgId)
-      setOrgId(orgId)
+    (newOrgId: string) => {
+      // Update cookie for proxy redirect fallback
+      document.cookie = `${SELO_ORG_COOKIE}=${newOrgId}; path=/; max-age=31536000; SameSite=Lax`
 
-      // If on a detail page (path ends with a UUID segment), navigate to parent list view
-      // e.g. /seo/audit/abc-123 → /seo/audit?org=...
-      const uuidSegmentPattern = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      const targetPath = uuidSegmentPattern.test(pathname)
-        ? pathname.replace(uuidSegmentPattern, '')
-        : pathname
+      // Replace org segment in current path
+      let targetPath = pathname
+      if (currentOrgId) {
+        // Replace the current org UUID with the new one
+        targetPath = pathname.replace(`/${currentOrgId}`, `/${newOrgId}`)
+      } else {
+        // No org in path currently, prepend it
+        targetPath = `/${newOrgId}${pathname}`
+      }
 
-      const url = new URL(window.location.href)
-      url.searchParams.set('org', orgId)
-      const newUrl = targetPath + '?' + url.searchParams.toString()
+      // If on a detail page (last segment is a UUID that isn't the org), go to parent
+      const segments = targetPath.split('/').filter(Boolean)
+      if (segments.length > 2) {
+        const lastSegment = segments[segments.length - 1]
+        if (
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastSegment)
+        ) {
+          segments.pop()
+          targetPath = '/' + segments.join('/')
+        }
+      }
 
       startTransition(() => {
-        router.push(newUrl)
+        router.push(targetPath)
         router.refresh()
       })
     },
-    [pathname, router, setOrgId]
+    [pathname, currentOrgId, router]
   )
 
-  // User-initiated org selection — immediate UI update + navigation
   const handleSelectOrganization = useCallback(
     (orgId: string) => {
-      setLocalOrgId(orgId)
       navigateToOrg(orgId)
     },
     [navigateToOrg]
@@ -110,38 +85,6 @@ export function OrgSelector({
     setDialogOpen(false)
     handleSelectOrganization(organization.id)
   }
-
-  // Sync cookie when URL org changes (e.g. direct link with ?org=)
-  useEffect(() => {
-    if (urlOrgId) {
-      setOrgCookie(urlOrgId)
-      localStorage.setItem(LAST_ORG_KEY, urlOrgId)
-    }
-  }, [urlOrgId])
-
-  // One-time migration: if localStorage has an org but cookie doesn't, set the cookie.
-  // This ensures existing users get server-side org resolution on their next page load.
-  useEffect(() => {
-    const cookieOrg = getOrgCookie()
-    if (!cookieOrg) {
-      const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-      if (lastOrgId) {
-        setOrgCookie(lastOrgId)
-      }
-    }
-  }, [])
-
-  // If no org is selected, restore the last used org or pick the first active one.
-  useEffect(() => {
-    if (selectedOrganizationId || activeOrganizations.length === 0) return
-
-    const lastOrgId = localStorage.getItem(LAST_ORG_KEY)
-    if (lastOrgId && activeOrganizations.some((o) => o.id === lastOrgId)) {
-      navigateToOrg(lastOrgId)
-    } else {
-      navigateToOrg(activeOrganizations[0].id)
-    }
-  }, [selectedOrganizationId, activeOrganizations, navigateToOrg])
 
   const getDisplayLabel = (): React.ReactNode => {
     if (!selectedOrg) {
@@ -204,7 +147,7 @@ export function OrgSelector({
                   {org.status}
                 </Badge>
               </div>
-              {org.id === selectedOrganizationId && (
+              {org.id === currentOrgId && (
                 <Check className="h-4 w-4 flex-shrink-0 text-green-600" aria-hidden="true" />
               )}
             </DropdownMenuItem>
