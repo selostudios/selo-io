@@ -6,7 +6,7 @@ import { transformToPresentation } from './transform'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ orgId: string; id: string }>
   searchParams: Promise<{ share?: string; settings?: string }>
 }
 

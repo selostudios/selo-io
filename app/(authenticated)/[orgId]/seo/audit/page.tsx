@@ -4,11 +4,11 @@ import { UnifiedAuditClient } from './client'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function UnifiedAuditPage({ searchParams }: PageProps) {
-  const { org: organizationId } = await searchParams
-  const data = await getUnifiedAuditData(organizationId)
+export default async function UnifiedAuditPage({ params }: PageProps) {
+  const { orgId } = await params
+  const data = await getUnifiedAuditData(orgId)
   return <UnifiedAuditClient {...data} />
 }

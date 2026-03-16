@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation'
 import { MonitoredSitesManager } from '@/components/settings/monitored-sites'
 import { UserRole } from '@/lib/enums'
 
-export default async function MonitoringSettingsPage() {
+interface PageProps {
+  params: Promise<{ orgId: string }>
+}
+
+export default async function MonitoringSettingsPage({ params }: PageProps) {
+  const { orgId } = await params
   const supabase = await createClient()
 
   const {
@@ -33,14 +38,14 @@ export default async function MonitoringSettingsPage() {
   const { data: org } = await supabase
     .from('organizations')
     .select('website_url')
-    .eq('id', userRecord.organization_id)
+    .eq('id', orgId)
     .single()
 
   // Get monitored sites
   const { data: sites } = await supabase
     .from('monitored_sites')
     .select('*')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
 
   return (
     <div className="space-y-6">

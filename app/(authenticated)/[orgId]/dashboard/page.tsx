@@ -1,43 +1,15 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isInternalUser } from '@/lib/permissions'
-import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 import { IntegrationsPanel } from '@/components/dashboard/integrations-panel'
 import { WebsiteUrlToast } from '@/components/audit/website-url-toast'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function DashboardPage({ searchParams }: PageProps) {
-  const { org: selectedOrgId } = await searchParams
-
-  const user = await getAuthUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  const userRecord = await getUserRecord(user.id)
-  const isInternal = userRecord ? isInternalUser(userRecord) : false
-  const organizationId = await resolveOrganizationId(
-    selectedOrgId,
-    userRecord?.organization_id ?? null,
-    isInternal
-  )
-
-  if (!userRecord || !organizationId) {
-    if (isInternal && !organizationId) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Select an organization to view dashboard.</p>
-        </div>
-      )
-    }
-    redirect('/onboarding')
-  }
+export default async function DashboardPage({ params }: PageProps) {
+  const { orgId: organizationId } = await params
 
   const supabase = await createClient()
 

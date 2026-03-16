@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { deleteInvite } from './actions'
 import { formatDate, displayName } from '@/lib/utils'
 import { canManageTeam } from '@/lib/permissions'
-import { withSettingsAuth, NoOrgSelected } from '@/lib/auth/settings-auth'
+import { withSettingsAuth } from '@/lib/auth/settings-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,13 +20,12 @@ function getInitials(name: string): string {
 }
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function TeamSettingsPage({ searchParams }: PageProps) {
-  const result = await withSettingsAuth(
-    searchParams,
-    async (organizationId, { isInternal, userRecord }) => {
+export default async function TeamSettingsPage({ params }: PageProps) {
+  const { orgId } = await params
+  const result = await withSettingsAuth(orgId, async (organizationId, { isInternal, userRecord }) => {
       const supabase = await createClient()
       const isAdmin = isInternal || canManageTeam(userRecord.role)
 
@@ -90,13 +89,8 @@ export default async function TeamSettingsPage({ searchParams }: PageProps) {
       }
 
       return { org, teamMembersWithEmails, pendingInvites, isAdmin, organizationId }
-    },
-    'Select an organization to view team members.'
+    }
   )
-
-  if (result.type === 'no-org') {
-    return <NoOrgSelected message={result.message} />
-  }
 
   const { org, teamMembersWithEmails, pendingInvites, isAdmin, organizationId } = result.data
 

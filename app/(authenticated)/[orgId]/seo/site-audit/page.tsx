@@ -5,11 +5,11 @@ import { DeprecationBanner } from '@/components/audit/deprecation-banner'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function SiteAuditPage({ searchParams }: PageProps) {
-  const { org: organizationId } = await searchParams
+export default async function SiteAuditPage({ params }: PageProps) {
+  const { orgId: organizationId } = await params
   const data = await getSiteAuditData(organizationId)
   return (
     <>

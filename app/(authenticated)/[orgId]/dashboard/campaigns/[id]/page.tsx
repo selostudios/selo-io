@@ -7,19 +7,14 @@ import { DeleteCampaignButton } from '@/components/campaigns/delete-campaign-but
 import { formatDate, displayName, CampaignStatus } from '@/lib/utils'
 import { EditableDescription } from '@/components/campaigns/editable-description'
 import { EditableUtmSection } from '@/components/campaigns/editable-utm-section'
-import { canManageCampaigns, isInternalUser } from '@/lib/permissions'
+import { canManageCampaigns } from '@/lib/permissions'
 
 interface CampaignDetailPageProps {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string; id: string }>
 }
 
-export default async function CampaignDetailPage({
-  params,
-  searchParams,
-}: CampaignDetailPageProps) {
-  const { id } = await params
-  const { org: selectedOrgId } = await searchParams
+export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
+  const { orgId, id } = await params
   const supabase = await createClient()
 
   const { data: campaign } = await supabase.from('campaigns').select('*').eq('id', id).single()
@@ -43,13 +38,8 @@ export default async function CampaignDetailPage({
     redirect('/login')
   }
 
-  const isInternal = isInternalUser(userRecord)
-
-  // Determine which organization the user is viewing
-  const viewingOrgId = isInternal && selectedOrgId ? selectedOrgId : userRecord.organization_id
-
   // Verify the campaign belongs to the organization being viewed
-  if (campaign.organization_id !== viewingOrgId) {
+  if (campaign.organization_id !== orgId) {
     notFound()
   }
 

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { withSettingsAuth, NoOrgSelected } from '@/lib/auth/settings-auth'
+import { withSettingsAuth } from '@/lib/auth/settings-auth'
 import { createClient } from '@/lib/supabase/server'
 import { canManageIntegrations } from '@/lib/permissions'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
@@ -9,10 +9,12 @@ import { IntegrationsPageContent } from './integrations-page-content'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function IntegrationsPage({ searchParams }: PageProps) {
+export default async function IntegrationsPage({ params }: PageProps) {
+  const { orgId } = await params
+
   // Guard: only users with integrations:manage can access
   const user = await getAuthUser()
   if (user) {
@@ -22,9 +24,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps) {
     }
   }
 
-  const result = await withSettingsAuth(
-    searchParams,
-    async (organizationId) => {
+  const result = await withSettingsAuth(orgId, async (organizationId) => {
       const supabase = await createClient()
       const { data: connections } = await supabase
         .from('platform_connections')
@@ -44,13 +44,8 @@ export default async function IntegrationsPage({ searchParams }: PageProps) {
       )
 
       return { connectionsByPlatform }
-    },
-    'Select an organization to view integrations.'
+    }
   )
-
-  if (result.type === 'no-org') {
-    return <NoOrgSelected message={result.message} />
-  }
 
   return (
     <>

@@ -4,7 +4,7 @@ import { UnifiedLiveProgress } from '@/components/audit/unified-live-progress'
 import { UnifiedAuditStatus } from '@/lib/enums'
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ orgId: string; id: string }>
 }
 
 const IN_PROGRESS_STATUSES = [

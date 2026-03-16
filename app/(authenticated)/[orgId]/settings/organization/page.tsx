@@ -2,18 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
 import { canManageOrg } from '@/lib/permissions'
-import { withSettingsAuth, NoOrgSelected } from '@/lib/auth/settings-auth'
+import { withSettingsAuth } from '@/lib/auth/settings-auth'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function OrganizationSettingsPage({ searchParams }: PageProps) {
-  const result = await withSettingsAuth(
-    searchParams,
-    async (organizationId, { isInternal, userRecord }) => {
+export default async function OrganizationSettingsPage({ params }: PageProps) {
+  const { orgId } = await params
+  const result = await withSettingsAuth(orgId, async (organizationId, { isInternal, userRecord }) => {
       // Only check permissions for external users
       if (!isInternal && !canManageOrg(userRecord.role)) {
         redirect('/settings/team')
@@ -48,13 +47,8 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
         .order('name', { ascending: true })
 
       return { org, auditCount: auditCount || 0, industries: industries || [] }
-    },
-    'Select an organization to view settings.'
+    }
   )
-
-  if (result.type === 'no-org') {
-    return <NoOrgSelected message={result.message} />
-  }
 
   const { org, auditCount, industries } = result.data
 

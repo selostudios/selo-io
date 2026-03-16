@@ -4,11 +4,11 @@ import { ClientReportsClient } from './client'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ org?: string }>
+  params: Promise<{ orgId: string }>
 }
 
-export default async function ClientReportsPage({ searchParams }: PageProps) {
-  const { org: organizationId } = await searchParams
-  const data = await getClientReportsPageData(organizationId)
+export default async function ClientReportsPage({ params }: PageProps) {
+  const { orgId } = await params
+  const data = await getClientReportsPageData(orgId)
   return <ClientReportsClient {...data} />
 }

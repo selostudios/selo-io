@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isInternalUser } from '@/lib/permissions'
-import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export interface SettingsAuthContext {
   organizationId: string
@@ -13,20 +12,17 @@ export interface SettingsAuthContext {
   }
 }
 
-export type SettingsAuthResult<T> =
-  | { type: 'success'; context: SettingsAuthContext; data: T }
-  | { type: 'no-org'; message: string }
+export type SettingsAuthResult<T> = { type: 'success'; context: SettingsAuthContext; data: T }
 
 /**
  * Shared auth logic for settings pages.
- * Handles user auth, internal user org selection, and permission checks.
+ * Handles user auth and permission checks.
+ * Organization ID is already validated by the [orgId] layout.
  */
 export async function withSettingsAuth<T>(
-  searchParams: Promise<{ org?: string }>,
-  getData: (organizationId: string, context: SettingsAuthContext) => Promise<T>,
-  noOrgMessage: string = 'Select an organization to view settings.'
+  orgId: string,
+  getData: (organizationId: string, context: SettingsAuthContext) => Promise<T>
 ): Promise<SettingsAuthResult<T>> {
-  const { org: selectedOrgId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -55,34 +51,14 @@ export async function withSettingsAuth<T>(
   }
 
   const isInternal = isInternalUser(userRecord)
-  const organizationId = await resolveOrganizationId(
-    selectedOrgId,
-    userRecord.organization_id,
-    isInternal
-  )
-
-  if (!organizationId) {
-    return { type: 'no-org', message: noOrgMessage }
-  }
 
   const context: SettingsAuthContext = {
-    organizationId,
+    organizationId: orgId,
     isInternal,
     userRecord,
   }
 
-  const data = await getData(organizationId, context)
+  const data = await getData(orgId, context)
 
   return { type: 'success', context, data }
-}
-
-/**
- * Component to render when no organization is selected.
- */
-export function NoOrgSelected({ message }: { message: string }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <p className="text-muted-foreground">{message}</p>
-    </div>
-  )
 }
