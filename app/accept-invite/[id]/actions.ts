@@ -116,16 +116,6 @@ export async function acceptInvite(inviteId: string) {
     return { error: 'Failed to join organization. Please try again.' }
   }
 
-  // Sync users table (required until RLS policies on other tables are migrated to team_members)
-  await supabase.from('users').upsert(
-    {
-      id: user.id,
-      organization_id: invite.organization_id,
-      role: invite.role,
-    },
-    { onConflict: 'id' }
-  )
-
   // Mark invite as accepted - only update if still pending (prevents race condition)
   const { error: updateError } = await supabase
     .from('invites')

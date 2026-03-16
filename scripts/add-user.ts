@@ -112,8 +112,6 @@ async function addUser() {
 
     const { error: userError } = await supabase.from('users').insert({
       id: authData.user.id,
-      organization_id: orgData.id,
-      role: 'admin',
       ...(internal ? { is_internal: true } : {}),
     })
 

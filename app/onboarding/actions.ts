@@ -87,8 +87,6 @@ export async function createOrganization(formData: FormData): Promise<{ error: s
   // Create user record and team membership
   const { error: userRecordError } = await supabase.from('users').insert({
     id: user.id,
-    organization_id: org.id,
-    role: UserRole.Admin,
   })
 
   if (userRecordError) {

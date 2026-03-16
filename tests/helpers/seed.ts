@@ -78,29 +78,21 @@ export async function seedTestData() {
   await supabase.from('users').insert([
     {
       id: adminUser.data.user!.id,
-      organization_id: org!.id,
-      role: 'admin',
       first_name: testUsers.admin.firstName,
       last_name: testUsers.admin.lastName,
     },
     {
       id: teamMemberUser.data.user!.id,
-      organization_id: org!.id,
-      role: 'team_member',
       first_name: testUsers.teamMember.firstName,
       last_name: testUsers.teamMember.lastName,
     },
     {
       id: viewerUser.data.user!.id,
-      organization_id: org!.id,
-      role: 'client_viewer',
       first_name: testUsers.viewer.firstName,
       last_name: testUsers.viewer.lastName,
     },
     {
       id: developerUser.data.user!.id,
-      organization_id: org!.id,
-      role: 'developer',
       is_internal: true,
       first_name: testUsers.developer.firstName,
       last_name: testUsers.developer.lastName,

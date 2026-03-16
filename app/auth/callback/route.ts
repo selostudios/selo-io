@@ -89,7 +89,7 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}${next}`)
         }
 
-        // Auto-accept: insert membership first (critical), then dual-write + mark accepted
+        // Auto-accept: insert membership first (critical), then mark accepted
         // Sequential to ensure membership exists before marking invite as accepted
         const { error: memberError } = await supabase.from('team_members').upsert(
           {
@@ -105,16 +105,6 @@ export async function GET(request: Request) {
           await supabase.auth.signOut()
           return NextResponse.redirect(`${origin}/access-denied`)
         }
-
-        // Sync users table (required until RLS policies on other tables are migrated to team_members)
-        await supabase.from('users').upsert(
-          {
-            id: user.id,
-            organization_id: invite.organization_id,
-            role: invite.role,
-          },
-          { onConflict: 'id' }
-        )
 
         // Mark invite as accepted
         const { error: inviteUpdateError } = await supabase
