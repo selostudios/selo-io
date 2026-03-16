@@ -16,12 +16,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization, internal status, and role
-  const { data: userRecord } = await supabase
+  // Get user's organization, internal status, and role via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: membership?.organization_id ?? null,
+        role: membership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })

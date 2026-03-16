@@ -13,12 +13,21 @@ export async function getAIOAuditReport(auditId: string) {
     throw new Error('Unauthorized')
   }
 
-  // Get user's organization, internal status, and role
-  const { data: userRecord } = await supabase
+  // Get user's organization, internal status, and role via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const aioMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: aioMembership?.organization_id ?? null,
+        role: aioMembership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord) {
     throw new Error('User not found')

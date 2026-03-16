@@ -22,11 +22,19 @@ export async function fetchBrandData(websiteUrl: string): Promise<FetchBrandData
     return { error: 'Not authenticated' }
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('id, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: membership?.organization_id ?? null,
+        role: membership?.role ?? 'client_viewer',
+      }
+    : null
 
   if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can fetch brand data' }
@@ -78,20 +86,31 @@ export async function uploadBrandLogo(
     return { error: 'Not authenticated' }
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUploadUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !canManageOrg(userRecord.role)) {
+  const uploadMembership = (
+    rawUploadUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const uploadUserRecord = rawUploadUser
+    ? {
+        organization_id: uploadMembership?.organization_id ?? null,
+        role: uploadMembership?.role ?? 'client_viewer',
+        is_internal: rawUploadUser.is_internal,
+      }
+    : null
+
+  if (!uploadUserRecord || !canManageOrg(uploadUserRecord.role)) {
     return { error: 'Only admins can upload logos' }
   }
 
   // Determine which organization to update
   // Internal users can specify a different org, otherwise use their own
-  const isInternal = userRecord.is_internal === true
-  const orgId = isInternal && organizationId ? organizationId : userRecord.organization_id
+  const isInternal = uploadUserRecord.is_internal === true
+  const orgId = isInternal && organizationId ? organizationId : uploadUserRecord.organization_id
 
   if (!orgId) {
     return { error: 'No organization specified' }

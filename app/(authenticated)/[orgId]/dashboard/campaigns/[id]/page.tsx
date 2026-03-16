@@ -28,11 +28,22 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('role, organization_id, is_internal')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user?.id)
     .single()
+
+  const detailMembership = (
+    rawUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: detailMembership?.organization_id ?? null,
+        role: detailMembership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord) {
     redirect('/login')

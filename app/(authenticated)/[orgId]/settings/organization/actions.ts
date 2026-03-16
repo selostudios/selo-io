@@ -75,11 +75,22 @@ export async function updateOrganization(
   }
 
   // Get user's organization and verify they're an admin
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const updateMembership = (
+    rawUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: updateMembership?.organization_id ?? null,
+        role: updateMembership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord || !canManageOrg(userRecord.role)) {
     return { error: 'Only admins can update organization settings' }
@@ -190,17 +201,27 @@ export async function uploadLogo(
   }
 
   // Get user's organization and verify they're an admin
-  const { data: userRecord } = await supabase
+  const { data: rawUploadUser } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('id, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !canManageOrg(userRecord.role)) {
+  const uploadMembership = (
+    rawUploadUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const uploadUserRecord = rawUploadUser
+    ? {
+        organization_id: uploadMembership?.organization_id ?? null,
+        role: uploadMembership?.role ?? 'client_viewer',
+      }
+    : null
+
+  if (!uploadUserRecord || !canManageOrg(uploadUserRecord.role)) {
     return { error: 'Only admins can upload logos' }
   }
 
-  const orgId = userRecord.organization_id
+  const orgId = uploadUserRecord.organization_id
   const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png'
   const filePath = `${orgId}/logo.${fileExt}`
 
@@ -261,17 +282,27 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
   }
 
   // Get user's organization and verify they're an admin
-  const { data: userRecord } = await supabase
+  const { data: rawRemoveUser } = await supabase
     .from('users')
-    .select('organization_id, role')
+    .select('id, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord || !canManageOrg(userRecord.role)) {
+  const removeMembership = (
+    rawRemoveUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const removeUserRecord = rawRemoveUser
+    ? {
+        organization_id: removeMembership?.organization_id ?? null,
+        role: removeMembership?.role ?? 'client_viewer',
+      }
+    : null
+
+  if (!removeUserRecord || !canManageOrg(removeUserRecord.role)) {
     return { error: 'Only admins can remove logos' }
   }
 
-  const orgId = userRecord.organization_id
+  const orgId = removeUserRecord.organization_id
 
   // Delete all logo files for this org
   const { data: existingFiles } = await supabase.storage.from('organization-logos').list(orgId)

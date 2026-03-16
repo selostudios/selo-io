@@ -29,11 +29,15 @@ export async function updateFeedbackStatus({
   }
 
   // Verify user is a developer
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('role')
+    .select('id, team_members(role)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? { role: (rawUser.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer' }
+    : null
 
   if (!userRecord || !canManageFeedback(userRecord.role)) {
     return { error: 'Only developers can update feedback' }

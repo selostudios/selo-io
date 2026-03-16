@@ -53,12 +53,19 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
     return { error: 'Not authenticated' }
   }
 
-  // Get user's organization
-  const { data: userRecord } = await supabase
+  // Get user's organization via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? {
+        organization_id:
+          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+      }
+    : null
 
   if (!userRecord) {
     console.error('[Submit Feedback Error]', {

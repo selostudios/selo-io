@@ -91,11 +91,18 @@ export async function syncHubSpotMetrics() {
     return { error: 'Not authenticated' }
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? {
+        organization_id:
+          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+      }
+    : null
 
   if (!userRecord) {
     return { error: 'User not found' }
@@ -229,11 +236,18 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
     return { error: 'Not authenticated' }
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? {
+        organization_id:
+          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+      }
+    : null
 
   if (!userRecord) {
     return { error: 'User not found' }

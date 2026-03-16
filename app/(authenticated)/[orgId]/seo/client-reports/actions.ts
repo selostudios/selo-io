@@ -135,18 +135,21 @@ export async function createReportFromAudit(auditId: string): Promise<CreateRepo
   }
 
   // Only admins and internal users can create reports
-  const { data: userRecord } = await supabase
+  const { data: rawCreateUser } = await supabase
     .from('users')
-    .select('role, is_internal')
+    .select('id, is_internal, team_members(role)')
     .eq('id', currentUser.id)
     .single()
 
-  if (!userRecord) {
+  const createRole =
+    (rawCreateUser?.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer'
+
+  if (!rawCreateUser) {
     return { success: false, error: 'User not found' }
   }
 
-  const isAdmin = userRecord.role === UserRole.Admin
-  const isInternal = userRecord.is_internal === true
+  const isAdmin = createRole === UserRole.Admin
+  const isInternal = rawCreateUser.is_internal === true
   if (!isAdmin && !isInternal) {
     return { success: false, error: 'You do not have permission to create reports' }
   }
@@ -496,18 +499,29 @@ export async function deleteReport(
     return { success: false, error: 'Not authenticated' }
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawDeleteUser } = await supabase
     .from('users')
-    .select('organization_id, role, is_internal')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  const deleteMembership = (
+    rawDeleteUser?.team_members as { organization_id: string; role: string }[]
+  )?.[0]
+  const deleteUserRecord = rawDeleteUser
+    ? {
+        organization_id: deleteMembership?.organization_id ?? null,
+        role: deleteMembership?.role ?? 'client_viewer',
+        is_internal: rawDeleteUser.is_internal,
+      }
+    : null
+
+  if (!deleteUserRecord) {
     return { success: false, error: 'User not found' }
   }
 
-  const isAdmin = userRecord.role === UserRole.Admin
-  const isInternal = userRecord.is_internal
+  const isAdmin = deleteUserRecord.role === UserRole.Admin
+  const isInternal = deleteUserRecord.is_internal
 
   if (!isAdmin && !isInternal) {
     return { success: false, error: "You don't have permission to delete reports" }
@@ -515,8 +529,8 @@ export async function deleteReport(
 
   let deleteQuery = supabase.from('generated_reports').delete().eq('id', reportId)
 
-  if (!isInternal && userRecord.organization_id) {
-    deleteQuery = deleteQuery.eq('organization_id', userRecord.organization_id)
+  if (!isInternal && deleteUserRecord.organization_id) {
+    deleteQuery = deleteQuery.eq('organization_id', deleteUserRecord.organization_id)
   }
 
   const { error } = await deleteQuery

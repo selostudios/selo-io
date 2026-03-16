@@ -11,12 +11,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization - don't trust client-provided organization_id
-  const { data: userRecord } = await supabase
+  // Get user's organization via team_members - don't trust client-provided organization_id
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? {
+        organization_id:
+          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+      }
+    : null
 
   if (!userRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -67,12 +74,20 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization
-  const { data: userRecord } = await supabase
+  // Get user's organization via team_members
+  const { data: rawPatchUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawPatchUser
+    ? {
+        organization_id:
+          (rawPatchUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+          null,
+      }
+    : null
 
   if (!userRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -123,14 +138,22 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization
-  const { data: userRecord } = await supabase
+  // Get user's organization via team_members
+  const { data: rawDeleteUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  const deleteUserRecord = rawDeleteUser
+    ? {
+        organization_id:
+          (rawDeleteUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+          null,
+      }
+    : null
+
+  if (!deleteUserRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
@@ -146,7 +169,7 @@ export async function DELETE(request: Request) {
     .from('monitored_sites')
     .delete()
     .eq('id', id)
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', deleteUserRecord.organization_id)
 
   if (error) {
     console.error('[Monitored Sites Error]', {

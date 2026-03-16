@@ -52,20 +52,22 @@ export async function getCurrentUser(): Promise<{
     return null
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('id, is_internal, organization_id')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  if (!rawUser) {
     return null
   }
 
+  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
+
   return {
-    id: userRecord.id,
-    isInternal: userRecord.is_internal === true,
-    organizationId: userRecord.organization_id,
+    id: rawUser.id,
+    isInternal: rawUser.is_internal === true,
+    organizationId: membership?.organization_id ?? null,
   }
 }
 

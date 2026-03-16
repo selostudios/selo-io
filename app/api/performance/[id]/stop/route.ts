@@ -15,12 +15,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's record
-  const { data: userData } = await supabase
+  // Get user's record via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const stopMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userData = rawUser
+    ? {
+        organization_id: stopMembership?.organization_id ?? null,
+        role: stopMembership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   const role = userData?.role
 

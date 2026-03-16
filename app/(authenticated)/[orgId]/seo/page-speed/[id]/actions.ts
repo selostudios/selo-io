@@ -20,11 +20,20 @@ export async function getPerformanceAuditData(id: string): Promise<{
     notFound()
   }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const psMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: psMembership?.organization_id ?? null,
+        role: psMembership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord) {
     notFound()

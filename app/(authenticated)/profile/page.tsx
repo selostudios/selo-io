@@ -15,19 +15,21 @@ export default async function ProfileSettingsPage() {
   }
 
   // Get user's name and role
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('first_name, last_name, role')
+    .select('first_name, last_name, team_members(role)')
     .eq('id', user.id)
     .single()
+
+  const profileRole = (rawUser?.team_members as { role: string }[])?.[0]?.role
 
   return (
     <div className="space-y-6">
       <ProfilePageForm
         email={user.email || ''}
-        firstName={userRecord?.first_name || ''}
-        lastName={userRecord?.last_name || ''}
-        role={userRecord?.role || UserRole.TeamMember}
+        firstName={rawUser?.first_name || ''}
+        lastName={rawUser?.last_name || ''}
+        role={profileRole || UserRole.TeamMember}
       />
     </div>
   )

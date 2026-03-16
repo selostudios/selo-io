@@ -32,12 +32,20 @@ export async function POST(request: Request) {
 
   const { url, organizationId, crawlMode = 'standard', maxPages = 100 } = body
 
-  // Get user record
-  const { data: userRecord } = await supabase
+  // Get user record via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal')
+    .select('id, is_internal, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userRecord = rawUser
+    ? {
+        organization_id:
+          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+        is_internal: rawUser.is_internal,
+      }
+    : null
 
   if (!userRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })

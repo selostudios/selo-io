@@ -98,12 +98,14 @@ export async function createSharedLink(
     return { success: false, error: 'Not authenticated' }
   }
 
-  // Get user's organization_id
-  const { data: userRecord } = await supabase
+  // Get user's organization_id via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const membership = (rawUser?.team_members as { organization_id: string }[])?.[0]
 
   const token = generateShareToken()
   const expiresAt = calculateExpirationDate(input.expires_in, input.custom_expiration)
@@ -148,7 +150,7 @@ export async function createSharedLink(
       password_hash: passwordHash,
       max_views: input.max_views ?? 50,
       created_by: user.id,
-      organization_id: userRecord?.organization_id ?? null,
+      organization_id: membership?.organization_id ?? null,
     })
     .select()
     .single()

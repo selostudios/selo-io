@@ -30,21 +30,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ hasActiveAudit: false })
   }
 
-  // Get user's organization and internal status
-  const { data: userRecord } = await supabase
+  // Get user's organization and internal status via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal')
+    .select('id, is_internal, team_members(organization_id)')
     .eq('id', user.id)
     .single()
 
-  if (!userRecord) {
+  if (!rawUser) {
     return NextResponse.json({ hasActiveAudit: false })
   }
 
+  const userOrgId =
+    (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null
+
   // Determine which organization to check
-  const targetOrgId = userRecord.is_internal
-    ? requestedOrgId || userRecord.organization_id
-    : userRecord.organization_id
+  const targetOrgId = rawUser.is_internal ? requestedOrgId || userOrgId : userOrgId
 
   if (!targetOrgId) {
     return NextResponse.json({ hasActiveAudit: false })

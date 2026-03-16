@@ -138,11 +138,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       return redirect('/login')
     }
 
-    const { data: userRecord, error: userError } = await supabase
+    const { data: rawOAuthUser, error: userError } = await supabase
       .from('users')
-      .select('organization_id')
+      .select('id, team_members(organization_id)')
       .eq('id', user.id)
       .single()
+
+    const userRecord = rawOAuthUser
+      ? {
+          organization_id:
+            (rawOAuthUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+            null,
+        }
+      : null
 
     if (userError || !userRecord) {
       console.error('[OAuth Callback] User fetch error', {

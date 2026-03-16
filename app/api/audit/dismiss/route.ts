@@ -13,12 +13,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization
-  const { data: userData } = await supabase
+  // Get user's organization via team_members
+  const { data: rawDismissUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userData = rawDismissUser
+    ? {
+        organization_id:
+          (rawDismissUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+          null,
+      }
+    : null
 
   if (!userData?.organization_id) {
     return NextResponse.json({ error: 'No organization found' }, { status: 400 })
@@ -72,12 +80,20 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization
-  const { data: userData } = await supabase
+  // Get user's organization via team_members
+  const { data: rawDismissUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userData = rawDismissUser
+    ? {
+        organization_id:
+          (rawDismissUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+          null,
+      }
+    : null
 
   if (!userData?.organization_id) {
     return NextResponse.json({ error: 'No organization found' }, { status: 400 })
@@ -120,12 +136,20 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's organization
-  const { data: userData } = await supabase
+  // Get user's organization via team_members
+  const { data: rawDismissUser } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', user.id)
     .single()
+
+  const userData = rawDismissUser
+    ? {
+        organization_id:
+          (rawDismissUser.team_members as { organization_id: string }[])?.[0]?.organization_id ??
+          null,
+      }
+    : null
 
   if (!userData?.organization_id) {
     return NextResponse.json({ error: 'No organization found' }, { status: 400 })

@@ -14,14 +14,15 @@ export default async function SupportPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Get user role for permission check
-  const { data: userRecord } = await supabase
+  // Get user role for permission check via team_members
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('role')
+    .select('id, team_members(role)')
     .eq('id', user!.id)
     .single()
 
-  const canEdit = canManageFeedback(userRecord?.role)
+  const userRole = (rawUser?.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer'
+  const canEdit = canManageFeedback(userRole)
 
   // Fetch all feedback with relations
   // Note: email is in auth.users, not public.users - would need a view or function to access
