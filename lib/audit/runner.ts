@@ -214,6 +214,8 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
     // Get base URL for site-wide dismissal checks
     const baseUrl = new URL(url).origin
 
+    const siteWideCheckResults: SiteAuditCheck[] = []
+
     for (const check of siteWideChecks) {
       // Skip dismissed checks
       if (isDismissed(dismissedChecks, check.name, baseUrl)) {
@@ -242,12 +244,19 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         }
 
         allCheckResults.push(checkResult)
-        const { error: insertError } = await supabase.from('site_audit_checks').insert(checkResult)
-        if (insertError) {
-          console.error(`[Audit] Failed to insert site-wide check ${check.name}:`, insertError)
-        }
+        siteWideCheckResults.push(checkResult)
       } catch (error) {
         console.error(`[Audit] Site-wide check ${check.name} failed:`, error)
+      }
+    }
+
+    // Batch insert all site-wide check results
+    if (siteWideCheckResults.length > 0) {
+      const { error: insertError } = await supabase
+        .from('site_audit_checks')
+        .insert(siteWideCheckResults)
+      if (insertError) {
+        console.error('[Audit] Failed to batch insert site-wide checks:', insertError)
       }
     }
 
@@ -556,9 +565,16 @@ async function finishAudit(
       }
 
       allCheckResults.push(checkResult)
-      await supabase.from('site_audit_checks').insert(checkResult)
     } catch (error) {
       console.error(`[Audit Finish] Site-wide check ${check.name} failed:`, error)
+    }
+  }
+
+  // Batch insert all site-wide check results
+  if (allCheckResults.length > 0) {
+    const { error: insertError } = await supabase.from('site_audit_checks').insert(allCheckResults)
+    if (insertError) {
+      console.error('[Audit Finish] Failed to batch insert site-wide checks:', insertError)
     }
   }
 
@@ -728,6 +744,8 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     // Get base URL for site-wide dismissal checks
     const baseUrl = new URL(url).origin
 
+    const resumeSiteWideResults: SiteAuditCheck[] = []
+
     for (const check of siteWideChecks) {
       if (isDismissed(dismissedChecks, check.name, baseUrl)) {
         continue
@@ -755,9 +773,19 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
         }
 
         allCheckResults.push(checkResult)
-        await supabase.from('site_audit_checks').insert(checkResult)
+        resumeSiteWideResults.push(checkResult)
       } catch (error) {
         console.error(`[Audit Resume] Site-wide check ${check.name} failed:`, error)
+      }
+    }
+
+    // Batch insert all site-wide check results
+    if (resumeSiteWideResults.length > 0) {
+      const { error: insertError } = await supabase
+        .from('site_audit_checks')
+        .insert(resumeSiteWideResults)
+      if (insertError) {
+        console.error('[Audit Resume] Failed to batch insert site-wide checks:', insertError)
       }
     }
 
@@ -930,6 +958,8 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
         }
 
         // Run site-wide checks
+        const completeSiteWideResults: SiteAuditCheck[] = []
+
         for (const check of siteWideChecks) {
           try {
             const result = await check.run(siteWideContext)
@@ -953,9 +983,19 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
             }
 
             allCheckResults.push(checkResult)
-            await supabase.from('site_audit_checks').insert(checkResult)
+            completeSiteWideResults.push(checkResult)
           } catch (error) {
             console.error(`[Audit Complete] Site-wide check ${check.name} failed:`, error)
+          }
+        }
+
+        // Batch insert all site-wide check results
+        if (completeSiteWideResults.length > 0) {
+          const { error: insertError } = await supabase
+            .from('site_audit_checks')
+            .insert(completeSiteWideResults)
+          if (insertError) {
+            console.error('[Audit Complete] Failed to batch insert site-wide checks:', insertError)
           }
         }
       }

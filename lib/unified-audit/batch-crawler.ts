@@ -336,15 +336,6 @@ export async function crawlBatch(
     allPages.push(page)
     pagesProcessed++
 
-    // Update pages_crawled count with timestamp
-    await supabase
-      .from('audits')
-      .update({
-        pages_crawled: allPages.length,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', auditId)
-
     // Run page-specific checks (skip for resources and error pages)
     if (!isResource && isCheckablePage(page)) {
       const context: CheckContext = {
@@ -402,6 +393,17 @@ export async function crawlBatch(
 
     // Small delay to be respectful
     await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+
+  // Update pages_crawled count once at end of batch
+  if (pagesProcessed > 0) {
+    await supabase
+      .from('audits')
+      .update({
+        pages_crawled: allPages.length,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', auditId)
   }
 
   // Check if there are more pages remaining
