@@ -164,7 +164,8 @@ export function ChildSidebar({
                     orgId &&
                     (item.href.startsWith('/seo') ||
                       item.href.startsWith('/settings') ||
-                      item.href.startsWith('/dashboard'))
+                      item.href.startsWith('/dashboard') ||
+                      item.href.startsWith('/support'))
                   ) {
                     href = `/${orgId}${item.href}`
                   }
