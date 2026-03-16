@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Smartphone, Monitor, AlertTriangle } from 'lucide-react'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PerformanceResults } from './performance-results'
@@ -17,6 +18,7 @@ interface PerformanceAuditPageProps {
 }
 
 export function PerformanceAuditPage({ audit, results }: PerformanceAuditPageProps) {
+  const buildOrgHref = useBuildOrgHref()
   const [device, setDevice] = useState<DeviceType>(DeviceType.Mobile)
 
   // Check which devices have results
@@ -32,7 +34,7 @@ export function PerformanceAuditPage({ audit, results }: PerformanceAuditPagePro
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link
-          href="/seo/page-speed"
+          href={buildOrgHref('/seo/page-speed')}
           className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

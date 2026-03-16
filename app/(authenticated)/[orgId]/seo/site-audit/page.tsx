@@ -13,7 +13,7 @@ export default async function SiteAuditPage({ params }: PageProps) {
   const data = await getSiteAuditData(organizationId)
   return (
     <>
-      <DeprecationBanner auditType="Site Audit" />
+      <DeprecationBanner auditType="Site Audit" orgId={organizationId} />
       <SiteAuditClient {...data} />
     </>
   )

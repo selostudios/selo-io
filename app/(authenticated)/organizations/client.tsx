@@ -186,7 +186,7 @@ export function OrganizationsClient({ organizations, industries }: Organizations
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
                         <Link
-                          href={`/settings/organization?org=${org.id}`}
+                          href={`/${org.id}/settings/organization`}
                           className="font-medium hover:underline"
                         >
                           {org.name}

@@ -13,7 +13,7 @@ export default async function PageSpeedPage({ params }: PageProps) {
   const data = await getPageSpeedData(organizationId)
   return (
     <>
-      <DeprecationBanner auditType="Page Speed Audit" />
+      <DeprecationBanner auditType="Page Speed Audit" orgId={organizationId} />
       <PageSpeedClient {...data} />
     </>
   )

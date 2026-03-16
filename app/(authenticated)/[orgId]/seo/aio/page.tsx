@@ -13,7 +13,7 @@ export default async function AIOAuditPage({ params }: PageProps) {
   const data = await getAIOAuditData(organizationId)
   return (
     <>
-      <DeprecationBanner auditType="AI Optimization Audit" />
+      <DeprecationBanner auditType="AI Optimization Audit" orgId={organizationId} />
       <AIOAuditClient {...data} />
     </>
   )

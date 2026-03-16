@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ArrowLeft, ExternalLink, Share2, Search, X } from 'lucide-react'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,7 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const buildOrgHref = useBuildOrgHref()
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -104,7 +106,7 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
         {/* Header */}
         <div className="flex items-center justify-between">
           <Link
-            href="/seo/audit"
+            href={buildOrgHref('/seo/audit')}
             className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

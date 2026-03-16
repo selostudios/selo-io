@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,7 +59,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <a href="/dashboard">Go to Dashboard</a>
+              <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           </CardContent>
         </Card>

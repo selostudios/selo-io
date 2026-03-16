@@ -4,7 +4,6 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageTeam, isInternalUser } from '@/lib/permissions'
 import { UserRole, InviteStatus, INVITE_EXPIRY_DAYS } from '@/lib/enums'
-import { resolveOrganizationId } from '@/lib/auth/resolve-org'
 
 export async function sendInvite(formData: FormData) {
   const email = formData.get('email') as string
@@ -79,10 +78,9 @@ export async function sendInvite(formData: FormData) {
     return { error: 'Only admins can send invites' }
   }
 
-  // Resolve the target organization: use explicit ID if provided, otherwise resolve from cookie/user
+  // Use explicit org ID from form data, or fall back to user's membership org
   const isInternal = isInternalUser(userRecord)
-  const organizationId =
-    targetOrgId || (await resolveOrganizationId(undefined, userRecord.organization_id, isInternal))
+  const organizationId = targetOrgId || userRecord.organization_id
 
   if (!organizationId) {
     return { error: 'No organization selected' }

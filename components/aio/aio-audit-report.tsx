@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowLeft, ChevronDown, ExternalLink } from 'lucide-react'
+import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -21,6 +22,8 @@ interface AIOAuditReportProps {
 }
 
 export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProps) {
+  const buildOrgHref = useBuildOrgHref()
+
   // Group checks by category
   const checksByCategory = checks.reduce(
     (acc, check) => {
@@ -50,7 +53,7 @@ export function AIOAuditReport({ audit, checks, aiAnalyses }: AIOAuditReportProp
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Back Button */}
       <Link
-        href="/seo/aio"
+        href={buildOrgHref('/seo/aio')}
         className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
