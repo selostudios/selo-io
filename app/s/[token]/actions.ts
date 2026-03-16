@@ -122,22 +122,23 @@ export async function getSharedReportData(
 
   const org = report.organization
 
-  const { data: performanceResults } = await supabase
-    .from('performance_audit_results')
-    .select('*')
-    .eq('audit_id', report.performance_audit_id)
-
-  const { data: siteChecks } = await supabase
-    .from('site_audit_checks')
-    .select('*')
-    .eq('audit_id', report.site_audit_id)
-    .order('created_at', { ascending: true })
-
-  const { data: aioChecks } = await supabase
-    .from('aio_checks')
-    .select('*')
-    .eq('audit_id', report.aio_audit_id)
-    .order('created_at', { ascending: true })
+  const [{ data: performanceResults }, { data: siteChecks }, { data: aioChecks }] =
+    await Promise.all([
+      supabase
+        .from('performance_audit_results')
+        .select('*')
+        .eq('audit_id', report.performance_audit_id),
+      supabase
+        .from('site_audit_checks')
+        .select('*')
+        .eq('audit_id', report.site_audit_id)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('aio_checks')
+        .select('*')
+        .eq('audit_id', report.aio_audit_id)
+        .order('created_at', { ascending: true }),
+    ])
 
   const reportWithAudits = {
     ...report,

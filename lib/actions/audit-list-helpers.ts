@@ -234,54 +234,55 @@ export async function getPerformanceAuditListData(
     .filter((audit) => audit.organization_id === null)
     .map((audit) => audit.id)
 
-  let firstUrlsMap: Record<string, string> = {}
-
-  if (oneTimeAuditIds.length > 0) {
-    const { data: firstUrls } = await supabase
-      .from('performance_audit_results')
-      .select('audit_id, url')
-      .in('audit_id', oneTimeAuditIds)
-      .order('created_at', { ascending: true })
-
-    if (firstUrls) {
-      firstUrlsMap = firstUrls.reduce(
-        (acc, result) => {
-          if (!acc[result.audit_id]) {
-            acc[result.audit_id] = result.url
-          }
-          return acc
-        },
-        {} as Record<string, string>
-      )
-    }
-  }
-
   // Fetch average performance scores for completed audits
   const completedAuditIds = (audits ?? [])
     .filter((audit) => audit.status === 'completed')
     .map((audit) => audit.id)
 
-  const avgScoresMap: Record<string, number> = {}
+  // Run enrichment queries and org fetch in parallel
+  const [firstUrlsResult, avgScoresResult, organizations] = await Promise.all([
+    oneTimeAuditIds.length > 0
+      ? supabase
+          .from('performance_audit_results')
+          .select('audit_id, url')
+          .in('audit_id', oneTimeAuditIds)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: null }),
+    completedAuditIds.length > 0
+      ? supabase
+          .from('performance_audit_results')
+          .select('audit_id, performance_score')
+          .in('audit_id', completedAuditIds)
+          .not('performance_score', 'is', null)
+      : Promise.resolve({ data: null }),
+    getOrganizationsForSelector(),
+  ])
 
-  if (completedAuditIds.length > 0) {
-    const { data: results } = await supabase
-      .from('performance_audit_results')
-      .select('audit_id, performance_score')
-      .in('audit_id', completedAuditIds)
-      .not('performance_score', 'is', null)
-
-    if (results) {
-      // Group scores by audit_id and compute average
-      const scoresByAudit: Record<string, number[]> = {}
-      for (const result of results) {
-        if (!scoresByAudit[result.audit_id]) {
-          scoresByAudit[result.audit_id] = []
+  let firstUrlsMap: Record<string, string> = {}
+  if (firstUrlsResult.data) {
+    firstUrlsMap = firstUrlsResult.data.reduce(
+      (acc, result) => {
+        if (!acc[result.audit_id]) {
+          acc[result.audit_id] = result.url
         }
-        scoresByAudit[result.audit_id].push(result.performance_score as number)
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  }
+
+  const avgScoresMap: Record<string, number> = {}
+  if (avgScoresResult.data) {
+    // Group scores by audit_id and compute average
+    const scoresByAudit: Record<string, number[]> = {}
+    for (const result of avgScoresResult.data) {
+      if (!scoresByAudit[result.audit_id]) {
+        scoresByAudit[result.audit_id] = []
       }
-      for (const [auditId, scores] of Object.entries(scoresByAudit)) {
-        avgScoresMap[auditId] = Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
-      }
+      scoresByAudit[result.audit_id].push(result.performance_score as number)
+    }
+    for (const [auditId, scores] of Object.entries(scoresByAudit)) {
+      avgScoresMap[auditId] = Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
     }
   }
 
@@ -293,8 +294,6 @@ export async function getPerformanceAuditListData(
       : {}),
     avg_performance_score: avgScoresMap[audit.id] ?? null,
   }))
-
-  const organizations = await getOrganizationsForSelector()
 
   return {
     audits: enrichedAudits as PerformanceAudit[],
