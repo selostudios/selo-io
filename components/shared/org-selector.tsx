@@ -78,9 +78,16 @@ export function OrgSelector({
       setOrgCookie(orgId)
       setOrgId(orgId)
 
+      // If on a detail page (path ends with a UUID segment), navigate to parent list view
+      // e.g. /seo/audit/abc-123 → /seo/audit?org=...
+      const uuidSegmentPattern = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      const targetPath = uuidSegmentPattern.test(pathname)
+        ? pathname.replace(uuidSegmentPattern, '')
+        : pathname
+
       const url = new URL(window.location.href)
       url.searchParams.set('org', orgId)
-      const newUrl = pathname + url.search
+      const newUrl = targetPath + '?' + url.searchParams.toString()
 
       startTransition(() => {
         router.push(newUrl)

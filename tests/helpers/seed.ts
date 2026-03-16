@@ -101,10 +101,16 @@ export async function seedTestData() {
       id: developerUser.data.user!.id,
       organization_id: org!.id,
       role: 'developer',
+      is_internal: true,
       first_name: testUsers.developer.firstName,
       last_name: testUsers.developer.lastName,
     },
   ])
+
+  // Add developer to internal_employees table
+  await supabase.from('internal_employees').insert({
+    user_id: developerUser.data.user!.id,
+  })
 
   // Create team memberships (primary source of truth for org + role)
   await supabase.from('team_members').insert([

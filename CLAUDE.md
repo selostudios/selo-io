@@ -319,11 +319,13 @@ await page.locator('[data-testid="new-report-button"]').click()
 
 ### Before Pushing
 
-Always run lint and tests before pushing to remote:
+**MANDATORY: Always run lint, format, unit tests, and build before every push.** Do not push code that hasn't passed all of these checks. Fix any issues before pushing.
 
 ```bash
 npm run lint && npm run test:unit && npm run build
 ```
+
+If formatting fails, fix with `npx prettier --write <file>` and re-run lint.
 
 ### Permissions & Access Control
 
