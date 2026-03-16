@@ -32,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 // Must import after mocks
-import { deleteUnifiedAudit } from '@/app/(authenticated)/seo/audit/actions'
+import { deleteUnifiedAudit } from '@/app/(authenticated)/[orgId]/seo/audit/actions'
 
 describe('deleteUnifiedAudit', () => {
   beforeEach(() => {
