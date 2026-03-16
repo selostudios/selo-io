@@ -12,7 +12,9 @@ interface PageProps {
 
 export default async function OrganizationSettingsPage({ params }: PageProps) {
   const { orgId } = await params
-  const result = await withSettingsAuth(orgId, async (organizationId, { isInternal, userRecord }) => {
+  const result = await withSettingsAuth(
+    orgId,
+    async (organizationId, { isInternal, userRecord }) => {
       // Only check permissions for external users
       if (!isInternal && !canManageOrg(userRecord.role)) {
         redirect('/settings/team')

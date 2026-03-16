@@ -67,9 +67,7 @@ describe('useBuildOrgHref', () => {
 
   it('does not double-prefix if path already starts with org ID', () => {
     mockPathname = '/a1b2c3d4-e5f6-7890-abcd-ef1234567890/dashboard'
-    render(
-      <BuildOrgHrefTest path="/a1b2c3d4-e5f6-7890-abcd-ef1234567890/seo/audit" />
-    )
+    render(<BuildOrgHrefTest path="/a1b2c3d4-e5f6-7890-abcd-ef1234567890/seo/audit" />)
     expect(screen.getByTestId('href')).toHaveTextContent(
       '/a1b2c3d4-e5f6-7890-abcd-ef1234567890/seo/audit'
     )

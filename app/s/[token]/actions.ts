@@ -6,7 +6,10 @@ import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types
 import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
-import type { ReportCheck, ReportAuditData } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+import type {
+  ReportCheck,
+  ReportAuditData,
+} from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
 
 export interface SharedSiteAuditData {
   audit: SiteAudit

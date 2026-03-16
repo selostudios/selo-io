@@ -85,6 +85,7 @@ Single validation point for all org-scoped pages:
 ## Files Affected (~50 files)
 
 ### Core (5 files)
+
 - `hooks/use-org-context.tsx` — Rewrite or delete
 - `lib/auth/resolve-org.ts` — Delete
 - `components/shared/org-selector.tsx` — Rewrite navigation logic
@@ -92,16 +93,20 @@ Single validation point for all org-scoped pages:
 - `components/layout/app-shell.tsx` — Simplify, remove OrgProvider
 
 ### Navigation (3 files)
+
 - `components/navigation/navigation-shell.tsx` — Use orgId from path
 - `components/navigation/child-sidebar.tsx` — Prefix all links with orgId
 - `components/settings/settings-tabs.tsx` — Prefix links with orgId
 
 ### Route Pages (~21 files)
+
 All pages under dashboard/, seo/, settings/ — move into `[orgId]/` directory, remove `searchParams.org` handling.
 
 ### Client Components (~8 files)
+
 Components using `useBuildOrgHref()` — replace with direct path construction using orgId prop or context.
 
 ### New Files
+
 - `middleware.ts` — Auth + org redirect
 - `app/(authenticated)/[orgId]/layout.tsx` — Org validation layout

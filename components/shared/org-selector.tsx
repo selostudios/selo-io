@@ -58,9 +58,7 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
       const segments = targetPath.split('/').filter(Boolean)
       if (segments.length > 2) {
         const lastSegment = segments[segments.length - 1]
-        if (
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastSegment)
-        ) {
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastSegment)) {
           segments.pop()
           targetPath = '/' + segments.join('/')
         }

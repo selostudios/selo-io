@@ -13,6 +13,7 @@
 ## Task 1: Create middleware for org redirect
 
 **Files:**
+
 - Create: `middleware.ts`
 
 The middleware intercepts requests to org-scoped routes that are missing the `[orgId]` segment. It reads the `selo-org` cookie and redirects to `/{orgId}/path`. If no cookie, redirects to `/organizations`.
@@ -138,6 +139,7 @@ git commit -m "feat: add middleware for org URL redirect"
 ## Task 2: Create `[orgId]` layout with validation
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/layout.tsx`
 
 This layout validates the org UUID, checks user access, and updates the `selo-org` cookie. All org-scoped pages will be nested under this.
@@ -224,6 +226,7 @@ mv app/\(authenticated\)/support app/\(authenticated\)/\[orgId\]/support
 ```
 
 Verify these remain at top level (NOT moved):
+
 - `app/(authenticated)/quick-audit/`
 - `app/(authenticated)/app-settings/`
 - `app/(authenticated)/organizations/`
@@ -251,6 +254,7 @@ Every page that currently reads `searchParams.org` must switch to `params.orgId`
 ### 4a: Dashboard page (`app/(authenticated)/[orgId]/dashboard/page.tsx`)
 
 Change from:
+
 ```typescript
 interface PageProps {
   searchParams: Promise<{ org?: string }>
@@ -261,6 +265,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 ```
 
 Change to:
+
 ```typescript
 interface PageProps {
   params: Promise<{ orgId: string }>
@@ -284,6 +289,7 @@ Params are now `{ orgId: string; id: string }`.
 ### 4d: Audit list page (`app/(authenticated)/[orgId]/seo/audit/page.tsx`)
 
 Change from:
+
 ```typescript
 interface PageProps {
   searchParams: Promise<{ org?: string }>
@@ -294,6 +300,7 @@ export default async function UnifiedAuditPage({ searchParams }: PageProps) {
 ```
 
 Change to:
+
 ```typescript
 interface PageProps {
   params: Promise<{ orgId: string }>
@@ -326,6 +333,7 @@ These use `withSettingsAuth(searchParams, ...)`. Update `withSettingsAuth` to ac
 **Modify `lib/auth/settings-auth.tsx`:**
 
 Change signature from:
+
 ```typescript
 export async function withSettingsAuth<T>(
   searchParams: Promise<{ org?: string }>,
@@ -334,6 +342,7 @@ export async function withSettingsAuth<T>(
 ```
 
 To:
+
 ```typescript
 export async function withSettingsAuth<T>(
   orgId: string,
@@ -371,11 +380,13 @@ git commit -m "refactor: update all pages to read orgId from route params"
 ## Task 5: Rewrite org-context hooks
 
 **Files:**
+
 - Modify: `hooks/use-org-context.tsx`
 
 The `OrgProvider`, `useOrgId`, `useSetOrgId`, and `useBuildOrgHref` hooks need to work with the path-based org instead of `?org=` query param.
 
 **New approach:**
+
 - `useOrgId()` reads the orgId from the URL pathname (first segment after `/`)
 - `useBuildOrgHref(path)` prepends `/{orgId}` to a path
 - `OrgProvider` and `useSetOrgId` are no longer needed (org is in URL, not state)
@@ -443,6 +454,7 @@ git commit -m "refactor: rewrite org hooks to use path-based org ID"
 ## Task 6: Update AppShell and authenticated layout
 
 **Files:**
+
 - Modify: `components/layout/app-shell.tsx`
 - Modify: `app/(authenticated)/layout.tsx`
 - Modify: `lib/auth/resolve-layout-data.ts`
@@ -473,11 +485,13 @@ git commit -m "refactor: remove OrgProvider and resolvedOrgId from app shell"
 ## Task 7: Rewrite OrgSelector for path-based navigation
 
 **Files:**
+
 - Modify: `components/shared/org-selector.tsx`
 
 The selector now swaps the org UUID segment in the URL path instead of setting a `?org=` query param.
 
 **Key changes:**
+
 - `useOrgId()` to read current org from path
 - On org switch: replace the first UUID segment with the new orgId
 - If on a detail page (path has a second UUID like `/audit/{auditId}`), navigate to parent list
@@ -535,6 +549,7 @@ git commit -m "refactor: rewrite org selector for path-based navigation"
 ## Task 8: Update navigation components
 
 **Files:**
+
 - Modify: `components/navigation/navigation-shell.tsx`
 - Modify: `components/navigation/child-sidebar.tsx`
 - Modify: `components/settings/settings-tabs.tsx`
@@ -551,7 +566,9 @@ const handleSectionChange = useCallback(
     if (section !== activeSection) {
       const baseRoute = sectionDefaultRoutes[section]
       // Prefix org-scoped routes with orgId
-      const needsOrg = ['/dashboard', '/seo', '/settings', '/support'].some(p => baseRoute.startsWith(p))
+      const needsOrg = ['/dashboard', '/seo', '/settings', '/support'].some((p) =>
+        baseRoute.startsWith(p)
+      )
       const href = needsOrg && orgId ? `/${orgId}${baseRoute}` : baseRoute
       router.push(href)
     }
@@ -561,10 +578,14 @@ const handleSectionChange = useCallback(
 ```
 
 Also update `getSectionFromPathname` to handle the orgId prefix:
+
 ```typescript
 function getSectionFromPathname(pathname: string): ParentSection {
   // Strip the leading UUID segment if present
-  const stripped = pathname.replace(/^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i, '')
+  const stripped = pathname.replace(
+    /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    ''
+  )
   if (stripped.startsWith('/quick-audit')) return 'quick-audit'
   if (stripped.startsWith('/organizations')) return 'organizations'
   if (stripped.startsWith('/app-settings')) return 'app-settings'
@@ -621,6 +642,7 @@ npm run build 2>&1 | tail -20
 ```
 
 The following files should work without modification (they all use `buildOrgHref('/some/path')` which now returns `/{orgId}/some/path`):
+
 - `app/(authenticated)/[orgId]/seo/audit/client.tsx`
 - `app/(authenticated)/[orgId]/seo/client-reports/client.tsx`
 - `app/(authenticated)/[orgId]/seo/aio/client.tsx`
@@ -643,14 +665,17 @@ If any fail, it's because they have hardcoded `/seo/...` links (not using `build
 ## Task 10: Update organizations page links
 
 **Files:**
+
 - Modify: `app/(authenticated)/organizations/client.tsx`
 
 The organizations table links currently use `?org=`:
+
 ```typescript
 href={`/settings/organization?org=${org.id}`}
 ```
 
 Change to:
+
 ```typescript
 href={`/${org.id}/settings/organization`}
 ```
@@ -667,9 +692,11 @@ git commit -m "refactor: update org list links to path-based org URLs"
 ## Task 11: Delete dead code
 
 **Files to delete:**
+
 - `lib/auth/resolve-org.ts` — No longer needed (org comes from URL path)
 
 **Files to clean up:**
+
 - `lib/constants/org-storage.ts` — Remove `LAST_ORG_KEY` export (keep `SELO_ORG_COOKIE`)
 - Remove `LAST_ORG_KEY` imports from `components/shared/org-selector.tsx` (already done in Task 7)
 - Remove all `import { resolveOrganizationId }` across the codebase
@@ -697,6 +724,7 @@ git commit -m "chore: delete resolve-org.ts and clean up dead org param code"
 ## Task 12: Update E2E tests
 
 **Files:**
+
 - Modify: `tests/e2e/unified-audit.spec.ts`
 
 E2E tests navigate to `/seo/audit` etc. These will now need the org prefix, or rely on middleware redirect. Since the middleware redirects bare `/seo/audit` to `/{orgId}/seo/audit`, the tests may work as-is after login (cookie gets set during login).
@@ -714,6 +742,7 @@ If tests fail because middleware redirects aren't followed, update test URLs to 
 ## Task 13: Update `useActiveAudit` hook
 
 **Files:**
+
 - Check: `hooks/use-active-audit.ts`
 
 The `useActiveAudit` hook is called from `navigation-shell.tsx` and currently receives `orgParam` from `searchParams.get('org')`. Update it to accept the org from `useOrgId()` or receive it as a prop.
@@ -723,26 +752,31 @@ The `useActiveAudit` hook is called from `navigation-shell.tsx` and currently re
 ## Task 14: Final verification
 
 **Step 1: Run lint**
+
 ```bash
 npm run lint
 ```
 
 **Step 2: Run format**
+
 ```bash
 npm run format:check
 ```
 
 **Step 3: Run unit tests**
+
 ```bash
 npm run test:unit
 ```
 
 **Step 4: Run build**
+
 ```bash
 npm run build
 ```
 
 **Step 5: Manual smoke test**
+
 - Start dev server: `npm run dev`
 - Login → should redirect to `/{orgId}/dashboard`
 - Navigate sidebar → all links have org in path
@@ -756,39 +790,39 @@ npm run build
 
 ## Files Summary
 
-| File | Action | Task |
-|------|--------|------|
-| `middleware.ts` | Create | 1 |
-| `app/(authenticated)/[orgId]/layout.tsx` | Create | 2 |
-| `app/(authenticated)/[orgId]/dashboard/` | Move | 3 |
-| `app/(authenticated)/[orgId]/seo/` | Move | 3 |
-| `app/(authenticated)/[orgId]/settings/` | Move | 3 |
-| `app/(authenticated)/[orgId]/support/` | Move | 3 |
-| `app/(authenticated)/[orgId]/dashboard/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/dashboard/campaigns/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/dashboard/campaigns/[id]/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/audit/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/audit/[id]/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/client-reports/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/client-reports/[id]/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/site-audit/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/page-speed/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/seo/aio/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/settings/organization/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/settings/team/page.tsx` | Modify | 4 |
-| `app/(authenticated)/[orgId]/settings/integrations/page.tsx` | Modify | 4 |
-| `lib/auth/settings-auth.tsx` | Modify | 4 |
-| `hooks/use-org-context.tsx` | Rewrite | 5 |
-| `tests/unit/hooks/use-org-context.test.tsx` | Rewrite | 5 |
-| `components/layout/app-shell.tsx` | Modify | 6 |
-| `app/(authenticated)/layout.tsx` | Modify | 6 |
-| `lib/auth/resolve-layout-data.ts` | Modify | 6 |
-| `components/shared/org-selector.tsx` | Rewrite | 7 |
-| `components/navigation/navigation-shell.tsx` | Modify | 8 |
-| `components/navigation/child-sidebar.tsx` | Modify | 8 |
-| `components/settings/settings-tabs.tsx` | Modify | 8 |
-| `app/(authenticated)/organizations/client.tsx` | Modify | 10 |
-| `lib/auth/resolve-org.ts` | Delete | 11 |
-| `lib/constants/org-storage.ts` | Modify | 11 |
-| `tests/e2e/unified-audit.spec.ts` | Possibly modify | 12 |
-| `hooks/use-active-audit.ts` | Modify | 13 |
+| File                                                            | Action          | Task |
+| --------------------------------------------------------------- | --------------- | ---- |
+| `middleware.ts`                                                 | Create          | 1    |
+| `app/(authenticated)/[orgId]/layout.tsx`                        | Create          | 2    |
+| `app/(authenticated)/[orgId]/dashboard/`                        | Move            | 3    |
+| `app/(authenticated)/[orgId]/seo/`                              | Move            | 3    |
+| `app/(authenticated)/[orgId]/settings/`                         | Move            | 3    |
+| `app/(authenticated)/[orgId]/support/`                          | Move            | 3    |
+| `app/(authenticated)/[orgId]/dashboard/page.tsx`                | Modify          | 4    |
+| `app/(authenticated)/[orgId]/dashboard/campaigns/page.tsx`      | Modify          | 4    |
+| `app/(authenticated)/[orgId]/dashboard/campaigns/[id]/page.tsx` | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/audit/page.tsx`                | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/audit/[id]/page.tsx`           | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/client-reports/page.tsx`       | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/client-reports/[id]/page.tsx`  | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/site-audit/page.tsx`           | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/page-speed/page.tsx`           | Modify          | 4    |
+| `app/(authenticated)/[orgId]/seo/aio/page.tsx`                  | Modify          | 4    |
+| `app/(authenticated)/[orgId]/settings/organization/page.tsx`    | Modify          | 4    |
+| `app/(authenticated)/[orgId]/settings/team/page.tsx`            | Modify          | 4    |
+| `app/(authenticated)/[orgId]/settings/integrations/page.tsx`    | Modify          | 4    |
+| `lib/auth/settings-auth.tsx`                                    | Modify          | 4    |
+| `hooks/use-org-context.tsx`                                     | Rewrite         | 5    |
+| `tests/unit/hooks/use-org-context.test.tsx`                     | Rewrite         | 5    |
+| `components/layout/app-shell.tsx`                               | Modify          | 6    |
+| `app/(authenticated)/layout.tsx`                                | Modify          | 6    |
+| `lib/auth/resolve-layout-data.ts`                               | Modify          | 6    |
+| `components/shared/org-selector.tsx`                            | Rewrite         | 7    |
+| `components/navigation/navigation-shell.tsx`                    | Modify          | 8    |
+| `components/navigation/child-sidebar.tsx`                       | Modify          | 8    |
+| `components/settings/settings-tabs.tsx`                         | Modify          | 8    |
+| `app/(authenticated)/organizations/client.tsx`                  | Modify          | 10   |
+| `lib/auth/resolve-org.ts`                                       | Delete          | 11   |
+| `lib/constants/org-storage.ts`                                  | Modify          | 11   |
+| `tests/e2e/unified-audit.spec.ts`                               | Possibly modify | 12   |
+| `hooks/use-active-audit.ts`                                     | Modify          | 13   |

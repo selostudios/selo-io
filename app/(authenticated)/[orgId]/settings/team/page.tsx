@@ -25,7 +25,9 @@ interface PageProps {
 
 export default async function TeamSettingsPage({ params }: PageProps) {
   const { orgId } = await params
-  const result = await withSettingsAuth(orgId, async (organizationId, { isInternal, userRecord }) => {
+  const result = await withSettingsAuth(
+    orgId,
+    async (organizationId, { isInternal, userRecord }) => {
       const supabase = await createClient()
       const isAdmin = isInternal || canManageTeam(userRecord.role)
 

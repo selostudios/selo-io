@@ -25,27 +25,26 @@ export default async function IntegrationsPage({ params }: PageProps) {
   }
 
   const result = await withSettingsAuth(orgId, async (organizationId) => {
-      const supabase = await createClient()
-      const { data: connections } = await supabase
-        .from('platform_connections')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('created_at', { ascending: true })
+    const supabase = await createClient()
+    const { data: connections } = await supabase
+      .from('platform_connections')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: true })
 
-      const platforms = ['linkedin', 'hubspot', 'google_analytics'] as const
-      const allConnections = connections || []
+    const platforms = ['linkedin', 'hubspot', 'google_analytics'] as const
+    const allConnections = connections || []
 
-      const connectionsByPlatform = platforms.reduce(
-        (acc, platform) => {
-          acc[platform] = allConnections.filter((c) => c.platform_type === platform)
-          return acc
-        },
-        {} as Record<string, typeof allConnections>
-      )
+    const connectionsByPlatform = platforms.reduce(
+      (acc, platform) => {
+        acc[platform] = allConnections.filter((c) => c.platform_type === platform)
+        return acc
+      },
+      {} as Record<string, typeof allConnections>
+    )
 
-      return { connectionsByPlatform }
-    }
-  )
+    return { connectionsByPlatform }
+  })
 
   return (
     <>

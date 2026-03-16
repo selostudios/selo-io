@@ -152,8 +152,7 @@ export function ChildSidebar({
                     isActive = strippedPathname.startsWith('/settings')
                   } else {
                     isActive =
-                      strippedPathname === item.href ||
-                      strippedPathname.startsWith(item.href + '/')
+                      strippedPathname === item.href || strippedPathname.startsWith(item.href + '/')
                   }
 
                   // Show spinner for active unified audit
