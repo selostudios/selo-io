@@ -148,6 +148,44 @@ export async function inviteInternalEmployee(
   return { success: true }
 }
 
+export async function updateInternalEmployee(
+  userId: string,
+  firstName: string,
+  lastName: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await requireInternalUser()
+  if (error) return { success: false, error }
+
+  if (!firstName || firstName.trim().length === 0) {
+    return { success: false, error: 'First name is required' }
+  }
+  if (firstName.length > 50 || lastName.length > 50) {
+    return { success: false, error: 'Names must be less than 50 characters' }
+  }
+
+  const serviceClient = createServiceClient()
+
+  const { error: updateError } = await serviceClient
+    .from('users')
+    .update({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+    })
+    .eq('id', userId)
+
+  if (updateError) {
+    console.error('[App Settings Error]', {
+      type: 'update_employee',
+      timestamp: new Date().toISOString(),
+      error: updateError.message,
+    })
+    return { success: false, error: 'Failed to update employee' }
+  }
+
+  revalidatePath('/app-settings/team')
+  return { success: true }
+}
+
 export async function removeInternalEmployee(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {

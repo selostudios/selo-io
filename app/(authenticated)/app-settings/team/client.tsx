@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { inviteInternalEmployee, removeInternalEmployee } from './actions'
+import { inviteInternalEmployee, removeInternalEmployee, updateInternalEmployee } from './actions'
 
 interface InternalEmployee {
   id: string
@@ -65,6 +65,9 @@ function formatLastSignIn(lastSignIn: string | null): string {
 export function TeamClient({ employees, isAdmin, currentUserId }: TeamClientProps) {
   const router = useRouter()
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [editEmployee, setEditEmployee] = useState<InternalEmployee | null>(null)
+  const [editFirstName, setEditFirstName] = useState('')
+  const [editLastName, setEditLastName] = useState('')
   const [email, setEmail] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -80,6 +83,31 @@ export function TeamClient({ employees, isAdmin, currentUserId }: TeamClientProp
         router.refresh()
       } else {
         toast.error(result.error ?? 'Failed to send invite')
+      }
+    })
+  }
+
+  function handleEdit(employee: InternalEmployee) {
+    setEditEmployee(employee)
+    setEditFirstName(employee.firstName ?? '')
+    setEditLastName(employee.lastName ?? '')
+  }
+
+  function handleSaveEdit() {
+    if (!editEmployee || !editFirstName.trim()) return
+
+    startTransition(async () => {
+      const result = await updateInternalEmployee(
+        editEmployee.userId,
+        editFirstName.trim(),
+        editLastName.trim()
+      )
+      if (result.success) {
+        toast.success('Employee updated successfully')
+        setEditEmployee(null)
+        router.refresh()
+      } else {
+        toast.error(result.error ?? 'Failed to update employee')
       }
     })
   }
@@ -152,42 +180,95 @@ export function TeamClient({ employees, isAdmin, currentUserId }: TeamClientProp
               <TableCell>{formatLastSignIn(employee.lastSignIn)}</TableCell>
               {isAdmin && (
                 <TableCell>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        disabled={employee.userId === currentUserId || isPending}
-                        data-testid={`remove-employee-button-${employee.userId}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remove Employee</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will revoke their internal access and delete their account. This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleRemove(employee.userId)}
-                          data-testid={`confirm-remove-button-${employee.userId}`}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(employee)}
+                      disabled={isPending}
+                      data-testid={`edit-employee-button-${employee.userId}`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          disabled={employee.userId === currentUserId || isPending}
+                          data-testid={`remove-employee-button-${employee.userId}`}
                         >
-                          Remove
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove Employee</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will revoke their internal access and delete their account. This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleRemove(employee.userId)}
+                            data-testid={`confirm-remove-button-${employee.userId}`}
+                          >
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               )}
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={!!editEmployee} onOpenChange={(open) => !open && setEditEmployee(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-first-name">First name</Label>
+              <Input
+                id="edit-first-name"
+                value={editFirstName}
+                onChange={(e) => setEditFirstName(e.target.value)}
+                placeholder="First name"
+                data-testid="edit-first-name-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-last-name">Last name</Label>
+              <Input
+                id="edit-last-name"
+                value={editLastName}
+                onChange={(e) => setEditLastName(e.target.value)}
+                placeholder="Last name"
+                data-testid="edit-last-name-input"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditEmployee(null)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isPending || !editFirstName.trim()}
+              data-testid="save-employee-button"
+            >
+              {isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
