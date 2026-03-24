@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isInternalUser } from '@/lib/permissions'
-import { runUnifiedAudit, runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
+import { runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
 
 // Extend function timeout for long-running audits
 export const maxDuration = 800
@@ -136,12 +136,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create audit' }, { status: 500 })
   }
 
-  // Start audit in background
-  // Use batch runner for exhaustive mode, simple runner for standard mode
-  const runner = crawlMode === 'exhaustive' ? runUnifiedAuditBatch : runUnifiedAudit
+  // Start audit in background — always use batch runner for timeout-safe self-continuation
   after(async () => {
     try {
-      await runner(audit.id, websiteUrl)
+      await runUnifiedAuditBatch(audit.id, websiteUrl)
     } catch (err) {
       console.error('[Unified Audit API] Background audit failed:', err)
       const serviceClient = (await import('@/lib/supabase/server')).createServiceClient()

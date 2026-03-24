@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { runUnifiedAudit } from '@/lib/unified-audit/runner'
+import { runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
 import { UnifiedAuditStatus } from '@/lib/enums'
 
 export async function POST(request: Request) {
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         }
 
         if (audit) {
-          runUnifiedAudit(audit.id, site.url).catch(async (err) => {
+          runUnifiedAuditBatch(audit.id, site.url).catch(async (err) => {
             console.error('[Cron Error]', {
               type: 'unified_audit_failed',
               url: site.url,
