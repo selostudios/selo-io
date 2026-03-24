@@ -359,8 +359,9 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
           .eq('id', auditId)
       }
 
-      // Run the batch crawl
-      const result = await crawlBatch(auditId, { dismissedChecks })
+      // Run the batch crawl — pass remaining time so batch doesn't overrun function budget
+      const remainingMs = MAX_FUNCTION_DURATION_MS - (Date.now() - functionStartTime)
+      const result = await crawlBatch(auditId, { dismissedChecks, timeBudgetMs: remainingMs })
 
       console.log(
         `[Unified Audit Batch] Batch ${currentBatch} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`

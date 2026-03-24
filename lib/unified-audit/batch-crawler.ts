@@ -75,6 +75,8 @@ export interface BatchResult {
 
 export interface BatchCrawlOptions {
   dismissedChecks: DismissedCheck[]
+  /** Override max batch duration (used by runner to pass remaining function time budget) */
+  timeBudgetMs?: number
 }
 
 /**
@@ -108,7 +110,10 @@ export async function crawlBatch(
 ): Promise<BatchResult> {
   const supabase = createServiceClient()
   const startTime = Date.now()
-  const { dismissedChecks } = options
+  const { dismissedChecks, timeBudgetMs } = options
+  const effectiveBudget = timeBudgetMs
+    ? Math.min(MAX_BATCH_DURATION_MS, timeBudgetMs)
+    : MAX_BATCH_DURATION_MS
 
   let pagesProcessed = 0
   let stopped = false
@@ -125,7 +130,7 @@ export async function crawlBatch(
 
   while (pagesProcessed < BATCH_SIZE) {
     // Check time budget
-    if (Date.now() - startTime > MAX_BATCH_DURATION_MS) {
+    if (Date.now() - startTime > effectiveBudget) {
       console.log(`[Batch Crawler] Time budget exceeded after ${pagesProcessed} pages`)
       break
     }
