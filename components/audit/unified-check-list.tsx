@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
@@ -601,6 +601,8 @@ export function UnifiedCheckList({
 // Category-Grouped Check List
 // =============================================================================
 
+const INITIAL_VISIBLE_CHECKS = 10
+
 function CategoryGroupedCheckList({
   checks,
   totalPages,
@@ -615,6 +617,21 @@ function CategoryGroupedCheckList({
     pageUrls: string[]
   ) => Promise<{ passed: number; failed: number; warnings: number }>
 }) {
+  // Track which categories have been expanded to show all checks
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+
+  const toggleCategory = useCallback((category: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+      return next
+    })
+  }, [])
+
   // Group by category, then within each category group by check_name
   const groups = useMemo(() => {
     const categoryMap = new Map<string, AuditCheck[]>()
@@ -648,6 +665,13 @@ function CategoryGroupedCheckList({
         const warnings = sorted.filter((g) => g.worstStatus === CheckStatus.Warning).length
         const passed = sorted.filter((g) => g.worstStatus === CheckStatus.Passed).length
 
+        const isExpanded = expandedCategories.has(category)
+        const visibleChecks =
+          isExpanded || sorted.length <= INITIAL_VISIBLE_CHECKS
+            ? sorted
+            : sorted.slice(0, INITIAL_VISIBLE_CHECKS)
+        const hiddenCheckCount = sorted.length - INITIAL_VISIBLE_CHECKS
+
         return (
           <Collapsible key={category} defaultOpen>
             <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -678,7 +702,7 @@ function CategoryGroupedCheckList({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="border-t">
-                  {sorted.map((group) => (
+                  {visibleChecks.map((group) => (
                     <GroupedCheckItem
                       key={group.representative.check_name}
                       group={group}
@@ -687,6 +711,16 @@ function CategoryGroupedCheckList({
                       onRerun={onRerunCheck}
                     />
                   ))}
+                  {hiddenCheckCount > 0 && (
+                    <button
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full border-t px-6 py-2.5 text-center text-xs transition-colors"
+                      onClick={() => toggleCategory(category)}
+                    >
+                      {isExpanded
+                        ? 'Show less'
+                        : `Show ${hiddenCheckCount} more check${hiddenCheckCount !== 1 ? 's' : ''}`}
+                    </button>
+                  )}
                 </div>
               </CollapsibleContent>
             </div>

@@ -78,24 +78,48 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
     return searchFilteredChecks.filter((c) => c.status === activeFilter)
   }, [searchFilteredChecks, activeFilter])
 
-  // Score-filtered checks for tabs
-  const seoChecks = useMemo(
-    () => statusFilteredChecks.filter((c) => c.feeds_scores.includes(ScoreDimension.SEO)),
-    [statusFilteredChecks]
-  )
-  const performanceChecks = useMemo(
-    () => statusFilteredChecks.filter((c) => c.feeds_scores.includes(ScoreDimension.Performance)),
-    [statusFilteredChecks]
-  )
-  const aiChecks = useMemo(
-    () => statusFilteredChecks.filter((c) => c.feeds_scores.includes(ScoreDimension.AIReadiness)),
-    [statusFilteredChecks]
-  )
+  // Score-filtered checks — only computed for the active tab to avoid
+  // grouping/sorting thousands of checks across all tabs on every render
+  const tabChecks = useMemo(() => {
+    switch (currentTab) {
+      case 'seo':
+        return statusFilteredChecks.filter((c) => c.feeds_scores.includes(ScoreDimension.SEO))
+      case 'performance':
+        return statusFilteredChecks.filter((c) =>
+          c.feeds_scores.includes(ScoreDimension.Performance)
+        )
+      case 'ai-readiness':
+        return statusFilteredChecks.filter((c) =>
+          c.feeds_scores.includes(ScoreDimension.AIReadiness)
+        )
+      default:
+        return statusFilteredChecks
+    }
+  }, [statusFilteredChecks, currentTab])
 
-  // Counts for filter badges
-  const failedCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Failed).length
-  const warningCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Warning).length
-  const passedCount = searchFilteredChecks.filter((c) => c.status === CheckStatus.Passed).length
+  // Tab counts — lightweight single pass instead of 3 separate filters
+  const tabCounts = useMemo(() => {
+    const counts = { seo: 0, performance: 0, aiReadiness: 0 }
+    for (const c of statusFilteredChecks) {
+      if (c.feeds_scores.includes(ScoreDimension.SEO)) counts.seo++
+      if (c.feeds_scores.includes(ScoreDimension.Performance)) counts.performance++
+      if (c.feeds_scores.includes(ScoreDimension.AIReadiness)) counts.aiReadiness++
+    }
+    return counts
+  }, [statusFilteredChecks])
+
+  // Counts for filter badges — single pass
+  const { failedCount, warningCount, passedCount } = useMemo(() => {
+    let failed = 0,
+      warning = 0,
+      passed = 0
+    for (const c of searchFilteredChecks) {
+      if (c.status === CheckStatus.Failed) failed++
+      else if (c.status === CheckStatus.Warning) warning++
+      else if (c.status === CheckStatus.Passed) passed++
+    }
+    return { failedCount: failed, warningCount: warning, passedCount: passed }
+  }, [searchFilteredChecks])
 
   const displayUrl = audit.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
@@ -222,46 +246,19 @@ export function UnifiedAuditDetailClient({ audit, checks }: UnifiedAuditDetailCl
               Overview
             </TabsTrigger>
             <TabsTrigger value="seo" data-testid="tab-seo">
-              SEO ({seoChecks.length})
+              SEO ({tabCounts.seo})
             </TabsTrigger>
             <TabsTrigger value="performance" data-testid="tab-performance">
-              Performance ({performanceChecks.length})
+              Performance ({tabCounts.performance})
             </TabsTrigger>
             <TabsTrigger value="ai-readiness" data-testid="tab-ai-readiness">
-              AI Readiness ({aiChecks.length})
+              AI Readiness ({tabCounts.aiReadiness})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value={currentTab} className="space-y-4">
             <UnifiedCheckList
-              checks={statusFilteredChecks}
-              groupBy="category"
-              totalPages={audit.pages_crawled}
-              onRerunCheck={handleRerunCheck}
-            />
-          </TabsContent>
-
-          <TabsContent value="seo" className="space-y-4">
-            <UnifiedCheckList
-              checks={seoChecks}
-              groupBy="category"
-              totalPages={audit.pages_crawled}
-              onRerunCheck={handleRerunCheck}
-            />
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-4">
-            <UnifiedCheckList
-              checks={performanceChecks}
-              groupBy="category"
-              totalPages={audit.pages_crawled}
-              onRerunCheck={handleRerunCheck}
-            />
-          </TabsContent>
-
-          <TabsContent value="ai-readiness" className="space-y-4">
-            <UnifiedCheckList
-              checks={aiChecks}
+              checks={tabChecks}
               groupBy="category"
               totalPages={audit.pages_crawled}
               onRerunCheck={handleRerunCheck}
