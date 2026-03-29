@@ -15,12 +15,11 @@ import { UnifiedCheckList } from '@/components/audit/unified-check-list'
 import { rerunCheck } from './actions'
 import { SharedResourceType, UnifiedAuditStatus, CheckStatus, ScoreDimension } from '@/lib/enums'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
-import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
+import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 
 interface UnifiedAuditDetailClientProps {
   audit: UnifiedAudit
   checks: AuditCheck[]
-  pages: AuditPage[]
 }
 
 type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'

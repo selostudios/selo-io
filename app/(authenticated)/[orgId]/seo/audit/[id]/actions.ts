@@ -3,27 +3,34 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { paginateQuery } from '@/lib/supabase/paginate'
 import { notFound } from 'next/navigation'
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { canAccessAllAudits } from '@/lib/permissions'
 import { ScoreDimension } from '@/lib/enums'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { getCheckByName } from '@/lib/unified-audit/checks'
 import { buildCheckRecord } from '@/lib/unified-audit/runner'
 import type { CheckContext } from '@/lib/unified-audit/types'
-import type {
-  UnifiedAudit,
-  AuditCheck,
-  AuditPage,
-  AuditAIAnalysis,
-} from '@/lib/unified-audit/types'
+import type { UnifiedAudit, AuditCheck, AuditAIAnalysis } from '@/lib/unified-audit/types'
 
 // =============================================================================
 // Types
 // =============================================================================
 
+// Explicit column selects to avoid fetching unused data
+const AUDIT_SELECT = `id, organization_id, created_by, domain, url, status,
+  seo_score, performance_score, ai_readiness_score, overall_score,
+  pages_crawled, crawl_mode, max_pages,
+  passed_count, warning_count, failed_count,
+  executive_summary, error_message,
+  started_at, completed_at, created_at` as '*'
+
+const CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, status,
+  display_name, display_name_passed, description, fix_guidance,
+  learn_more_url, details, feeds_scores, created_at` as '*'
+
 export interface UnifiedAuditReportData {
   audit: UnifiedAudit
   checks: AuditCheck[]
-  pages: AuditPage[]
 }
 
 export interface UnifiedAuditDetailData extends UnifiedAuditReportData {
@@ -39,35 +46,14 @@ export interface UnifiedAuditDetailData extends UnifiedAuditReportData {
  * Used by the audit detail/report page.
  */
 export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditReportData> {
+  // Fetch auth (cached) and audit in parallel
   const supabase = await createClient()
+  const [user, { data: audit, error: auditError }] = await Promise.all([
+    getAuthUser(),
+    supabase.from('audits').select(AUDIT_SELECT).eq('id', id).single(),
+  ])
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
   if (!user) notFound()
-
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, is_internal, team_members(organization_id, role)')
-    .eq('id', user.id)
-    .single()
-  const _membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
-  const userRecord = rawUser
-    ? {
-        organization_id: _membership?.organization_id ?? null,
-        role: _membership?.role ?? 'client_viewer',
-        is_internal: rawUser.is_internal,
-      }
-    : null
-  if (!userRecord) notFound()
-
-  // Fetch audit
-  const { data: audit, error: auditError } = await supabase
-    .from('audits')
-    .select('*')
-    .eq('id', id)
-    .single()
-
   if (auditError || !audit) {
     console.error('[Get Unified Audit Report Error]', {
       type: 'audit_not_found',
@@ -77,6 +63,10 @@ export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditRep
     notFound()
   }
 
+  // getUserRecord is cached per-request, so this is free if layout already called it
+  const userRecord = await getUserRecord(user.id)
+  if (!userRecord) notFound()
+
   // Verify access
   const hasAccess =
     audit.organization_id === userRecord.organization_id ||
@@ -85,35 +75,20 @@ export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditRep
 
   if (!hasAccess) notFound()
 
-  // Fetch checks and pages in parallel (paginated for large audits)
+  // Fetch checks (paginated for large audits)
   let checks: AuditCheck[]
-  let pages: AuditPage[]
 
   try {
-    ;[checks, pages] = await Promise.all([
-      paginateQuery<AuditCheck>(
-        (sb, range) =>
-          sb
-            .from('audit_checks')
-            .select('*')
-            .eq('audit_id', id)
-            .order('created_at', { ascending: true })
-            .order('id', { ascending: true })
-            .range(range.from, range.to),
-        supabase
-      ),
-      paginateQuery<AuditPage>(
-        (sb, range) =>
-          sb
-            .from('audit_pages')
-            .select('*')
-            .eq('audit_id', id)
-            .order('created_at', { ascending: true })
-            .order('id', { ascending: true })
-            .range(range.from, range.to),
-        supabase
-      ),
-    ])
+    checks = await paginateQuery<AuditCheck>(
+      (sb, range) =>
+        sb
+          .from('audit_checks')
+          .select(CHECK_SELECT)
+          .eq('audit_id', id)
+          .order('created_at', { ascending: true })
+          .range(range.from, range.to),
+      supabase
+    )
   } catch (err) {
     console.error('[Get Unified Audit Report Error]', {
       type: 'paginated_fetch_failed',
@@ -127,7 +102,6 @@ export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditRep
   return {
     audit: audit as UnifiedAudit,
     checks,
-    pages,
   }
 }
 

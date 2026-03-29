@@ -208,7 +208,6 @@ export function SharedResourceClient({
             <UnifiedAuditDetailClient
               audit={resourceData.data.audit}
               checks={resourceData.data.checks}
-              pages={resourceData.data.pages}
             />
           </div>
         )

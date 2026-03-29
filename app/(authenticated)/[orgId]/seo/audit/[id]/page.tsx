@@ -18,11 +18,11 @@ const IN_PROGRESS_STATUSES = [
 
 export default async function UnifiedAuditDetailPage({ params }: PageProps) {
   const { id } = await params
-  const { audit, checks, pages } = await getUnifiedAuditReport(id)
+  const { audit, checks } = await getUnifiedAuditReport(id)
 
   if (IN_PROGRESS_STATUSES.includes(audit.status)) {
     return <UnifiedLiveProgress auditId={audit.id} initialStatus={audit.status} />
   }
 
-  return <UnifiedAuditDetailClient audit={audit} checks={checks} pages={pages} />
+  return <UnifiedAuditDetailClient audit={audit} checks={checks} />
 }

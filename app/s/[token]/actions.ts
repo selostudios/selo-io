@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { paginateQuery } from '@/lib/supabase/paginate'
 import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types'
-import type { UnifiedAudit, AuditCheck, AuditPage } from '@/lib/unified-audit/types'
+import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
 import type {
@@ -40,9 +40,6 @@ const AUDIT_CHECK_SELECT = `id, audit_id, page_url, category, check_name, priori
   display_name, display_name_passed, description, fix_guidance,
   learn_more_url, details, feeds_scores, created_at` as '*'
 
-const AUDIT_PAGE_SELECT = `id, audit_id, url, title, meta_description, status_code,
-  last_modified, is_resource, resource_type, depth, created_at` as '*'
-
 const PERF_RESULT_SELECT = `id, audit_id, url, device, lcp_ms, lcp_rating, inp_ms, inp_rating,
   cls_score, cls_rating, performance_score, accessibility_score,
   best_practices_score, seo_score, created_at` as '*'
@@ -60,7 +57,6 @@ export interface SharedSiteAuditData {
 export interface SharedUnifiedAuditData {
   audit: UnifiedAudit
   checks: AuditCheck[]
-  pages: AuditPage[]
 }
 
 /**
@@ -226,33 +222,20 @@ export async function getSharedUnifiedAuditData(
   }
 
   try {
-    const [checks, pages] = await Promise.all([
-      paginateQuery<AuditCheck>(
-        (sb, range) =>
-          sb
-            .from('audit_checks')
-            .select(AUDIT_CHECK_SELECT)
-            .eq('audit_id', auditId)
-            .order('created_at', { ascending: true })
-            .range(range.from, range.to),
-        supabase
-      ),
-      paginateQuery<AuditPage>(
-        (sb, range) =>
-          sb
-            .from('audit_pages')
-            .select(AUDIT_PAGE_SELECT)
-            .eq('audit_id', auditId)
-            .order('created_at', { ascending: true })
-            .range(range.from, range.to),
-        supabase
-      ),
-    ])
+    const checks = await paginateQuery<AuditCheck>(
+      (sb, range) =>
+        sb
+          .from('audit_checks')
+          .select(AUDIT_CHECK_SELECT)
+          .eq('audit_id', auditId)
+          .order('created_at', { ascending: true })
+          .range(range.from, range.to),
+      supabase
+    )
 
     return {
       audit: audit as UnifiedAudit,
       checks,
-      pages,
     }
   } catch (err) {
     console.error('[Shared Unified Audit Error]', {
