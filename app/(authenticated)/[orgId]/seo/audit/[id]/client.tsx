@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Share2, Search, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Share2, Search, X } from 'lucide-react'
 import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -297,9 +297,7 @@ export function UnifiedAuditDetailClient({
             </div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="text-muted-foreground size-6 animate-spin" />
-              </div>
+              <CheckListSkeleton />
             ) : (
               <UnifiedCheckList
                 checks={statusFilteredChecks}
@@ -319,5 +317,46 @@ export function UnifiedAuditDetailClient({
         resourceId={audit.id}
       />
     </>
+  )
+}
+
+// =============================================================================
+// Skeleton
+// =============================================================================
+
+function CheckItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 border-t px-6 py-3">
+      <div className="h-4 w-4 animate-pulse rounded-full bg-neutral-200" />
+      <div className="h-4 w-48 animate-pulse rounded bg-neutral-200" />
+      <div className="ml-auto h-4 w-16 animate-pulse rounded bg-neutral-100" />
+    </div>
+  )
+}
+
+function CategorySkeleton({ items }: { items: number }) {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="flex items-center justify-between bg-gray-50 px-6 py-3">
+        <div className="h-5 w-32 animate-pulse rounded bg-neutral-200" />
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-12 animate-pulse rounded bg-neutral-100" />
+          <div className="h-5 w-12 animate-pulse rounded bg-neutral-100" />
+        </div>
+      </div>
+      {Array.from({ length: items }, (_, i) => (
+        <CheckItemSkeleton key={i} />
+      ))}
+    </div>
+  )
+}
+
+function CheckListSkeleton() {
+  return (
+    <div className="space-y-6">
+      <CategorySkeleton items={5} />
+      <CategorySkeleton items={4} />
+      <CategorySkeleton items={3} />
+    </div>
   )
 }
