@@ -13,7 +13,7 @@ import { ShareModal } from '@/components/share/share-modal'
 import { UnifiedScoreCards } from '@/components/audit/unified-score-cards'
 import { UnifiedCheckList } from '@/components/audit/unified-check-list'
 import { getUnifiedAuditChecksByTab, rerunCheck } from './actions'
-import { SharedResourceType, UnifiedAuditStatus, CheckStatus } from '@/lib/enums'
+import { SharedResourceType, UnifiedAuditStatus } from '@/lib/enums'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 import type { TabCounts } from './actions'
@@ -149,20 +149,7 @@ export function UnifiedAuditDetailClient({
     return searchFilteredChecks.filter((c) => c.status === activeFilter)
   }, [searchFilteredChecks, activeFilter])
 
-  // Counts for filter badges from loaded checks
-  const { failedCount, warningCount, passedCount } = useMemo(() => {
-    let failed = 0,
-      warning = 0,
-      passed = 0
-    for (const c of searchFilteredChecks) {
-      if (c.status === CheckStatus.Failed) failed++
-      else if (c.status === CheckStatus.Warning) warning++
-      else if (c.status === CheckStatus.Passed) passed++
-    }
-    return { failedCount: failed, warningCount: warning, passedCount: passed }
-  }, [searchFilteredChecks])
-
-  // Tab counts from server — static, don't change with filters
+  // Status counts from server — always accurate, don't depend on loaded checks
   const currentTabCounts = tabCounts[TAB_TO_COUNTS_KEY[currentTab]]
 
   const displayUrl = audit.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
@@ -240,47 +227,34 @@ export function UnifiedAuditDetailClient({
             className="cursor-pointer"
             onClick={() => setActiveFilter('all')}
           >
-            All ({isLoading ? currentTabCounts.total : searchFilteredChecks.length})
+            All ({currentTabCounts.total})
           </Badge>
           <Badge
             variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
             className={
-              (isLoading ? currentTabCounts.failed : failedCount) === 0
-                ? 'cursor-not-allowed opacity-50'
-                : 'cursor-pointer'
+              currentTabCounts.failed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
             }
-            onClick={() =>
-              (isLoading ? currentTabCounts.failed : failedCount) > 0 && setActiveFilter('failed')
-            }
+            onClick={() => currentTabCounts.failed > 0 && setActiveFilter('failed')}
           >
-            Failed ({isLoading ? currentTabCounts.failed : failedCount})
+            Failed ({currentTabCounts.failed})
           </Badge>
           <Badge
             variant={activeFilter === 'warning' ? 'warning' : 'outline'}
             className={
-              (isLoading ? currentTabCounts.warning : warningCount) === 0
-                ? 'cursor-not-allowed opacity-50'
-                : 'cursor-pointer'
+              currentTabCounts.warning === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
             }
-            onClick={() =>
-              (isLoading ? currentTabCounts.warning : warningCount) > 0 &&
-              setActiveFilter('warning')
-            }
+            onClick={() => currentTabCounts.warning > 0 && setActiveFilter('warning')}
           >
-            Warnings ({isLoading ? currentTabCounts.warning : warningCount})
+            Warnings ({currentTabCounts.warning})
           </Badge>
           <Badge
             variant={activeFilter === 'passed' ? 'success' : 'outline'}
             className={
-              (isLoading ? currentTabCounts.passed : passedCount) === 0
-                ? 'cursor-not-allowed opacity-50'
-                : 'cursor-pointer'
+              currentTabCounts.passed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
             }
-            onClick={() =>
-              (isLoading ? currentTabCounts.passed : passedCount) > 0 && setActiveFilter('passed')
-            }
+            onClick={() => currentTabCounts.passed > 0 && setActiveFilter('passed')}
           >
-            Passed ({isLoading ? currentTabCounts.passed : passedCount})
+            Passed ({currentTabCounts.passed})
           </Badge>
           <div className="relative ml-auto">
             <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
