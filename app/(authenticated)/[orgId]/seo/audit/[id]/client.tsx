@@ -220,62 +220,6 @@ export function UnifiedAuditDetailClient({
           aiReadiness={audit.ai_readiness_score}
         />
 
-        {/* Search and Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge
-            variant={activeFilter === 'all' ? 'default' : 'outline'}
-            className="cursor-pointer"
-            onClick={() => setActiveFilter('all')}
-          >
-            All ({currentTabCounts.total})
-          </Badge>
-          <Badge
-            variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
-            className={
-              currentTabCounts.failed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-            }
-            onClick={() => currentTabCounts.failed > 0 && setActiveFilter('failed')}
-          >
-            Failed ({currentTabCounts.failed})
-          </Badge>
-          <Badge
-            variant={activeFilter === 'warning' ? 'warning' : 'outline'}
-            className={
-              currentTabCounts.warning === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-            }
-            onClick={() => currentTabCounts.warning > 0 && setActiveFilter('warning')}
-          >
-            Warnings ({currentTabCounts.warning})
-          </Badge>
-          <Badge
-            variant={activeFilter === 'passed' ? 'success' : 'outline'}
-            className={
-              currentTabCounts.passed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-            }
-            onClick={() => currentTabCounts.passed > 0 && setActiveFilter('passed')}
-          >
-            Passed ({currentTabCounts.passed})
-          </Badge>
-          <div className="relative ml-auto">
-            <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-            <Input
-              type="text"
-              placeholder="Search checks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 w-48 pr-8 pl-8 text-sm"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-              >
-                <X className="size-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Tabbed Content */}
         <Tabs value={currentTab} onValueChange={handleTabChange} data-testid="audit-tabs">
           <TabsList>
@@ -294,6 +238,64 @@ export function UnifiedAuditDetailClient({
           </TabsList>
 
           <TabsContent value={currentTab} className="space-y-4">
+            {/* Filters scoped to active tab */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={activeFilter === 'all' ? 'default' : 'outline'}
+                className="cursor-pointer"
+                onClick={() => setActiveFilter('all')}
+              >
+                All ({currentTabCounts.total})
+              </Badge>
+              <Badge
+                variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
+                className={
+                  currentTabCounts.failed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                }
+                onClick={() => currentTabCounts.failed > 0 && setActiveFilter('failed')}
+              >
+                Failed ({currentTabCounts.failed})
+              </Badge>
+              <Badge
+                variant={activeFilter === 'warning' ? 'warning' : 'outline'}
+                className={
+                  currentTabCounts.warning === 0
+                    ? 'cursor-not-allowed opacity-50'
+                    : 'cursor-pointer'
+                }
+                onClick={() => currentTabCounts.warning > 0 && setActiveFilter('warning')}
+              >
+                Warnings ({currentTabCounts.warning})
+              </Badge>
+              <Badge
+                variant={activeFilter === 'passed' ? 'success' : 'outline'}
+                className={
+                  currentTabCounts.passed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                }
+                onClick={() => currentTabCounts.passed > 0 && setActiveFilter('passed')}
+              >
+                Passed ({currentTabCounts.passed})
+              </Badge>
+              <div className="relative ml-auto">
+                <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder="Search checks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 w-48 pr-8 pl-8 text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="text-muted-foreground size-6 animate-spin" />
