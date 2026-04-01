@@ -1,4 +1,4 @@
-import { getUnifiedAuditReport } from './actions'
+import { getAuditOverview } from './actions'
 import { UnifiedAuditDetailClient } from './client'
 import { UnifiedLiveProgress } from '@/components/audit/unified-live-progress'
 import { UnifiedAuditStatus } from '@/lib/enums'
@@ -18,11 +18,11 @@ const IN_PROGRESS_STATUSES = [
 
 export default async function UnifiedAuditDetailPage({ params }: PageProps) {
   const { id } = await params
-  const { audit, checks } = await getUnifiedAuditReport(id)
+  const { audit, tabCounts } = await getAuditOverview(id)
 
   if (IN_PROGRESS_STATUSES.includes(audit.status)) {
     return <UnifiedLiveProgress auditId={audit.id} initialStatus={audit.status} />
   }
 
-  return <UnifiedAuditDetailClient audit={audit} checks={checks} />
+  return <UnifiedAuditDetailClient audit={audit} tabCounts={tabCounts} />
 }

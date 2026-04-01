@@ -10,7 +10,12 @@ import { ReportPresentation } from '@/components/reports/report-presentation'
 import { AuditReport } from '@/components/audit/audit-report'
 import { UnifiedAuditDetailClient } from '@/app/(authenticated)/[orgId]/seo/audit/[id]/client'
 import { accessSharedLink } from '@/lib/share/actions'
-import { getSharedReportData, getSharedSiteAuditData, getSharedUnifiedAuditData } from './actions'
+import {
+  getSharedReportData,
+  getSharedSiteAuditData,
+  getSharedUnifiedAuditData,
+  getSharedChecksByTab,
+} from './actions'
 import { getShareErrorMessage, getResourceTypeLabel } from '@/lib/share/utils'
 import { SharedResourceType } from '@/lib/enums'
 import type { ReportPresentationData } from '@/lib/reports/types'
@@ -207,7 +212,8 @@ export function SharedResourceClient({
           <div className="p-6">
             <UnifiedAuditDetailClient
               audit={resourceData.data.audit}
-              checks={resourceData.data.checks}
+              tabCounts={resourceData.data.tabCounts}
+              fetchChecks={getSharedChecksByTab}
             />
           </div>
         )

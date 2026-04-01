@@ -2,8 +2,10 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { paginateQuery } from '@/lib/supabase/paginate'
+import { ScoreDimension } from '@/lib/enums'
 import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types'
 import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
+import type { TabCounts } from '@/app/(authenticated)/[orgId]/seo/audit/[id]/actions'
 import type { ReportPresentationData } from '@/lib/reports/types'
 import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
 import type {
@@ -56,7 +58,7 @@ export interface SharedSiteAuditData {
 
 export interface SharedUnifiedAuditData {
   audit: UnifiedAudit
-  checks: AuditCheck[]
+  tabCounts: TabCounts
 }
 
 /**
@@ -197,8 +199,8 @@ export async function getSharedReportData(
 }
 
 /**
- * Fetch unified audit data for a shared link
- * Uses service client to bypass RLS for public access
+ * Fetch unified audit overview for a shared link (audit + tab counts, no full checks).
+ * Uses service client to bypass RLS for public access.
  */
 export async function getSharedUnifiedAuditData(
   auditId: string
@@ -221,29 +223,82 @@ export async function getSharedUnifiedAuditData(
     return null
   }
 
-  try {
-    const checks = await paginateQuery<AuditCheck>(
-      (sb, range) =>
-        sb
-          .from('audit_checks')
-          .select(AUDIT_CHECK_SELECT)
-          .eq('audit_id', auditId)
-          .order('created_at', { ascending: true })
-          .range(range.from, range.to),
-      supabase
-    )
+  const { data: checkSummary } = await supabase
+    .from('audit_checks')
+    .select('status, feeds_scores')
+    .eq('audit_id', auditId)
 
-    return {
-      audit: audit as UnifiedAudit,
-      checks,
-    }
-  } catch (err) {
-    console.error('[Shared Unified Audit Error]', {
-      type: 'paginated_fetch_failed',
-      auditId,
-      error: err instanceof Error ? err.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    })
-    return null
+  const tabCounts = computeSharedTabCounts(checkSummary ?? [])
+
+  return {
+    audit: audit as UnifiedAudit,
+    tabCounts,
   }
+}
+
+/**
+ * Fetch checks for a specific tab on a shared unified audit.
+ * Called client-side when switching tabs on the shared page.
+ */
+export async function getSharedChecksByTab(
+  auditId: string,
+  tab: 'overview' | 'seo' | 'performance' | 'ai_readiness'
+): Promise<AuditCheck[]> {
+  const supabase = await createServiceClient()
+
+  const dimensionMap: Record<string, ScoreDimension> = {
+    seo: ScoreDimension.SEO,
+    performance: ScoreDimension.Performance,
+    ai_readiness: ScoreDimension.AIReadiness,
+  }
+
+  const dimension = tab !== 'overview' ? dimensionMap[tab] : null
+
+  return paginateQuery<AuditCheck>((sb, range) => {
+    let query = sb.from('audit_checks').select(AUDIT_CHECK_SELECT).eq('audit_id', auditId)
+
+    if (dimension) {
+      query = query.contains('feeds_scores', [dimension])
+    }
+
+    return query.order('created_at', { ascending: true }).range(range.from, range.to)
+  }, supabase)
+}
+
+function computeSharedTabCounts(checks: { status: string; feeds_scores: string[] }[]): TabCounts {
+  const empty = () => ({ total: 0, failed: 0, warning: 0, passed: 0 })
+  const counts: TabCounts = {
+    overview: empty(),
+    seo: empty(),
+    performance: empty(),
+    aiReadiness: empty(),
+  }
+
+  for (const c of checks) {
+    counts.overview.total++
+    if (c.status === 'failed') counts.overview.failed++
+    else if (c.status === 'warning') counts.overview.warning++
+    else if (c.status === 'passed') counts.overview.passed++
+
+    if (c.feeds_scores.includes(ScoreDimension.SEO)) {
+      counts.seo.total++
+      if (c.status === 'failed') counts.seo.failed++
+      else if (c.status === 'warning') counts.seo.warning++
+      else if (c.status === 'passed') counts.seo.passed++
+    }
+    if (c.feeds_scores.includes(ScoreDimension.Performance)) {
+      counts.performance.total++
+      if (c.status === 'failed') counts.performance.failed++
+      else if (c.status === 'warning') counts.performance.warning++
+      else if (c.status === 'passed') counts.performance.passed++
+    }
+    if (c.feeds_scores.includes(ScoreDimension.AIReadiness)) {
+      counts.aiReadiness.total++
+      if (c.status === 'failed') counts.aiReadiness.failed++
+      else if (c.status === 'warning') counts.aiReadiness.warning++
+      else if (c.status === 'passed') counts.aiReadiness.passed++
+    }
+  }
+
+  return counts
 }

@@ -28,6 +28,25 @@ const CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, st
   display_name, display_name_passed, description, fix_guidance,
   learn_more_url, details, feeds_scores, created_at` as '*'
 
+export interface StatusCounts {
+  total: number
+  failed: number
+  warning: number
+  passed: number
+}
+
+export interface TabCounts {
+  overview: StatusCounts
+  seo: StatusCounts
+  performance: StatusCounts
+  aiReadiness: StatusCounts
+}
+
+export interface UnifiedAuditOverviewData {
+  audit: UnifiedAudit
+  tabCounts: TabCounts
+}
+
 export interface UnifiedAuditReportData {
   audit: UnifiedAudit
   checks: AuditCheck[]
@@ -106,6 +125,91 @@ export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditRep
 }
 
 /**
+ * Get audit record with lightweight tab counts (no full checks).
+ * Used by the audit detail page for initial render — checks are lazy-loaded per tab.
+ */
+export async function getAuditOverview(id: string): Promise<UnifiedAuditOverviewData> {
+  const supabase = await createClient()
+  const [user, { data: audit, error: auditError }] = await Promise.all([
+    getAuthUser(),
+    supabase.from('audits').select(AUDIT_SELECT).eq('id', id).single(),
+  ])
+
+  if (!user) notFound()
+  if (auditError || !audit) {
+    console.error('[Get Audit Overview Error]', {
+      type: 'audit_not_found',
+      auditId: id,
+      timestamp: new Date().toISOString(),
+    })
+    notFound()
+  }
+
+  const userRecord = await getUserRecord(user.id)
+  if (!userRecord) notFound()
+
+  const hasAccess =
+    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id === null && audit.created_by === user.id) ||
+    canAccessAllAudits(userRecord)
+
+  if (!hasAccess) notFound()
+
+  // Fetch only status + feeds_scores for counting (~50 bytes/row vs ~2KB for full checks)
+  const { data: checkSummary } = await supabase
+    .from('audit_checks')
+    .select('status, feeds_scores')
+    .eq('audit_id', id)
+
+  const tabCounts = computeTabCounts(checkSummary ?? [])
+
+  return {
+    audit: audit as UnifiedAudit,
+    tabCounts,
+  }
+}
+
+function computeTabCounts(checks: { status: string; feeds_scores: string[] }[]): TabCounts {
+  const empty = (): StatusCounts => ({ total: 0, failed: 0, warning: 0, passed: 0 })
+  const counts: TabCounts = {
+    overview: empty(),
+    seo: empty(),
+    performance: empty(),
+    aiReadiness: empty(),
+  }
+
+  for (const c of checks) {
+    // Overview counts all checks
+    counts.overview.total++
+    if (c.status === 'failed') counts.overview.failed++
+    else if (c.status === 'warning') counts.overview.warning++
+    else if (c.status === 'passed') counts.overview.passed++
+
+    // Dimension-specific counts
+    if (c.feeds_scores.includes(ScoreDimension.SEO)) {
+      counts.seo.total++
+      if (c.status === 'failed') counts.seo.failed++
+      else if (c.status === 'warning') counts.seo.warning++
+      else if (c.status === 'passed') counts.seo.passed++
+    }
+    if (c.feeds_scores.includes(ScoreDimension.Performance)) {
+      counts.performance.total++
+      if (c.status === 'failed') counts.performance.failed++
+      else if (c.status === 'warning') counts.performance.warning++
+      else if (c.status === 'passed') counts.performance.passed++
+    }
+    if (c.feeds_scores.includes(ScoreDimension.AIReadiness)) {
+      counts.aiReadiness.total++
+      if (c.status === 'failed') counts.aiReadiness.failed++
+      else if (c.status === 'warning') counts.aiReadiness.warning++
+      else if (c.status === 'passed') counts.aiReadiness.passed++
+    }
+  }
+
+  return counts
+}
+
+/**
  * Get full audit detail data including AI analyses.
  * Used by the audit detail page when AI analysis tab is active.
  */
@@ -127,19 +231,33 @@ export async function getUnifiedAuditDetail(id: string): Promise<UnifiedAuditDet
 }
 
 /**
- * Get checks filtered by score dimension tab (SEO, Performance, AI Readiness).
- * Uses the feeds_scores array to filter relevant checks.
+ * Get checks filtered by score dimension tab (SEO, Performance, AI Readiness, or all for overview).
+ * Uses the feeds_scores array to filter relevant checks. Paginated for large audits.
  */
 export async function getUnifiedAuditChecksByTab(
   auditId: string,
-  tab: 'seo' | 'performance' | 'ai_readiness'
+  tab: 'overview' | 'seo' | 'performance' | 'ai_readiness'
 ): Promise<AuditCheck[]> {
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) return []
+
+  // Verify audit access
+  const { data: audit } = await supabase
+    .from('audits')
+    .select('id, organization_id, created_by')
+    .eq('id', auditId)
+    .single()
+  if (!audit) return []
+
+  const userRecord = await getUserRecord(user.id)
+  if (!userRecord) return []
+
+  const hasAccess =
+    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id === null && audit.created_by === user.id) ||
+    canAccessAllAudits(userRecord)
+  if (!hasAccess) return []
 
   const dimensionMap: Record<string, ScoreDimension> = {
     seo: ScoreDimension.SEO,
@@ -147,17 +265,17 @@ export async function getUnifiedAuditChecksByTab(
     ai_readiness: ScoreDimension.AIReadiness,
   }
 
-  const dimension = dimensionMap[tab]
+  const dimension = tab !== 'overview' ? dimensionMap[tab] : null
 
-  // Supabase supports filtering on array columns with `cs` (contains)
-  const { data: checks } = await supabase
-    .from('audit_checks')
-    .select('*')
-    .eq('audit_id', auditId)
-    .contains('feeds_scores', [dimension])
-    .order('created_at', { ascending: true })
+  return paginateQuery<AuditCheck>((sb, range) => {
+    let query = sb.from('audit_checks').select(CHECK_SELECT).eq('audit_id', auditId)
 
-  return (checks ?? []) as AuditCheck[]
+    if (dimension) {
+      query = query.contains('feeds_scores', [dimension])
+    }
+
+    return query.order('created_at', { ascending: true }).range(range.from, range.to)
+  }, supabase)
 }
 
 // =============================================================================
