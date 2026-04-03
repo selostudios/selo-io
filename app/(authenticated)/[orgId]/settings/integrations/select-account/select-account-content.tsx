@@ -28,16 +28,24 @@ export function SelectAccountContent({
     if (!selectedId) return
     setSaving(true)
 
-    const result = await completeOAuthConnection(selectedId)
+    try {
+      const result = await completeOAuthConnection(selectedId)
 
-    if (result && 'error' in result) {
-      toast.error(result.error)
+      if (result && 'error' in result) {
+        toast.error(result.error, { duration: Infinity, closeButton: true })
+        setSaving(false)
+        return
+      }
+
+      toast.success(`${platformName} connected successfully`)
+      router.push(`/${orgId}/settings/integrations`)
+    } catch {
+      toast.error('Something went wrong. Please try again or contact your administrator.', {
+        duration: Infinity,
+        closeButton: true,
+      })
       setSaving(false)
-      return
     }
-
-    toast.success(`${platformName} connected successfully`)
-    router.push(`/${orgId}/settings/integrations`)
   }
 
   async function handleCancel() {
