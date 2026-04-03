@@ -131,10 +131,7 @@ export async function syncLinkedInMetrics(organizationId?: string) {
     endDate.setHours(23, 59, 59, 999)
 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(
-      dailyMetrics,
-      orgId
-    )
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 
     // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
     const { error: insertError } = await supabase
@@ -262,7 +259,7 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      orgId
+      userRecord.organization_id
     )
 
     await supabase

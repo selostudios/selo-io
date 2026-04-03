@@ -148,10 +148,7 @@ export async function syncGoogleAnalyticsMetrics(organizationId?: string) {
 
     // Fetch daily breakdowns
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(
-      dailyMetrics,
-      orgId
-    )
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 
     // Upsert to avoid duplicate entries
     const { error: insertError } = await supabase
@@ -281,7 +278,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
   let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', orgId)
+    .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'google_analytics')
 
   // If connectionId provided, filter to that specific connection
@@ -299,7 +296,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     // 1. Try DB cache first
     const cached = await getMetricsFromDb(
       supabase,
-      orgId,
+      userRecord.organization_id,
       'google_analytics',
       period
     )
@@ -324,7 +321,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      orgId
+      userRecord.organization_id
     )
 
     await supabase
@@ -339,7 +336,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(
       supabase,
-      orgId,
+      userRecord.organization_id,
       'google_analytics',
       period
     )

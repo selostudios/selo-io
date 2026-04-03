@@ -256,7 +256,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
   let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', orgId)
+    .eq('organization_id', userRecord.organization_id)
     .eq('platform_type', 'hubspot')
 
   if (connectionId) {
@@ -271,7 +271,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
 
   try {
     // 1. Try DB cache first
-    const cached = await getMetricsFromDb(supabase, orgId, 'hubspot', period)
+    const cached = await getMetricsFromDb(supabase, userRecord.organization_id, 'hubspot', period)
 
     // 2. If fresh (< 1 hour), use DB data
     if (isCacheValid(cached)) {
@@ -292,7 +292,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
 
     // Fetch yesterday's metrics only
     const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
-    const records = adapter.normalizeToDbRecords(metrics, orgId, yesterday)
+    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, yesterday)
 
     await supabase
       .from('campaign_metrics')
@@ -306,7 +306,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
     // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(
       supabase,
-      orgId,
+      userRecord.organization_id,
       'hubspot',
       period
     )
