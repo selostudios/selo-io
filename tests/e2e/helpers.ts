@@ -1,20 +1,26 @@
 import { Page } from '@playwright/test'
 import { testUsers } from '../fixtures'
 
-export async function loginAsAdmin(page: Page) {
+async function login(page: Page, email: string, password: string) {
   await page.goto('/login')
-  await page.fill('input[name="email"]', testUsers.admin.email)
-  await page.fill('input[name="password"]', testUsers.admin.password)
+  await page.fill('input[name="email"]', email)
+  await page.fill('input[name="password"]', password)
   await page.click('button[type="submit"]')
-  await page.waitForURL('/dashboard')
+
+  // Login redirects to /dashboard, which the proxy may redirect to /organizations
+  // if the selo-org cookie isn't set yet. Navigate to / which resolves the org
+  // from team membership and redirects to /{orgId}/dashboard, setting the cookie.
+  await page.waitForURL(/\/(dashboard|organizations)/)
+  await page.goto('/')
+  await page.waitForURL(/\/dashboard/)
+}
+
+export async function loginAsAdmin(page: Page) {
+  await login(page, testUsers.admin.email, testUsers.admin.password)
 }
 
 export async function loginAsTeamMember(page: Page) {
-  await page.goto('/login')
-  await page.fill('input[name="email"]', testUsers.teamMember.email)
-  await page.fill('input[name="password"]', testUsers.teamMember.password)
-  await page.click('button[type="submit"]')
-  await page.waitForURL('/dashboard')
+  await login(page, testUsers.teamMember.email, testUsers.teamMember.password)
 }
 
 export async function logout(page: Page) {
@@ -27,5 +33,5 @@ export async function logout(page: Page) {
 
 export async function gotoSettings(page: Page, tab: 'organization' | 'team' | 'integrations') {
   await page.click(`text=Settings`)
-  await page.waitForURL(`/settings/${tab}`)
+  await page.waitForURL(new RegExp(`/settings/${tab}`))
 }

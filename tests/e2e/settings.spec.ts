@@ -35,15 +35,15 @@ test.describe('Settings', () => {
 
     // Click Team tab
     await page.getByRole('link', { name: 'Team' }).click()
-    await expect(page).toHaveURL('/settings/team')
+    await expect(page).toHaveURL(/\/settings\/team/)
 
     // Click Integrations tab
     await page.getByRole('link', { name: 'Integrations' }).click()
-    await expect(page).toHaveURL('/settings/integrations')
+    await expect(page).toHaveURL(/\/settings\/integrations/)
 
     // Click Organization tab
     await page.getByRole('link', { name: 'Organization' }).click()
-    await expect(page).toHaveURL('/settings/organization')
+    await expect(page).toHaveURL(/\/settings\/organization/)
   })
 
   test('admin can view team members', async ({ page }) => {
