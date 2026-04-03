@@ -81,7 +81,7 @@ export async function syncMetricsForHubSpotConnection(
     .eq('id', connectionId)
 }
 
-export async function syncHubSpotMetrics() {
+export async function syncHubSpotMetrics(organizationId?: string) {
   const supabase = await createClient()
 
   const {
@@ -91,27 +91,26 @@ export async function syncHubSpotMetrics() {
     return { error: 'Not authenticated' }
   }
 
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, team_members(organization_id)')
-    .eq('id', user.id)
-    .single()
+  let orgId = organizationId
+  if (!orgId) {
+    const { data: rawUser } = await supabase
+      .from('users')
+      .select('id, team_members(organization_id)')
+      .eq('id', user.id)
+      .single()
 
-  const userRecord = rawUser
-    ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
-      }
-    : null
+    orgId =
+      (rawUser?.team_members as { organization_id: string }[])?.[0]?.organization_id ?? undefined
+  }
 
-  if (!userRecord) {
+  if (!orgId) {
     return { error: 'User not found' }
   }
 
   const { data: connection } = await supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
     .eq('platform_type', 'hubspot')
     .single()
 
@@ -132,7 +131,7 @@ export async function syncHubSpotMetrics() {
 
     // Include form submissions on manual refresh (user explicitly requested fresh data)
     const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
-    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, yesterday)
+    const records = adapter.normalizeToDbRecords(metrics, orgId, yesterday)
 
     // Upsert to avoid duplicate entries
     const { error: insertError } = await supabase
@@ -257,7 +256,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
   let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
     .eq('platform_type', 'hubspot')
 
   if (connectionId) {
@@ -272,7 +271,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
 
   try {
     // 1. Try DB cache first
-    const cached = await getMetricsFromDb(supabase, userRecord.organization_id, 'hubspot', period)
+    const cached = await getMetricsFromDb(supabase, orgId, 'hubspot', period)
 
     // 2. If fresh (< 1 hour), use DB data
     if (isCacheValid(cached)) {
@@ -293,7 +292,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
 
     // Fetch yesterday's metrics only
     const metrics = await adapter.fetchMetrics(yesterday, endDate, 1, true)
-    const records = adapter.normalizeToDbRecords(metrics, userRecord.organization_id, yesterday)
+    const records = adapter.normalizeToDbRecords(metrics, orgId, yesterday)
 
     await supabase
       .from('campaign_metrics')
@@ -307,7 +306,7 @@ export async function getHubSpotMetrics(period: Period = Period.ThirtyDays, conn
     // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(
       supabase,
-      userRecord.organization_id,
+      orgId,
       'hubspot',
       period
     )

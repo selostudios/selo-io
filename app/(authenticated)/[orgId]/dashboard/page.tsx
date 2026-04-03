@@ -35,6 +35,7 @@ export default async function DashboardPage({ params }: PageProps) {
       <WebsiteUrlToast websiteUrl={orgData?.website_url || null} />
 
       <IntegrationsPanel
+        organizationId={organizationId}
         linkedInConnections={linkedInConnections}
         googleAnalyticsConnections={googleAnalyticsConnections}
         hubspotConnections={hubspotConnections}

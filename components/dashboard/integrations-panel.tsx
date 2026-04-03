@@ -30,6 +30,7 @@ type Connection = {
 }
 
 interface IntegrationsPanelProps {
+  organizationId: string
   linkedInConnections: Connection[]
   googleAnalyticsConnections: Connection[]
   hubspotConnections: Connection[]
@@ -46,6 +47,7 @@ function getMostRecentSync(connections: Connection[]): string | null {
 const STORAGE_KEY = 'selo-dashboard-period'
 
 export function IntegrationsPanel({
+  organizationId,
   linkedInConnections,
   googleAnalyticsConnections,
   hubspotConnections,
@@ -81,11 +83,15 @@ export function IntegrationsPanel({
     setIsRefreshing(true)
 
     const results = await Promise.allSettled([
-      linkedInConnections.length > 0 ? syncLinkedInMetrics() : Promise.resolve({ skipped: true }),
-      googleAnalyticsConnections.length > 0
-        ? syncGoogleAnalyticsMetrics()
+      linkedInConnections.length > 0
+        ? syncLinkedInMetrics(organizationId)
         : Promise.resolve({ skipped: true }),
-      hubspotConnections.length > 0 ? syncHubSpotMetrics() : Promise.resolve({ skipped: true }),
+      googleAnalyticsConnections.length > 0
+        ? syncGoogleAnalyticsMetrics(organizationId)
+        : Promise.resolve({ skipped: true }),
+      hubspotConnections.length > 0
+        ? syncHubSpotMetrics(organizationId)
+        : Promise.resolve({ skipped: true }),
     ])
 
     const errors: string[] = []

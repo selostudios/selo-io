@@ -79,7 +79,7 @@ export async function syncMetricsForLinkedInConnection(
     .eq('id', connectionId)
 }
 
-export async function syncLinkedInMetrics() {
+export async function syncLinkedInMetrics(organizationId?: string) {
   const supabase = await createClient()
 
   // Get current user
@@ -90,21 +90,20 @@ export async function syncLinkedInMetrics() {
     return { error: 'Not authenticated' }
   }
 
-  // Get user's organization
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, team_members(organization_id)')
-    .eq('id', user.id)
-    .single()
+  // Resolve organization: use provided orgId or fall back to first membership
+  let orgId = organizationId
+  if (!orgId) {
+    const { data: rawUser } = await supabase
+      .from('users')
+      .select('id, team_members(organization_id)')
+      .eq('id', user.id)
+      .single()
 
-  const userRecord = rawUser
-    ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
-      }
-    : null
+    orgId =
+      (rawUser?.team_members as { organization_id: string }[])?.[0]?.organization_id ?? undefined
+  }
 
-  if (!userRecord) {
+  if (!orgId) {
     return { error: 'User not found' }
   }
 
@@ -112,7 +111,7 @@ export async function syncLinkedInMetrics() {
   const { data: connection } = await supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
     .eq('platform_type', 'linkedin')
     .single()
 
@@ -134,7 +133,7 @@ export async function syncLinkedInMetrics() {
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      userRecord.organization_id
+      orgId
     )
 
     // Store daily snapshots for time-series tracking (upsert to avoid duplicates)
@@ -263,7 +262,7 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      userRecord.organization_id
+      orgId
     )
 
     await supabase

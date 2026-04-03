@@ -98,7 +98,7 @@ export async function syncMetricsForGoogleAnalyticsConnection(
     .eq('id', connectionId)
 }
 
-export async function syncGoogleAnalyticsMetrics() {
+export async function syncGoogleAnalyticsMetrics(organizationId?: string) {
   const supabase = await createClient()
 
   const {
@@ -108,27 +108,26 @@ export async function syncGoogleAnalyticsMetrics() {
     return { error: 'Not authenticated' }
   }
 
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, team_members(organization_id)')
-    .eq('id', user.id)
-    .single()
+  let orgId = organizationId
+  if (!orgId) {
+    const { data: rawUser } = await supabase
+      .from('users')
+      .select('id, team_members(organization_id)')
+      .eq('id', user.id)
+      .single()
 
-  const userRecord = rawUser
-    ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
-      }
-    : null
+    orgId =
+      (rawUser?.team_members as { organization_id: string }[])?.[0]?.organization_id ?? undefined
+  }
 
-  if (!userRecord) {
+  if (!orgId) {
     return { error: 'User not found' }
   }
 
   const { data: connection } = await supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
     .eq('platform_type', 'google_analytics')
     .single()
 
@@ -151,7 +150,7 @@ export async function syncGoogleAnalyticsMetrics() {
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      userRecord.organization_id
+      orgId
     )
 
     // Upsert to avoid duplicate entries
@@ -282,7 +281,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
   let connectionQuery = supabase
     .from('platform_connections')
     .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .eq('organization_id', orgId)
     .eq('platform_type', 'google_analytics')
 
   // If connectionId provided, filter to that specific connection
@@ -300,7 +299,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     // 1. Try DB cache first
     const cached = await getMetricsFromDb(
       supabase,
-      userRecord.organization_id,
+      orgId,
       'google_analytics',
       period
     )
@@ -325,7 +324,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(
       dailyMetrics,
-      userRecord.organization_id
+      orgId
     )
 
     await supabase
@@ -340,7 +339,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(
       supabase,
-      userRecord.organization_id,
+      orgId,
       'google_analytics',
       period
     )
