@@ -28,8 +28,8 @@ export function getErrorMessage(error: OAuthErrorType, details?: ErrorDetails): 
 
   const messages: Record<OAuthErrorType, { user: string; dev: string }> = {
     user_cancelled: {
-      user: 'LinkedIn connection cancelled',
-      dev: 'User denied authorization at LinkedIn consent screen',
+      user: 'Connection cancelled.',
+      dev: 'User denied authorization at consent screen',
     },
     invalid_code: {
       user: 'Authorization failed. Please try again.',
@@ -40,23 +40,23 @@ export function getErrorMessage(error: OAuthErrorType, details?: ErrorDetails): 
       dev: 'State token mismatch - possible CSRF attack',
     },
     no_organizations: {
-      user: 'No LinkedIn organizations found. You need admin access to a company page.',
+      user: 'No accounts found. Make sure you have admin access to the account you want to connect.',
       dev: `fetchUserAccounts() returned empty array. Access token scopes: ${details?.scopes?.join(', ')}`,
     },
     already_connected: {
-      user: 'This LinkedIn organization is already connected',
+      user: 'This account is already connected.',
       dev: `Org ${details?.orgId} already connected to platform_connection ${details?.connectionId}`,
     },
     token_refresh_failed: {
-      user: 'LinkedIn connection expired. Please reconnect.',
+      user: 'Connection expired. Please reconnect.',
       dev: `Refresh token failed: ${details?.statusCode} - ${details?.error} - ${details?.description}`,
     },
     api_error: {
-      user: 'Failed to connect to LinkedIn. Please try again.',
+      user: 'Failed to connect. Please try again.',
       dev: `API error at ${details?.endpoint}: ${details?.status} - ${JSON.stringify(details?.response)}`,
     },
     unknown: {
-      user: 'An unexpected error occurred',
+      user: 'Something went wrong. Please try again or contact your administrator.',
       dev: `Unknown error: ${JSON.stringify(details)}`,
     },
   }
