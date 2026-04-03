@@ -7,6 +7,10 @@ DROP POLICY IF EXISTS "Users can insert org-level metrics" ON public.campaign_me
 DROP POLICY IF EXISTS "Users can insert metrics for their organization" ON public.campaign_metrics;
 DROP POLICY IF EXISTS "Users can view metrics in their organization" ON public.campaign_metrics;
 
+-- Drop new policies too in case they were applied manually before this migration
+DROP POLICY IF EXISTS "Users can insert metrics for their organizations" ON public.campaign_metrics;
+DROP POLICY IF EXISTS "Users can view metrics in their organizations" ON public.campaign_metrics;
+
 -- Create multi-org INSERT policy
 CREATE POLICY "Users can insert metrics for their organizations" ON public.campaign_metrics
   FOR INSERT
