@@ -108,7 +108,7 @@ interface PendingOAuthData {
   accounts: Account[]
 }
 
-export async function completeOAuthConnection(accountId: string) {
+export async function completeOAuthConnection(accountId: string, orgId: string) {
   const cookieStore = await cookies()
   const pendingCookie = cookieStore.get('oauth_pending_tokens')?.value
 
@@ -131,11 +131,29 @@ export async function completeOAuthConnection(accountId: string) {
   }
 
   return withIntegrationsAuth(async (ctx) => {
+    // Use the orgId from the URL (the org the user is viewing), not the
+    // default from team_members which is arbitrary for multi-org users.
+    const targetOrgId = orgId || ctx.organizationId
+
+    // Verify user has access to this org
+    if (targetOrgId !== ctx.organizationId && !ctx.isInternal) {
+      const { data: membership } = await ctx.supabase
+        .from('team_members')
+        .select('organization_id')
+        .eq('user_id', ctx.userId)
+        .eq('organization_id', targetOrgId)
+        .single()
+
+      if (!membership) {
+        return { error: 'You do not have access to this organization.' }
+      }
+    }
+
     // Check if this specific account is already connected
     const { data: existing } = await ctx.supabase
       .from('platform_connections')
       .select('id')
-      .eq('organization_id', ctx.organizationId)
+      .eq('organization_id', targetOrgId)
       .eq('platform_type', pending.platform)
       .eq('account_name', selectedAccount.name)
       .single()
@@ -147,7 +165,7 @@ export async function completeOAuthConnection(accountId: string) {
     }
 
     const { error } = await ctx.supabase.from('platform_connections').insert({
-      organization_id: ctx.organizationId,
+      organization_id: targetOrgId,
       platform_type: pending.platform,
       account_name: selectedAccount.name,
       credentials: {

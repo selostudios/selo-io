@@ -29,7 +29,7 @@ export function SelectAccountContent({
     setSaving(true)
 
     try {
-      const result = await completeOAuthConnection(selectedId)
+      const result = await completeOAuthConnection(selectedId, orgId)
 
       if (result && 'error' in result) {
         toast.error(result.error, { duration: Infinity, closeButton: true })
