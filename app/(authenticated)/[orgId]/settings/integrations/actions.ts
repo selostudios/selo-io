@@ -1,9 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { encryptCredentials } from '@/lib/utils/crypto'
+import { cookies } from 'next/headers'
+import { encryptCredentials, decryptCredentials } from '@/lib/utils/crypto'
 import { withIntegrationsAuth } from '@/lib/actions/with-auth'
 import { PlatformType } from '@/lib/enums'
+import type { Account } from '@/lib/oauth/types'
 
 export async function connectPlatform(formData: FormData) {
   const platform_type = formData.get('platform_type') as string
@@ -93,6 +95,93 @@ export async function disconnectPlatform(connectionId: string) {
     revalidatePath('/settings/integrations')
     return { success: true }
   })
+}
+
+interface PendingOAuthData {
+  platform: string
+  tokens: {
+    access_token: string
+    refresh_token: string
+    expires_at: string
+    scopes: string[]
+  }
+  accounts: Account[]
+}
+
+export async function completeOAuthConnection(accountId: string) {
+  const cookieStore = await cookies()
+  const pendingCookie = cookieStore.get('oauth_pending_tokens')?.value
+
+  if (!pendingCookie) {
+    return { error: 'OAuth session expired. Please try connecting again.' }
+  }
+
+  let pending: PendingOAuthData
+  try {
+    pending = decryptCredentials<PendingOAuthData>(pendingCookie)
+  } catch {
+    cookieStore.delete('oauth_pending_tokens')
+    cookieStore.delete('oauth_org_id')
+    return { error: 'Invalid OAuth session. Please try connecting again.' }
+  }
+
+  const selectedAccount = pending.accounts.find((a) => a.id === accountId)
+  if (!selectedAccount) {
+    return { error: 'Invalid account selection.' }
+  }
+
+  return withIntegrationsAuth(async (ctx) => {
+    // Check if this specific account is already connected
+    const { data: existing } = await ctx.supabase
+      .from('platform_connections')
+      .select('id')
+      .eq('organization_id', ctx.organizationId)
+      .eq('platform_type', pending.platform)
+      .eq('account_name', selectedAccount.name)
+      .single()
+
+    if (existing) {
+      cookieStore.delete('oauth_pending_tokens')
+      cookieStore.delete('oauth_org_id')
+      return { error: `${selectedAccount.name} is already connected.` }
+    }
+
+    const { error } = await ctx.supabase.from('platform_connections').insert({
+      organization_id: ctx.organizationId,
+      platform_type: pending.platform,
+      account_name: selectedAccount.name,
+      credentials: {
+        access_token: pending.tokens.access_token,
+        refresh_token: pending.tokens.refresh_token,
+        expires_at: pending.tokens.expires_at,
+        organization_id: selectedAccount.id,
+        organization_name: selectedAccount.name,
+        scopes: pending.tokens.scopes,
+      },
+      status: 'active',
+    })
+
+    if (error) {
+      console.error('[Complete OAuth Connection Error]', {
+        type: 'database_error',
+        timestamp: new Date().toISOString(),
+      })
+      return { error: 'Failed to save connection. Please try again.' }
+    }
+
+    // Clean up cookies
+    cookieStore.delete('oauth_pending_tokens')
+    cookieStore.delete('oauth_org_id')
+
+    revalidatePath('/settings/integrations')
+    return { success: true, platform: pending.platform }
+  })
+}
+
+export async function cancelOAuthConnection() {
+  const cookieStore = await cookies()
+  cookieStore.delete('oauth_pending_tokens')
+  cookieStore.delete('oauth_org_id')
 }
 
 export async function updateConnectionDisplayName(connectionId: string, displayName: string) {

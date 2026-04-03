@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
 import { getErrorMessage } from '@/lib/oauth/errors'
+import { encryptCredentials } from '@/lib/utils/crypto'
 
 // Helper to clear OAuth cookies
 function clearOAuthCookies(
@@ -13,6 +14,7 @@ function clearOAuthCookies(
   cookieStore.delete('oauth_state')
   cookieStore.delete('oauth_platform')
   cookieStore.delete('oauth_org_id')
+  cookieStore.delete('oauth_pending_tokens')
 }
 
 // Build the integrations path with orgId prefix when available
@@ -126,7 +128,36 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
-    // Auto-select first account (future: show selection UI for multiple)
+    // If multiple accounts, store tokens and redirect to account selector
+    if (accounts.length > 1) {
+      const expiresAt = provider.calculateExpiresAt(tokens.expires_in)
+      const pendingData = {
+        platform,
+        tokens: {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_at: expiresAt,
+          scopes: tokens.scopes || [],
+        },
+        accounts,
+      }
+
+      const encrypted = encryptCredentials(pendingData)
+      cookieStore.set('oauth_pending_tokens', encrypted, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 600, // 10 minutes
+        path: '/',
+      })
+
+      const orgId = orgIdFromCookie || ''
+      return redirect(
+        `${integrationsPath(orgId)}/select-account?platform=${platform}`
+      )
+    }
+
+    // Single account — save immediately
     const selectedAccount = accounts[0]
 
     // Get current user and organization
