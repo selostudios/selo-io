@@ -166,10 +166,15 @@ export class LinkedInOAuthProvider extends OAuthProvider {
       }
     }
 
-    const accounts = data.elements.map((el: LinkedInOrgElement) => ({
-      id: el['organization~'].id.toString(),
-      name: el['organization~'].localizedName,
-    }))
+    const seen = new Set<string>()
+    const accounts: Account[] = []
+    for (const el of data.elements as LinkedInOrgElement[]) {
+      const id = el['organization~'].id.toString()
+      if (!seen.has(id)) {
+        seen.add(id)
+        accounts.push({ id, name: el['organization~'].localizedName })
+      }
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.log('[LinkedIn OAuth] Accounts fetched:', {
