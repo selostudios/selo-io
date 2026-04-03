@@ -12,10 +12,17 @@ function clearOAuthCookies(
 ) {
   cookieStore.delete('oauth_state')
   cookieStore.delete('oauth_platform')
+  cookieStore.delete('oauth_org_id')
+}
+
+// Build the integrations path with orgId prefix when available
+function integrationsPath(orgId: string | undefined): string {
+  return orgId ? `/${orgId}/settings/integrations` : '/settings/integrations'
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const cookieStore = await cookies()
+  const orgIdFromCookie = cookieStore.get('oauth_org_id')?.value
 
   try {
     const { provider: providerParam } = await params
@@ -27,7 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       const message = getErrorMessage('unknown', {
         message: 'Invalid platform parameter',
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     // Get callback params
@@ -40,7 +47,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
     if (error === 'user_cancelled_authorize' || error === 'access_denied') {
       clearOAuthCookies(cookieStore)
       const message = getErrorMessage('user_cancelled')
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     // Validate required params
@@ -49,7 +56,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       const message = getErrorMessage('invalid_code', {
         message: 'Missing code or state parameter',
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     // Validate state (CSRF protection)
@@ -62,7 +69,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     if (storedPlatform !== platform) {
@@ -73,10 +80,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
         timestamp: new Date().toISOString(),
       })
       const message = getErrorMessage('invalid_state')
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
-    // Clear state cookies
+    // Clear state cookies (keep oauth_org_id until final redirect)
     cookieStore.delete('oauth_state')
     cookieStore.delete('oauth_platform')
 
@@ -94,7 +101,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
         statusCode: err instanceof Error ? 400 : undefined,
         message: err instanceof Error ? err.message : 'Unknown error',
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     // Fetch user's organizations/accounts
@@ -108,7 +115,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
         status: err instanceof Error ? 500 : undefined,
         response: err instanceof Error ? err.message : 'Unknown error',
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     if (accounts.length === 0) {
@@ -116,7 +123,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       const message = getErrorMessage('no_organizations', {
         scopes: tokens.scopes,
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
     }
 
     // Auto-select first account (future: show selection UI for multiple)
@@ -161,6 +168,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       return redirect('/login')
     }
 
+    // Use the orgId from the cookie (where the user initiated from) or fall back to user's org
+    const orgId = orgIdFromCookie || userRecord.organization_id
+
     // Check if this specific account is already connected
     const { data: existing } = await supabase
       .from('platform_connections')
@@ -176,7 +186,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
         orgId: selectedAccount.id,
         connectionId: existing.id,
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgId)}?error=${encodeURIComponent(message)}`)
     }
 
     // Save connection
@@ -207,7 +217,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       const message = getErrorMessage('unknown', {
         message: 'Failed to save connection',
       })
-      return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+      return redirect(`${integrationsPath(orgId)}?error=${encodeURIComponent(message)}`)
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -218,7 +228,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       })
     }
 
-    return redirect(`/settings/integrations?success=connected&platform=${platform}`)
+    clearOAuthCookies(cookieStore)
+    return redirect(`${integrationsPath(orgId)}?success=connected&platform=${platform}`)
   } catch (error) {
     // Re-throw redirect errors - they're not real errors
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
@@ -231,13 +242,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       timestamp: new Date().toISOString(),
     })
 
-    cookieStore.delete('oauth_state')
-    cookieStore.delete('oauth_platform')
+    clearOAuthCookies(cookieStore)
 
     const message = getErrorMessage('unknown', {
       message: error instanceof Error ? error.message : 'Unknown error',
     })
 
-    return redirect(`/settings/integrations?error=${encodeURIComponent(message)}`)
+    return redirect(`${integrationsPath(orgIdFromCookie)}?error=${encodeURIComponent(message)}`)
   }
 }
