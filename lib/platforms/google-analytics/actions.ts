@@ -257,58 +257,34 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     return { error: 'Not authenticated' }
   }
 
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, team_members(organization_id)')
-    .eq('id', user.id)
-    .single()
-
-  const userRecord = rawUser
-    ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
-      }
-    : null
-
-  if (!userRecord) {
-    return { error: 'User not found' }
+  if (!connectionId) {
+    return { error: 'Connection ID is required' }
   }
 
-  // Build query to find connection
-  let connectionQuery = supabase
+  // Query connection directly by ID — RLS ensures user can only access their org's connections
+  const { data: connection } = await supabase
     .from('platform_connections')
-    .select('id, credentials')
-    .eq('organization_id', userRecord.organization_id)
+    .select('id, credentials, organization_id')
+    .eq('id', connectionId)
     .eq('platform_type', 'google_analytics')
-
-  // If connectionId provided, filter to that specific connection
-  if (connectionId) {
-    connectionQuery = connectionQuery.eq('id', connectionId)
-  }
-
-  const { data: connection } = await connectionQuery.single()
+    .single()
 
   if (!connection) {
     return { error: 'Google Analytics not connected' }
   }
 
+  const orgId = connection.organization_id
+
   try {
     // 1. Try DB cache first
-    const cached = await getMetricsFromDb(
-      supabase,
-      userRecord.organization_id,
-      'google_analytics',
-      period
-    )
+    const cached = await getMetricsFromDb(supabase, orgId, 'google_analytics', period)
 
     // 2. If fresh (< 1 hour), use DB data
     if (isCacheValid(cached)) {
       return formatGAMetricsFromDb(cached, period)
     }
 
-    // 3. Cache is stale - sync yesterday's daily data (not accumulated period data)
-    // This correctly stores single-day values instead of the old buggy behavior
-    // that stored accumulated period totals as single-day values
+    // 3. Cache is stale - sync yesterday's daily data
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
 
@@ -319,10 +295,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     endDate.setHours(23, 59, 59, 999)
 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
-    const records = adapter.normalizeDailyMetricsToDbRecords(
-      dailyMetrics,
-      userRecord.organization_id
-    )
+    const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 
     await supabase
       .from('campaign_metrics')
@@ -334,12 +307,7 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
       .eq('id', connection.id)
 
     // Re-fetch from DB to get all data including the fresh sync
-    const updatedCache = await getMetricsFromDb(
-      supabase,
-      userRecord.organization_id,
-      'google_analytics',
-      period
-    )
+    const updatedCache = await getMetricsFromDb(supabase, orgId, 'google_analytics', period)
     return formatGAMetricsFromDb(updatedCache, period)
   } catch (error) {
     console.error('[GA Metrics Error]', error)
