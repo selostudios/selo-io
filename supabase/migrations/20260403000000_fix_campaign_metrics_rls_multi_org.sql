@@ -30,3 +30,21 @@ CREATE POLICY "Users can view metrics in their organizations" ON public.campaign
     )
     OR (SELECT public.is_internal_user())
   );
+
+-- Create multi-org UPDATE policy (required for upsert when row already exists)
+DROP POLICY IF EXISTS "Users can update metrics for their organizations" ON public.campaign_metrics;
+
+CREATE POLICY "Users can update metrics for their organizations" ON public.campaign_metrics
+  FOR UPDATE
+  USING (
+    organization_id IN (
+      SELECT tm.organization_id FROM public.team_members tm WHERE tm.user_id = auth.uid()
+    )
+    OR (SELECT public.is_internal_user())
+  )
+  WITH CHECK (
+    organization_id IN (
+      SELECT tm.organization_id FROM public.team_members tm WHERE tm.user_id = auth.uid()
+    )
+    OR (SELECT public.is_internal_user())
+  );
