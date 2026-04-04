@@ -84,4 +84,76 @@ describe('LinkedInAdapter', () => {
       })
     })
   })
+
+  describe('normalizeDailyMetricsToDbRecords', () => {
+    it('produces 6 records per day', () => {
+      const adapter = new LinkedInAdapter(mockCredentials)
+      const dailyMetrics = [
+        {
+          date: '2026-03-15',
+          followers: 100,
+          followerGrowth: 5,
+          pageViews: 200,
+          uniqueVisitors: 80,
+          impressions: 500,
+          reactions: 20,
+        },
+      ]
+
+      const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, 'org-1')
+      expect(records).toHaveLength(6)
+    })
+
+    it('maps all metric types correctly', () => {
+      const adapter = new LinkedInAdapter(mockCredentials)
+      const dailyMetrics = [
+        {
+          date: '2026-03-15',
+          followers: 100,
+          followerGrowth: 5,
+          pageViews: 200,
+          uniqueVisitors: 80,
+          impressions: 500,
+          reactions: 20,
+        },
+      ]
+
+      const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, 'org-1')
+      const byType = Object.fromEntries(records.map((r) => [r.metric_type, r.value]))
+
+      expect(byType['linkedin_followers']).toBe(100)
+      expect(byType['linkedin_follower_growth']).toBe(5)
+      expect(byType['linkedin_page_views']).toBe(200)
+      expect(byType['linkedin_unique_visitors']).toBe(80)
+      expect(byType['linkedin_impressions']).toBe(500)
+      expect(byType['linkedin_reactions']).toBe(20)
+    })
+
+    it('produces 12 records for 2 days', () => {
+      const adapter = new LinkedInAdapter(mockCredentials)
+      const dailyMetrics = [
+        {
+          date: '2026-03-15',
+          followers: 100,
+          followerGrowth: 5,
+          pageViews: 200,
+          uniqueVisitors: 80,
+          impressions: 500,
+          reactions: 20,
+        },
+        {
+          date: '2026-03-16',
+          followers: 105,
+          followerGrowth: 5,
+          pageViews: 210,
+          uniqueVisitors: 85,
+          impressions: 520,
+          reactions: 22,
+        },
+      ]
+
+      const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, 'org-1')
+      expect(records).toHaveLength(12)
+    })
+  })
 })

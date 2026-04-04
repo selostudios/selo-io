@@ -14,7 +14,7 @@ type Campaign = {
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
-    <Link href={`/dashboard/campaigns/${campaign.id}`}>
+    <Link href={`/dashboard/campaigns/${campaign.id}`} data-testid="campaign-card">
       <Card className="cursor-pointer transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start justify-between">

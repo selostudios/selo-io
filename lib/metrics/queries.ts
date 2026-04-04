@@ -55,3 +55,32 @@ export async function getMetricsFromDb(
 export function isCacheValid(cached: CachedMetricsResult): boolean {
   return cached.isFresh && cached.metrics.length > 0
 }
+
+/**
+ * Upsert metric records and update the connection's last_sync_at timestamp.
+ * Throws on upsert failure so callers can handle errors in their own way.
+ */
+export async function upsertMetricsAndUpdateSync(
+  supabase: SupabaseClient,
+  records: Array<{
+    organization_id: string
+    platform_type: string
+    date: string
+    metric_type: string
+    value: number
+  }>,
+  connectionId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('campaign_metrics')
+    .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
+
+  if (error) {
+    throw new Error(`Failed to save metrics: ${error.message}`)
+  }
+
+  await supabase
+    .from('platform_connections')
+    .update({ last_sync_at: new Date().toISOString() })
+    .eq('id', connectionId)
+}

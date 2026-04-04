@@ -31,7 +31,7 @@ export default async function DashboardPage({ params }: PageProps) {
   const hubspotConnections = (connections || []).filter((c) => c.platform_type === 'hubspot')
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8 p-8" data-testid="dashboard-page">
       <WebsiteUrlToast websiteUrl={orgData?.website_url || null} />
 
       <IntegrationsPanel

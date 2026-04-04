@@ -29,23 +29,23 @@ export default async function SelectAccountPage({ params, searchParams }: PagePr
   const pendingCookie = cookieStore.get('oauth_pending_tokens')?.value
 
   if (!pendingCookie) {
-    redirect(`/${orgId}/settings/integrations?error=${encodeURIComponent('OAuth session expired. Please try connecting again.')}`)
+    redirect(
+      `/${orgId}/settings/integrations?error=${encodeURIComponent('OAuth session expired. Please try connecting again.')}`
+    )
   }
 
   let pending: PendingOAuthData
   try {
     pending = decryptCredentials<PendingOAuthData>(pendingCookie)
   } catch {
-    redirect(`/${orgId}/settings/integrations?error=${encodeURIComponent('Invalid OAuth session. Please try connecting again.')}`)
+    redirect(
+      `/${orgId}/settings/integrations?error=${encodeURIComponent('Invalid OAuth session. Please try connecting again.')}`
+    )
   }
 
   const platformName = getPlatformDisplayName(platform || pending.platform)
 
   return (
-    <SelectAccountContent
-      accounts={pending.accounts}
-      platformName={platformName}
-      orgId={orgId}
-    />
+    <SelectAccountContent accounts={pending.accounts} platformName={platformName} orgId={orgId} />
   )
 }

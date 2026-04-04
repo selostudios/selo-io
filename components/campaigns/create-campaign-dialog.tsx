@@ -97,7 +97,7 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" data-testid="new-campaign-button">
           <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
           {buttonText}
         </Button>
@@ -182,7 +182,11 @@ export function CreateCampaignDialog({ buttonText = 'New Campaign' }: CreateCamp
             </div>
           </div>
           <div className="flex justify-end">
-            <Button type="submit" disabled={isLoading || !isFormValid}>
+            <Button
+              type="submit"
+              disabled={isLoading || !isFormValid}
+              data-testid="create-campaign-submit"
+            >
               {isLoading ? 'Creating…' : 'Create Campaign'}
             </Button>
           </div>

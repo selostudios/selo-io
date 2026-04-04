@@ -15,11 +15,7 @@ interface SelectAccountContentProps {
   orgId: string
 }
 
-export function SelectAccountContent({
-  accounts,
-  platformName,
-  orgId,
-}: SelectAccountContentProps) {
+export function SelectAccountContent({ accounts, platformName, orgId }: SelectAccountContentProps) {
   const router = useRouter()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -77,9 +73,7 @@ export function SelectAccountContent({
             <CardContent className="flex items-center gap-3 p-4">
               <Building2 className="text-muted-foreground h-5 w-5 shrink-0" />
               <span className="flex-1 font-medium">{account.name}</span>
-              {selectedId === account.id && (
-                <Check className="text-primary h-5 w-5 shrink-0" />
-              )}
+              {selectedId === account.id && <Check className="text-primary h-5 w-5 shrink-0" />}
             </CardContent>
           </Card>
         ))}

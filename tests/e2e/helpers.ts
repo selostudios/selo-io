@@ -27,6 +27,10 @@ export async function loginAsDeveloper(page: Page) {
   await login(page, testUsers.developer.email, testUsers.developer.password)
 }
 
+export async function loginAsViewer(page: Page) {
+  await login(page, testUsers.viewer.email, testUsers.viewer.password)
+}
+
 export async function logout(page: Page) {
   // Click user menu
   await page.click('button:has(svg)')

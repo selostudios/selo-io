@@ -47,7 +47,9 @@ export default async function CampaignsPage({ params }: CampaignsPageProps) {
     <div className="space-y-8 p-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Campaigns</h1>
+          <h1 className="text-3xl font-bold" data-testid="campaigns-page-title">
+            Campaigns
+          </h1>
           <p className="text-muted-foreground mt-2">
             Manage your marketing campaigns and track performance
           </p>
@@ -64,7 +66,10 @@ export default async function CampaignsPage({ params }: CampaignsPageProps) {
             <CampaignCard key={campaign.id} campaign={campaign} />
           ))}
           {(!campaigns || campaigns.length === 0) && (
-            <div className="col-span-full space-y-4 rounded-lg border-2 border-dashed border-neutral-300 p-12 text-center">
+            <div
+              className="col-span-full space-y-4 rounded-lg border-2 border-dashed border-neutral-300 p-12 text-center"
+              data-testid="campaigns-empty-state"
+            >
               <p className="text-muted-foreground">No campaigns yet.</p>
               {canCreateCampaign && <CreateCampaignDialog buttonText="Create Campaign" />}
             </div>

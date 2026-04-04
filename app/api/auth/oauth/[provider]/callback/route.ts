@@ -152,9 +152,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
       })
 
       const orgId = orgIdFromCookie || ''
-      return redirect(
-        `${integrationsPath(orgId)}/select-account?platform=${platform}`
-      )
+      return redirect(`${integrationsPath(orgId)}/select-account?platform=${platform}`)
     }
 
     // Single account — save immediately

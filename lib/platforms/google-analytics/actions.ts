@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { GoogleAnalyticsAdapter } from './adapter'
 import { decryptCredentials } from '@/lib/utils/crypto'
-import { getMetricsFromDb, isCacheValid } from '@/lib/metrics/queries'
+import { getYesterdayRange, getSyncDateRange } from '@/lib/utils/date-ranges'
+import { getMetricsFromDb, isCacheValid, upsertMetricsAndUpdateSync } from '@/lib/metrics/queries'
 import { calculateTrendFromDb, buildTimeSeriesArray } from '@/lib/metrics/helpers'
 import { GA_METRICS } from '@/lib/metrics/types'
 import type { GoogleAnalyticsCredentials, TrafficAcquisition } from './types'
@@ -53,14 +54,7 @@ export async function syncMetricsForGoogleAnalyticsConnection(
   const credentials = getCredentials(storedCredentials)
   const adapter = new GoogleAnalyticsAdapter(credentials, connectionId)
 
-  // Use provided date or default to yesterday
-  const syncDate = targetDate ? new Date(targetDate) : new Date()
-  if (!targetDate) {
-    syncDate.setDate(syncDate.getDate() - 1)
-  }
-  syncDate.setHours(0, 0, 0, 0)
-  const endDate = new Date(syncDate)
-  endDate.setHours(23, 59, 59, 999)
+  const { start: syncDate, end: endDate } = getSyncDateRange(targetDate)
 
   // Fetch daily breakdowns
   const dailyMetrics = await adapter.fetchDailyMetrics(syncDate, endDate)
@@ -83,19 +77,7 @@ export async function syncMetricsForGoogleAnalyticsConnection(
     'days'
   )
 
-  // Upsert to avoid duplicate entries
-  const { error: insertError } = await supabase
-    .from('campaign_metrics')
-    .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
-
-  if (insertError) {
-    throw new Error(`Failed to save Google Analytics metrics: ${insertError.message}`)
-  }
-
-  await supabase
-    .from('platform_connections')
-    .update({ last_sync_at: new Date().toISOString() })
-    .eq('id', connectionId)
+  await upsertMetricsAndUpdateSync(supabase, records, connectionId)
 }
 
 export async function syncGoogleAnalyticsMetrics(organizationId?: string) {
@@ -140,30 +122,13 @@ export async function syncGoogleAnalyticsMetrics(organizationId?: string) {
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
 
     // Fetch only yesterday's metrics (use backfill script for historical data)
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    yesterday.setHours(0, 0, 0, 0)
-    const endDate = new Date(yesterday)
-    endDate.setHours(23, 59, 59, 999)
+    const { start: yesterday, end: endDate } = getYesterdayRange()
 
     // Fetch daily breakdowns
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 
-    // Upsert to avoid duplicate entries
-    const { error: insertError } = await supabase
-      .from('campaign_metrics')
-      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
-
-    if (insertError) {
-      console.error('[GA Sync Error]', insertError)
-      return { error: `Failed to save metrics: ${insertError.message}` }
-    }
-
-    await supabase
-      .from('platform_connections')
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq('id', connection.id)
+    await upsertMetricsAndUpdateSync(supabase, records, connection.id)
 
     revalidatePath('/dashboard')
     return { success: true }
@@ -288,23 +253,12 @@ export async function getGoogleAnalyticsMetrics(period: Period, connectionId?: s
     const credentials = getCredentials(connection.credentials as StoredCredentials)
     const adapter = new GoogleAnalyticsAdapter(credentials, connection.id)
 
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    yesterday.setHours(0, 0, 0, 0)
-    const endDate = new Date(yesterday)
-    endDate.setHours(23, 59, 59, 999)
+    const { start: yesterday, end: endDate } = getYesterdayRange()
 
     const dailyMetrics = await adapter.fetchDailyMetrics(yesterday, endDate)
     const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, orgId)
 
-    await supabase
-      .from('campaign_metrics')
-      .upsert(records, { onConflict: 'organization_id,platform_type,date,metric_type' })
-
-    await supabase
-      .from('platform_connections')
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq('id', connection.id)
+    await upsertMetricsAndUpdateSync(supabase, records, connection.id)
 
     // Re-fetch from DB to get all data including the fresh sync
     const updatedCache = await getMetricsFromDb(supabase, orgId, 'google_analytics', period)

@@ -95,3 +95,31 @@ export function calculatePercentageChange(current: number, previous: number): nu
   }
   return ((current - previous) / previous) * 100
 }
+
+/**
+ * Returns yesterday's date range (00:00:00.000 to 23:59:59.999).
+ * Used by platform sync and getMetrics functions.
+ */
+export function getYesterdayRange(): DateRange {
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(0, 0, 0, 0)
+  const end = new Date(yesterday)
+  end.setHours(23, 59, 59, 999)
+  return { start: yesterday, end }
+}
+
+/**
+ * Returns a date range for syncing metrics.
+ * If targetDate is provided, uses that date. Otherwise defaults to yesterday.
+ */
+export function getSyncDateRange(targetDate?: Date): DateRange {
+  const syncDate = targetDate ? new Date(targetDate) : new Date()
+  if (!targetDate) {
+    syncDate.setDate(syncDate.getDate() - 1)
+  }
+  syncDate.setHours(0, 0, 0, 0)
+  const end = new Date(syncDate)
+  end.setHours(23, 59, 59, 999)
+  return { start: syncDate, end }
+}

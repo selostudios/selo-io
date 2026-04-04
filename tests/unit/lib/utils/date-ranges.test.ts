@@ -4,6 +4,9 @@ import {
   getPreviousPeriodRange,
   getCalendarQuarterRange,
   getPreviousQuarterRange,
+  calculatePercentageChange,
+  getYesterdayRange,
+  getSyncDateRange,
 } from '@/lib/utils/date-ranges'
 
 describe('date-ranges', () => {
@@ -65,6 +68,57 @@ describe('date-ranges', () => {
       const range = getPreviousQuarterRange(new Date('2026-01-15'))
       expect(range.start.toISOString().split('T')[0]).toBe('2025-10-01')
       expect(range.end.toISOString().split('T')[0]).toBe('2025-12-31')
+    })
+  })
+
+  describe('calculatePercentageChange', () => {
+    it('returns positive change for growth', () => {
+      expect(calculatePercentageChange(150, 100)).toBe(50)
+    })
+
+    it('returns negative change for decline', () => {
+      expect(calculatePercentageChange(50, 100)).toBe(-50)
+    })
+
+    it('returns null when both are zero', () => {
+      expect(calculatePercentageChange(0, 0)).toBeNull()
+    })
+
+    it('returns 100 when previous is zero and current is positive', () => {
+      expect(calculatePercentageChange(50, 0)).toBe(100)
+    })
+  })
+
+  describe('getYesterdayRange', () => {
+    it('returns a range spanning all of yesterday', () => {
+      const { start, end } = getYesterdayRange()
+      const today = new Date()
+      const expectedDate = new Date(today)
+      expectedDate.setDate(expectedDate.getDate() - 1)
+
+      expect(start.getDate()).toBe(expectedDate.getDate())
+      expect(start.getHours()).toBe(0)
+      expect(start.getMinutes()).toBe(0)
+      expect(end.getHours()).toBe(23)
+      expect(end.getMinutes()).toBe(59)
+      expect(end.getSeconds()).toBe(59)
+    })
+  })
+
+  describe('getSyncDateRange', () => {
+    it('defaults to yesterday when no target date provided', () => {
+      const { start } = getSyncDateRange()
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      expect(start.getDate()).toBe(yesterday.getDate())
+    })
+
+    it('uses provided target date', () => {
+      const target = new Date(2026, 0, 10) // Jan 10, 2026
+      const { start, end } = getSyncDateRange(target)
+      expect(start.getDate()).toBe(10)
+      expect(start.getMonth()).toBe(0)
+      expect(end.getHours()).toBe(23)
     })
   })
 })
