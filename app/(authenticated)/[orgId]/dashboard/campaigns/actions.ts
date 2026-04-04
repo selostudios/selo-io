@@ -121,7 +121,6 @@ export async function updateCampaign(
         end_date: end_date || null,
       })
       .eq('id', campaignId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       console.error('[Update Campaign Error]', {
@@ -150,7 +149,6 @@ export async function updateCampaignDescription(
       .from('campaigns')
       .update({ description: description?.trim() || null })
       .eq('id', campaignId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       return { error: 'Failed to update description' }
@@ -172,7 +170,6 @@ export async function updateUtmMedium(campaignId: string, medium: string): Promi
       .from('campaigns')
       .update({ utm_medium: medium })
       .eq('id', campaignId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       return { error: 'Failed to update medium' }
@@ -204,7 +201,6 @@ export async function updateUtmParameters(
         utm_content: params.utm_content || null,
       })
       .eq('id', campaignId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       return { error: 'Failed to update UTM parameters' }
@@ -217,11 +213,7 @@ export async function updateUtmParameters(
 
 export async function deleteCampaign(campaignId: string): Promise<ActionResult> {
   return withCampaignAuth(async (ctx) => {
-    const { error } = await ctx.supabase
-      .from('campaigns')
-      .delete()
-      .eq('id', campaignId)
-      .eq('organization_id', ctx.organizationId!)
+    const { error } = await ctx.supabase.from('campaigns').delete().eq('id', campaignId)
 
     if (error) {
       console.error('[Delete Campaign Error]', {
