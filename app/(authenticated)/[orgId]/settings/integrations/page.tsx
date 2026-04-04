@@ -15,11 +15,11 @@ interface PageProps {
 export default async function IntegrationsPage({ params }: PageProps) {
   const { orgId } = await params
 
-  // Guard: only users with integrations:manage can access
+  // Guard: only admins or internal users can access integrations
   const user = await getAuthUser()
   if (user) {
     const record = await getUserRecord(user.id)
-    if (!canManageIntegrations(record?.role)) {
+    if (!record?.is_internal && !canManageIntegrations(record?.role)) {
       redirect('/settings/team')
     }
   }

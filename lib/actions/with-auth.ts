@@ -122,13 +122,13 @@ export async function withAuth<T>(
     organizationId: userRecord.organization_id,
   }
 
-  // Check organization requirement
-  if (options?.requireOrganization && !ctx.organizationId) {
+  // Check organization requirement (internal users may operate without a team_members org)
+  if (options?.requireOrganization && !ctx.organizationId && !isInternal) {
     return { error: options.permissionError ?? 'Organization required' }
   }
 
-  // Check permission
-  if (options?.permission && !hasPermission(userRecord.role, options.permission)) {
+  // Check permission (internal users bypass permission checks)
+  if (options?.permission && !isInternal && !hasPermission(userRecord.role, options.permission)) {
     return {
       error: options.permissionError ?? `You don't have permission to perform this action`,
     }

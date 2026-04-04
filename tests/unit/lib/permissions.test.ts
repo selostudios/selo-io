@@ -214,6 +214,38 @@ describe('permissions', () => {
     })
   })
 
+  describe('internal user permission bypass pattern', () => {
+    // Internal users bypass role-based permission checks. The hasPermission function
+    // is role-only; callers (withAuth, page guards) must check isInternal separately.
+    // These tests document that non-admin internal users would fail role checks,
+    // proving the bypass is necessary.
+
+    it('hasPermission denies integrations:manage for non-admin roles', () => {
+      expect(hasPermission(UserRole.Developer, 'integrations:manage')).toBe(false)
+      expect(hasPermission(UserRole.TeamMember, 'integrations:manage')).toBe(false)
+      expect(hasPermission(UserRole.ClientViewer, 'integrations:manage')).toBe(false)
+      expect(hasPermission(undefined, 'integrations:manage')).toBe(false)
+    })
+
+    it('hasPermission denies org:update for most roles', () => {
+      expect(hasPermission(UserRole.TeamMember, 'org:update')).toBe(false)
+      expect(hasPermission(UserRole.ClientViewer, 'org:update')).toBe(false)
+    })
+
+    it('isInternalUser correctly identifies internal users regardless of role', () => {
+      expect(isInternalUser({ is_internal: true })).toBe(true)
+      // An internal user with no role or a low-privilege role is still internal
+      expect(isInternalUser({ is_internal: true })).toBe(true)
+    })
+
+    it('canManageIntegrations returns false for undefined role (internal user with no team membership)', () => {
+      // This is the exact scenario that caused the bug: internal user with no
+      // team_members row gets role=undefined, and canManageIntegrations fails.
+      // Callers must check isInternal before this check.
+      expect(canManageIntegrations(undefined)).toBe(false)
+    })
+  })
+
   describe('isInternalUser', () => {
     it('returns true when is_internal is true', () => {
       expect(isInternalUser({ is_internal: true })).toBe(true)

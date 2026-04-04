@@ -17,7 +17,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
         </p>
       </div>
 
-      <SettingsTabs userRole={userRecord?.role} />
+      <SettingsTabs userRole={userRecord?.role} isInternal={userRecord?.is_internal ?? false} />
 
       {children}
     </div>

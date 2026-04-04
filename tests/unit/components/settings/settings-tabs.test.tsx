@@ -51,4 +51,22 @@ describe('SettingsTabs', () => {
     // undefined !== ExternalDeveloper, so Monitoring visible
     expect(screen.getByText('Monitoring')).toBeInTheDocument()
   })
+
+  it('shows Integrations tab for internal user even without admin role', () => {
+    render(<SettingsTabs userRole={UserRole.TeamMember} isInternal={true} />)
+
+    expect(screen.getByText('Integrations')).toBeInTheDocument()
+  })
+
+  it('shows Integrations tab for internal user with no role', () => {
+    render(<SettingsTabs isInternal={true} />)
+
+    expect(screen.getByText('Integrations')).toBeInTheDocument()
+  })
+
+  it('hides Integrations for non-internal user without admin role', () => {
+    render(<SettingsTabs userRole={UserRole.TeamMember} isInternal={false} />)
+
+    expect(screen.queryByText('Integrations')).not.toBeInTheDocument()
+  })
 })

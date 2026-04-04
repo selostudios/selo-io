@@ -19,9 +19,9 @@ const allSettingsTabs: SettingsTab[] = [
   { name: 'Monitoring', href: '/settings/monitoring' },
 ]
 
-function getVisibleTabs(userRole?: string): SettingsTab[] {
+function getVisibleTabs(userRole?: string, isInternal?: boolean): SettingsTab[] {
   return allSettingsTabs.filter((tab) => {
-    if (tab.href === '/settings/integrations') return canManageIntegrations(userRole)
+    if (tab.href === '/settings/integrations') return isInternal || canManageIntegrations(userRole)
     if (tab.href === '/settings/monitoring') return userRole !== UserRole.ExternalDeveloper
     return true
   })
@@ -29,9 +29,10 @@ function getVisibleTabs(userRole?: string): SettingsTab[] {
 
 interface SettingsTabsProps {
   userRole?: string
+  isInternal?: boolean
 }
 
-export function SettingsTabs({ userRole }: SettingsTabsProps) {
+export function SettingsTabs({ userRole, isInternal }: SettingsTabsProps) {
   const pathname = usePathname()
   const orgId = useOrgId()
 
@@ -40,7 +41,7 @@ export function SettingsTabs({ userRole }: SettingsTabsProps) {
     ''
   )
 
-  const visibleTabs = getVisibleTabs(userRole)
+  const visibleTabs = getVisibleTabs(userRole, isInternal)
 
   return (
     <div className="border-b">
