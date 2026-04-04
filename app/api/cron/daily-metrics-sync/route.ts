@@ -47,6 +47,7 @@ export async function POST(request: Request) {
   // Parse optional backfill parameters from request body
   let startDate: Date | undefined
   let endDate: Date | undefined
+  let organizationId: string | undefined
 
   try {
     const body = await request.json().catch(() => ({}))
@@ -62,15 +63,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid endDate format' }, { status: 400 })
       }
     }
+    if (body.organizationId) {
+      organizationId = body.organizationId
+    }
   } catch {
     // No body or invalid JSON - continue with default (yesterday only)
   }
 
-  // Get all active platform connections
-  const { data: connections, error } = await supabase
+  // Get active platform connections, optionally filtered by org
+  let connectionsQuery = supabase
     .from('platform_connections')
     .select('id, organization_id, platform_type, credentials, status')
     .eq('status', 'active')
+
+  if (organizationId) {
+    connectionsQuery = connectionsQuery.eq('organization_id', organizationId)
+  }
+
+  const { data: connections, error } = await connectionsQuery
 
   if (error) {
     console.error('[Cron Error]', {
@@ -221,6 +231,7 @@ export async function POST(request: Request) {
           daysProcessed: results.daysProcessed,
           startDate: startDate?.toISOString().split('T')[0],
           endDate: endDate?.toISOString().split('T')[0],
+          ...(organizationId && { organizationId }),
         },
       })
       .eq('id', logId)

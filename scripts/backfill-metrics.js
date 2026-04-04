@@ -4,9 +4,11 @@
 /**
  * Backfill metrics from a specific date
  * Usage:
- *   npm run backfill:metrics -- 2026-01-01        # Backfills from Jan 1 to yesterday
- *   npm run backfill:metrics -- 2026-01-01 --prod # Backfills production data
- *   npm run backfill:metrics -- --days=90 --prod  # Backfills last 90 days
+ *   npm run backfill:metrics -- 2026-01-01              # Backfills from Jan 1 to yesterday
+ *   npm run backfill:metrics -- 2026-01-01 --prod       # Backfills production data
+ *   npm run backfill:metrics -- --days=90 --prod        # Backfills last 90 days
+ *   npm run backfill:metrics -- --days=30 --org=<id>    # Backfills specific org only
+ *   npm run backfill:metrics -- --days=30 --org=<id> --prod
  */
 
 const fs = require('fs')
@@ -16,7 +18,9 @@ const path = require('path')
 const args = process.argv.slice(2)
 const dateArg = args.find((arg) => arg.match(/^\d{4}-\d{2}-\d{2}$/))
 const daysArg = args.find((arg) => arg.startsWith('--days='))
+const orgArg = args.find((arg) => arg.startsWith('--org='))
 const isProd = args.includes('--prod') || args.includes('-p')
+const organizationId = orgArg ? orgArg.split('=')[1] : null
 
 // Calculate start date
 let startDate
@@ -106,6 +110,9 @@ async function backfillMetrics() {
   console.log(`   Target: ${isProd ? 'Production' : 'Local dev'}`)
   console.log(`   Date range: ${startDateStr} to ${endDateStr}`)
   console.log(`   Total days: ${totalDays}`)
+  if (organizationId) {
+    console.log(`   Organization: ${organizationId}`)
+  }
   console.log(`\n⏳ This may take a while for large date ranges...\n`)
 
   try {
@@ -122,6 +129,7 @@ async function backfillMetrics() {
       body: JSON.stringify({
         startDate: startDateStr,
         endDate: endDateStr,
+        ...(organizationId && { organizationId }),
       }),
     })
 
