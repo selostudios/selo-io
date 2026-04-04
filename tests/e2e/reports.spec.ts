@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { loginAsAdmin, loginAsTeamMember } from './helpers'
 import { testUsers } from '../fixtures'
 
 test.describe('Client Reports Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as admin user
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.admin.email)
-    await page.fill('input[name="password"]', testUsers.admin.password)
-    await page.click('button[type="submit"]')
-    // Dashboard may include org query param
-    await expect(page).toHaveURL(/\/dashboard/)
+    await loginAsAdmin(page)
   })
 
   test('navigates to client reports page', async ({ page }) => {
@@ -29,11 +24,7 @@ test.describe('Client Reports Page', () => {
 
 test.describe('Client Report Search', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.admin.email)
-    await page.fill('input[name="password"]', testUsers.admin.password)
-    await page.click('button[type="submit"]')
-    await expect(page).toHaveURL(/\/dashboard/)
+    await loginAsAdmin(page)
   })
 
   test('has search functionality', async ({ page }) => {
@@ -70,12 +61,14 @@ test.describe('Public Report Access', () => {
 
 test.describe('Client Report Permissions', () => {
   test('viewer can access client reports page', async ({ page }) => {
-    // Login as viewer
+    // Login as viewer — use inline login since no helper for viewer
     await page.goto('/login')
     await page.fill('input[name="email"]', testUsers.viewer.email)
     await page.fill('input[name="password"]', testUsers.viewer.password)
     await page.click('button[type="submit"]')
-    await expect(page).toHaveURL(/\/dashboard/)
+    await page.waitForURL(/\/(dashboard|organizations)/)
+    await page.goto('/')
+    await page.waitForURL(/\/dashboard/)
 
     // Navigate directly to client reports
     await page.goto('/seo/client-reports')
@@ -84,12 +77,7 @@ test.describe('Client Report Permissions', () => {
   })
 
   test('team member can access client reports page', async ({ page }) => {
-    // Login as team member
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.teamMember.email)
-    await page.fill('input[name="password"]', testUsers.teamMember.password)
-    await page.click('button[type="submit"]')
-    await expect(page).toHaveURL(/\/dashboard/)
+    await loginAsTeamMember(page)
 
     // Navigate directly to client reports
     await page.goto('/seo/client-reports')

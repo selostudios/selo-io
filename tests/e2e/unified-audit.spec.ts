@@ -1,14 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { testUsers } from '../fixtures'
+import { loginAsAdmin, loginAsDeveloper } from './helpers'
 
 test.describe('Full Site Audit', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as admin user
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.admin.email)
-    await page.fill('input[name="password"]', testUsers.admin.password)
-    await page.click('button[type="submit"]')
-    await expect(page).toHaveURL(/\/dashboard/)
+    await loginAsAdmin(page)
   })
 
   test('navigates to unified audit page', async ({ page }) => {
@@ -121,12 +116,7 @@ test.describe('Full Site Audit', () => {
 
 test.describe('Quick Audit (Unified)', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as developer (internal) user
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testUsers.developer.email)
-    await page.fill('input[name="password"]', testUsers.developer.password)
-    await page.click('button[type="submit"]')
-    await expect(page).toHaveURL(/\/dashboard/)
+    await loginAsDeveloper(page)
   })
 
   test('quick audit page has unified audit flow', async ({ page }) => {

@@ -43,11 +43,21 @@ export default async function TeamSettingsPage({ params }: PageProps) {
         org_id: organizationId,
       })
 
-      const { data: teamMembers } = await supabase
-        .from('users')
-        .select('id, role, created_at')
+      // Query team members via team_members join table (primary source of truth)
+      const { data: teamMemberships } = await supabase
+        .from('team_members')
+        .select('user_id, role, users(id, created_at)')
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false })
+
+      const teamMembers = (teamMemberships || []).map((tm) => {
+        const user = tm.users as unknown as { id: string; created_at: string }
+        return {
+          id: user?.id || tm.user_id,
+          role: tm.role,
+          created_at: user?.created_at || '',
+        }
+      })
 
       // Map emails and names to team members
       const userDataMap = new Map<string, { email: string; first_name: string; last_name: string }>(

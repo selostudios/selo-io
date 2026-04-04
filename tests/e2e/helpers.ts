@@ -23,6 +23,10 @@ export async function loginAsTeamMember(page: Page) {
   await login(page, testUsers.teamMember.email, testUsers.teamMember.password)
 }
 
+export async function loginAsDeveloper(page: Page) {
+  await login(page, testUsers.developer.email, testUsers.developer.password)
+}
+
 export async function logout(page: Page) {
   // Click user menu
   await page.click('button:has(svg)')
