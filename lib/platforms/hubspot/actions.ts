@@ -43,7 +43,7 @@ export async function syncMetricsForHubSpotConnection(
   targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
-  const adapter = new HubSpotAdapter(credentials, connectionId)
+  const adapter = new HubSpotAdapter(credentials, connectionId, supabase)
 
   const { start: syncDate, end: endDate } = getSyncDateRange(targetDate)
 

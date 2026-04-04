@@ -8,6 +8,7 @@ import type {
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 const MAX_RETRIES = 3
@@ -25,15 +26,21 @@ export class HubSpotClient {
   private credentials: HubSpotCredentials
   private connectionId: string | null
   private oauthProvider: OAuthProvider | null
+  private supabaseClient: SupabaseClient | undefined
   // Cache marketing metrics since they don't change between period fetches
   private marketingMetricsCache: HubSpotMarketingMetrics | null = null
 
-  constructor(credentials: HubSpotCredentials, connectionId?: string) {
+  constructor(
+    credentials: HubSpotCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
     this.credentials = credentials
     this.accessToken = credentials.access_token
     this.connectionId = connectionId || null
     this.oauthProvider =
       connectionId && credentials.refresh_token ? getOAuthProvider(Platform.HUBSPOT) : null
+    this.supabaseClient = supabaseClient
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -53,7 +60,11 @@ export class HubSpotClient {
         const newTokens = await this.oauthProvider.refreshAccessToken(
           this.credentials.refresh_token
         )
-        await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
+        await this.oauthProvider.updateTokensInDatabase(
+          this.connectionId,
+          newTokens,
+          this.supabaseClient
+        )
 
         this.credentials = {
           ...this.credentials,

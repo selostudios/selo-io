@@ -5,6 +5,7 @@ import type {
   GoogleAnalyticsDailyMetrics,
   GoogleAnalyticsMetricType,
 } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface MetricRecord {
   organization_id: string
@@ -18,8 +19,12 @@ interface MetricRecord {
 export class GoogleAnalyticsAdapter {
   private client: GoogleAnalyticsClient
 
-  constructor(credentials: GoogleAnalyticsCredentials, connectionId?: string) {
-    this.client = new GoogleAnalyticsClient(credentials, connectionId)
+  constructor(
+    credentials: GoogleAnalyticsCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
+    this.client = new GoogleAnalyticsClient(credentials, connectionId, supabaseClient)
   }
 
   async fetchMetrics(startDate: Date, endDate: Date): Promise<GoogleAnalyticsMetrics> {

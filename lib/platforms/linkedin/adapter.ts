@@ -5,6 +5,7 @@ import type {
   LinkedInDailyMetrics,
   LinkedInMetricType,
 } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface MetricRecord {
   organization_id: string
@@ -18,8 +19,12 @@ interface MetricRecord {
 export class LinkedInAdapter {
   private client: LinkedInClient
 
-  constructor(credentials: LinkedInCredentials, connectionId?: string) {
-    this.client = new LinkedInClient(credentials, connectionId)
+  constructor(
+    credentials: LinkedInCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
+    this.client = new LinkedInClient(credentials, connectionId, supabaseClient)
   }
 
   async fetchMetrics(startDate: Date, endDate: Date): Promise<LinkedInMetrics> {

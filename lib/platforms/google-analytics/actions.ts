@@ -52,7 +52,7 @@ export async function syncMetricsForGoogleAnalyticsConnection(
   targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
-  const adapter = new GoogleAnalyticsAdapter(credentials, connectionId)
+  const adapter = new GoogleAnalyticsAdapter(credentials, connectionId, supabase)
 
   const { start: syncDate, end: endDate } = getSyncDateRange(targetDate)
 

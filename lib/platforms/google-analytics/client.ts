@@ -7,6 +7,7 @@ import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
 import { GAChannel } from '@/lib/enums'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const GA_DATA_API_BASE = 'https://analyticsdata.googleapis.com/v1beta'
 
@@ -16,14 +17,20 @@ export class GoogleAnalyticsClient {
   private credentials: GoogleAnalyticsCredentials
   private connectionId: string | null
   private oauthProvider: OAuthProvider | null
+  private supabaseClient: SupabaseClient | undefined
 
-  constructor(credentials: GoogleAnalyticsCredentials, connectionId?: string) {
+  constructor(
+    credentials: GoogleAnalyticsCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
     this.credentials = credentials
     this.accessToken = credentials.access_token
     this.propertyId = credentials.property_id
     this.connectionId = connectionId || null
     this.oauthProvider =
       connectionId && credentials.refresh_token ? getOAuthProvider(Platform.GOOGLE_ANALYTICS) : null
+    this.supabaseClient = supabaseClient
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -44,7 +51,11 @@ export class GoogleAnalyticsClient {
           this.credentials.refresh_token
         )
 
-        await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
+        await this.oauthProvider.updateTokensInDatabase(
+          this.connectionId,
+          newTokens,
+          this.supabaseClient
+        )
 
         this.credentials = {
           ...this.credentials,

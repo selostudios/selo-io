@@ -2,6 +2,7 @@ import type { LinkedInCredentials, LinkedInMetrics, LinkedInDailyMetrics } from 
 import { getOAuthProvider } from '@/lib/oauth/registry'
 import { Platform } from '@/lib/oauth/types'
 import type { OAuthProvider } from '@/lib/oauth/base'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Use REST API (not v2) for full analytics access
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/rest'
@@ -13,14 +14,20 @@ export class LinkedInClient {
   private credentials: LinkedInCredentials
   private connectionId: string | null
   private oauthProvider: OAuthProvider | null
+  private supabaseClient: SupabaseClient | undefined
 
-  constructor(credentials: LinkedInCredentials, connectionId?: string) {
+  constructor(
+    credentials: LinkedInCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
     this.credentials = credentials
     this.accessToken = credentials.access_token
     this.organizationId = credentials.organization_id
     this.connectionId = connectionId || null
     this.oauthProvider =
       connectionId && credentials.refresh_token ? getOAuthProvider(Platform.LINKEDIN) : null
+    this.supabaseClient = supabaseClient
   }
 
   private async ensureFreshToken(): Promise<void> {
@@ -43,7 +50,11 @@ export class LinkedInClient {
           this.credentials.refresh_token
         )
 
-        await this.oauthProvider.updateTokensInDatabase(this.connectionId, newTokens)
+        await this.oauthProvider.updateTokensInDatabase(
+          this.connectionId,
+          newTokens,
+          this.supabaseClient
+        )
 
         // Update local credentials
         this.credentials = {

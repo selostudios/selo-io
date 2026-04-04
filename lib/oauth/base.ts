@@ -2,6 +2,7 @@
 import { randomBytes } from 'crypto'
 import { Platform, TokenResponse, Account } from './types'
 import { createClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export abstract class OAuthProvider {
   abstract platform: Platform
@@ -54,10 +55,16 @@ export abstract class OAuthProvider {
   }
 
   /**
-   * Update tokens in database after refresh
+   * Update tokens in database after refresh.
+   * Accepts an optional supabase client for cron/backfill contexts where
+   * there is no user session (the service client bypasses RLS).
    */
-  async updateTokensInDatabase(connectionId: string, tokens: TokenResponse): Promise<void> {
-    const supabase = await createClient()
+  async updateTokensInDatabase(
+    connectionId: string,
+    tokens: TokenResponse,
+    supabaseClient?: SupabaseClient
+  ): Promise<void> {
+    const supabase = supabaseClient ?? (await createClient())
     const expiresAt = this.calculateExpiresAt(tokens.expires_in)
 
     // Get current credentials to preserve other fields

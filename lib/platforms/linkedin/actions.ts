@@ -41,7 +41,7 @@ export async function syncMetricsForLinkedInConnection(
   targetDate?: Date
 ): Promise<void> {
   const credentials = getCredentials(storedCredentials)
-  const adapter = new LinkedInAdapter(credentials, connectionId)
+  const adapter = new LinkedInAdapter(credentials, connectionId, supabase)
 
   const { start: syncDate, end: endDate } = getSyncDateRange(targetDate)
 

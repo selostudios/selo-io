@@ -1,6 +1,7 @@
 // lib/platforms/hubspot/adapter.ts
 import { HubSpotClient } from './client'
 import type { HubSpotCredentials, HubSpotMetrics } from './types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface MetricRecord {
   organization_id: string
@@ -14,8 +15,12 @@ interface MetricRecord {
 export class HubSpotAdapter {
   private client: HubSpotClient
 
-  constructor(credentials: HubSpotCredentials, connectionId?: string) {
-    this.client = new HubSpotClient(credentials, connectionId)
+  constructor(
+    credentials: HubSpotCredentials,
+    connectionId?: string,
+    supabaseClient?: SupabaseClient
+  ) {
+    this.client = new HubSpotClient(credentials, connectionId, supabaseClient)
   }
 
   /**
