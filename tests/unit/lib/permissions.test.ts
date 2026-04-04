@@ -244,6 +244,16 @@ describe('permissions', () => {
       // Callers must check isInternal before this check.
       expect(canManageIntegrations(undefined)).toBe(false)
     })
+
+    it('canManageTeam returns false for undefined role (internal user with no team membership)', () => {
+      // Same pattern as integrations: internal user trying to invite team
+      // members gets role=undefined from team_members[0], so canManageTeam fails.
+      expect(canManageTeam(undefined)).toBe(false)
+    })
+
+    it('canManageOrg returns false for undefined role (internal user with no team membership)', () => {
+      expect(canManageOrg(undefined)).toBe(false)
+    })
   })
 
   describe('isInternalUser', () => {

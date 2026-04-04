@@ -74,12 +74,11 @@ export async function sendInvite(formData: FormData) {
     role: membership?.role ?? 'client_viewer',
   }
 
-  if (!canManageTeam(userRecord.role)) {
+  const isInternal = isInternalUser(userRecord)
+
+  if (!isInternal && !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can send invites' }
   }
-
-  // Use explicit org ID from form data, or fall back to user's membership org
-  const isInternal = isInternalUser(userRecord)
   const organizationId = targetOrgId || userRecord.organization_id
 
   if (!organizationId) {
@@ -245,11 +244,11 @@ export async function resendInvite(inviteId: string) {
     role: membership?.role ?? 'client_viewer',
   }
 
-  if (!canManageTeam(userRecord.role)) {
+  const isInternal = isInternalUser(userRecord)
+
+  if (!isInternal && !canManageTeam(userRecord.role)) {
     return { error: 'Only admins can resend invites' }
   }
-
-  const isInternal = isInternalUser(userRecord)
 
   // Get the invite — internal users can access any org's invites
   const query = isInternal
@@ -388,7 +387,9 @@ export async function deleteInvite(inviteId: string) {
     role: membership?.role ?? 'client_viewer',
   }
 
-  if (!canManageTeam(userRecord.role)) {
+  const isInternal = isInternalUser(userRecord)
+
+  if (!isInternal && !canManageTeam(userRecord.role)) {
     console.error('[Delete Invite Error]', {
       type: 'unauthorized',
       userId: user.id,
@@ -396,8 +397,6 @@ export async function deleteInvite(inviteId: string) {
     })
     return { error: 'Only admins can delete invites' }
   }
-
-  const isInternal = isInternalUser(userRecord)
   const deleteClient = isInternal ? createServiceClient() : supabase
 
   // Internal users can delete any org's invites; external users scoped to their org

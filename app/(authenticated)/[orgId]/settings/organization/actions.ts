@@ -92,13 +92,11 @@ export async function updateOrganization(
       }
     : null
 
-  if (!userRecord || !canManageOrg(userRecord.role)) {
+  const isInternal = userRecord ? isInternalUser(userRecord) : false
+
+  if (!userRecord || (!isInternal && !canManageOrg(userRecord.role))) {
     return { error: 'Only admins can update organization settings' }
   }
-
-  // Determine which organization to update
-  // Internal users can specify a different org, otherwise use their own
-  const isInternal = isInternalUser(userRecord)
   const orgId = isInternal && organizationId ? organizationId : userRecord.organization_id
 
   if (!orgId) {
@@ -203,7 +201,7 @@ export async function uploadLogo(
   // Get user's organization and verify they're an admin
   const { data: rawUploadUser } = await supabase
     .from('users')
-    .select('id, team_members(organization_id, role)')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -214,10 +212,14 @@ export async function uploadLogo(
     ? {
         organization_id: uploadMembership?.organization_id ?? null,
         role: uploadMembership?.role ?? 'client_viewer',
+        is_internal: rawUploadUser.is_internal,
       }
     : null
 
-  if (!uploadUserRecord || !canManageOrg(uploadUserRecord.role)) {
+  if (
+    !uploadUserRecord ||
+    (!isInternalUser(uploadUserRecord) && !canManageOrg(uploadUserRecord.role))
+  ) {
     return { error: 'Only admins can upload logos' }
   }
 
@@ -284,7 +286,7 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
   // Get user's organization and verify they're an admin
   const { data: rawRemoveUser } = await supabase
     .from('users')
-    .select('id, team_members(organization_id, role)')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -295,10 +297,14 @@ export async function removeLogo(): Promise<{ error?: string; success?: boolean 
     ? {
         organization_id: removeMembership?.organization_id ?? null,
         role: removeMembership?.role ?? 'client_viewer',
+        is_internal: rawRemoveUser.is_internal,
       }
     : null
 
-  if (!removeUserRecord || !canManageOrg(removeUserRecord.role)) {
+  if (
+    !removeUserRecord ||
+    (!isInternalUser(removeUserRecord) && !canManageOrg(removeUserRecord.role))
+  ) {
     return { error: 'Only admins can remove logos' }
   }
 

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { canManageOrg } from '@/lib/permissions'
+import { canManageOrg, isInternalUser } from '@/lib/permissions'
 import { fetchBrandfetch, extractDomain, normalizeBrandData, BrandfetchError } from './client'
 import type { BrandData } from './types'
 
@@ -24,7 +24,7 @@ export async function fetchBrandData(websiteUrl: string): Promise<FetchBrandData
 
   const { data: rawUser } = await supabase
     .from('users')
-    .select('id, team_members(organization_id, role)')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
 
@@ -33,10 +33,11 @@ export async function fetchBrandData(websiteUrl: string): Promise<FetchBrandData
     ? {
         organization_id: membership?.organization_id ?? null,
         role: membership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
       }
     : null
 
-  if (!userRecord || !canManageOrg(userRecord.role)) {
+  if (!userRecord || (!isInternalUser(userRecord) && !canManageOrg(userRecord.role))) {
     return { error: 'Only admins can fetch brand data' }
   }
 
@@ -103,13 +104,14 @@ export async function uploadBrandLogo(
       }
     : null
 
-  if (!uploadUserRecord || !canManageOrg(uploadUserRecord.role)) {
+  if (
+    !uploadUserRecord ||
+    (!isInternalUser(uploadUserRecord) && !canManageOrg(uploadUserRecord.role))
+  ) {
     return { error: 'Only admins can upload logos' }
   }
 
-  // Determine which organization to update
-  // Internal users can specify a different org, otherwise use their own
-  const isInternal = uploadUserRecord.is_internal === true
+  const isInternal = isInternalUser(uploadUserRecord)
   const orgId = isInternal && organizationId ? organizationId : uploadUserRecord.organization_id
 
   if (!orgId) {
