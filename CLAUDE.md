@@ -273,7 +273,20 @@ Integration and E2E tests require local Supabase running via Docker.
 
 #### Test Philosophy
 
-**Tests must validate application behavior, not framework or language features.** Every test should exercise our code and verify a meaningful outcome.
+We optimize for **confidence in correctness**, not test count or coverage percentage. A small number of well-written tests that catch real bugs is infinitely more valuable than hundreds of tests that verify trivia.
+
+##### What to test
+
+**Tests must validate application behavior, not framework or language features.** Every test should exercise _our_ code and verify a meaningful outcome that maps to something a user or developer would care about.
+
+**DO write tests that:**
+
+- Verify business logic produces correct results given specific inputs (e.g., "score calculation returns 73 for a site with 4 critical failures")
+- Confirm check implementations detect the right issues in real HTML
+- Validate that components render the correct UI based on application state
+- Test that server actions enforce auth, return correct data, and handle edge cases
+- Verify integration between modules (e.g., "runner triggers scoring after all checks complete")
+- Test error paths and boundary conditions that could cause silent data loss
 
 **Do NOT write tests that:**
 
@@ -281,16 +294,45 @@ Integration and E2E tests require local Supabase running via Docker.
 - Verify TypeScript interfaces compile or have certain properties
 - Test that a framework API works as documented (e.g., testing that `useState` updates state)
 - Assert trivial type coercions or constant values
-
-**DO write tests that:**
-
-- Verify business logic produces correct results given specific inputs (e.g., "Given these check results, the score should be 73")
-- Confirm check implementations detect the right issues in real HTML
-- Validate that components render the correct UI based on application state
-- Test that server actions enforce auth, return correct data, and handle edge cases
-- Verify integration between modules (e.g., "Runner calls scoring after all checks complete")
+- Duplicate what the type system already guarantees
+- Test getters, setters, or simple pass-through functions with no logic
 
 **Rule of thumb:** If deleting the test wouldn't reduce confidence in the application working correctly, the test has no value. Every test should be able to catch a real bug.
+
+##### How to name tests
+
+Test descriptions should describe **intent and expected behavior from the user's perspective**, not implementation details. A good test name answers: "What should happen, and under what conditions?"
+
+```typescript
+// BAD — describes implementation
+'calls calculateTrendFromDb with linkedin_impressions metric type'
+'sets state to loading when fetch starts'
+'renders a div with className metrics-grid'
+
+// GOOD — describes intent and behavior
+'returns zero trend when no historical data exists'
+'shows loading indicator while metrics are being fetched'
+'displays all five LinkedIn metrics in a responsive grid'
+```
+
+**The test name should still make sense if the implementation changes entirely.** If you rename a function and your test name breaks, the name was coupled to implementation. Test names should survive refactors.
+
+For `describe` blocks, name them after the unit being tested (function, component, feature). For `it`/`test` blocks, name them after the behavior:
+
+```typescript
+describe('calculateTrendFromDb', () => {
+  test('sums daily values across the selected period', () => { ... })
+  test('returns null change when previous period has no data', () => { ... })
+  test('handles cumulative metrics by using latest value instead of sum', () => { ... })
+})
+```
+
+##### Test structure
+
+- **Arrange-Act-Assert**: Set up inputs, call the function, verify the output. Keep each test focused on one behavior.
+- **No test interdependence**: Tests must not depend on execution order or shared mutable state.
+- **Minimal mocking**: Prefer real implementations. Only mock external boundaries (APIs, databases in unit tests). Never mock the module under test.
+- **Realistic inputs**: Use data that resembles production. Don't test with `"foo"` and `"bar"` when the function processes HTML documents or metric arrays.
 
 #### E2E Testing Conventions
 
@@ -317,15 +359,27 @@ await page.locator('[data-testid="new-report-button"]').click()
 
 **Why**: Data-testid attributes are more reliable than text selectors (which can match multiple elements) or CSS classes (which may change with styling). They clearly indicate "this element is used in tests" and survive refactoring.
 
+**Login helpers**: Always use the shared helpers from `tests/e2e/helpers.ts` (`loginAsAdmin`, `loginAsTeamMember`, `loginAsDeveloper`). These navigate to `/` after form submission to resolve the org cookie via the proxy middleware. Inline login flows that skip this step cause flaky tests because `page.goto('/settings/team')` relies on the `selo-org` cookie being set for the proxy redirect to `/{orgId}/settings/team`.
+
 ### Before Pushing
 
-**MANDATORY: Always run lint, format, unit tests, and build before every push.** Do not push code that hasn't passed all of these checks. Fix any issues before pushing.
+**MANDATORY: A task is not done until all checks pass.** Every push must be preceded by the full verification suite. Do not push code that fails any check. Do not skip checks to save time. Quality over speed, always.
 
 ```bash
 npm run lint && npm run test:unit && npm run build
 ```
 
-If formatting fails, fix with `npx prettier --write <file>` and re-run lint.
+**The checklist:**
+
+1. **Format** — If `prettier --check` fails, fix with `npx prettier --write <file>` and re-run lint.
+2. **Lint** — All ESLint rules must pass. Do not disable rules to work around failures.
+3. **Unit tests** — All tests must pass. If a test fails, investigate and fix the root cause. Do not skip or `.only()` tests to get a green run.
+4. **Build** — The production build must succeed. TypeScript errors, missing imports, and type mismatches are all blockers.
+5. **Review your diff** — Before committing, read `git diff` to verify you haven't introduced unintended changes, debug artifacts (`console.log`), or leftover code.
+
+**If any check fails, stop and fix it before proceeding.** Do not push with the intention of "fixing it in the next commit." The main branch must always be in a working state.
+
+**After pushing:** Confirm CI passes. If CI fails on something that passed locally (e.g., E2E tests), investigate and fix in a follow-up commit.
 
 ### Permissions & Access Control
 
@@ -431,5 +485,5 @@ console.error('[Context Error]', { type: 'error_type', timestamp: new Date().toI
 ### LinkedIn OAuth Notes
 
 - App must be approved for "Marketing Developer Platform" product
-- Multiple organization selection not yet supported (auto-selects first)
+- Account selector is shown when a user manages multiple organizations; single-account connections auto-save
 - Production rate limiting recommended before deployment
