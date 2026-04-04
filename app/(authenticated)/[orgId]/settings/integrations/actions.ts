@@ -77,12 +77,11 @@ export async function connectPlatform(formData: FormData) {
 
 export async function disconnectPlatform(connectionId: string) {
   return withIntegrationsAuth(async (ctx) => {
-    // Delete with organization check for defense in depth
+    // No organization_id filter needed — connectionId is unique and RLS enforces org isolation
     const { error } = await ctx.supabase
       .from('platform_connections')
       .delete()
       .eq('id', connectionId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       console.error('[Disconnect Platform Error]', {
@@ -204,11 +203,11 @@ export async function cancelOAuthConnection() {
 
 export async function updateConnectionDisplayName(connectionId: string, displayName: string) {
   return withIntegrationsAuth(async (ctx) => {
+    // No organization_id filter needed — connectionId is unique and RLS enforces org isolation
     const { error } = await ctx.supabase
       .from('platform_connections')
       .update({ display_name: displayName.trim() || null })
       .eq('id', connectionId)
-      .eq('organization_id', ctx.organizationId!)
 
     if (error) {
       console.error('[Update Display Name Error]', {
