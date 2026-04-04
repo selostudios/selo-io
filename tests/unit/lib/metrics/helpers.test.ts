@@ -256,6 +256,59 @@ describe('calculateTrendFromDb', () => {
     expect(result.current).toBe(0)
     expect(result.change).toBeNull()
   })
+
+  it('returns null change for 30-day view when only 30 days of data exists', () => {
+    useFakeDate()
+    // With now = 2026-04-03, 30d current period is 2026-03-04 to 2026-04-02
+    // Previous period would be 2026-02-02 to 2026-03-03
+    // Only providing data from 2026-03-05 onwards — no previous period coverage
+    const metrics: MetricRecord[] = []
+    for (let d = 5; d <= 31; d++) {
+      metrics.push(rec(`2026-03-${String(d).padStart(2, '0')}`, 'impressions', 100))
+    }
+    metrics.push(rec('2026-04-01', 'impressions', 100))
+    metrics.push(rec('2026-04-02', 'impressions', 100))
+
+    const result = calculateTrendFromDb(metrics, 'impressions', '30d')
+    expect(result.current).toBeGreaterThan(0)
+    expect(result.change).toBeNull() // No previous period data → null
+  })
+
+  it('shows trend for 7-day view when 30 days of data exists', () => {
+    useFakeDate()
+    // 7d current: 2026-03-27 to 2026-04-02
+    // 7d previous: 2026-03-20 to 2026-03-26
+    // Both within a 30-day backfill from 2026-03-05
+    const metrics: MetricRecord[] = []
+    for (let d = 5; d <= 31; d++) {
+      metrics.push(rec(`2026-03-${String(d).padStart(2, '0')}`, 'impressions', 100))
+    }
+    metrics.push(rec('2026-04-01', 'impressions', 100))
+    metrics.push(rec('2026-04-02', 'impressions', 100))
+
+    const result = calculateTrendFromDb(metrics, 'impressions', '7d')
+    expect(result.current).toBeGreaterThan(0)
+    expect(result.change).not.toBeNull() // Previous period has data → trend shown
+  })
+
+  it('shows trend for 30-day view when 60 days of data exists', () => {
+    useFakeDate()
+    // 30d current: 2026-03-04 to 2026-04-02
+    // 30d previous: 2026-02-02 to 2026-03-03
+    const metrics: MetricRecord[] = []
+    // Generate 60 days of data from Feb 3 to Apr 2
+    const start = new Date(2026, 1, 3)
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(start)
+      d.setDate(d.getDate() + i)
+      const dateStr = d.toISOString().split('T')[0]
+      metrics.push(rec(dateStr, 'impressions', 100))
+    }
+
+    const result = calculateTrendFromDb(metrics, 'impressions', '30d')
+    expect(result.current).toBeGreaterThan(0)
+    expect(result.change).not.toBeNull() // Both periods covered → trend shown
+  })
 })
 
 // ─── buildTimeSeries ───────────────────────────────────────────────

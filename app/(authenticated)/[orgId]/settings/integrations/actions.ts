@@ -181,6 +181,10 @@ export async function completeOAuthConnection(accountId: string, orgId: string) 
     if (error) {
       console.error('[Complete OAuth Connection Error]', {
         type: 'database_error',
+        error: error.message,
+        code: error.code,
+        targetOrgId,
+        platform: pending.platform,
         timestamp: new Date().toISOString(),
       })
       return { error: 'Failed to save connection. Please try again.' }
