@@ -8,7 +8,7 @@ test.describe('Role-Based Access', () => {
     await page.goto('/settings/team')
 
     // Admin should see the invite button
-    await expect(page.getByText('Invite')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Invite Member' })).toBeVisible()
   })
 
   test('team member can access dashboard', async ({ page }) => {

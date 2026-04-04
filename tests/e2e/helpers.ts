@@ -33,9 +33,9 @@ export async function loginAsViewer(page: Page) {
 
 export async function logout(page: Page) {
   // Click user menu
-  await page.click('button:has(svg)')
+  await page.locator('[data-testid="user-menu-trigger"]').click()
   // Click sign out
-  await page.click('text=Sign out')
+  await page.locator('button[type="submit"]', { hasText: 'Sign out' }).click()
   await page.waitForURL('/login')
 }
 

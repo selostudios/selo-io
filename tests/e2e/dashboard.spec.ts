@@ -20,11 +20,11 @@ test.describe('Dashboard', () => {
     const periodSelect = page.getByRole('combobox')
     await expect(periodSelect).toBeVisible()
 
-    // Should be able to open the dropdown
+    // Should be able to open the dropdown (use role to avoid matching trigger text)
     await periodSelect.click()
-    await expect(page.getByText('7 days')).toBeVisible()
-    await expect(page.getByText('30 days')).toBeVisible()
-    await expect(page.getByText('This quarter')).toBeVisible()
+    await expect(page.getByRole('option', { name: '7 days' })).toBeVisible()
+    await expect(page.getByRole('option', { name: '30 days' })).toBeVisible()
+    await expect(page.getByRole('option', { name: 'This quarter' })).toBeVisible()
   })
 
   test('can navigate to campaigns from sidebar', async ({ page }) => {
