@@ -363,7 +363,7 @@ export async function getReportAuditData(
       url: c.page_url || '',
       device: 'mobile',
       performance_score:
-        ((c.details as Record<string, unknown>)?.performanceScore as number | null) ?? null,
+        ((c.details as Record<string, unknown>)?.performance as number | null) ?? null,
     }))
 
     return {
