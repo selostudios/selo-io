@@ -269,6 +269,7 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
         status: 'completed',
         created_at: unifiedAudit.created_at,
         organization_id: unifiedAudit.organization_id,
+        avg_performance_score: unifiedAudit.performance_score ?? null,
       }
       report.aio_audit = {
         id: unifiedAudit.id,

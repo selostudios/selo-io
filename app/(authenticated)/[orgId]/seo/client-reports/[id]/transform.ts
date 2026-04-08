@@ -26,14 +26,17 @@ export function transformToPresentation(
   const seoScore = report.site_audit.overall_score ?? 0
   const aioScore = report.aio_audit.overall_aio_score ?? 0
 
-  // Calculate average performance score
+  // Use audit-level performance score (from unified audit scoring), falling back
+  // to average of per-page Lighthouse scores from individual checks
+  const auditLevelScore = report.performance_audit.avg_performance_score
   const perfScores = auditData.performanceResults
     .map((r) => r.performance_score)
     .filter((s): s is number => s !== null)
-  const pageSpeedScore =
+  const checkLevelScore =
     perfScores.length > 0
       ? Math.round(perfScores.reduce((a, b) => a + b, 0) / perfScores.length)
-      : 0
+      : null
+  const pageSpeedScore = auditLevelScore ?? checkLevelScore ?? 0
 
   // Transform opportunities from failed checks
   const opportunities = transformOpportunities(auditData)

@@ -5,6 +5,7 @@ import { ScoreRing } from '../score-ring'
 import { cn } from '@/lib/utils'
 import { ScoreStatus } from '@/lib/enums'
 import { getScoreStatus, getScoreStatusLabel } from '@/lib/reports'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface AtAGlanceSlideProps {
   combinedScore: number
@@ -17,10 +18,12 @@ function ScoreCard({
   title,
   score,
   icon,
+  description,
 }: {
   title: string
   score: number
   icon: React.ReactNode
+  description: string
 }) {
   const status = getScoreStatus(score)
   const statusLabel = getScoreStatusLabel(status)
@@ -39,16 +42,23 @@ function ScoreCard({
   }
 
   return (
-    <div className={cn('rounded-xl border p-6', statusColors[status])}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className="text-muted-foreground">{icon}</div>
-        <span className="font-medium">{title}</span>
-      </div>
-      <div className="flex items-baseline justify-between">
-        <span className={cn('text-4xl font-bold', scoreColors[status])}>{score}</span>
-        <span className="text-muted-foreground text-sm">{statusLabel}</span>
-      </div>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn('rounded-xl border p-6', statusColors[status])}>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="text-muted-foreground">{icon}</div>
+            <span className="font-medium">{title}</span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className={cn('text-4xl font-bold', scoreColors[status])}>{score}</span>
+            <span className="text-muted-foreground text-sm">{statusLabel}</span>
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-xs">
+        {description}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -83,6 +93,7 @@ export function AtAGlanceSlide({
           <ScoreCard
             title="Search Visibility"
             score={seoScore}
+            description="Based on SEO checks including meta tags, crawlability, content quality, internal links, and media optimization across all crawled pages."
             icon={
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -97,6 +108,7 @@ export function AtAGlanceSlide({
           <ScoreCard
             title="Site Speed"
             score={pageSpeedScore}
+            description="Average Lighthouse performance score across crawled pages, measuring load time, interactivity, and visual stability via Google PageSpeed Insights."
             icon={
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -111,6 +123,7 @@ export function AtAGlanceSlide({
           <ScoreCard
             title="AI Readiness"
             score={aioScore}
+            description="Evaluates how well your site can be understood by AI search engines, including structured data, schema markup, and content accessibility for AI crawlers."
             icon={
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
