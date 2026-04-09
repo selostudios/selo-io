@@ -26,6 +26,7 @@ describe('ChatGPTAdapter', () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'Warby Parker is known for affordable eyewear. Visit https://warbyparker.com for more.',
       usage: { inputTokens: 50, outputTokens: 100 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const adapter = new ChatGPTAdapter()
@@ -43,6 +44,7 @@ describe('ChatGPTAdapter', () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'Response',
       usage: { inputTokens: 10, outputTokens: 20 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const adapter = new ChatGPTAdapter()

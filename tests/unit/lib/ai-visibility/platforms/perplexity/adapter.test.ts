@@ -38,10 +38,7 @@ describe('PerplexityAdapter', () => {
 
     expect(result.text).toContain('Warby Parker')
     expect(result.model).toBe('sonar')
-    expect(result.citations).toEqual([
-      'https://warbyparker.com',
-      'https://example.com/review',
-    ])
+    expect(result.citations).toEqual(['https://warbyparker.com', 'https://example.com/review'])
     expect(result.inputTokens).toBe(30)
     expect(result.outputTokens).toBe(60)
   })

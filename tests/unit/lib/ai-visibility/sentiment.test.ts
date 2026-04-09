@@ -21,6 +21,7 @@ describe('analyzeSentiment', () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'positive',
       usage: { inputTokens: 50, outputTokens: 5, totalTokens: 55 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const result = await analyzeSentiment(
@@ -42,6 +43,7 @@ describe('analyzeSentiment', () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'maybe slightly positive but also somewhat mixed',
       usage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const result = await analyzeSentiment('Some text', 'Brand')
@@ -52,6 +54,7 @@ describe('analyzeSentiment', () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'negative',
       usage: { inputTokens: 100, outputTokens: 5, totalTokens: 105 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const result = await analyzeSentiment('Terrible brand', 'Brand')
@@ -74,6 +77,7 @@ describe('analyzeSentimentBatch', () => {
         { index: 2, sentiment: 'neutral' },
       ]),
       usage: { inputTokens: 200, outputTokens: 50, totalTokens: 250 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     const items = [

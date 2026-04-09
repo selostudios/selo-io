@@ -38,10 +38,7 @@ describe('detectBrandMention', () => {
   })
 
   it('is case-insensitive', () => {
-    const result = detectBrandMention(
-      'warby parker has expanded internationally.',
-      brandName
-    )
+    const result = detectBrandMention('warby parker has expanded internationally.', brandName)
     expect(result.mentioned).toBe(true)
   })
 
@@ -77,11 +74,7 @@ describe('detectBrandMention', () => {
   })
 
   it('handles brand aliases', () => {
-    const result = detectBrandMention(
-      'WP eyewear has great customer service.',
-      brandName,
-      ['WP']
-    )
+    const result = detectBrandMention('WP eyewear has great customer service.', brandName, ['WP'])
     expect(result.mentioned).toBe(true)
   })
 })
@@ -116,10 +109,7 @@ describe('extractCitations', () => {
   })
 
   it('returns not cited when domain is absent', () => {
-    const result = extractCitations(
-      ['https://zenni.com/frames'],
-      domain
-    )
+    const result = extractCitations(['https://zenni.com/frames'], domain)
     expect(result.domainCited).toBe(false)
     expect(result.citedUrls).toEqual([])
   })
@@ -131,10 +121,7 @@ describe('extractCitations', () => {
   })
 
   it('matches domain with www prefix', () => {
-    const result = extractCitations(
-      ['https://www.warbyparker.com/shop'],
-      domain
-    )
+    const result = extractCitations(['https://www.warbyparker.com/shop'], domain)
     expect(result.domainCited).toBe(true)
   })
 
@@ -167,11 +154,7 @@ describe('detectCompetitors', () => {
   })
 
   it('is case-insensitive', () => {
-    const result = detectCompetitors(
-      'zenni optical has good prices',
-      ['Zenni Optical'],
-      []
-    )
+    const result = detectCompetitors('zenni optical has good prices', ['Zenni Optical'], [])
     expect(result[0].mentioned).toBe(true)
   })
 
