@@ -247,6 +247,72 @@ All steps are pure functions (except sentiment) and independently testable.
 
 Server action `runAIVisibilitySync(orgId)` runs the same pipeline for one org. Triggered by "Sync Now" button on dashboard.
 
+## Feature-Level Cost Tracking
+
+### Problem
+
+The existing `logUsage()` system tracks by `service` (anthropic, pagespeed) and `event_type` (ai_analysis, psi_fetch), but can't answer "how much did AI Visibility cost for org X vs Client Reports?"
+
+### Solution: `UsageFeature` Enum
+
+Add a `feature` column to `usage_logs` that categorizes spend by product area:
+
+```typescript
+enum UsageFeature {
+  SiteAudit = 'site_audit',           // AI analysis + PSI in unified audits
+  ClientReports = 'client_reports',   // Executive summary generation
+  AIVisibility = 'ai_visibility',     // Brand monitoring queries + sentiment
+}
+```
+
+This keeps `service` (which provider: anthropic, openai, perplexity, pagespeed) separate from `feature` (which product area). Enables two views:
+- "How much are we spending on Anthropic across all features?"
+- "How much is AI Visibility costing for org X?"
+
+### Migration
+
+- Add `feature text` column to `usage_logs` (nullable for backwards compat)
+- Backfill existing rows: `ai_analysis` / `psi_fetch` → `site_audit`, `summary_generation` → `client_reports`
+
+### `logUsage()` Update
+
+```typescript
+logUsage(service, eventType, {
+  feature: UsageFeature.AIVisibility,   // NEW
+  organizationId,
+  tokensInput,
+  tokensOutput,
+  cost,
+  metadata,
+})
+```
+
+### Existing Call Sites to Update
+
+| File | event_type | feature |
+|------|-----------|---------|
+| `lib/unified-audit/ai-runner.ts` | `ai_analysis` | `SiteAudit` |
+| `lib/unified-audit/psi-runner.ts` | `psi_fetch` | `SiteAudit` |
+| `lib/reports/summary-generator.ts` | `summary_generation` | `ClientReports` |
+
+### Cost Surfacing in Org Settings
+
+- **Feature breakdown**: Table or pie chart showing spend per feature (Site Audit, Client Reports, AI Visibility)
+- **Service breakdown**: Secondary view showing spend per provider (Anthropic, OpenAI, Perplexity, PageSpeed)
+- **Time range selector**: Current month, last 3 months, custom
+- **Internal org list**: Total spend column with feature tooltip breakdown
+
+### Budget Scope
+
+Budgets on `ai_visibility_configs` apply specifically to the AI Visibility feature. Future features can have their own budgets. The `feature` column enables querying spend per feature accurately:
+
+```sql
+SELECT SUM(cost) FROM usage_logs
+WHERE organization_id = $1
+  AND feature = 'ai_visibility'
+  AND created_at >= date_trunc('month', now())
+```
+
 ## Budget System
 
 ### Enforcement
@@ -287,8 +353,10 @@ Score thresholds (same as existing audit scores):
 ## Implementation Phases
 
 ### Phase 1 — Foundation
-- Database migrations (all 5 tables + RLS policies)
-- Core types and enums (`AIPlatform`, `SyncFrequency`, `BrandSentiment`, etc.)
+- Database migrations (all 5 AI Visibility tables + RLS policies)
+- Add `feature` column to `usage_logs` + backfill migration
+- Core types and enums (`AIPlatform`, `SyncFrequency`, `BrandSentiment`, `UsageFeature`, etc.)
+- Update `logUsage()` signature and existing 3 call sites to pass `feature`
 - Navigation restructure (split "SEO / AIO" → "SEO" + "AI Visibility")
 - AI Visibility config UI in org settings (platforms, frequency, budget)
 - Topic and prompt management UI (CRUD, manual prompt creation)
@@ -305,10 +373,10 @@ Score thresholds (same as existing audit scores):
 ### Phase 3 — Sync Pipeline & Cost Tracking
 - Cron job (`ai-visibility-sync`) with self-continuation
 - Budget checking and enforcement
-- Cost logging via `logUsage()`
+- Cost logging via `logUsage()` with `feature: AIVisibility`
 - Budget alert emails (90% + 100% thresholds)
 - On-demand sync server action
-- Cost display in org settings
+- Feature-level cost breakdown UI in org settings (spend per feature + per provider)
 
 ### Phase 4 — Dashboard & UI
 - Overview page (score ring, trend line chart, platform distribution, mentions/citations/cited pages metrics)
