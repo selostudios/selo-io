@@ -8,6 +8,21 @@
 
 **Tech Stack:** Supabase PostgreSQL migrations, TypeScript enums, Vitest for TDD, Next.js App Router, Shadcn UI components.
 
+## Progress
+
+| Task | Status | Commit | Notes |
+|------|--------|--------|-------|
+| 1. UsageFeature enum + logUsage | Done | `3badf9f` | 6 unit tests pass |
+| 2. Migration: usage_logs feature column | Done | `a83ac0d` | Backfill + index |
+| 3. Migration: AI Visibility tables | Done | `b98e22b` | 5 tables, RLS policies |
+| 4. Types and enums | Done | `e1d9f00` | 4 enums, 7 interfaces, 5 tests |
+| 5. Navigation restructure | Done | `b1e5dec` | SEO / AI Visibility split, 7 tests |
+| 6. Stub route pages | Done | `fa23938` | 3 pages + layout, 3 render tests |
+| 7. Final verification | Done | — | 751 tests pass, build clean |
+| 8. CLI command: sync:ai-visibility | Pending | — | Added to plan for Phase 2 |
+
+**Completed:** 2026-04-09 | **Tests added:** 15 (751 total) | **Pushed to:** `origin/main`
+
 ---
 
 ### Task 1: Add `UsageFeature` enum and update `logUsage()`
@@ -905,4 +920,58 @@ Start dev server and verify:
 
 ```bash
 git push
+```
+
+---
+
+### Task 8: CLI command — `sync:ai-visibility`
+
+Add a script to programmatically trigger the AI Visibility pipeline for a specific organization, following the same patterns as `sync:metrics` and `backfill:metrics`.
+
+**Files:**
+- Create: `scripts/sync-ai-visibility.ts`
+- Modify: `package.json` (add script entries)
+
+**Step 1: Create the script**
+
+Create `scripts/sync-ai-visibility.ts` following the existing patterns:
+
+```typescript
+// Usage:
+//   npm run sync:ai-visibility -- --org=<uuid>           (local)
+//   npm run sync:ai-visibility -- --org=<uuid> --prod    (production)
+//   npm run sync:ai-visibility -- --org=<uuid> --dry-run (preview only)
+```
+
+The script should:
+1. Parse `--org=<uuid>` (required), `--prod`, and `--dry-run` flags from `process.argv`
+2. Load `.env.local` or `.env` based on `--prod` flag
+3. Create a Supabase service client
+4. Verify the organization exists and has an `ai_visibility_configs` row with `is_active: true`
+5. Call the same pipeline function that the future cron job will use (e.g., `runAIVisibilitySync(organizationId)` from `lib/ai-visibility/sync.ts`)
+6. Log progress and results to console
+
+**Architecture note:** The pipeline function (`runAIVisibilitySync`) doesn't exist yet — it will be built in Phase 2. The script should be structured so it calls that function once it exists. For now, the script can:
+- Validate the org and config exist
+- Print what *would* be synced (topics, prompts, platforms)
+- Exit with a message that the sync engine is not yet implemented
+
+This way the CLI is ready to go the moment the pipeline is built.
+
+**Step 2: Add package.json entries**
+
+```json
+"sync:ai-visibility": "tsx scripts/sync-ai-visibility.ts",
+"sync:ai-visibility:prod": "tsx scripts/sync-ai-visibility.ts --prod"
+```
+
+**Step 3: Write test**
+
+Create `tests/unit/scripts/sync-ai-visibility.test.ts` to verify argument parsing and validation logic (extract the arg parser into a testable function).
+
+**Step 4: Commit**
+
+```bash
+git add scripts/sync-ai-visibility.ts package.json tests/unit/scripts/sync-ai-visibility.test.ts
+git commit -m "feat: add sync:ai-visibility CLI command (pipeline stub)"
 ```
