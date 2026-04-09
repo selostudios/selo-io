@@ -16,6 +16,10 @@ import {
   Users,
   Plug,
   Activity,
+  Eye,
+  MessageSquareText,
+  AtSign,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -43,10 +47,19 @@ const homeNavigation: NavigationGroup[] = [
     ],
   },
   {
-    header: 'SEO / AIO',
+    header: 'SEO',
     items: [
       { name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck },
       { name: 'Client Reports', href: '/seo/client-reports', icon: FileText },
+    ],
+  },
+  {
+    header: 'AI Visibility',
+    items: [
+      { name: 'Overview', href: '/ai-visibility', icon: Eye },
+      { name: 'Prompts', href: '/ai-visibility/prompts', icon: MessageSquareText },
+      { name: 'Brand Mentions', href: '/ai-visibility/mentions', icon: AtSign },
+      { name: 'Site Audit', href: '/seo/aio', icon: Bot },
     ],
   },
   {
@@ -163,6 +176,7 @@ export function ChildSidebar({
                   if (
                     orgId &&
                     (item.href.startsWith('/seo') ||
+                      item.href.startsWith('/ai-visibility') ||
                       item.href.startsWith('/settings') ||
                       item.href.startsWith('/dashboard') ||
                       item.href.startsWith('/support'))

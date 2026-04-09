@@ -7,7 +7,7 @@ import { ChildSidebar } from './child-sidebar'
 import { useActiveAudit } from '@/hooks/use-active-audit'
 import { useOrgId } from '@/hooks/use-org-context'
 
-function getSectionFromPathname(pathname: string): ParentSection {
+export function getSectionFromPathname(pathname: string): ParentSection {
   // Strip leading UUID segment if present
   const stripped = pathname.replace(
     /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
