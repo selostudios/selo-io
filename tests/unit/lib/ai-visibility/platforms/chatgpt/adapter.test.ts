@@ -25,7 +25,7 @@ describe('ChatGPTAdapter', () => {
   it('returns a standardized response from OpenAI', async () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'Warby Parker is known for affordable eyewear. Visit https://warbyparker.com for more.',
-      usage: { promptTokens: 50, completionTokens: 100, totalTokens: 150 },
+      usage: { inputTokens: 50, outputTokens: 100 },
     } as any)
 
     const adapter = new ChatGPTAdapter()
@@ -42,7 +42,7 @@ describe('ChatGPTAdapter', () => {
   it('passes the prompt to generateText', async () => {
     vi.mocked(generateText).mockResolvedValue({
       text: 'Response',
-      usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+      usage: { inputTokens: 10, outputTokens: 20 },
     } as any)
 
     const adapter = new ChatGPTAdapter()
