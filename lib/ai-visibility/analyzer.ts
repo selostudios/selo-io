@@ -1,3 +1,5 @@
+import type { CompetitorMention } from './types'
+
 export interface BrandMentionResult {
   mentioned: boolean
   mentionCount: number
@@ -91,4 +93,42 @@ export function extractCitations(
     domainCited: unique.length > 0,
     citedUrls: unique,
   }
+}
+
+/**
+ * Detect competitor mentions and citations in an AI response.
+ */
+export function detectCompetitors(
+  text: string,
+  competitorNames: string[],
+  allCitations: string[],
+  competitorDomains?: Record<string, string>
+): CompetitorMention[] {
+  if (competitorNames.length === 0) return []
+
+  const lowerText = text.toLowerCase()
+
+  return competitorNames.map((name) => {
+    const mentioned = lowerText.includes(name.toLowerCase())
+
+    let cited = false
+    if (competitorDomains?.[name]) {
+      const domain = competitorDomains[name].toLowerCase()
+      cited = allCitations.some((url) => {
+        try {
+          const hostname = new URL(url).hostname.toLowerCase()
+          return hostname === domain || hostname === `www.${domain}`
+        } catch {
+          return false
+        }
+      })
+    } else {
+      // Heuristic: check if any citation URL contains the competitor name
+      const nameParts = name.toLowerCase().split(/\s+/)
+      const primaryPart = nameParts[0]
+      cited = allCitations.some((url) => url.toLowerCase().includes(primaryPart))
+    }
+
+    return { name, mentioned, cited }
+  })
 }

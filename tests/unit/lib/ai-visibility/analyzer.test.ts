@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectBrandMention, extractCitations } from '@/lib/ai-visibility/analyzer'
+import { detectBrandMention, extractCitations, detectCompetitors } from '@/lib/ai-visibility/analyzer'
 
 describe('detectBrandMention', () => {
   const brandName = 'Warby Parker'
@@ -129,5 +129,44 @@ describe('extractCitations', () => {
       domain
     )
     expect(result.citedUrls).toEqual(['https://warbyparker.com/glasses'])
+  })
+})
+
+describe('detectCompetitors', () => {
+  it('detects competitor mentions in response text', () => {
+    const result = detectCompetitors(
+      'Both Zenni Optical and EyeBuyDirect offer affordable frames online.',
+      ['Zenni Optical', 'EyeBuyDirect', 'LensCrafters'],
+      ['https://zenni.com/frames']
+    )
+    expect(result).toEqual([
+      { name: 'Zenni Optical', mentioned: true, cited: true },
+      { name: 'EyeBuyDirect', mentioned: true, cited: false },
+      { name: 'LensCrafters', mentioned: false, cited: false },
+    ])
+  })
+
+  it('returns empty array when no competitors configured', () => {
+    const result = detectCompetitors('Some text', [], [])
+    expect(result).toEqual([])
+  })
+
+  it('is case-insensitive', () => {
+    const result = detectCompetitors(
+      'zenni optical has good prices',
+      ['Zenni Optical'],
+      []
+    )
+    expect(result[0].mentioned).toBe(true)
+  })
+
+  it('detects citations matching competitor domains', () => {
+    const result = detectCompetitors(
+      'Check out these eyewear options.',
+      ['Zenni Optical'],
+      ['https://www.zenni.com/glasses'],
+      { 'Zenni Optical': 'zenni.com' }
+    )
+    expect(result[0].cited).toBe(true)
   })
 })
