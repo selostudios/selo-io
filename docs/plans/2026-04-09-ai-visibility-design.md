@@ -352,37 +352,48 @@ Score thresholds (same as existing audit scores):
 
 ## Implementation Phases
 
-### Phase 1 — Foundation
+| Phase | Name | Status | Notes |
+|-------|------|--------|-------|
+| 1 | Foundation | Done | DB tables, types, enums, nav, stub pages |
+| 2 | Platform Adapters & Analysis | Done | 3 adapters, analyzer pipeline, scorer (56 tests) |
+| 3 | Sync Pipeline & Cost Tracking | In Progress | Orchestrator, budget system, cron, alerts |
+| 4 | Dashboard & UI | Not Started | Overview, prompts, mentions pages |
+| 5 | AIO Migration & Cleanup | Not Started | Move AIO under AI Visibility nav |
+
+### Phase 1 — Foundation (Done)
 - Database migrations (all 5 AI Visibility tables + RLS policies)
 - Add `feature` column to `usage_logs` + backfill migration
 - Core types and enums (`AIPlatform`, `SyncFrequency`, `BrandSentiment`, `UsageFeature`, etc.)
 - Update `logUsage()` signature and existing 3 call sites to pass `feature`
 - Navigation restructure (split "SEO / AIO" → "SEO" + "AI Visibility")
-- AI Visibility config UI in org settings (platforms, frequency, budget)
-- Topic and prompt management UI (CRUD, manual prompt creation)
+- Stub pages for AI Visibility section
 
-### Phase 2 — Platform Adapters & Analysis Pipeline
-- `AIProviderAdapter` interface
-- ChatGPT adapter (OpenAI API)
-- Claude adapter (Anthropic API)
-- Perplexity adapter (Perplexity API)
-- Response analyzer (mention detection, citation extraction, sentiment, competitors)
-- Prompt generator (auto-generate from org name, industry, products)
-- Full TDD with mock fixtures per platform
+### Phase 2 — Platform Adapters & Analysis Pipeline (Done)
+- `AIProviderAdapter` interface and cost estimation
+- ChatGPT adapter (`@ai-sdk/openai`, gpt-4o-mini)
+- Claude adapter (`@ai-sdk/anthropic`, claude-sonnet-4-20250514)
+- Perplexity adapter (`@ai-sdk/perplexity`, sonar) with native citation extraction
+- Adapter registry (`getAdapter`/`getAdapters`)
+- Response analyzer: brand mention detection, citation extraction, competitor detection, sentiment analysis (batch + single)
+- Composed `analyzeResponse()` function
+- AI Visibility scorer (40% mentions + 40% citations + 20% sentiment)
+- 56 tests across 9 test files
 
-### Phase 3 — Sync Pipeline & Cost Tracking
-- Cron job (`ai-visibility-sync`) with self-continuation
-- Budget checking and enforcement
-- Cost logging via `logUsage()` with `feature: AIVisibility`
-- Budget alert emails (90% + 100% thresholds)
+### Phase 3 — Sync Pipeline & Cost Tracking (In Progress)
+- Competitors column migration on `ai_visibility_configs`
+- Org context builder (brand name from org, domain from website_url)
+- Budget module (spend tracking, threshold checks, dedup logic)
+- Budget alert email template (React Email)
+- Budget alert sender (emails to internal users)
+- Sync orchestrator (`syncOrganization` — prompts x platforms loop with budget enforcement)
+- Cron job (`ai-visibility-sync`, daily 4 AM UTC)
 - On-demand sync server action
-- Feature-level cost breakdown UI in org settings (spend per feature + per provider)
 
 ### Phase 4 — Dashboard & UI
 - Overview page (score ring, trend line chart, platform distribution, mentions/citations/cited pages metrics)
 - Prompts page (topic grouping, per-prompt results table, add custom prompt)
 - Brand Mentions page (filterable log: platform, sentiment, date range)
-- Score calculation implementation
+- AI Visibility config UI in org settings (platforms, frequency, budget, competitors)
 
 ### Phase 5 — AIO Migration & Cleanup
 - Move existing AIO audit under AI Visibility nav as "Site Audit"
