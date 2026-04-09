@@ -25,7 +25,7 @@ export function SlideContainer({
   return (
     <div
       className={cn(
-        'flex min-h-full w-full flex-col p-8 md:p-12 lg:p-16',
+        'flex min-h-full w-full flex-col px-12 py-8 md:px-20 md:py-12 lg:px-24 lg:py-16',
         // Only apply variant styles if no custom style is provided
         !style && variantStyles[variant],
         // Print styles
