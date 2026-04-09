@@ -1,4 +1,7 @@
 import type { CompetitorMention } from './types'
+import { BrandSentiment } from '@/lib/enums'
+import type { AIProviderResponse } from './platforms/types'
+import { analyzeSentiment } from './sentiment'
 
 export interface BrandMentionResult {
   mentioned: boolean
@@ -131,4 +134,58 @@ export function detectCompetitors(
 
     return { name, mentioned, cited }
   })
+}
+
+export interface OrgContext {
+  brandName: string
+  domain: string
+  aliases?: string[]
+  competitors?: string[]
+  competitorDomains?: Record<string, string>
+}
+
+export interface AnalyzedResponse {
+  brand_mentioned: boolean
+  brand_sentiment: string
+  brand_position: number | null
+  domain_cited: boolean
+  cited_urls: string[]
+  competitor_mentions: CompetitorMention[] | null
+  sentiment_cost_cents: number
+}
+
+/**
+ * Run all analysis steps on an AI provider response.
+ */
+export async function analyzeResponse(
+  response: AIProviderResponse,
+  context: OrgContext
+): Promise<AnalyzedResponse> {
+  const mention = detectBrandMention(response.text, context.brandName, context.aliases)
+  const citation = extractCitations(response.citations, context.domain, response.text)
+  const competitors = detectCompetitors(
+    response.text,
+    context.competitors ?? [],
+    response.citations,
+    context.competitorDomains
+  )
+
+  // Only analyze sentiment if brand was mentioned
+  let sentiment: BrandSentiment = BrandSentiment.Neutral
+  let sentimentCostCents = 0
+  if (mention.mentioned) {
+    const sentimentResult = await analyzeSentiment(response.text, context.brandName)
+    sentiment = sentimentResult.sentiment
+    sentimentCostCents = sentimentResult.costCents
+  }
+
+  return {
+    brand_mentioned: mention.mentioned,
+    brand_sentiment: sentiment,
+    brand_position: mention.position,
+    domain_cited: citation.domainCited,
+    cited_urls: citation.citedUrls,
+    competitor_mentions: competitors.length > 0 ? competitors : null,
+    sentiment_cost_cents: sentimentCostCents,
+  }
 }

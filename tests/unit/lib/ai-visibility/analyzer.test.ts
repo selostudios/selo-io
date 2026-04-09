@@ -1,5 +1,20 @@
-import { describe, it, expect } from 'vitest'
-import { detectBrandMention, extractCitations, detectCompetitors } from '@/lib/ai-visibility/analyzer'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/lib/ai-visibility/sentiment', () => ({
+  analyzeSentiment: vi.fn().mockResolvedValue({
+    sentiment: 'positive',
+    inputTokens: 50,
+    outputTokens: 5,
+    costCents: 1,
+  }),
+}))
+
+import {
+  detectBrandMention,
+  extractCitations,
+  detectCompetitors,
+  analyzeResponse,
+} from '@/lib/ai-visibility/analyzer'
 
 describe('detectBrandMention', () => {
   const brandName = 'Warby Parker'
@@ -168,5 +183,32 @@ describe('detectCompetitors', () => {
       { 'Zenni Optical': 'zenni.com' }
     )
     expect(result[0].cited).toBe(true)
+  })
+})
+
+describe('analyzeResponse', () => {
+  it('composes all analysis steps into a single result', async () => {
+    const result = await analyzeResponse(
+      {
+        text: 'Warby Parker is a top eyewear brand. Zenni is also popular.',
+        citations: ['https://warbyparker.com/glasses', 'https://zenni.com/frames'],
+        model: 'gpt-4o-mini',
+        inputTokens: 100,
+        outputTokens: 200,
+        costCents: 5,
+      },
+      {
+        brandName: 'Warby Parker',
+        domain: 'warbyparker.com',
+        competitors: ['Zenni'],
+      }
+    )
+
+    expect(result.brand_mentioned).toBe(true)
+    expect(result.brand_sentiment).toBe('positive')
+    expect(result.domain_cited).toBe(true)
+    expect(result.cited_urls).toContain('https://warbyparker.com/glasses')
+    expect(result.competitor_mentions).toHaveLength(1)
+    expect(result.competitor_mentions![0].name).toBe('Zenni')
   })
 })

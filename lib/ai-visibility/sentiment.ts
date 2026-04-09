@@ -39,7 +39,7 @@ export async function analyzeSentiment(
     const { text, usage } = await generateText({
       model: anthropic(MODEL),
       prompt: `Classify the sentiment toward "${brandName}" in the following text. Reply with exactly one word: positive, neutral, or negative.\n\nText: ${responseText}`,
-      maxTokens: 10,
+      maxOutputTokens: 10,
     })
 
     const inputTokens = usage?.inputTokens ?? 0
@@ -76,7 +76,7 @@ export async function analyzeSentimentBatch(
     const { text, usage } = await generateText({
       model: anthropic(MODEL),
       prompt: `Classify the sentiment toward each brand in the texts below. Return a JSON array with objects containing "index" (number) and "sentiment" (one of: "positive", "neutral", "negative").\n\n${itemList}`,
-      maxTokens: items.length * 30,
+      maxOutputTokens: items.length * 30,
     })
 
     const inputTokens = usage?.inputTokens ?? 0
