@@ -300,3 +300,13 @@ export enum ScoreDimension {
   Performance = 'performance',
   AIReadiness = 'ai_readiness',
 }
+
+// =============================================================================
+// Usage Tracking Enums
+// =============================================================================
+
+export enum UsageFeature {
+  SiteAudit = 'site_audit',
+  ClientReports = 'client_reports',
+  AIVisibility = 'ai_visibility',
+}

@@ -31,6 +31,7 @@ describe('logUsage', () => {
       service: 'anthropic',
       event_type: 'ai_analysis',
       organization_id: 'org-123',
+      feature: null,
       tokens_input: 1000,
       tokens_output: 500,
       cost: 0.0045,
@@ -69,10 +70,47 @@ describe('logUsage', () => {
       service: 'pagespeed',
       event_type: 'psi_fetch',
       organization_id: null,
+      feature: null,
       tokens_input: null,
       tokens_output: null,
       cost: null,
       metadata: null,
     })
+  })
+
+  it('includes feature field when provided', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(createServiceClient).mockReturnValue({ from: mockFrom } as any)
+
+    await logUsage('anthropic', 'ai_analysis', {
+      organizationId: 'org-123',
+      feature: 'site_audit',
+    })
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service: 'anthropic',
+        event_type: 'ai_analysis',
+        organization_id: 'org-123',
+        feature: 'site_audit',
+      })
+    )
+  })
+
+  it('defaults feature to null when not provided', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(createServiceClient).mockReturnValue({ from: mockFrom } as any)
+
+    await logUsage('pagespeed', 'psi_fetch')
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        feature: null,
+      })
+    )
   })
 })

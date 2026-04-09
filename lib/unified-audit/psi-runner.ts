@@ -14,6 +14,7 @@ import { DeviceType } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext } from './types'
 import type { SiteAuditPage } from '@/lib/audit/types'
 import { logUsage } from '@/lib/app-settings/usage'
+import { UsageFeature } from '@/lib/enums'
 
 const PERFORMANCE_CHECK_NAMES = [lighthouseScores.name, coreWebVitals.name, pageResponseTime.name]
 
@@ -98,6 +99,7 @@ export async function runPSIAnalysis(
 
       await logUsage('pagespeed', 'psi_fetch', {
         organizationId: audit?.organization_id,
+        feature: UsageFeature.SiteAudit,
         metadata: { auditId, pageUrl: pageImportance.url },
       })
 

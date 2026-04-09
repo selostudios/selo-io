@@ -6,6 +6,7 @@ import { fetchPage } from '@/lib/audit/fetcher'
 import type { AuditPage, AuditAIAnalysis } from './types'
 import type { SiteAuditPage } from '@/lib/audit/types'
 import { logUsage } from '@/lib/app-settings/usage'
+import { UsageFeature } from '@/lib/enums'
 
 export interface AIRunnerResult {
   strategicScore: number | null
@@ -117,6 +118,7 @@ export async function runAIAnalysisPhase(
 
   await logUsage('anthropic', 'ai_analysis', {
     organizationId: audit?.organization_id,
+    feature: UsageFeature.SiteAudit,
     tokensInput: batchResult.totalInputTokens,
     tokensOutput: batchResult.totalOutputTokens,
     cost: batchResult.totalCost,

@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 interface UsageOptions {
   organizationId?: string | null
+  feature?: string | null
   tokensInput?: number
   tokensOutput?: number
   cost?: number
@@ -25,6 +26,7 @@ export async function logUsage(
       service,
       event_type: eventType,
       organization_id: opts.organizationId ?? null,
+      feature: opts.feature ?? null,
       tokens_input: opts.tokensInput ?? null,
       tokens_output: opts.tokensOutput ?? null,
       cost: opts.cost ?? null,

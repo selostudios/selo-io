@@ -3,7 +3,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import type { SiteAudit, SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
-import { CheckPriority, CheckStatus, CWVRating } from '@/lib/enums'
+import { CheckPriority, CheckStatus, CWVRating, UsageFeature } from '@/lib/enums'
 import { getScoreStatus } from './types'
 
 interface SummaryInput {
@@ -139,7 +139,7 @@ export async function generateReportSummary(input: SummaryInput): Promise<string
   const pageSpeedStatus = getScoreStatus(pageSpeedScore)
   const aioStatus = getScoreStatus(aioScore)
 
-  const prompt = `Write a concise executive summary for a comprehensive marketing performance report. This report combines SEO, PageSpeed, and AI Optimization audits for a customer's website.
+  const prompt = `You are writing an executive summary for a client-facing marketing performance report. You are speaking directly to the business owner or marketing lead — someone who cares about results, not technical jargon.
 
 Domain: ${domain}
 Overall Score: ${combinedScore}/100
@@ -149,24 +149,21 @@ Score Breakdown:
 - PageSpeed Score: ${pageSpeedScore}/100 (${pageSpeedStatus}) - ${performanceSummary}
 - AI Optimization Score: ${aioScore}/100 (${aioStatus})
 
-Pages Analyzed: ${siteAudit.pages_crawled} (SEO) / ${aioAudit.pages_analyzed} (AIO)
+Pages Analyzed: ${siteAudit.pages_crawled} (SEO)
 Critical Issues Found: ${criticalCount}
 
 Top Opportunities for Improvement:
 ${topOpportunities.length > 0 ? topOpportunities.map((o) => `- ${o}`).join('\n') : '- No major issues found'}
 
-Write 3 short paragraphs in plain text (NO markdown, NO bullet points, NO special formatting):
+Write 3 short paragraphs in plain text (NO markdown, NO bullet points, NO special formatting). Address the reader as "you" and "your" — this is a conversation, not a lab report.
 
-1. Opening Diagnosis: Summarize the website's overall marketing performance health in one clear sentence. Reference the combined score and which area needs the most attention (SEO, PageSpeed, or AI Optimization).
+1. Where you stand: Lead with what's working well before addressing gaps. Be specific — don't just recite scores, explain what they mean for the business. For example, a low page speed score means potential customers are leaving before seeing your content.
 
-2. Business Impact: Explain what these findings mean for the business in plain English. Focus on potential losses or gains in:
-   - Search visibility and organic traffic (SEO)
-   - User experience and conversion rates (PageSpeed)
-   - Visibility in AI-powered search and assistants (AI Optimization)
+2. What's at stake: Translate the findings into business outcomes the reader cares about — lost leads, missed revenue, competitors showing up ahead of them in search. Make it tangible and relatable, not abstract.
 
-3. Priority Actions: Recommend 2-3 specific, actionable next steps based on the most impactful opportunities. If the score is high (80+), acknowledge the good work and suggest optimization opportunities.
+3. What to do next: Recommend 2-3 clear next steps, framed as opportunities rather than problems. Use language like "By improving X, you could see Y" rather than "Fix X". If scores are high (80+), reinforce confidence and suggest where to push further.
 
-Maximum 150 words. Professional, consultative tone. Plain text only - no asterisks, no hashes, no formatting symbols.`
+Maximum 150 words. Warm, confident, consultative tone — like a trusted advisor, not a scorecard. Plain text only — no asterisks, no hashes, no formatting symbols.`
 
   try {
     const { text, usage } = await generateText({
@@ -178,6 +175,7 @@ Maximum 150 words. Professional, consultative tone. Plain text only - no asteris
     const { logUsage } = await import('@/lib/app-settings/usage')
     await logUsage('anthropic', 'summary_generation', {
       organizationId: input.organizationId,
+      feature: UsageFeature.ClientReports,
       tokensInput: usage?.inputTokens,
       tokensOutput: usage?.outputTokens,
       metadata: { reportId: input.reportId, domain },
@@ -212,39 +210,43 @@ export function generateFallbackReportSummary(input: SummaryInput): string {
     siteChecks,
   } = input
 
-  const healthStatus =
-    combinedScore >= 80
-      ? 'is performing well'
-      : combinedScore >= 60
-        ? 'has room for improvement'
-        : 'requires immediate attention'
-
   const criticalCount = countCriticalIssues(siteChecks, aioChecks)
 
-  // Find the weakest area
+  // Find the weakest and strongest areas
   const scores = [
-    { name: 'SEO', score: seoScore },
-    { name: 'PageSpeed', score: pageSpeedScore },
-    { name: 'AI Optimization', score: aioScore },
+    { name: 'SEO', label: 'search visibility', score: seoScore },
+    { name: 'PageSpeed', label: 'site speed', score: pageSpeedScore },
+    { name: 'AI Optimization', label: 'AI search readiness', score: aioScore },
   ]
   const weakestArea = scores.reduce((min, s) => (s.score < min.score ? s : min))
+  const strongestArea = scores.reduce((max, s) => (s.score > max.score ? s : max))
 
-  let summary = `${domain} ${healthStatus} with an overall marketing performance score of ${combinedScore}/100. `
-  summary += `The analysis covers SEO (${seoScore}/100), PageSpeed (${pageSpeedScore}/100), and AI Optimization (${aioScore}/100) across ${siteAudit.pages_crawled} pages.\n\n`
+  let summary = ''
+
+  if (combinedScore >= 80) {
+    summary += `Your site is in a strong position with an overall score of ${combinedScore}/100. `
+    summary += `Your ${strongestArea.label} is particularly solid at ${strongestArea.score}/100, which means you're already ahead of most competitors in this area.\n\n`
+  } else if (combinedScore >= 60) {
+    summary += `Your site has a solid foundation to build on, scoring ${combinedScore}/100 overall. `
+    summary += `Your ${strongestArea.label} is a real strength at ${strongestArea.score}/100, and there are clear opportunities to bring other areas up to match.\n\n`
+  } else {
+    summary += `We've completed a thorough analysis of your site across ${siteAudit.pages_crawled} pages, and your overall score is ${combinedScore}/100. `
+    summary += `While there's meaningful work to do, the good news is that the biggest improvements are often the most straightforward to implement.\n\n`
+  }
 
   if (criticalCount > 0) {
-    summary += `${criticalCount} critical issue${criticalCount !== 1 ? 's were' : ' was'} identified that may be impacting search visibility and user experience. `
-    summary += `${weakestArea.name} is the area requiring the most attention with a score of ${weakestArea.score}/100.\n\n`
+    summary += `We found ${criticalCount} critical issue${criticalCount !== 1 ? 's' : ''} that could be costing you visitors and potential customers. `
+    summary += `Your ${weakestArea.label} score of ${weakestArea.score}/100 suggests you may be losing ground to competitors who have invested in this area.\n\n`
   } else if (combinedScore < 80) {
-    summary += `While no critical issues were found, there are opportunities to improve performance, particularly in ${weakestArea.name}.\n\n`
+    summary += `There are no critical issues holding you back, but improving your ${weakestArea.label} (currently ${weakestArea.score}/100) could make a noticeable difference in how many people find and engage with your site.\n\n`
   } else {
-    summary += `The website is performing well across all areas with no critical issues identified.\n\n`
+    summary += `No critical issues were found across any area, which is a great position to be in.\n\n`
   }
 
   summary +=
     combinedScore >= 80
-      ? 'Continue monitoring performance and consider optimization opportunities in lower-scoring areas.'
-      : `Priority: Focus on improving ${weakestArea.name} to maximize overall marketing performance.`
+      ? `To keep your competitive edge, consider fine-tuning your ${weakestArea.label} — even small gains at this level can translate to meaningful results.`
+      : `By focusing on ${weakestArea.label} first, you could see the biggest return on investment. We've outlined specific steps in the recommendations section to help you get started.`
 
   return summary
 }
