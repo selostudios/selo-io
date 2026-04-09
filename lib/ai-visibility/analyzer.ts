@@ -47,3 +47,48 @@ export function detectBrandMention(
 
   return { mentioned: true, mentionCount: totalCount, position }
 }
+
+export interface CitationResult {
+  domainCited: boolean
+  citedUrls: string[]
+}
+
+/**
+ * Extract citations matching the org's domain.
+ * First checks native citation URLs (from Perplexity), then falls back to
+ * parsing URLs from the response text (for ChatGPT/Claude).
+ */
+export function extractCitations(
+  nativeCitations: string[],
+  domain: string,
+  responseText?: string
+): CitationResult {
+  const domainLower = domain.toLowerCase()
+
+  const matchesDomain = (url: string): boolean => {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase()
+      return hostname === domainLower || hostname === `www.${domainLower}`
+    } catch {
+      return false
+    }
+  }
+
+  // Check native citations first
+  let matchingUrls = nativeCitations.filter(matchesDomain)
+
+  // Fall back to parsing URLs from text if no native citations provided
+  if (matchingUrls.length === 0 && responseText) {
+    const urlRegex = /https?:\/\/[^\s)>\]"']+/g
+    const textUrls = responseText.match(urlRegex) ?? []
+    matchingUrls = textUrls.filter(matchesDomain)
+  }
+
+  // Deduplicate
+  const unique = [...new Set(matchingUrls)]
+
+  return {
+    domainCited: unique.length > 0,
+    citedUrls: unique,
+  }
+}

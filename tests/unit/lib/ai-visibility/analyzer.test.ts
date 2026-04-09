@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectBrandMention } from '@/lib/ai-visibility/analyzer'
+import { detectBrandMention, extractCitations } from '@/lib/ai-visibility/analyzer'
 
 describe('detectBrandMention', () => {
   const brandName = 'Warby Parker'
@@ -68,5 +68,66 @@ describe('detectBrandMention', () => {
       ['WP']
     )
     expect(result.mentioned).toBe(true)
+  })
+})
+
+describe('extractCitations', () => {
+  const domain = 'warbyparker.com'
+
+  it('extracts domain citations from native citation URLs', () => {
+    const result = extractCitations(
+      [
+        'https://warbyparker.com/glasses',
+        'https://zenni.com/frames',
+        'https://www.warbyparker.com/about',
+      ],
+      domain
+    )
+    expect(result.domainCited).toBe(true)
+    expect(result.citedUrls).toEqual([
+      'https://warbyparker.com/glasses',
+      'https://www.warbyparker.com/about',
+    ])
+  })
+
+  it('extracts URLs from response text when no native citations', () => {
+    const result = extractCitations(
+      [],
+      domain,
+      'Check out https://warbyparker.com/glasses for more info. Also see https://example.com.'
+    )
+    expect(result.domainCited).toBe(true)
+    expect(result.citedUrls).toEqual(['https://warbyparker.com/glasses'])
+  })
+
+  it('returns not cited when domain is absent', () => {
+    const result = extractCitations(
+      ['https://zenni.com/frames'],
+      domain
+    )
+    expect(result.domainCited).toBe(false)
+    expect(result.citedUrls).toEqual([])
+  })
+
+  it('handles empty inputs', () => {
+    const result = extractCitations([], domain)
+    expect(result.domainCited).toBe(false)
+    expect(result.citedUrls).toEqual([])
+  })
+
+  it('matches domain with www prefix', () => {
+    const result = extractCitations(
+      ['https://www.warbyparker.com/shop'],
+      domain
+    )
+    expect(result.domainCited).toBe(true)
+  })
+
+  it('deduplicates URLs', () => {
+    const result = extractCitations(
+      ['https://warbyparker.com/glasses', 'https://warbyparker.com/glasses'],
+      domain
+    )
+    expect(result.citedUrls).toEqual(['https://warbyparker.com/glasses'])
   })
 })
