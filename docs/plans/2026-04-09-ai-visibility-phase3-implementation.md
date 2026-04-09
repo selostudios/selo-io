@@ -15,6 +15,7 @@
 ### Task 1: Migration — add competitors column to ai_visibility_configs
 
 **Files:**
+
 - Create: `supabase/migrations/20260409000002_ai_visibility_add_competitors.sql`
 
 **Step 1: Write the migration**
@@ -40,7 +41,11 @@ Expected: Migration applies without error
 Modify `lib/ai-visibility/types.ts` — update `AIVisibilityConfig` interface to add:
 
 ```typescript
-competitors: { name: string; domain: string }[]
+competitors: {
+  name: string
+  domain: string
+}
+;[]
 ```
 
 after the `budget_alert_threshold` field.
@@ -59,6 +64,7 @@ git commit -m "feat: add competitors column to ai_visibility_configs"
 Builds the `OrgContext` needed by the analyzer from org + config data.
 
 **Files:**
+
 - Create: `lib/ai-visibility/context.ts`
 - Test: `tests/unit/lib/ai-visibility/context.test.ts`
 
@@ -113,7 +119,7 @@ describe('buildOrgContext', () => {
     expect(context.competitors).toEqual(['Zenni Optical', 'EyeBuyDirect'])
     expect(context.competitorDomains).toEqual({
       'Zenni Optical': 'zenni.com',
-      'EyeBuyDirect': 'eyebuydirect.com',
+      EyeBuyDirect: 'eyebuydirect.com',
     })
   })
 
@@ -201,6 +207,7 @@ git commit -m "feat: add org context builder for AI visibility"
 ### Task 3: Budget module — spend tracking and budget checks
 
 **Files:**
+
 - Create: `lib/ai-visibility/budget.ts`
 - Test: `tests/unit/lib/ai-visibility/budget.test.ts`
 
@@ -403,6 +410,7 @@ git commit -m "feat: add budget tracking and threshold checks"
 ### Task 4: Budget alert email template
 
 **Files:**
+
 - Create: `emails/ai-visibility-budget-alert.tsx`
 
 **Step 1: Create the email template**
@@ -471,9 +479,7 @@ export default function AIVisibilityBudgetAlert({
               <Text className="text-sm font-medium text-neutral-900">
                 Current spend: {formatCents(currentSpendCents)} / {formatCents(budgetCents)}
               </Text>
-              <Text className="text-sm text-neutral-600">
-                Alert threshold: {thresholdPercent}%
-              </Text>
+              <Text className="text-sm text-neutral-600">Alert threshold: {thresholdPercent}%</Text>
             </Section>
 
             {isExceeded && (
@@ -517,6 +523,7 @@ git commit -m "feat: add budget alert email template"
 Sends budget alert emails to internal users and updates the config.
 
 **Files:**
+
 - Create: `lib/ai-visibility/alerts.ts`
 - Test: `tests/unit/lib/ai-visibility/alerts.test.ts`
 
@@ -549,10 +556,7 @@ describe('sendBudgetAlert', () => {
 
     // Chain: from('users').select(...).eq('is_internal', true)
     mockEq.mockResolvedValue({
-      data: [
-        { email: 'alice@selo.co' },
-        { email: 'bob@selo.co' },
-      ],
+      data: [{ email: 'alice@selo.co' }, { email: 'bob@selo.co' }],
       error: null,
     })
     mockSelect.mockReturnValue({ eq: mockEq })
@@ -741,6 +745,7 @@ git commit -m "feat: add budget alert email sender"
 The core function that syncs one organization: queries all prompts across platforms, analyzes responses, stores results, calculates score.
 
 **Files:**
+
 - Create: `lib/ai-visibility/sync.ts`
 - Test: `tests/unit/lib/ai-visibility/sync.test.ts`
 
@@ -1252,6 +1257,7 @@ git commit -m "feat: add sync orchestrator for AI visibility"
 ### Task 7: Cron route
 
 **Files:**
+
 - Create: `app/api/cron/ai-visibility-sync/route.ts`
 
 **Step 1: Create the cron route**
@@ -1388,6 +1394,7 @@ git commit -m "feat: add AI visibility sync cron job"
 ### Task 8: On-demand sync server action
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/ai-visibility/actions.ts`
 
 **Step 1: Create the server action**
@@ -1473,6 +1480,7 @@ Expected: ALL PASS
 Run: `find lib/ai-visibility -type f | sort`
 
 Expected:
+
 ```
 lib/ai-visibility/alerts.ts
 lib/ai-visibility/analyzer.ts

@@ -10,16 +10,16 @@
 
 ## Progress
 
-| Task | Status | Commit | Notes |
-|------|--------|--------|-------|
-| 1. UsageFeature enum + logUsage | Done | `3badf9f` | 6 unit tests pass |
-| 2. Migration: usage_logs feature column | Done | `a83ac0d` | Backfill + index |
-| 3. Migration: AI Visibility tables | Done | `b98e22b` | 5 tables, RLS policies |
-| 4. Types and enums | Done | `e1d9f00` | 4 enums, 7 interfaces, 5 tests |
-| 5. Navigation restructure | Done | `b1e5dec` | SEO / AI Visibility split, 7 tests |
-| 6. Stub route pages | Done | `fa23938` | 3 pages + layout, 3 render tests |
-| 7. Final verification | Done | — | 751 tests pass, build clean |
-| 8. CLI command: sync:ai-visibility | Pending | — | Added to plan for Phase 2 |
+| Task                                    | Status  | Commit    | Notes                              |
+| --------------------------------------- | ------- | --------- | ---------------------------------- |
+| 1. UsageFeature enum + logUsage         | Done    | `3badf9f` | 6 unit tests pass                  |
+| 2. Migration: usage_logs feature column | Done    | `a83ac0d` | Backfill + index                   |
+| 3. Migration: AI Visibility tables      | Done    | `b98e22b` | 5 tables, RLS policies             |
+| 4. Types and enums                      | Done    | `e1d9f00` | 4 enums, 7 interfaces, 5 tests     |
+| 5. Navigation restructure               | Done    | `b1e5dec` | SEO / AI Visibility split, 7 tests |
+| 6. Stub route pages                     | Done    | `fa23938` | 3 pages + layout, 3 render tests   |
+| 7. Final verification                   | Done    | —         | 751 tests pass, build clean        |
+| 8. CLI command: sync:ai-visibility      | Pending | —         | Added to plan for Phase 2          |
 
 **Completed:** 2026-04-09 | **Tests added:** 15 (751 total) | **Pushed to:** `origin/main`
 
@@ -30,6 +30,7 @@
 This is the smallest, most self-contained change — add feature-level cost categorization.
 
 **Files:**
+
 - Modify: `lib/enums.ts`
 - Modify: `lib/app-settings/usage.ts`
 - Modify: `tests/unit/lib/app-settings/usage.test.ts`
@@ -148,6 +149,7 @@ Expected: ALL PASS
 **Step 6: Update existing call sites**
 
 In `lib/unified-audit/ai-runner.ts`, find the `logUsage` call and add feature:
+
 ```typescript
 await logUsage('anthropic', 'ai_analysis', {
   // ...existing fields...
@@ -156,6 +158,7 @@ await logUsage('anthropic', 'ai_analysis', {
 ```
 
 In `lib/unified-audit/psi-runner.ts`, find the `logUsage` call and add feature:
+
 ```typescript
 await logUsage('pagespeed', 'psi_fetch', {
   // ...existing fields...
@@ -164,6 +167,7 @@ await logUsage('pagespeed', 'psi_fetch', {
 ```
 
 In `lib/reports/summary-generator.ts`, find the `logUsage` call and add feature:
+
 ```typescript
 await logUsage('anthropic', 'summary_generation', {
   // ...existing fields...
@@ -191,6 +195,7 @@ git commit -m "feat: add UsageFeature enum and feature tracking to logUsage"
 ### Task 2: Database migration — `usage_logs` feature column
 
 **Files:**
+
 - Create: `supabase/migrations/20260409000000_add_usage_logs_feature_column.sql`
 
 **Step 1: Write the migration**
@@ -228,6 +233,7 @@ git commit -m "migration: add feature column to usage_logs with backfill"
 ### Task 3: Database migration — AI Visibility tables
 
 **Files:**
+
 - Create: `supabase/migrations/20260409000001_ai_visibility_tables.sql`
 
 **Step 1: Write the migration**
@@ -482,6 +488,7 @@ git commit -m "migration: add AI Visibility tables with RLS policies"
 ### Task 4: Core TypeScript types and enums
 
 **Files:**
+
 - Modify: `lib/enums.ts`
 - Create: `lib/ai-visibility/types.ts`
 - Test: `tests/unit/lib/ai-visibility/types.test.ts`
@@ -739,6 +746,7 @@ git commit -m "feat: add AI Visibility types, enums, and display name maps"
 Split "SEO / AIO" into "SEO" and "AI Visibility" sections.
 
 **Files:**
+
 - Modify: `components/navigation/child-sidebar.tsx`
 
 **Step 1: Update the `homeNavigation` config**
@@ -746,6 +754,7 @@ Split "SEO / AIO" into "SEO" and "AI Visibility" sections.
 In `components/navigation/child-sidebar.tsx`, find the `homeNavigation` array and replace the `'SEO / AIO'` group with two separate groups. You will need to add the `Eye` icon import from `lucide-react` for the AI Visibility items.
 
 Change from:
+
 ```typescript
 {
   header: 'SEO / AIO',
@@ -757,6 +766,7 @@ Change from:
 ```
 
 Change to:
+
 ```typescript
 {
   header: 'SEO',
@@ -797,6 +807,7 @@ git commit -m "feat: split navigation into separate SEO and AI Visibility sectio
 Create placeholder pages so the nav links don't 404.
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/ai-visibility/page.tsx`
 - Create: `app/(authenticated)/[orgId]/ai-visibility/prompts/page.tsx`
 - Create: `app/(authenticated)/[orgId]/ai-visibility/mentions/page.tsx`
@@ -912,6 +923,7 @@ Expected: All migrations apply cleanly
 **Step 3: Verify locally**
 
 Start dev server and verify:
+
 - Navigation shows "SEO" and "AI Visibility" as separate sections
 - All three AI Visibility nav links work (show stub pages)
 - Existing SEO pages still work
@@ -929,6 +941,7 @@ git push
 Add a script to programmatically trigger the AI Visibility pipeline for a specific organization, following the same patterns as `sync:metrics` and `backfill:metrics`.
 
 **Files:**
+
 - Create: `scripts/sync-ai-visibility.ts`
 - Modify: `package.json` (add script entries)
 
@@ -944,6 +957,7 @@ Create `scripts/sync-ai-visibility.ts` following the existing patterns:
 ```
 
 The script should:
+
 1. Parse `--org=<uuid>` (required), `--prod`, and `--dry-run` flags from `process.argv`
 2. Load `.env.local` or `.env` based on `--prod` flag
 3. Create a Supabase service client
@@ -952,8 +966,9 @@ The script should:
 6. Log progress and results to console
 
 **Architecture note:** The pipeline function (`runAIVisibilitySync`) doesn't exist yet — it will be built in Phase 2. The script should be structured so it calls that function once it exists. For now, the script can:
+
 - Validate the org and config exist
-- Print what *would* be synced (topics, prompts, platforms)
+- Print what _would_ be synced (topics, prompts, platforms)
 - Exit with a message that the sync engine is not yet implemented
 
 This way the CLI is ready to go the moment the pipeline is built.

@@ -35,94 +35,95 @@ AI Visibility (new section)
 
 One per organization. Stores sync preferences and budget.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid PK | |
-| organization_id | uuid FK (unique) | References organizations |
-| sync_frequency | text | `daily` / `weekly` / `monthly` |
-| platforms | text[] | `['chatgpt', 'claude', 'perplexity']` |
-| is_active | boolean | Whether sync is enabled |
-| monthly_budget_cents | integer | Default 10000 ($100) |
-| budget_alert_threshold | integer | Default 90 (percent) |
-| last_alert_sent_at | timestamptz | Dedup alerts within a month |
-| last_alert_type | text | `approaching` / `exceeded` |
-| last_sync_at | timestamptz | |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+| Column                 | Type             | Description                           |
+| ---------------------- | ---------------- | ------------------------------------- |
+| id                     | uuid PK          |                                       |
+| organization_id        | uuid FK (unique) | References organizations              |
+| sync_frequency         | text             | `daily` / `weekly` / `monthly`        |
+| platforms              | text[]           | `['chatgpt', 'claude', 'perplexity']` |
+| is_active              | boolean          | Whether sync is enabled               |
+| monthly_budget_cents   | integer          | Default 10000 ($100)                  |
+| budget_alert_threshold | integer          | Default 90 (percent)                  |
+| last_alert_sent_at     | timestamptz      | Dedup alerts within a month           |
+| last_alert_type        | text             | `approaching` / `exceeded`            |
+| last_sync_at           | timestamptz      |                                       |
+| created_at             | timestamptz      |                                       |
+| updated_at             | timestamptz      |                                       |
 
 ### ai_visibility_topics
 
 Grouping layer for prompts (e.g., "Prescription Glasses", "Brand vs Competitor").
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid PK | |
-| organization_id | uuid FK | |
-| name | text | Topic display name |
-| source | text | `auto_generated` / `manual` |
-| is_active | boolean | |
-| metadata | jsonb | Industry tags, etc. |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+| Column          | Type        | Description                 |
+| --------------- | ----------- | --------------------------- |
+| id              | uuid PK     |                             |
+| organization_id | uuid FK     |                             |
+| name            | text        | Topic display name          |
+| source          | text        | `auto_generated` / `manual` |
+| is_active       | boolean     |                             |
+| metadata        | jsonb       | Industry tags, etc.         |
+| created_at      | timestamptz |                             |
+| updated_at      | timestamptz |                             |
 
 ### ai_visibility_prompts
 
 Individual prompts sent to AI platforms.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid PK | |
-| topic_id | uuid FK | References ai_visibility_topics |
-| organization_id | uuid FK | |
-| prompt_text | text | The actual prompt |
-| source | text | `auto_generated` / `manual` |
-| is_active | boolean | |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+| Column          | Type        | Description                     |
+| --------------- | ----------- | ------------------------------- |
+| id              | uuid PK     |                                 |
+| topic_id        | uuid FK     | References ai_visibility_topics |
+| organization_id | uuid FK     |                                 |
+| prompt_text     | text        | The actual prompt               |
+| source          | text        | `auto_generated` / `manual`     |
+| is_active       | boolean     |                                 |
+| created_at      | timestamptz |                                 |
+| updated_at      | timestamptz |                                 |
 
 ### ai_visibility_results
 
 One row per prompt + platform + sync run.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid PK | |
-| prompt_id | uuid FK | |
-| organization_id | uuid FK | |
-| platform | text | `chatgpt` / `claude` / `perplexity` |
-| response_text | text | Full AI response |
-| brand_mentioned | boolean | Was the brand name found? |
-| brand_sentiment | text | `positive` / `neutral` / `negative` |
-| brand_position | integer | Position in response (1=first third, 2=middle, 3=last third) |
-| domain_cited | boolean | Was the org's domain cited? |
-| cited_urls | text[] | Specific URLs from org's domain found |
-| competitor_mentions | jsonb | `[{name, mentioned, cited}]` |
-| tokens_used | integer | |
-| cost_cents | integer | Cost in cents for this query |
-| queried_at | timestamptz | When the query was executed |
-| raw_response | jsonb | Full API response for debugging |
-| created_at | timestamptz | |
+| Column              | Type        | Description                                                  |
+| ------------------- | ----------- | ------------------------------------------------------------ |
+| id                  | uuid PK     |                                                              |
+| prompt_id           | uuid FK     |                                                              |
+| organization_id     | uuid FK     |                                                              |
+| platform            | text        | `chatgpt` / `claude` / `perplexity`                          |
+| response_text       | text        | Full AI response                                             |
+| brand_mentioned     | boolean     | Was the brand name found?                                    |
+| brand_sentiment     | text        | `positive` / `neutral` / `negative`                          |
+| brand_position      | integer     | Position in response (1=first third, 2=middle, 3=last third) |
+| domain_cited        | boolean     | Was the org's domain cited?                                  |
+| cited_urls          | text[]      | Specific URLs from org's domain found                        |
+| competitor_mentions | jsonb       | `[{name, mentioned, cited}]`                                 |
+| tokens_used         | integer     |                                                              |
+| cost_cents          | integer     | Cost in cents for this query                                 |
+| queried_at          | timestamptz | When the query was executed                                  |
+| raw_response        | jsonb       | Full API response for debugging                              |
+| created_at          | timestamptz |                                                              |
 
 ### ai_visibility_scores
 
 Periodic score snapshots for trend charts.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid PK | |
-| organization_id | uuid FK | |
-| score | integer | 0-100 composite score |
-| mentions_count | integer | Total mentions this period |
-| citations_count | integer | Total citations this period |
-| cited_pages_count | integer | Unique pages cited |
-| platform_breakdown | jsonb | `{chatgpt: {mentions, citations}, ...}` |
-| period_start | date | |
-| period_end | date | |
-| created_at | timestamptz | |
+| Column             | Type        | Description                             |
+| ------------------ | ----------- | --------------------------------------- |
+| id                 | uuid PK     |                                         |
+| organization_id    | uuid FK     |                                         |
+| score              | integer     | 0-100 composite score                   |
+| mentions_count     | integer     | Total mentions this period              |
+| citations_count    | integer     | Total citations this period             |
+| cited_pages_count  | integer     | Unique pages cited                      |
+| platform_breakdown | jsonb       | `{chatgpt: {mentions, citations}, ...}` |
+| period_start       | date        |                                         |
+| period_end         | date        |                                         |
+| created_at         | timestamptz |                                         |
 
 ### RLS Policies
 
 All tables follow the existing multi-tenant pattern:
+
 - Users can only access rows matching their `organization_id` (via `team_members` join)
 - Internal users (`is_internal = true`) can access all organizations
 - Service client (cron jobs) bypasses RLS
@@ -164,7 +165,7 @@ interface AIProviderAdapter {
 
 interface AIProviderResponse {
   text: string
-  citations: string[]          // URLs cited (Perplexity returns natively)
+  citations: string[] // URLs cited (Perplexity returns natively)
   model: string
   tokensUsed: number
   costCents: number
@@ -172,6 +173,7 @@ interface AIProviderResponse {
 ```
 
 Each adapter handles its own:
+
 - Authentication (API keys stored via existing app_settings pattern)
 - Rate limiting (per-platform delays between calls)
 - Response normalization to the shared `AIProviderResponse` format
@@ -189,22 +191,26 @@ Each adapter handles its own:
 Each `AIProviderResponse` passes through four analysis steps:
 
 ### 1. Brand Mention Detection
+
 - Search response text for org name + configured aliases
 - Case-insensitive, handles partial matches
 - Returns: `mentioned: boolean`, `mentionCount: number`, `position: 1|2|3`
 
 ### 2. Citation Extraction
+
 - Perplexity: extract from native citation array
 - ChatGPT/Claude: parse response text for URLs matching org domain
 - Returns: `domainCited: boolean`, `citedUrls: string[]`
 
 ### 3. Sentiment Analysis
+
 - Batch classify all mention contexts via Claude API
 - Uses structured output for reliable `positive`/`neutral`/`negative`
 - Fallback to `neutral` on failure
 - Cost tracked via `logUsage()`
 
 ### 4. Competitor Detection
+
 - Scan responses for configured competitor names
 - Returns: `[{name, mentioned, cited}]`
 
@@ -215,6 +221,7 @@ All steps are pure functions (except sentiment) and independently testable.
 ### Cron Job
 
 `app/api/cron/ai-visibility-sync/route.ts`
+
 - Runs daily (configurable per org)
 - Validates `CRON_SECRET`
 - Self-continues via POST on timeout (same pattern as batch crawler)
@@ -224,7 +231,7 @@ All steps are pure functions (except sentiment) and independently testable.
 ```
 1. Check budget: query current month spend via logUsage
    → If >= monthly_budget_cents: skip org, log warning
-   
+
 2. Load active prompts for org
 
 3. For each platform in config.platforms:
@@ -259,13 +266,14 @@ Add a `feature` column to `usage_logs` that categorizes spend by product area:
 
 ```typescript
 enum UsageFeature {
-  SiteAudit = 'site_audit',           // AI analysis + PSI in unified audits
-  ClientReports = 'client_reports',   // Executive summary generation
-  AIVisibility = 'ai_visibility',     // Brand monitoring queries + sentiment
+  SiteAudit = 'site_audit', // AI analysis + PSI in unified audits
+  ClientReports = 'client_reports', // Executive summary generation
+  AIVisibility = 'ai_visibility', // Brand monitoring queries + sentiment
 }
 ```
 
 This keeps `service` (which provider: anthropic, openai, perplexity, pagespeed) separate from `feature` (which product area). Enables two views:
+
 - "How much are we spending on Anthropic across all features?"
 - "How much is AI Visibility costing for org X?"
 
@@ -278,7 +286,7 @@ This keeps `service` (which provider: anthropic, openai, perplexity, pagespeed) 
 
 ```typescript
 logUsage(service, eventType, {
-  feature: UsageFeature.AIVisibility,   // NEW
+  feature: UsageFeature.AIVisibility, // NEW
   organizationId,
   tokensInput,
   tokensOutput,
@@ -289,10 +297,10 @@ logUsage(service, eventType, {
 
 ### Existing Call Sites to Update
 
-| File | event_type | feature |
-|------|-----------|---------|
-| `lib/unified-audit/ai-runner.ts` | `ai_analysis` | `SiteAudit` |
-| `lib/unified-audit/psi-runner.ts` | `psi_fetch` | `SiteAudit` |
+| File                               | event_type           | feature         |
+| ---------------------------------- | -------------------- | --------------- |
+| `lib/unified-audit/ai-runner.ts`   | `ai_analysis`        | `SiteAudit`     |
+| `lib/unified-audit/psi-runner.ts`  | `psi_fetch`          | `SiteAudit`     |
 | `lib/reports/summary-generator.ts` | `summary_generation` | `ClientReports` |
 
 ### Cost Surfacing in Org Settings
@@ -316,18 +324,21 @@ WHERE organization_id = $1
 ## Budget System
 
 ### Enforcement
+
 - `monthly_budget_cents` on config (default $100 = 10000)
 - Checked before sync starts AND after each platform batch
 - Partial results always saved (never throw away completed work)
 - `canContinueSync(currentSpendCents, budgetCents): boolean` — pure function, easy to TDD
 
 ### Alerts
+
 - **90% threshold**: Email to all `is_internal` users — "Heads up: {org} at 90% of AI Visibility budget"
 - **100% exceeded**: Email to all `is_internal` users — "Budget exceeded: {org} syncs paused"
 - Deduplication: `last_alert_sent_at` + `last_alert_type` on config, one email per threshold per month
 - Uses existing React Email templates + Resend (production) / Mailpit (local)
 
 ### Cost Surfacing
+
 - **Org settings page**: Budget config, current month spend bar, cost breakdown by platform
 - **AI Visibility dashboard**: Banner when approaching limit
 - **Internal org list**: Spend vs budget column for Selo team
@@ -346,21 +357,23 @@ where:
 ```
 
 Score thresholds (same as existing audit scores):
+
 - 80+: Good
 - 60-79: Needs Improvement
 - <60: Poor
 
 ## Implementation Phases
 
-| Phase | Name | Status | Notes |
-|-------|------|--------|-------|
-| 1 | Foundation | Done | DB tables, types, enums, nav, stub pages |
-| 2 | Platform Adapters & Analysis | Done | 3 adapters, analyzer pipeline, scorer (56 tests) |
-| 3 | Sync Pipeline & Cost Tracking | In Progress | Orchestrator, budget system, cron, alerts |
-| 4 | Dashboard & UI | Not Started | Overview, prompts, mentions pages |
-| 5 | AIO Migration & Cleanup | Not Started | Move AIO under AI Visibility nav |
+| Phase | Name                          | Status      | Notes                                            |
+| ----- | ----------------------------- | ----------- | ------------------------------------------------ |
+| 1     | Foundation                    | Done        | DB tables, types, enums, nav, stub pages         |
+| 2     | Platform Adapters & Analysis  | Done        | 3 adapters, analyzer pipeline, scorer (56 tests) |
+| 3     | Sync Pipeline & Cost Tracking | In Progress | Orchestrator, budget system, cron, alerts        |
+| 4     | Dashboard & UI                | Not Started | Overview, prompts, mentions pages                |
+| 5     | AIO Migration & Cleanup       | Not Started | Move AIO under AI Visibility nav                 |
 
 ### Phase 1 — Foundation (Done)
+
 - Database migrations (all 5 AI Visibility tables + RLS policies)
 - Add `feature` column to `usage_logs` + backfill migration
 - Core types and enums (`AIPlatform`, `SyncFrequency`, `BrandSentiment`, `UsageFeature`, etc.)
@@ -369,6 +382,7 @@ Score thresholds (same as existing audit scores):
 - Stub pages for AI Visibility section
 
 ### Phase 2 — Platform Adapters & Analysis Pipeline (Done)
+
 - `AIProviderAdapter` interface and cost estimation
 - ChatGPT adapter (`@ai-sdk/openai`, gpt-4o-mini)
 - Claude adapter (`@ai-sdk/anthropic`, claude-sonnet-4-20250514)
@@ -380,6 +394,7 @@ Score thresholds (same as existing audit scores):
 - 56 tests across 9 test files
 
 ### Phase 3 — Sync Pipeline & Cost Tracking (In Progress)
+
 - Competitors column migration on `ai_visibility_configs`
 - Org context builder (brand name from org, domain from website_url)
 - Budget module (spend tracking, threshold checks, dedup logic)
@@ -390,12 +405,14 @@ Score thresholds (same as existing audit scores):
 - On-demand sync server action
 
 ### Phase 4 — Dashboard & UI
+
 - Overview page (score ring, trend line chart, platform distribution, mentions/citations/cited pages metrics)
 - Prompts page (topic grouping, per-prompt results table, add custom prompt)
 - Brand Mentions page (filterable log: platform, sentiment, date range)
 - AI Visibility config UI in org settings (platforms, frequency, budget, competitors)
 
 ### Phase 5 — AIO Migration & Cleanup
+
 - Move existing AIO audit under AI Visibility nav as "Site Audit"
 - Remove old "SEO / AIO" combined header
 - Update client reports to reference new nav structure

@@ -15,11 +15,13 @@
 ### Task 1: Install AI SDK provider packages
 
 **Files:**
+
 - Modify: `package.json`
 
 **Step 1: Install packages**
 
 Run:
+
 ```bash
 npm install @ai-sdk/openai @ai-sdk/perplexity
 ```
@@ -41,6 +43,7 @@ git commit -m "chore: install @ai-sdk/openai and @ai-sdk/perplexity"
 ### Task 2: Adapter interface and shared types
 
 **Files:**
+
 - Create: `lib/ai-visibility/platforms/types.ts`
 - Test: `tests/unit/lib/ai-visibility/platforms/types.test.ts`
 
@@ -135,21 +138,21 @@ export interface AIProviderResponse {
 // =============================================================================
 
 interface PlatformCost {
-  inputPerMillionTokens: number   // USD
-  outputPerMillionTokens: number  // USD
+  inputPerMillionTokens: number // USD
+  outputPerMillionTokens: number // USD
 }
 
 export const PLATFORM_COSTS: Record<AIPlatform, PlatformCost> = {
   [AIPlatform.ChatGPT]: {
-    inputPerMillionTokens: 2.5,    // GPT-4o mini
+    inputPerMillionTokens: 2.5, // GPT-4o mini
     outputPerMillionTokens: 10,
   },
   [AIPlatform.Claude]: {
-    inputPerMillionTokens: 3,      // Claude Sonnet
+    inputPerMillionTokens: 3, // Claude Sonnet
     outputPerMillionTokens: 15,
   },
   [AIPlatform.Perplexity]: {
-    inputPerMillionTokens: 1,      // Sonar
+    inputPerMillionTokens: 1, // Sonar
     outputPerMillionTokens: 1,
   },
 }
@@ -187,6 +190,7 @@ git commit -m "feat: add AIProviderAdapter interface and cost estimation"
 ### Task 3: ChatGPT adapter
 
 **Files:**
+
 - Create: `lib/ai-visibility/platforms/chatgpt/adapter.ts`
 - Test: `tests/unit/lib/ai-visibility/platforms/chatgpt/adapter.test.ts`
 
@@ -234,7 +238,7 @@ describe('ChatGPTAdapter', () => {
     expect(result.inputTokens).toBe(50)
     expect(result.outputTokens).toBe(100)
     expect(result.costCents).toBeGreaterThanOrEqual(0)
-    expect(result.citations).toEqual([])  // ChatGPT doesn't return native citations
+    expect(result.citations).toEqual([]) // ChatGPT doesn't return native citations
   })
 
   it('passes the prompt to generateText', async () => {
@@ -295,7 +299,7 @@ export class ChatGPTAdapter implements AIProviderAdapter {
 
       return {
         text,
-        citations: [],  // ChatGPT doesn't return native citations
+        citations: [], // ChatGPT doesn't return native citations
         model: MODEL,
         inputTokens,
         outputTokens,
@@ -327,6 +331,7 @@ git commit -m "feat: add ChatGPT adapter for AI visibility"
 ### Task 4: Claude adapter
 
 **Files:**
+
 - Create: `lib/ai-visibility/platforms/claude/adapter.ts`
 - Test: `tests/unit/lib/ai-visibility/platforms/claude/adapter.test.ts`
 
@@ -373,7 +378,7 @@ describe('ClaudeAdapter', () => {
     expect(result.inputTokens).toBe(40)
     expect(result.outputTokens).toBe(80)
     expect(result.costCents).toBeGreaterThanOrEqual(0)
-    expect(result.citations).toEqual([])  // Claude doesn't return native citations
+    expect(result.citations).toEqual([]) // Claude doesn't return native citations
   })
 
   it('handles API errors gracefully', async () => {
@@ -418,7 +423,7 @@ export class ClaudeAdapter implements AIProviderAdapter {
 
       return {
         text,
-        citations: [],  // Claude doesn't return native citations
+        citations: [], // Claude doesn't return native citations
         model: MODEL,
         inputTokens,
         outputTokens,
@@ -450,6 +455,7 @@ git commit -m "feat: add Claude adapter for AI visibility"
 ### Task 5: Perplexity adapter
 
 **Files:**
+
 - Create: `lib/ai-visibility/platforms/perplexity/adapter.ts`
 - Test: `tests/unit/lib/ai-visibility/platforms/perplexity/adapter.test.ts`
 
@@ -497,10 +503,7 @@ describe('PerplexityAdapter', () => {
 
     expect(result.text).toContain('Warby Parker')
     expect(result.model).toBe('sonar')
-    expect(result.citations).toEqual([
-      'https://warbyparker.com',
-      'https://example.com/review',
-    ])
+    expect(result.citations).toEqual(['https://warbyparker.com', 'https://example.com/review'])
     expect(result.inputTokens).toBe(30)
     expect(result.outputTokens).toBe(60)
   })
@@ -608,6 +611,7 @@ git commit -m "feat: add Perplexity adapter for AI visibility"
 ### Task 6: Adapter registry
 
 **Files:**
+
 - Create: `lib/ai-visibility/platforms/registry.ts`
 - Test: `tests/unit/lib/ai-visibility/platforms/registry.test.ts`
 
@@ -701,6 +705,7 @@ git commit -m "feat: add adapter registry for AI visibility platforms"
 ### Task 7: Brand mention detection
 
 **Files:**
+
 - Create: `lib/ai-visibility/analyzer.ts`
 - Test: `tests/unit/lib/ai-visibility/analyzer.test.ts`
 
@@ -734,10 +739,7 @@ describe('detectBrandMention', () => {
   })
 
   it('is case-insensitive', () => {
-    const result = detectBrandMention(
-      'warby parker has expanded internationally.',
-      brandName
-    )
+    const result = detectBrandMention('warby parker has expanded internationally.', brandName)
     expect(result.mentioned).toBe(true)
   })
 
@@ -773,11 +775,7 @@ describe('detectBrandMention', () => {
   })
 
   it('handles brand aliases', () => {
-    const result = detectBrandMention(
-      'WP eyewear has great customer service.',
-      brandName,
-      ['WP']
-    )
+    const result = detectBrandMention('WP eyewear has great customer service.', brandName, ['WP'])
     expect(result.mentioned).toBe(true)
   })
 })
@@ -796,7 +794,7 @@ Create `lib/ai-visibility/analyzer.ts`:
 export interface BrandMentionResult {
   mentioned: boolean
   mentionCount: number
-  position: number | null  // 1=first third, 2=middle, 3=last third
+  position: number | null // 1=first third, 2=middle, 3=last third
 }
 
 /**
@@ -861,6 +859,7 @@ git commit -m "feat: add brand mention detection to analyzer"
 ### Task 8: Citation extraction
 
 **Files:**
+
 - Modify: `lib/ai-visibility/analyzer.ts`
 - Modify: `tests/unit/lib/ai-visibility/analyzer.test.ts`
 
@@ -901,10 +900,7 @@ describe('extractCitations', () => {
   })
 
   it('returns not cited when domain is absent', () => {
-    const result = extractCitations(
-      ['https://zenni.com/frames'],
-      domain
-    )
+    const result = extractCitations(['https://zenni.com/frames'], domain)
     expect(result.domainCited).toBe(false)
     expect(result.citedUrls).toEqual([])
   })
@@ -916,10 +912,7 @@ describe('extractCitations', () => {
   })
 
   it('matches domain with www prefix', () => {
-    const result = extractCitations(
-      ['https://www.warbyparker.com/shop'],
-      domain
-    )
+    const result = extractCitations(['https://www.warbyparker.com/shop'], domain)
     expect(result.domainCited).toBe(true)
   })
 
@@ -1006,6 +999,7 @@ git commit -m "feat: add citation extraction to analyzer"
 ### Task 9: Competitor detection
 
 **Files:**
+
 - Modify: `lib/ai-visibility/analyzer.ts`
 - Modify: `tests/unit/lib/ai-visibility/analyzer.test.ts`
 
@@ -1014,7 +1008,11 @@ git commit -m "feat: add citation extraction to analyzer"
 Append to test file:
 
 ```typescript
-import { detectBrandMention, extractCitations, detectCompetitors } from '@/lib/ai-visibility/analyzer'
+import {
+  detectBrandMention,
+  extractCitations,
+  detectCompetitors,
+} from '@/lib/ai-visibility/analyzer'
 
 describe('detectCompetitors', () => {
   it('detects competitor mentions in response text', () => {
@@ -1036,11 +1034,7 @@ describe('detectCompetitors', () => {
   })
 
   it('is case-insensitive', () => {
-    const result = detectCompetitors(
-      'zenni optical has good prices',
-      ['Zenni Optical'],
-      []
-    )
+    const result = detectCompetitors('zenni optical has good prices', ['Zenni Optical'], [])
     expect(result[0].mentioned).toBe(true)
   })
 
@@ -1124,6 +1118,7 @@ git commit -m "feat: add competitor detection to analyzer"
 ### Task 10: Sentiment analysis
 
 **Files:**
+
 - Create: `lib/ai-visibility/sentiment.ts`
 - Test: `tests/unit/lib/ai-visibility/sentiment.test.ts`
 
@@ -1379,6 +1374,7 @@ git commit -m "feat: add sentiment analysis with batch support"
 Combine all analysis steps into a single entry point.
 
 **Files:**
+
 - Modify: `lib/ai-visibility/analyzer.ts`
 - Modify: `tests/unit/lib/ai-visibility/analyzer.test.ts`
 
@@ -1517,6 +1513,7 @@ git commit -m "feat: add composed analyzeResponse function"
 ### Task 12: AI Visibility scorer
 
 **Files:**
+
 - Create: `lib/ai-visibility/scorer.ts`
 - Test: `tests/unit/lib/ai-visibility/scorer.test.ts`
 
@@ -1682,6 +1679,7 @@ Expected: ALL PASS with no warnings related to new files
 Run: `find lib/ai-visibility -type f | sort`
 
 Expected:
+
 ```
 lib/ai-visibility/analyzer.ts
 lib/ai-visibility/platforms/chatgpt/adapter.ts

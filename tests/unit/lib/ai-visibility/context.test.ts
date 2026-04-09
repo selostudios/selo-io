@@ -44,7 +44,7 @@ describe('buildOrgContext', () => {
     expect(context.competitors).toEqual(['Zenni Optical', 'EyeBuyDirect'])
     expect(context.competitorDomains).toEqual({
       'Zenni Optical': 'zenni.com',
-      'EyeBuyDirect': 'eyebuydirect.com',
+      EyeBuyDirect: 'eyebuydirect.com',
     })
   })
 
