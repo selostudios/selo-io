@@ -37,6 +37,7 @@ export interface AIVisibilityConfig {
   is_active: boolean
   monthly_budget_cents: number
   budget_alert_threshold: number
+  competitors: { name: string; domain: string }[]
   last_alert_sent_at: string | null
   last_alert_type: string | null
   last_sync_at: string | null
