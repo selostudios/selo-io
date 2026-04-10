@@ -76,15 +76,24 @@ export function useUnifiedAuditPolling(auditId: string, enabled: boolean) {
   }, [auditId])
 
   const fetcher = useCallback(async (): Promise<UnifiedAuditProgress> => {
-    const response = await fetch(`/api/unified-audit/${auditId}/status`)
-    const data = await response.json()
+    try {
+      const response = await fetch(`/api/unified-audit/${auditId}/status`)
+      const data = await response.json()
 
-    // Trigger batch continuation if needed (side effect during fetch)
-    if (data.status === UnifiedAuditStatus.BatchComplete && !isContinuingRef.current) {
-      triggerContinue()
+      // Trigger batch continuation if needed (side effect during fetch)
+      if (data.status === UnifiedAuditStatus.BatchComplete && !isContinuingRef.current) {
+        triggerContinue()
+      }
+
+      return data
+    } catch (error) {
+      console.error('[Unified Audit Polling Error]', {
+        type: 'fetch_error',
+        auditId,
+        timestamp: new Date().toISOString(),
+      })
+      throw error
     }
-
-    return data
   }, [auditId, triggerContinue])
 
   const { data: progress, isLoading } = usePolling<UnifiedAuditProgress>({
