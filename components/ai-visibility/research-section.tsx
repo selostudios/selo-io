@@ -123,7 +123,26 @@ export function ResearchSection({
 
   const handleSaved = async (promptId: string) => {
     if (!researchId) return
-    await linkResearchResultsToPrompt(orgId, researchId, promptId)
+    try {
+      const result = await linkResearchResultsToPrompt(orgId, researchId, promptId)
+      if ('error' in result) {
+        console.error('[Research Save Error]', {
+          type: 'link_results_failed',
+          researchId,
+          promptId,
+          error: result.error,
+          timestamp: new Date().toISOString(),
+        })
+      }
+    } catch (error) {
+      console.error('[Research Save Error]', {
+        type: 'link_results_exception',
+        researchId,
+        promptId,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      })
+    }
   }
 
   return (
