@@ -262,6 +262,7 @@ export async function createOrganization(
             role: inv.role,
             logoUrl: null,
           }),
+          idempotencyKey: `invite-${invite.id}`,
         })
       } catch (emailErr) {
         console.error('[Organizations Error]', {

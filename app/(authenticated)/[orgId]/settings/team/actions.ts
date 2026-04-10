@@ -4,8 +4,15 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageTeam, isInternalUser } from '@/lib/permissions'
 import { UserRole, InviteStatus, INVITE_EXPIRY_DAYS } from '@/lib/enums'
+import { inviteLimiter, getIpFromHeaders } from '@/lib/rate-limit'
 
 export async function sendInvite(formData: FormData) {
+  const ip = await getIpFromHeaders()
+  const rateLimit = inviteLimiter.check(ip)
+  if (!rateLimit.success) {
+    return { error: 'Too many invite requests. Please try again later.' }
+  }
+
   const email = formData.get('email') as string
   const role = formData.get('role') as UserRole
   const targetOrgId = formData.get('organizationId') as string | null
@@ -174,6 +181,7 @@ export async function sendInvite(formData: FormData) {
         role,
         logoUrl: org?.logo_url || null,
       }),
+      idempotencyKey: `invite-${invite.id}`,
     })
 
     if (result.error) {
@@ -207,6 +215,12 @@ export async function sendInvite(formData: FormData) {
 }
 
 export async function resendInvite(inviteId: string) {
+  const ip = await getIpFromHeaders()
+  const rateLimit = inviteLimiter.check(ip)
+  if (!rateLimit.success) {
+    return { error: 'Too many invite requests. Please try again later.' }
+  }
+
   const supabase = await createClient()
 
   const {
@@ -330,6 +344,7 @@ export async function resendInvite(inviteId: string) {
         role: invite.role,
         logoUrl: org?.logo_url || null,
       }),
+      idempotencyKey: `resend-invite-${inviteId}-${newExpiresAt.getTime()}`,
     })
 
     if (result.error) {

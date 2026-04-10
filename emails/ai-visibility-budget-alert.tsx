@@ -73,7 +73,8 @@ export default function AIVisibilityBudgetAlert({
 
             <Section className="mt-6 border-t border-neutral-200 pt-4">
               <Text className="text-xs text-neutral-400">
-                This is an automated alert from Selo IO.
+                This is an automated alert from Selo IO. To adjust alert thresholds, visit the AI
+                Visibility settings for this organization.
               </Text>
             </Section>
           </Container>

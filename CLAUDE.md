@@ -138,6 +138,7 @@ Located in `app/api/cron/`. All cron jobs require `CRON_SECRET` environment vari
 | `weekly-audits`      | Sun 2 AM UTC   | Runs scheduled site audits for organizations with monitoring enabled       |
 | `daily-metrics-sync` | Daily 3 AM UTC | Syncs metrics from all active platform connections (LinkedIn, HubSpot, GA) |
 | `audit-cleanup`      | Sun 4 AM UTC   | Cleans up old audit data to reduce storage                                 |
+| `weekly-summary`     | Mon 7 AM UTC   | Sends weekly marketing performance digest emails to org team members       |
 
 **Audit Cleanup Strategy:**
 
@@ -493,6 +494,16 @@ console.error('[Context Error]', { type: 'error_type', timestamp: new Date().toI
 > **Rate Limiting Upgrade:** The current implementation uses in-memory storage which only persists within warm serverless instances. This provides partial protection but is not production-grade. **Before launch or when abuse is observed**, upgrade to a Redis-backed solution (Upstash with `@upstash/ratelimit` is the recommended drop-in). The `lib/rate-limit.ts` interface is designed so only the storage backend needs to change — all call sites remain the same.
 
 **Security headers**: Configured in `next.config.ts` `headers()`. Includes X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.
+
+### Email Infrastructure
+
+**Provider**: Resend (production), Mailpit (local dev via `USE_MAILPIT=true`). Templates in `emails/` using React Email.
+
+**Suppression list** (`email_suppressions` table): Checked before every send via `lib/email/client.ts`. Hard bounces and complaints are automatically added via the Resend webhook at `app/api/webhooks/resend/route.ts`. Configure the webhook in Resend dashboard with `RESEND_WEBHOOK_SECRET` env var.
+
+**Idempotency**: All email sends should include an `idempotencyKey` option (deterministic, based on the business event — e.g. `invite-${inviteId}`) to prevent duplicate sends on retries.
+
+**Rate limiting**: Invite endpoints (`sendInvite`, `resendInvite`, `inviteInternalEmployee`) are rate-limited via `inviteLimiter` (10/hour per IP).
 
 ### LinkedIn OAuth Notes
 

@@ -46,6 +46,7 @@ export async function sendBudgetAlert(input: BudgetAlertInput): Promise<void> {
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'Selo IO <onboarding@resend.dev>'
 
     // Send to each internal user
+    const monthKey = new Date().toISOString().slice(0, 7) // YYYY-MM
     await Promise.all(
       internalUsers.map((user) =>
         sendEmail({
@@ -59,6 +60,7 @@ export async function sendBudgetAlert(input: BudgetAlertInput): Promise<void> {
             budgetCents,
             thresholdPercent,
           }),
+          idempotencyKey: `budget-alert-${organizationId}-${alertType}-${monthKey}-${user.email}`,
         })
       )
     )

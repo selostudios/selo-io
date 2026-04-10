@@ -16,6 +16,7 @@ interface WeeklySummaryEmailProps {
   weekStartDate: string
   summaryBullets: string[]
   dashboardLink: string
+  unsubscribeUrl?: string
 }
 
 export default function WeeklySummaryEmail({
@@ -23,6 +24,7 @@ export default function WeeklySummaryEmail({
   weekStartDate,
   summaryBullets,
   dashboardLink,
+  unsubscribeUrl,
 }: WeeklySummaryEmailProps) {
   return (
     <Html>
@@ -59,6 +61,15 @@ export default function WeeklySummaryEmail({
               This summary is automatically generated every Monday morning based on your campaign
               performance.
             </Text>
+
+            {unsubscribeUrl && (
+              <Text className="mt-4 text-xs text-neutral-400">
+                <a href={unsubscribeUrl} className="text-neutral-400 underline">
+                  Unsubscribe
+                </a>{' '}
+                from weekly summaries.
+              </Text>
+            )}
           </Container>
         </Body>
       </Tailwind>

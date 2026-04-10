@@ -129,5 +129,6 @@ async function notifySubmitter(
       newStatus,
       note,
     }),
+    idempotencyKey: `feedback-status-${feedbackId}-${newStatus}`,
   })
 }

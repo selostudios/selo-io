@@ -134,6 +134,12 @@ export const oauthLimiter = createRateLimiter('oauth', {
   maxRequests: 10,
 })
 
+/** Email invites: 10 per hour per IP (covers send, resend, internal invite) */
+export const inviteLimiter = createRateLimiter('invite', {
+  interval: 60 * 60 * 1000,
+  maxRequests: 10,
+})
+
 /** General API: 100 requests per hour per IP */
 export const apiLimiter = createRateLimiter('api', {
   interval: 60 * 60 * 1000,

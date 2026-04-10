@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireInternalUser } from '@/lib/app-settings/auth'
+import { inviteLimiter, getIpFromHeaders } from '@/lib/rate-limit'
 
 interface InternalEmployee {
   id: string
@@ -63,6 +64,12 @@ export async function getInternalEmployees(): Promise<InternalEmployee[] | { err
 export async function inviteInternalEmployee(
   email: string
 ): Promise<{ success: boolean; error?: string }> {
+  const ip = await getIpFromHeaders()
+  const rateLimit = inviteLimiter.check(ip)
+  if (!rateLimit.success) {
+    return { success: false, error: 'Too many invite requests. Please try again later.' }
+  }
+
   const { error, user, userRecord } = await requireInternalUser()
   if (error) return { success: false, error }
   if (userRecord!.role !== 'admin') return { success: false, error: 'Admin access required' }
@@ -127,6 +134,7 @@ export async function inviteInternalEmployee(
         inviteLink,
         invitedByEmail: user!.email ?? 'a team member',
       }),
+      idempotencyKey: `internal-invite-${invite.id}`,
     })
 
     if (result.error) {
