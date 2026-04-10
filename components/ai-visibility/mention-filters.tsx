@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Select,
@@ -8,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { AIPlatform, BrandSentiment } from '@/lib/enums'
 import { PLATFORM_DISPLAY_NAMES, SENTIMENT_DISPLAY_NAMES } from '@/lib/ai-visibility/types'
 
@@ -16,14 +18,16 @@ const ALL_VALUE = '__all__'
 export function MentionFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const searchTimeout = useRef<NodeJS.Timeout>(undefined)
 
   const currentPlatform = searchParams.get('platform') ?? ALL_VALUE
   const currentSentiment = searchParams.get('sentiment') ?? ALL_VALUE
   const currentDays = searchParams.get('days') ?? '30'
+  const currentSearch = searchParams.get('search') ?? ''
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (value === ALL_VALUE) {
+    if (value === ALL_VALUE || value === '') {
       params.delete(key)
     } else {
       params.set(key, value)
@@ -33,6 +37,18 @@ export function MentionFilters() {
 
   return (
     <div className="flex flex-wrap gap-3">
+      <Input
+        placeholder="Search mentions..."
+        defaultValue={currentSearch}
+        onChange={(e) => {
+          const value = e.target.value
+          clearTimeout(searchTimeout.current)
+          searchTimeout.current = setTimeout(() => {
+            updateFilter('search', value)
+          }, 300)
+        }}
+        className="w-[200px]"
+      />
       <Select value={currentPlatform} onValueChange={(v) => updateFilter('platform', v)}>
         <SelectTrigger className="w-[160px]">
           <SelectValue placeholder="All Platforms" />

@@ -43,9 +43,7 @@ export async function GET(
     // Verify user has access — check org of results, or verify user's org
     if (!isInternalUser(userRecord)) {
       // Check if any result belongs to a different org
-      const foreignResult = results.find(
-        (r) => r.organization_id !== userRecord.organization_id
-      )
+      const foreignResult = results.find((r) => r.organization_id !== userRecord.organization_id)
       if (foreignResult) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }

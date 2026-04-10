@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ orgId: string }>
-  searchParams: Promise<{ platform?: string; sentiment?: string; days?: string }>
+  searchParams: Promise<{ platform?: string; sentiment?: string; days?: string; search?: string }>
 }
 
 export default async function MentionsPage({ params, searchParams }: PageProps) {
@@ -21,6 +21,7 @@ export default async function MentionsPage({ params, searchParams }: PageProps) 
     platform: filters.platform,
     sentiment: filters.sentiment,
     days: filters.days ? parseInt(filters.days, 10) : 30,
+    search: filters.search,
   }
 
   const { mentions, hasMore } = await getMentions(supabase, orgId, parsedFilters)
@@ -37,7 +38,7 @@ export default async function MentionsPage({ params, searchParams }: PageProps) 
         orgId={orgId}
         initialMentions={mentions}
         initialHasMore={hasMore}
-        hasFilters={!!(filters.platform || filters.sentiment)}
+        hasFilters={!!(filters.platform || filters.sentiment || filters.search)}
         filters={parsedFilters}
       />
     </div>

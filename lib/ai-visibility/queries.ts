@@ -31,6 +31,7 @@ export interface MentionFilters {
   platform?: string
   sentiment?: string
   days?: number
+  search?: string
 }
 
 export interface MentionResult extends AIVisibilityResult {
@@ -238,6 +239,9 @@ export async function getMentions(
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - filters.days)
     query = query.gte('queried_at', cutoff.toISOString())
+  }
+  if (filters.search) {
+    query = query.ilike('response_text', `%${filters.search}%`)
   }
 
   const { data } = await query
