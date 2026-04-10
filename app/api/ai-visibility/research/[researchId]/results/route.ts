@@ -40,11 +40,17 @@ export async function GET(
   try {
     const results = await getResearchResults(researchId)
 
-    // Verify user has access to these results (check org of first result)
-    if (results.length > 0 && !isInternalUser(userRecord)) {
-      if (results[0].organization_id !== userRecord.organization_id) {
+    // Verify user has access — check org of results, or verify user's org
+    if (!isInternalUser(userRecord)) {
+      // Check if any result belongs to a different org
+      const foreignResult = results.find(
+        (r) => r.organization_id !== userRecord.organization_id
+      )
+      if (foreignResult) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
+      // If no results yet, the researchId is a 128-bit UUID — unguessable.
+      // The start endpoint already verified org access before generating it.
     }
 
     return NextResponse.json(results)
