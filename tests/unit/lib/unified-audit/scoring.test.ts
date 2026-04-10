@@ -111,13 +111,13 @@ describe('Unified Scoring', () => {
   })
 
   describe('calculateAIReadinessScore', () => {
-    test('blends 40% programmatic + 60% strategic when AI analysis available', () => {
+    test('blends 50% programmatic + 50% strategic when AI analysis available', () => {
       const checks = [
         makeCheck({ feeds_scores: [ScoreDimension.AIReadiness], status: CheckStatus.Passed }),
       ]
       // programmatic = 100, strategic = 80
-      // 100 * 0.4 + 80 * 0.6 = 40 + 48 = 88
-      expect(calculateAIReadinessScore(checks, 80)).toBe(88)
+      // 100 * 0.5 + 80 * 0.5 = 50 + 40 = 90
+      expect(calculateAIReadinessScore(checks, 80)).toBe(90)
     })
 
     test('uses 100% programmatic when no AI analysis', () => {
@@ -132,8 +132,8 @@ describe('Unified Scoring', () => {
         makeCheck({ feeds_scores: [ScoreDimension.AIReadiness], status: CheckStatus.Failed }),
       ]
       // programmatic = 0, strategic = 100
-      // 0 * 0.4 + 100 * 0.6 = 60
-      expect(calculateAIReadinessScore(checks, 100)).toBe(60)
+      // 0 * 0.5 + 100 * 0.5 = 50
+      expect(calculateAIReadinessScore(checks, 100)).toBe(50)
     })
   })
 
@@ -143,10 +143,20 @@ describe('Unified Scoring', () => {
       expect(calculateOverallScore(80, 70, 90)).toBe(80)
     })
 
-    test('returns null when any score is null', () => {
-      expect(calculateOverallScore(80, null, 90)).toBeNull()
-      expect(calculateOverallScore(null, 70, 90)).toBeNull()
-      expect(calculateOverallScore(80, 70, null)).toBeNull()
+    test('re-weights when some scores are null (partial completion)', () => {
+      // SEO=80, Perf=null, AI=90 → only SEO(0.4) + AI(0.3) = 0.7 total
+      // (80*0.4 + 90*0.3) / 0.7 = (32+27) / 0.7 ≈ 84
+      expect(calculateOverallScore(80, null, 90)).toBe(84)
+      // SEO=null, Perf=70, AI=90 → only Perf(0.3) + AI(0.3) = 0.6 total
+      // (70*0.3 + 90*0.3) / 0.6 = (21+27) / 0.6 = 80
+      expect(calculateOverallScore(null, 70, 90)).toBe(80)
+      // SEO=80, Perf=70, AI=null → only SEO(0.4) + Perf(0.3) = 0.7 total
+      // (80*0.4 + 70*0.3) / 0.7 = (32+21) / 0.7 ≈ 76
+      expect(calculateOverallScore(80, 70, null)).toBe(76)
+    })
+
+    test('returns null when all scores are null', () => {
+      expect(calculateOverallScore(null, null, null)).toBeNull()
     })
 
     test('returns 100 when all scores are 100', () => {

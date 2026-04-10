@@ -43,7 +43,7 @@ export function calculatePerformanceScore(checks: AuditCheck[]): number {
 }
 
 /**
- * AI Readiness score blends programmatic checks (40%) with Claude AI strategic score (60%).
+ * AI Readiness score blends programmatic checks (50%) with Claude AI strategic score (50%).
  * When no AI analysis is available, uses 100% programmatic.
  */
 export function calculateAIReadinessScore(
@@ -54,7 +54,7 @@ export function calculateAIReadinessScore(
     checks.filter((c) => c.feeds_scores.includes(ScoreDimension.AIReadiness))
   )
   if (strategicScore === null) return programmaticScore
-  return Math.round(programmaticScore * 0.4 + strategicScore * 0.6)
+  return Math.round(programmaticScore * 0.5 + strategicScore * 0.5)
 }
 
 export function calculateOverallScore(
@@ -63,10 +63,17 @@ export function calculateOverallScore(
   aiReadiness: number | null,
   weights: ScoreWeights = DEFAULT_SCORE_WEIGHTS
 ): number | null {
-  if (seo === null || performance === null || aiReadiness === null) return null
-  return Math.round(
-    seo * weights.seo + performance * weights.performance + aiReadiness * weights.ai_readiness
-  )
+  const scores: { value: number; weight: number }[] = []
+  if (seo !== null) scores.push({ value: seo, weight: weights.seo })
+  if (performance !== null) scores.push({ value: performance, weight: weights.performance })
+  if (aiReadiness !== null) scores.push({ value: aiReadiness, weight: weights.ai_readiness })
+
+  if (scores.length === 0) return null
+
+  const totalWeight = scores.reduce((sum, s) => sum + s.weight, 0)
+  const weightedSum = scores.reduce((sum, s) => sum + s.value * s.weight, 0)
+
+  return Math.round(weightedSum / totalWeight)
 }
 
 export function getScoreStatus(score: number): ScoreStatus {
