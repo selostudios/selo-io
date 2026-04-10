@@ -116,7 +116,7 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
 
       if (analysis.brand_mentioned) {
         mentionedCount++
-        allSentiments.push(analysis.brand_sentiment as BrandSentiment)
+        allSentiments.push(analysis.brand_sentiment)
       }
       if (analysis.domain_cited) {
         citedCount++

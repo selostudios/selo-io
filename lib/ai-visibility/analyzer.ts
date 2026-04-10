@@ -146,7 +146,7 @@ export interface OrgContext {
 
 export interface AnalyzedResponse {
   brand_mentioned: boolean
-  brand_sentiment: string
+  brand_sentiment: BrandSentiment
   brand_position: number | null
   domain_cited: boolean
   cited_urls: string[]

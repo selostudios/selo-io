@@ -6,7 +6,7 @@ import { analyzeResponse } from './analyzer'
 import { generateInsight } from './insights'
 import { logUsage } from '@/lib/app-settings/usage'
 import { UsageFeature } from '@/lib/enums'
-import type { AIPlatform } from '@/lib/enums'
+import type { AIPlatform, BrandSentiment } from '@/lib/enums'
 
 export interface PrepareResearchResult {
   researchId: string
@@ -156,7 +156,7 @@ export interface ResearchResult {
   platform: AIPlatform
   response_text: string
   brand_mentioned: boolean
-  brand_sentiment: string
+  brand_sentiment: BrandSentiment
   brand_position: number | null
   domain_cited: boolean
   cited_urls: string[]

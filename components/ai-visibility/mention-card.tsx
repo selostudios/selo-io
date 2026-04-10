@@ -9,7 +9,7 @@ import {
   PositionBadge,
   CompetitorPills,
 } from '@/components/ai-visibility/badges'
-import { AIPlatform, BrandSentiment } from '@/lib/enums'
+import { AIPlatform } from '@/lib/enums'
 import type { MentionResult } from '@/lib/ai-visibility/queries'
 
 interface MentionCardProps {
@@ -30,7 +30,7 @@ export function MentionCard({ mention }: MentionCardProps) {
         {/* Meta: platform + sentiment + date */}
         <div className="flex flex-wrap items-center gap-2">
           <PlatformBadge platform={mention.platform as AIPlatform} />
-          <SentimentBadge sentiment={mention.brand_sentiment as BrandSentiment} />
+          <SentimentBadge sentiment={mention.brand_sentiment} />
           <span className="text-muted-foreground text-xs">
             {new Date(mention.queried_at).toLocaleDateString('en-US', {
               month: 'short',

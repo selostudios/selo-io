@@ -67,7 +67,7 @@ function PromptRow({ prompt }: { prompt: PromptWithResults }) {
   const totalPlatforms = prompt.results.length
   const sentiments = prompt.results
     .filter((r) => r.brand_mentioned)
-    .map((r) => r.brand_sentiment as BrandSentiment)
+    .map((r) => r.brand_sentiment)
   const dominantSentiment = sentiments.length > 0 ? getDominantSentiment(sentiments) : null
 
   return (
@@ -108,7 +108,7 @@ function ResultDetail({ result }: { result: AIVisibilityResult }) {
       <div className="flex items-center gap-2">
         <PlatformBadge platform={result.platform as AIPlatform} />
         {result.brand_mentioned && (
-          <SentimentBadge sentiment={result.brand_sentiment as BrandSentiment} />
+          <SentimentBadge sentiment={result.brand_sentiment} />
         )}
         <PositionBadge position={result.brand_position} />
       </div>

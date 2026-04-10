@@ -11,7 +11,7 @@ import {
   PositionBadge,
   CompetitorPills,
 } from '@/components/ai-visibility/badges'
-import { AIPlatform, BrandSentiment } from '@/lib/enums'
+import { AIPlatform } from '@/lib/enums'
 import type { ResearchResult } from '@/lib/ai-visibility/research'
 
 interface ResearchResultCardProps {
@@ -30,7 +30,7 @@ export function ResearchResultCard({ result, onSaveToMonitoring }: ResearchResul
         {/* Header: platform + status badges */}
         <div className="flex flex-wrap items-center gap-2">
           <PlatformBadge platform={result.platform as AIPlatform} />
-          <SentimentBadge sentiment={result.brand_sentiment as BrandSentiment} />
+          <SentimentBadge sentiment={result.brand_sentiment} />
           <StatusChip positive={result.brand_mentioned} label="Mentioned" />
           <StatusChip positive={result.domain_cited} label="Cited" />
           <PositionBadge position={result.brand_position} />
