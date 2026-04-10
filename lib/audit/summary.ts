@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { getAnthropicProvider } from '@/lib/ai/provider'
 import { CheckPriority, CheckStatus } from '@/lib/enums'
 import type { SiteAuditCheck } from './types'
 
@@ -66,6 +66,7 @@ Write 2-3 short paragraphs in plain text (NO markdown, NO bullet points, NO spec
 
 Maximum 100 words. Direct, professional tone. Plain text only - no asterisks, no hashes, no formatting symbols.`
 
+  const anthropic = await getAnthropicProvider()
   const { text } = await generateText({
     model: anthropic('claude-opus-4-5-20251101'),
     prompt,

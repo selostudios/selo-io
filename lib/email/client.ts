@@ -3,8 +3,19 @@ import nodemailer from 'nodemailer'
 import { render } from '@react-email/components'
 import type { ReactElement } from 'react'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getAppCredential } from '@/lib/app-settings/credentials'
 
-export const resend = new Resend(process.env.RESEND_API_KEY!)
+/**
+ * Lazily resolve the Resend client — checks database-stored encrypted
+ * credentials first, falls back to RESEND_API_KEY env var.
+ */
+async function getResendClient(): Promise<Resend> {
+  const apiKey = await getAppCredential('resend')
+  if (!apiKey) {
+    throw new Error('Resend API key not configured. Set it in App Settings > Integrations.')
+  }
+  return new Resend(apiKey)
+}
 
 if (!process.env.RESEND_FROM_EMAIL) {
   console.error('[Email] RESEND_FROM_EMAIL is not set — emails will fail in production')
@@ -93,6 +104,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   }
 
   // Production: use Resend
+  const resend = await getResendClient()
   const result = await resend.emails.send({
     from,
     to,

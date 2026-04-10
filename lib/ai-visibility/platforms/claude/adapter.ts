@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { getAnthropicProvider } from '@/lib/ai/provider'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
@@ -10,6 +10,7 @@ export class ClaudeAdapter implements AIProviderAdapter {
 
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
+      const anthropic = await getAnthropicProvider()
       const { text, usage } = await generateText({
         model: anthropic(AI_MODELS.claude),
         prompt,

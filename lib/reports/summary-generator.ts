@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { getAnthropicProvider } from '@/lib/ai/provider'
 import type { SiteAudit, SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOAudit, AIOCheck } from '@/lib/aio/types'
@@ -165,6 +165,7 @@ Write 3 short paragraphs in plain text (NO markdown, NO bullet points, NO specia
 Maximum 150 words. Warm, confident, consultative tone — like a trusted advisor, not a scorecard. Plain text only — no asterisks, no hashes, no formatting symbols.`
 
   try {
+    const anthropic = await getAnthropicProvider()
     const { text, usage } = await generateText({
       model: anthropic('claude-sonnet-4-20250514'),
       prompt,

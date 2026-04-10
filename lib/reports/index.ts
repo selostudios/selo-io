@@ -36,9 +36,6 @@ export {
   getScoreContributions,
 } from './score-calculator'
 
-// Summary generation
-export {
-  generateReportSummary,
-  generateFallbackReportSummary,
-  regenerateReportSummary,
-} from './summary-generator'
+// Summary generation — import directly from './summary-generator' in server code.
+// Not re-exported here because it depends on server-only APIs (Supabase, Anthropic)
+// which cannot be bundled into client components.

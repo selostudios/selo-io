@@ -14,7 +14,8 @@ import type {
   GeneratedReportWithAudits,
   ReportUpdateInput,
 } from '@/lib/reports/types'
-import { calculateCombinedScore, generateReportSummary } from '@/lib/reports'
+import { calculateCombinedScore } from '@/lib/reports'
+import { generateReportSummary } from '@/lib/reports/summary-generator'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOCheck } from '@/lib/aio/types'

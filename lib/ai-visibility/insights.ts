@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { getAnthropicProvider } from '@/lib/ai/provider'
 import { BrandSentiment } from '@/lib/enums'
 import type { AnalyzedResponse, OrgContext } from './analyzer'
 import { AI_MODELS } from './platforms/models'
@@ -83,6 +83,7 @@ export async function generateInsight(
   context: OrgContext
 ): Promise<{ insight: string; costCents: number } | null> {
   try {
+    const anthropic = await getAnthropicProvider()
     const prompt = buildInsightPrompt(responseText, analysis, context)
 
     const result = await generateText({

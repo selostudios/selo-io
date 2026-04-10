@@ -5,8 +5,8 @@ vi.mock('ai', () => ({
   generateText: vi.fn(),
 }))
 
-vi.mock('@ai-sdk/anthropic', () => ({
-  anthropic: vi.fn().mockReturnValue('mocked-model'),
+vi.mock('@/lib/ai/provider', () => ({
+  getAnthropicProvider: vi.fn().mockResolvedValue(vi.fn().mockReturnValue('mocked-model')),
 }))
 
 import { ClaudeAdapter } from '@/lib/ai-visibility/platforms/claude/adapter'

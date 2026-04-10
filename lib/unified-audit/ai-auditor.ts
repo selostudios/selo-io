@@ -1,5 +1,5 @@
-import { anthropic } from '@ai-sdk/anthropic'
 import { generateText } from 'ai'
+import { getAnthropicProvider } from '@/lib/ai/provider'
 import * as cheerio from 'cheerio'
 import { z } from 'zod'
 import { AIO_QUALITY_SKILL } from './skill'
@@ -156,6 +156,7 @@ Return ONLY the JSON object, no explanation text before or after.`
 
   try {
     // Use generateText with JSON mode for better control over parsing
+    const anthropic = await getAnthropicProvider()
     const result = await generateText({
       model: anthropic(MODEL),
       prompt,
