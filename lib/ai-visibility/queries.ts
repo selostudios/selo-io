@@ -125,29 +125,45 @@ export async function getTopicsWithPrompts(
   supabase: SupabaseClient,
   orgId: string
 ): Promise<TopicWithPrompts[]> {
+  // Query 1: topics with their prompts via join
   const { data: topics } = await supabase
     .from('ai_visibility_topics')
-    .select('*')
+    .select('*, ai_visibility_prompts(*)')
     .eq('organization_id', orgId)
     .eq('is_active', true)
+    .eq('ai_visibility_prompts.is_active', true)
     .order('name')
 
   if (!topics?.length) return []
 
-  const { data: prompts } = await supabase
-    .from('ai_visibility_prompts')
-    .select('*')
-    .eq('organization_id', orgId)
-    .eq('is_active', true)
-    .order('created_at')
+  // Extract prompts from joined data
+  const allPrompts = topics.flatMap(
+    (t) =>
+      ((t.ai_visibility_prompts as unknown[]) ?? []) as {
+        id: string
+        prompt_text: string
+        created_at: string
+      }[]
+  )
 
-  if (!prompts?.length) return topics.map((t) => ({ ...t, prompts: [] }))
+  if (allPrompts.length === 0) {
+    return topics.map((t) => ({
+      id: t.id,
+      name: t.name,
+      is_active: t.is_active,
+      created_at: t.created_at,
+      prompts: [],
+    }))
+  }
 
-  // Get results from the most recent sync only
+  // Query 2: latest results for all prompts
+  const promptIds = allPrompts.map((p) => p.id)
   const { data: latestResult } = await supabase
     .from('ai_visibility_results')
     .select('queried_at')
     .eq('organization_id', orgId)
+    .eq('source', 'sync')
+    .in('prompt_id', promptIds)
     .order('queried_at', { ascending: false })
     .limit(1)
 
@@ -163,7 +179,28 @@ export async function getTopicsWithPrompts(
     resultsByPrompt = groupResultsByPromptId(results ?? [])
   }
 
-  return assembleTopicsWithPrompts(topics, prompts, resultsByPrompt)
+  return topics.map((t) => {
+    const topicPrompts = ((t.ai_visibility_prompts as unknown[]) ?? []) as {
+      id: string
+      prompt_text: string
+      created_at: string
+      is_active: boolean
+      topic_id: string
+      organization_id: string
+    }[]
+    return {
+      id: t.id,
+      name: t.name,
+      is_active: t.is_active,
+      created_at: t.created_at,
+      prompts: topicPrompts
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .map((p) => ({
+          ...p,
+          results: resultsByPrompt.get(p.id) ?? [],
+        })),
+    }
+  })
 }
 
 export async function getMentions(
