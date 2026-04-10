@@ -37,7 +37,7 @@ export function ResearchResultCard({ result, onSaveToMonitoring }: ResearchResul
         </div>
 
         {/* Response text */}
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           <p>
             {expanded ? result.response_text : snippet}
             {!expanded && hasMore && '...'}
@@ -54,21 +54,19 @@ export function ResearchResultCard({ result, onSaveToMonitoring }: ResearchResul
         </div>
 
         {/* Competitor mentions */}
-        {result.competitor_mentions && (
-          <CompetitorPills competitors={result.competitor_mentions} />
-        )}
+        {result.competitor_mentions && <CompetitorPills competitors={result.competitor_mentions} />}
 
         {/* Insight */}
         {result.insight && (
           <div
-            className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-1"
+            className="space-y-1 rounded-md border border-amber-200 bg-amber-50 p-3"
             data-testid="research-insight"
           >
             <div className="flex items-center gap-1.5 text-xs font-medium text-amber-800">
               <Lightbulb className="size-3.5" />
               Insight
             </div>
-            <p className="text-sm text-amber-900 whitespace-pre-line">{result.insight}</p>
+            <p className="text-sm whitespace-pre-line text-amber-900">{result.insight}</p>
           </div>
         )}
 
