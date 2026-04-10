@@ -81,7 +81,7 @@ export async function executeResearch(
           response.costCents + analysis.sentiment_cost_cents + (insightResult?.costCents ?? 0)
 
         // Store result
-        await supabase.from('ai_visibility_results').insert({
+        const { error: insertError } = await supabase.from('ai_visibility_results').insert({
           organization_id: orgId,
           prompt_id: null,
           research_id: researchId,
@@ -101,10 +101,23 @@ export async function executeResearch(
           raw_response: null,
         })
 
+        if (insertError) {
+          console.error('[AI Visibility Research Error]', {
+            type: 'result_insert_failed',
+            platform,
+            researchId,
+            error: insertError.message,
+            timestamp: new Date().toISOString(),
+          })
+          return
+        }
+
         // Log usage
         await logUsage(platform === 'chatgpt' ? 'openai' : platform, 'research_query', {
           organizationId: orgId,
           feature: UsageFeature.AIVisibility,
+          tokensInput: response.inputTokens,
+          tokensOutput: response.outputTokens,
           cost: queryCost,
           metadata: { platform, researchId, promptText: promptText.slice(0, 100) },
         })
