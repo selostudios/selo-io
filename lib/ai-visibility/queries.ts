@@ -46,6 +46,7 @@ export function groupResultsByPromptId(
 ): Map<string, AIVisibilityResult[]> {
   const map = new Map<string, AIVisibilityResult[]>()
   for (const result of results) {
+    if (!result.prompt_id) continue
     if (!map.has(result.prompt_id)) map.set(result.prompt_id, [])
     map.get(result.prompt_id)!.push(result)
   }

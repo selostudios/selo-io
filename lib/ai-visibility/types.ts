@@ -75,7 +75,7 @@ export interface CompetitorMention {
 
 export interface AIVisibilityResult {
   id: string
-  prompt_id: string
+  prompt_id: string | null
   organization_id: string
   platform: AIPlatform
   response_text: string
@@ -89,6 +89,9 @@ export interface AIVisibilityResult {
   cost_cents: number | null
   queried_at: string
   raw_response: Record<string, unknown> | null
+  research_id: string | null
+  source: 'sync' | 'research'
+  insight: string | null
   created_at: string
 }
 
