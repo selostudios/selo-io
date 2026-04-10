@@ -3,12 +3,6 @@ import { crawlSite } from '@/lib/audit/crawler'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { siteWideChecks, pageSpecificChecks } from './checks'
-import {
-  calculateSEOScore,
-  calculatePerformanceScore,
-  calculateAIReadinessScore,
-  calculateOverallScore,
-} from './scoring'
 import { UnifiedAuditStatus, CheckStatus, ScoreDimension } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext, AuditCheckDefinition } from './types'
 import type {
@@ -18,8 +12,8 @@ import type {
   PostCrawlContext,
   PostCrawlResult,
 } from './types'
-import { runPSIAnalysis } from './psi-runner'
-import { runAIAnalysisPhase } from './ai-runner'
+import { DEFAULT_SCORE_WEIGHTS } from './types'
+import { auditModules } from './modules/registry'
 
 // Budget for starting new batches: 800s max function timeout minus 300s buffer
 const MAX_FUNCTION_DURATION_MS = 500_000
@@ -31,6 +25,31 @@ const AUDIT_CHECK_SELECT = `id, audit_id, page_url, category, check_name, priori
 
 const AUDIT_PAGE_SELECT = `id, audit_id, url, title, meta_description, status_code,
   last_modified, is_resource, resource_type, depth, created_at` as '*'
+
+// =============================================================================
+// Partial Overall Score
+// =============================================================================
+
+function calculatePartialOverallScore(moduleResults: ModuleResult[]): number | null {
+  const completed = moduleResults.filter((r) => r.status === 'completed' && r.score !== null)
+  if (completed.length === 0) return null
+
+  const weightMap: Record<string, number> = {
+    [ScoreDimension.SEO]: DEFAULT_SCORE_WEIGHTS.seo,
+    [ScoreDimension.Performance]: DEFAULT_SCORE_WEIGHTS.performance,
+    [ScoreDimension.AIReadiness]: DEFAULT_SCORE_WEIGHTS.ai_readiness,
+  }
+
+  let totalWeight = 0
+  let weightedSum = 0
+  for (const result of completed) {
+    const weight = weightMap[result.dimension] ?? 0
+    totalWeight += weight
+    weightedSum += result.score! * weight
+  }
+  if (totalWeight === 0) return null
+  return Math.round(weightedSum / totalWeight)
+}
 
 // =============================================================================
 // Helpers
@@ -340,30 +359,30 @@ export async function runUnifiedAudit(auditId: string, url: string): Promise<voi
     }
 
     if (crawlStopped) {
-      await completeAuditScoring(auditId, url, allPages, allCheckResults, null)
+      await completeAuditScoring(
+        auditId,
+        url,
+        allPages,
+        allCheckResults,
+        audit.sample_size ?? 5,
+        false,
+        audit.organization_id
+      )
       return
     }
 
     // Phase 2: Site-wide checks
     await runSiteWideChecks(auditId, url, allPages, allCheckResults, dismissedChecks)
 
-    // Phase 3: PSI + AI analysis (parallel)
-    const analysisResults = await runAnalysisPhase(
+    // Phase 3+4: Module execution (parallel) + Scoring
+    await completeAuditScoring(
       auditId,
       url,
       allPages,
       allCheckResults,
       audit.sample_size ?? 5,
-      audit.ai_analysis_enabled ?? true
-    )
-
-    // Phase 4: Scoring
-    await completeAuditScoring(
-      auditId,
-      url,
-      allPages,
-      analysisResults.checkResults,
-      analysisResults.strategicScore
+      audit.ai_analysis_enabled ?? true,
+      audit.organization_id
     )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
@@ -578,93 +597,110 @@ async function runSiteWideChecks(
 }
 
 // =============================================================================
-// PSI + AI Analysis Phase
+// Scoring & Completion
 // =============================================================================
 
-interface AnalysisPhaseResult {
-  checkResults: AuditCheck[]
-  strategicScore: number | null
-}
-
-/**
- * Run PSI and AI analysis in parallel after site-wide checks.
- * If PSI upserted checks, re-fetches all checks from DB to get fresh data.
- */
-async function runAnalysisPhase(
+async function completeAuditScoring(
   auditId: string,
   url: string,
   allPages: AuditPage[],
-  currentCheckResults: AuditCheck[],
+  allCheckResults: AuditCheck[],
   sampleSize: number,
-  aiAnalysisEnabled: boolean
-): Promise<AnalysisPhaseResult> {
+  aiAnalysisEnabled: boolean,
+  organizationId: string | null
+): Promise<void> {
   const supabase = createServiceClient()
 
   // Set status to Analyzing
   await supabase.from('audits').update({ status: UnifiedAuditStatus.Analyzing }).eq('id', auditId)
 
-  // Run PSI and AI in parallel
-  const [psiResult, aiResult] = await Promise.allSettled([
-    runPSIAnalysis(auditId, url, allPages, sampleSize),
-    runAIAnalysisPhase(auditId, url, allPages, sampleSize, aiAnalysisEnabled),
-  ])
-
-  const psiData = psiResult.status === 'fulfilled' ? psiResult.value : null
-  const aiData = aiResult.status === 'fulfilled' ? aiResult.value : null
-
-  if (psiResult.status === 'rejected') {
-    console.error('[Unified Audit] PSI analysis failed:', psiResult.reason)
+  // Build post-crawl context for modules that have analysis phases
+  const postCrawlContext: PostCrawlContext = {
+    auditId,
+    url,
+    allPages,
+    sampleSize,
+    organizationId,
   }
-  if (aiResult.status === 'rejected') {
-    console.error('[Unified Audit] AI analysis failed:', aiResult.reason)
-  }
+
+  // Execute all modules in parallel (PSI, AI analysis, scoring)
+  const moduleResults = await executeModules(
+    auditModules,
+    allCheckResults,
+    aiAnalysisEnabled ? postCrawlContext : undefined
+  )
 
   // If PSI upserted checks, re-fetch all checks from DB (in-memory array is stale)
-  let checkResults = currentCheckResults
-  if (psiData && psiData.checksUpserted > 0) {
+  const psiResult = moduleResults.find((r) => r.dimension === ScoreDimension.Performance)
+  let finalCheckResults = allCheckResults
+  if (psiResult?.phaseResult && (psiResult.phaseResult.checksUpserted as number) > 0) {
     const { data: freshChecks } = await supabase
       .from('audit_checks')
       .select(AUDIT_CHECK_SELECT)
       .eq('audit_id', auditId)
 
     if (freshChecks) {
-      checkResults = freshChecks as AuditCheck[]
+      finalCheckResults = freshChecks as AuditCheck[]
+
+      // Re-run scoring with fresh checks
+      const refreshedResults = await executeModules(auditModules, finalCheckResults)
+      // Merge: keep phase results from original run, update scores from refreshed run
+      for (const refreshed of refreshedResults) {
+        const original = moduleResults.find((r) => r.dimension === refreshed.dimension)
+        if (original) {
+          original.score = refreshed.score
+          if (refreshed.status === 'completed') {
+            original.status = refreshed.status
+          }
+        }
+      }
     }
   }
 
-  return {
-    checkResults,
-    strategicScore: aiData?.strategicScore ?? null,
+  // Build module metadata from results
+  const moduleTimings: Record<string, number> = {}
+  const moduleStatuses: Record<string, ModuleStatus> = {}
+  const moduleErrors: Record<string, ModuleError> = {}
+
+  for (const result of moduleResults) {
+    moduleTimings[result.dimension] = result.durationMs
+    moduleStatuses[result.dimension] = result.status
+    if (result.error) {
+      moduleErrors[result.dimension] = result.error
+    }
   }
-}
 
-// =============================================================================
-// Scoring & Completion
-// =============================================================================
+  // Extract per-dimension scores
+  const seoScore = moduleResults.find((r) => r.dimension === ScoreDimension.SEO)?.score ?? null
+  const performanceScore =
+    moduleResults.find((r) => r.dimension === ScoreDimension.Performance)?.score ?? null
+  const aiReadinessScore =
+    moduleResults.find((r) => r.dimension === ScoreDimension.AIReadiness)?.score ?? null
 
-async function completeAuditScoring(
-  auditId: string,
-  _url: string,
-  _allPages: AuditPage[],
-  allCheckResults: AuditCheck[],
-  strategicScore: number | null = null
-): Promise<void> {
-  const supabase = createServiceClient()
+  // Calculate overall score using partial weighting (handles failed modules gracefully)
+  const overallScore = calculatePartialOverallScore(moduleResults)
 
-  const seoScore = calculateSEOScore(allCheckResults)
-  const performanceScore = calculatePerformanceScore(allCheckResults)
-  const aiReadinessScore = calculateAIReadinessScore(allCheckResults, strategicScore)
-  const overallScore = calculateOverallScore(seoScore, performanceScore, aiReadinessScore)
+  // Determine final audit status
+  const failedModuleCount = moduleResults.filter((r) => r.status === 'failed').length
+  let finalStatus: UnifiedAuditStatus
+  if (failedModuleCount === moduleResults.length) {
+    finalStatus = UnifiedAuditStatus.Failed
+  } else if (failedModuleCount > 0) {
+    finalStatus = UnifiedAuditStatus.CompletedWithErrors
+  } else {
+    finalStatus = UnifiedAuditStatus.Completed
+  }
 
-  // Count by status
-  const failedCount = allCheckResults.filter((c) => c.status === CheckStatus.Failed).length
-  const warningCount = allCheckResults.filter((c) => c.status === CheckStatus.Warning).length
-  const passedCount = allCheckResults.filter((c) => c.status === CheckStatus.Passed).length
+  // Count check statuses
+  const checksToCount = finalCheckResults
+  const failedCount = checksToCount.filter((c) => c.status === CheckStatus.Failed).length
+  const warningCount = checksToCount.filter((c) => c.status === CheckStatus.Warning).length
+  const passedCount = checksToCount.filter((c) => c.status === CheckStatus.Passed).length
 
   await supabase
     .from('audits')
     .update({
-      status: UnifiedAuditStatus.Completed,
+      status: finalStatus,
       overall_score: overallScore,
       seo_score: seoScore,
       performance_score: performanceScore,
@@ -672,13 +708,16 @@ async function completeAuditScoring(
       failed_count: failedCount,
       warning_count: warningCount,
       passed_count: passedCount,
+      module_timings: moduleTimings,
+      module_statuses: moduleStatuses,
+      module_errors: moduleErrors,
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq('id', auditId)
 
   console.log(
-    `[Unified Audit] Audit ${auditId} completed. SEO=${seoScore}, Performance=${performanceScore}, AI=${aiReadinessScore}, Overall=${overallScore}`
+    `[Unified Audit] Audit ${auditId} ${finalStatus}. SEO=${seoScore}, Performance=${performanceScore}, AI=${aiReadinessScore}, Overall=${overallScore}`
   )
 }
 
@@ -751,29 +790,20 @@ async function finishUnifiedAudit(
   // Fetch audit config for analysis phase
   const { data: auditConfig } = await supabase
     .from('audits')
-    .select('sample_size, ai_analysis_enabled')
+    .select('organization_id, sample_size, ai_analysis_enabled')
     .eq('id', auditId)
     .single()
 
-  // Run PSI + AI analysis (skip if stopped)
-  let strategicScore: number | null = null
-  let finalCheckResults = allCheckResults
-
-  if (!wasStopped) {
-    const analysisResults = await runAnalysisPhase(
-      auditId,
-      url,
-      allPages,
-      allCheckResults,
-      auditConfig?.sample_size ?? 5,
-      auditConfig?.ai_analysis_enabled ?? true
-    )
-    strategicScore = analysisResults.strategicScore
-    finalCheckResults = analysisResults.checkResults
-  }
-
-  // Scoring
-  await completeAuditScoring(auditId, url, allPages, finalCheckResults, strategicScore)
+  // Module execution + Scoring
+  await completeAuditScoring(
+    auditId,
+    url,
+    allPages,
+    allCheckResults,
+    auditConfig?.sample_size ?? 5,
+    wasStopped ? false : (auditConfig?.ai_analysis_enabled ?? true),
+    auditConfig?.organization_id ?? null
+  )
 }
 
 // =============================================================================

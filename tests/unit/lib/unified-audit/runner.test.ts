@@ -186,33 +186,33 @@ describe('completeAuditScoring', () => {
       },
     ]
 
-    await completeAuditScoring('a1', 'https://example.com', pages, checks)
+    await completeAuditScoring('a1', 'https://example.com', pages, checks, 5, true, null)
 
     // Verify update was called
     expect(mockFrom).toHaveBeenCalledWith('audits')
     expect(mockUpdate).toHaveBeenCalled()
 
-    // Get the scores that were passed to update
-    const updateCall = mockUpdate.mock.calls[0][0]
+    // The first update sets status to 'analyzing', the second is the final scoring update
+    const finalUpdateCall = mockUpdate.mock.calls[mockUpdate.mock.calls.length - 1][0]
 
     // SEO: critical(3) passed + recommended(2) failed = 300/(500) = 60%
-    expect(updateCall.seo_score).toBe(60)
+    expect(finalUpdateCall.seo_score).toBe(60)
 
     // AI Readiness: critical(3) warning = 150/300 = 50% (no strategic, 100% programmatic)
-    expect(updateCall.ai_readiness_score).toBe(50)
+    expect(finalUpdateCall.ai_readiness_score).toBe(50)
 
     // Performance: critical(3) passed = 300/300 = 100%
-    expect(updateCall.performance_score).toBe(100)
+    expect(finalUpdateCall.performance_score).toBe(100)
 
     // Overall: 60*0.4 + 100*0.3 + 50*0.3 = 24 + 30 + 15 = 69
-    expect(updateCall.overall_score).toBe(69)
+    expect(finalUpdateCall.overall_score).toBe(69)
 
     // Counts
-    expect(updateCall.failed_count).toBe(1)
-    expect(updateCall.warning_count).toBe(1)
-    expect(updateCall.passed_count).toBe(2)
+    expect(finalUpdateCall.failed_count).toBe(1)
+    expect(finalUpdateCall.warning_count).toBe(1)
+    expect(finalUpdateCall.passed_count).toBe(2)
 
-    expect(updateCall.status).toBe('completed')
+    expect(finalUpdateCall.status).toBe('completed')
   })
 
   it('returns 0 for dimensions with no matching checks', async () => {
@@ -253,15 +253,17 @@ describe('completeAuditScoring', () => {
       },
     ]
 
-    await completeAuditScoring('a1', 'https://example.com', pages, checks)
+    await completeAuditScoring('a1', 'https://example.com', pages, checks, 5, true, null)
 
-    const updateCall = mockUpdate.mock.calls[0][0]
-    expect(updateCall.seo_score).toBe(100)
+    // The first update sets status to 'analyzing', the second is the final scoring update
+    const finalUpdateCall = mockUpdate.mock.calls[mockUpdate.mock.calls.length - 1][0]
+    expect(finalUpdateCall.seo_score).toBe(100)
     // No performance or AI checks → calculateCheckScore returns 0
-    expect(updateCall.ai_readiness_score).toBe(0)
-    expect(updateCall.performance_score).toBe(0)
-    // Overall: null because calculateOverallScore gets 100, 0, 0 → 100*0.4 + 0*0.3 + 0*0.3 = 40
-    expect(updateCall.overall_score).toBe(40)
+    expect(finalUpdateCall.ai_readiness_score).toBe(0)
+    expect(finalUpdateCall.performance_score).toBe(0)
+    // Overall with partial weighting: all 3 modules complete with scores 100, 0, 0
+    // = (100*0.4 + 0*0.3 + 0*0.3) / (0.4+0.3+0.3) = 40/1.0 = 40
+    expect(finalUpdateCall.overall_score).toBe(40)
   })
 })
 
