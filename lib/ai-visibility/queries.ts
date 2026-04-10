@@ -149,10 +149,7 @@ export async function getTopicsWithPrompts(
 
   if (allPrompts.length === 0) {
     return topics.map((t) => ({
-      id: t.id,
-      name: t.name,
-      is_active: t.is_active,
-      created_at: t.created_at,
+      ...t,
       prompts: [],
     }))
   }
@@ -190,10 +187,7 @@ export async function getTopicsWithPrompts(
       organization_id: string
     }[]
     return {
-      id: t.id,
-      name: t.name,
-      is_active: t.is_active,
-      created_at: t.created_at,
+      ...t,
       prompts: topicPrompts
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .map((p) => ({
