@@ -152,6 +152,7 @@ export async function getResearchResults(researchId: string): Promise<ResearchRe
 
 export interface ResearchResult {
   id: string
+  organization_id: string
   platform: AIPlatform
   response_text: string
   brand_mentioned: boolean
