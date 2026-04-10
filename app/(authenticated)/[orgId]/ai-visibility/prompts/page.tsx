@@ -1,17 +1,37 @@
+import { createClient } from '@/lib/supabase/server'
+import { PageHeader } from '@/components/ai-visibility/page-header'
+import { PromptAccordion } from '@/components/ai-visibility/prompt-accordion'
+import { AddPromptDialog } from '@/components/ai-visibility/add-prompt-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { MessageSquareText } from 'lucide-react'
+import { getTopicsWithPrompts } from '@/lib/ai-visibility/queries'
 
-export default function AIVisibilityPromptsPage() {
+export const dynamic = 'force-dynamic'
+
+interface PageProps {
+  params: Promise<{ orgId: string }>
+}
+
+export default async function PromptsPage({ params }: PageProps) {
+  const { orgId } = await params
+  const supabase = await createClient()
+  const topics = await getTopicsWithPrompts(supabase, orgId)
+
   return (
     <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-2xl font-bold" data-testid="ai-visibility-prompts-page-title">
-        Prompts
-      </h1>
-      <EmptyState
-        icon={MessageSquareText}
-        title="No prompts configured"
-        description="Add topics and prompts to start tracking your brand's AI visibility."
-      />
+      <PageHeader title="Prompts">
+        <AddPromptDialog orgId={orgId} existingTopics={topics} />
+      </PageHeader>
+
+      {topics.length === 0 ? (
+        <EmptyState
+          icon={MessageSquareText}
+          title="No prompts configured"
+          description="Add prompts to track how AI platforms respond to queries about your brand."
+        />
+      ) : (
+        <PromptAccordion topics={topics} />
+      )}
     </div>
   )
 }

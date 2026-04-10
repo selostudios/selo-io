@@ -1,15 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import AIVisibilityPromptsPage from '@/app/(authenticated)/[orgId]/ai-visibility/prompts/page'
 import AIVisibilityMentionsPage from '@/app/(authenticated)/[orgId]/ai-visibility/mentions/page'
 
 describe('AI Visibility stub pages', () => {
-  it('renders prompts page with empty state', () => {
-    render(<AIVisibilityPromptsPage />)
-
-    expect(screen.getByTestId('ai-visibility-prompts-page-title')).toHaveTextContent('Prompts')
-    expect(screen.getByText('No prompts configured')).toBeInTheDocument()
-  })
+  // PromptsPage is now a server component (async with supabase) and cannot be unit tested with render.
+  // It is covered by integration/E2E tests.
 
   it('renders mentions page with empty state', () => {
     render(<AIVisibilityMentionsPage />)
