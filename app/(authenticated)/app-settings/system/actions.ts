@@ -9,6 +9,9 @@ interface HealthStatus {
   name: string
   status: 'healthy' | 'unconfigured' | 'inactive'
   lastActivity: string | null
+  hint: string | null
+  actionLabel: string | null
+  actionHref: string | null
 }
 
 interface ServiceTotal {
@@ -90,10 +93,56 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
       .single(),
   ])
 
+  const SERVICE_HINTS: Record<
+    string,
+    {
+      unconfigured: string
+      inactive: string
+      actionLabel: string
+      actionHref: string
+    }
+  > = {
+    anthropic: {
+      unconfigured: 'Add your Anthropic API key to enable AI-powered audit analysis.',
+      inactive:
+        'No AI analysis has run in the last 7 days. Run an audit with AI analysis enabled to activate.',
+      actionLabel: 'Configure API Key',
+      actionHref: '/app-settings/integrations',
+    },
+    resend: {
+      unconfigured: 'Add your Resend API key to enable email sending.',
+      inactive:
+        'No emails sent in the last 7 days. Emails are triggered by invites, weekly summaries, and alerts.',
+      actionLabel: 'Configure API Key',
+      actionHref: '/app-settings/integrations',
+    },
+    pagespeed: {
+      unconfigured: 'Add your PageSpeed Insights API key to enable performance audits.',
+      inactive: 'No PageSpeed checks in the last 7 days. Run an audit to activate.',
+      actionLabel: 'Configure API Key',
+      actionHref: '/app-settings/integrations',
+    },
+    weekly_audits: {
+      unconfigured: '',
+      inactive:
+        'No scheduled audits in the last 7 days. Enable site monitoring on an organization to activate.',
+      actionLabel: 'View Organizations',
+      actionHref: '/organizations',
+    },
+    daily_metrics: {
+      unconfigured: '',
+      inactive:
+        'No platform syncs in the last 7 days. Connect a platform (LinkedIn, HubSpot, GA) on an organization.',
+      actionLabel: 'View Organizations',
+      actionHref: '/organizations',
+    },
+  }
+
   const logResults = [anthropicLog, resendLog, pagespeedLog]
   const healthResults: HealthStatus[] = apiServices.map((service, i) => {
     const isConfigured = configuredKeys.has(service) || !!process.env[ENV_VAR_MAP[service]]
     const lastLog = logResults[i].data
+    const hints = SERVICE_HINTS[service]
 
     let status: HealthStatus['status'] = 'unconfigured'
     if (isConfigured) {
@@ -109,29 +158,44 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
       name: nameMap[service] ?? service,
       status,
       lastActivity: lastLog?.created_at ?? null,
+      hint: status === 'healthy' ? null : (hints?.[status] ?? null),
+      actionLabel: status === 'healthy' ? null : (hints?.actionLabel ?? null),
+      actionHref: status === 'healthy' ? null : (hints?.actionHref ?? null),
     }
   })
+
+  const weeklyAuditHints = SERVICE_HINTS['weekly_audits']
+  const weeklyAuditStatus: HealthStatus['status'] = lastCronAudit.data
+    ? new Date(lastCronAudit.data.created_at) > new Date(sevenDaysAgo)
+      ? 'healthy'
+      : 'inactive'
+    : 'inactive'
 
   healthResults.push({
     service: 'weekly_audits',
     name: 'Weekly Audits Cron',
-    status: lastCronAudit.data
-      ? new Date(lastCronAudit.data.created_at) > new Date(sevenDaysAgo)
-        ? 'healthy'
-        : 'inactive'
-      : 'inactive',
+    status: weeklyAuditStatus,
     lastActivity: lastCronAudit.data?.created_at ?? null,
+    hint: weeklyAuditStatus === 'healthy' ? null : weeklyAuditHints.inactive,
+    actionLabel: weeklyAuditStatus === 'healthy' ? null : weeklyAuditHints.actionLabel,
+    actionHref: weeklyAuditStatus === 'healthy' ? null : weeklyAuditHints.actionHref,
   })
+
+  const dailyMetricsHints = SERVICE_HINTS['daily_metrics']
+  const dailyMetricsStatus: HealthStatus['status'] = lastSync.data
+    ? new Date(lastSync.data.last_sync_at) > new Date(sevenDaysAgo)
+      ? 'healthy'
+      : 'inactive'
+    : 'inactive'
 
   healthResults.push({
     service: 'daily_metrics',
     name: 'Daily Metrics Sync',
-    status: lastSync.data
-      ? new Date(lastSync.data.last_sync_at) > new Date(sevenDaysAgo)
-        ? 'healthy'
-        : 'inactive'
-      : 'inactive',
+    status: dailyMetricsStatus,
     lastActivity: lastSync.data?.last_sync_at ?? null,
+    hint: dailyMetricsStatus === 'healthy' ? null : dailyMetricsHints.inactive,
+    actionLabel: dailyMetricsStatus === 'healthy' ? null : dailyMetricsHints.actionLabel,
+    actionHref: dailyMetricsStatus === 'healthy' ? null : dailyMetricsHints.actionHref,
   })
 
   return healthResults
