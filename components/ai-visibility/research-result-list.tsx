@@ -1,14 +1,9 @@
 'use client'
 
 import { AIPlatform } from '@/lib/enums'
+import { PLATFORM_DISPLAY_NAMES } from '@/lib/ai-visibility/types'
 import { ResearchResultCard } from './research-result-card'
 import type { ResearchResult } from '@/lib/ai-visibility/research'
-
-const PLATFORM_LABELS: Record<string, string> = {
-  [AIPlatform.ChatGPT]: 'ChatGPT',
-  [AIPlatform.Claude]: 'Claude',
-  [AIPlatform.Perplexity]: 'Perplexity',
-}
 
 interface ResearchResultListProps {
   results: ResearchResult[]
@@ -49,8 +44,8 @@ export function ResearchResultList({
           <div className="size-2 animate-pulse rounded-full bg-gray-400" />
           <span className="text-muted-foreground text-sm">
             {timedOut
-              ? `${PLATFORM_LABELS[platform] ?? platform} — timed out`
-              : `${PLATFORM_LABELS[platform] ?? platform} — loading...`}
+              ? `${PLATFORM_DISPLAY_NAMES[platform] ?? platform} — timed out`
+              : `${PLATFORM_DISPLAY_NAMES[platform] ?? platform} — loading...`}
           </span>
         </div>
       ))}

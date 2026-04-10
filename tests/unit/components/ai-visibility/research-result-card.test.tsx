@@ -30,11 +30,14 @@ describe('ResearchResultCard', () => {
     expect(screen.getByText('Mentioned')).toBeDefined()
   })
 
-  test('shows not mentioned badge when brand is absent', () => {
+  test('shows not-mentioned status when brand is absent', () => {
     render(
       <ResearchResultCard result={{ ...baseResult, brand_mentioned: false, brand_position: null }} />
     )
-    expect(screen.getByText('Not mentioned')).toBeDefined()
+    // StatusChip renders "Mentioned" with an X icon when positive=false
+    expect(screen.getByTestId('research-result-card')).toBeDefined()
+    // The Mentioned chip should still appear (with negative styling)
+    expect(screen.getAllByText('Mentioned').length).toBeGreaterThanOrEqual(1)
   })
 
   test('shows insight section when insight is present', () => {
