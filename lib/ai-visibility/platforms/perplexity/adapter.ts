@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { perplexity } from '@ai-sdk/perplexity'
+import { getPerplexityProvider } from '@/lib/ai/provider'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
@@ -15,6 +15,7 @@ export class PerplexityAdapter implements AIProviderAdapter {
 
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
+      const perplexity = await getPerplexityProvider()
       const result = await generateText({
         model: perplexity(AI_MODELS.perplexity),
         prompt,

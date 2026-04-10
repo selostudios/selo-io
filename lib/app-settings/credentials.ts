@@ -3,6 +3,8 @@ import { decryptCredentials } from '@/lib/utils/crypto'
 
 export const ENV_VAR_MAP: Record<string, string> = {
   anthropic: 'ANTHROPIC_API_KEY',
+  openai: 'OPENAI_API_KEY',
+  perplexity: 'PERPLEXITY_API_KEY',
   resend: 'RESEND_API_KEY',
   pagespeed: 'PAGESPEED_API_KEY',
   cron_secret: 'CRON_SECRET',
@@ -11,6 +13,8 @@ export const ENV_VAR_MAP: Record<string, string> = {
 /** Credential value key within the decrypted JSONB per setting type */
 const CREDENTIAL_FIELD: Record<string, string> = {
   anthropic: 'api_key',
+  openai: 'api_key',
+  perplexity: 'api_key',
   resend: 'api_key',
   pagespeed: 'api_key',
   cron_secret: 'secret',

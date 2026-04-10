@@ -5,8 +5,8 @@ vi.mock('ai', () => ({
   generateText: vi.fn(),
 }))
 
-vi.mock('@ai-sdk/perplexity', () => ({
-  perplexity: vi.fn().mockReturnValue('mocked-model'),
+vi.mock('@/lib/ai/provider', () => ({
+  getPerplexityProvider: vi.fn().mockResolvedValue(vi.fn().mockReturnValue('mocked-model')),
 }))
 
 import { PerplexityAdapter } from '@/lib/ai-visibility/platforms/perplexity/adapter'

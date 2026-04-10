@@ -3,7 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Bot, Mail, Gauge, KeyRound, Loader2, Info, ExternalLink } from 'lucide-react'
+import {
+  Bot,
+  Mail,
+  Gauge,
+  KeyRound,
+  Loader2,
+  Info,
+  ExternalLink,
+  MessageSquare,
+  Search,
+} from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +59,28 @@ const PROVIDERS = [
     testable: true,
     setupHint: 'Required for AI-powered audit analysis, report summaries, and AI visibility.',
     docsUrl: 'https://console.anthropic.com/settings/keys',
+    docsLabel: 'Get API Key',
+  },
+  {
+    key: 'openai',
+    name: 'OpenAI',
+    description: 'ChatGPT API for AI Visibility monitoring',
+    icon: MessageSquare,
+    placeholder: 'sk-...',
+    testable: true,
+    setupHint: 'Required for tracking how your brand appears in ChatGPT responses.',
+    docsUrl: 'https://platform.openai.com/api-keys',
+    docsLabel: 'Get API Key',
+  },
+  {
+    key: 'perplexity',
+    name: 'Perplexity',
+    description: 'Perplexity API for AI Visibility monitoring',
+    icon: Search,
+    placeholder: 'pplx-...',
+    testable: true,
+    setupHint: 'Required for tracking how your brand appears in Perplexity search responses.',
+    docsUrl: 'https://docs.perplexity.ai/guides/getting-started',
     docsLabel: 'Get API Key',
   },
   {

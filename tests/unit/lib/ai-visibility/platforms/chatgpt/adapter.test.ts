@@ -5,8 +5,8 @@ vi.mock('ai', () => ({
   generateText: vi.fn(),
 }))
 
-vi.mock('@ai-sdk/openai', () => ({
-  openai: vi.fn().mockReturnValue('mocked-model'),
+vi.mock('@/lib/ai/provider', () => ({
+  getOpenAIProvider: vi.fn().mockResolvedValue(vi.fn().mockReturnValue('mocked-model')),
 }))
 
 import { ChatGPTAdapter } from '@/lib/ai-visibility/platforms/chatgpt/adapter'

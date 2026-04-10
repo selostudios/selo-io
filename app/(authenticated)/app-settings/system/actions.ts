@@ -48,50 +48,67 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
   const configuredKeys = new Set((settings ?? []).map((s) => s.key))
 
   // Get last activity from usage_logs per service + cron/sync health in parallel
-  const apiServices = ['anthropic', 'resend', 'pagespeed'] as const
+  const apiServices = ['anthropic', 'openai', 'perplexity', 'resend', 'pagespeed'] as const
   const nameMap: Record<string, string> = {
     anthropic: 'Anthropic API',
+    openai: 'OpenAI API',
+    perplexity: 'Perplexity API',
     resend: 'Email (Resend)',
     pagespeed: 'PageSpeed Insights',
   }
 
-  const [anthropicLog, resendLog, pagespeedLog, lastCronAudit, lastSync] = await Promise.all([
-    serviceClient
-      .from('usage_logs')
-      .select('created_at')
-      .eq('service', 'anthropic')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
-    serviceClient
-      .from('usage_logs')
-      .select('created_at')
-      .eq('service', 'resend')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
-    serviceClient
-      .from('usage_logs')
-      .select('created_at')
-      .eq('service', 'pagespeed')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
-    serviceClient
-      .from('audits')
-      .select('created_at')
-      .is('created_by', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
-    serviceClient
-      .from('platform_connections')
-      .select('last_sync_at')
-      .not('last_sync_at', 'is', null)
-      .order('last_sync_at', { ascending: false })
-      .limit(1)
-      .single(),
-  ])
+  const [anthropicLog, openaiLog, perplexityLog, resendLog, pagespeedLog, lastCronAudit, lastSync] =
+    await Promise.all([
+      serviceClient
+        .from('usage_logs')
+        .select('created_at')
+        .eq('service', 'anthropic')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('usage_logs')
+        .select('created_at')
+        .eq('service', 'openai')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('usage_logs')
+        .select('created_at')
+        .eq('service', 'perplexity')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('usage_logs')
+        .select('created_at')
+        .eq('service', 'resend')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('usage_logs')
+        .select('created_at')
+        .eq('service', 'pagespeed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('audits')
+        .select('created_at')
+        .is('created_by', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+      serviceClient
+        .from('platform_connections')
+        .select('last_sync_at')
+        .not('last_sync_at', 'is', null)
+        .order('last_sync_at', { ascending: false })
+        .limit(1)
+        .single(),
+    ])
 
   const SERVICE_HINTS: Record<
     string,
@@ -106,6 +123,18 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
       unconfigured: 'Add your Anthropic API key to enable AI-powered audit analysis.',
       inactive:
         'No AI analysis has run in the last 7 days. Run an audit with AI analysis enabled to activate.',
+      actionLabel: 'Configure API Key',
+      actionHref: '/app-settings/integrations',
+    },
+    openai: {
+      unconfigured: 'Add your OpenAI API key to track brand visibility in ChatGPT.',
+      inactive: 'No ChatGPT queries in the last 7 days. Run an AI Visibility sync to activate.',
+      actionLabel: 'Configure API Key',
+      actionHref: '/app-settings/integrations',
+    },
+    perplexity: {
+      unconfigured: 'Add your Perplexity API key to track brand visibility in Perplexity.',
+      inactive: 'No Perplexity queries in the last 7 days. Run an AI Visibility sync to activate.',
       actionLabel: 'Configure API Key',
       actionHref: '/app-settings/integrations',
     },
@@ -138,7 +167,7 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
     },
   }
 
-  const logResults = [anthropicLog, resendLog, pagespeedLog]
+  const logResults = [anthropicLog, openaiLog, perplexityLog, resendLog, pagespeedLog]
   const healthResults: HealthStatus[] = apiServices.map((service, i) => {
     const isConfigured = configuredKeys.has(service) || !!process.env[ENV_VAR_MAP[service]]
     const lastLog = logResults[i].data

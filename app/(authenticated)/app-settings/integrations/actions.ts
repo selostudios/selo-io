@@ -16,6 +16,8 @@ interface AppSettingDisplay {
 
 const CREDENTIAL_FIELD: Record<string, string> = {
   anthropic: 'api_key',
+  openai: 'api_key',
+  perplexity: 'api_key',
   resend: 'api_key',
   pagespeed: 'api_key',
   cron_secret: 'secret',
@@ -57,7 +59,15 @@ export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: s
     }
   }
 
-  const allKeys = ['anthropic', 'resend', 'pagespeed', 'cron_secret', 'email_config']
+  const allKeys = [
+    'anthropic',
+    'openai',
+    'perplexity',
+    'resend',
+    'pagespeed',
+    'cron_secret',
+    'email_config',
+  ]
   const settingsMap = new Map((settings ?? []).map((s) => [s.key, s]))
 
   return allKeys.map((key) => {
@@ -193,6 +203,43 @@ export async function testAppConnection(
         })
         if (!res.ok) {
           return { success: false, message: `API returned ${res.status}` }
+        }
+        return { success: true, message: 'Connected successfully' }
+      }
+
+      case 'openai': {
+        const res = await fetch('https://api.openai.com/v1/models', {
+          headers: { Authorization: `Bearer ${credential}` },
+        })
+        if (!res.ok) {
+          const body = await res.text()
+          return {
+            success: false,
+            message: `API returned ${res.status}: ${body.slice(0, 200)}`,
+          }
+        }
+        return { success: true, message: 'Connected successfully' }
+      }
+
+      case 'perplexity': {
+        const res = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${credential}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'sonar',
+            messages: [{ role: 'user', content: 'ping' }],
+            max_tokens: 1,
+          }),
+        })
+        if (!res.ok) {
+          const body = await res.text()
+          return {
+            success: false,
+            message: `API returned ${res.status}: ${body.slice(0, 200)}`,
+          }
         }
         return { success: true, message: 'Connected successfully' }
       }

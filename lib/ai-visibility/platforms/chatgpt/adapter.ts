@@ -1,5 +1,5 @@
 import { generateText } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { getOpenAIProvider } from '@/lib/ai/provider'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
@@ -10,6 +10,7 @@ export class ChatGPTAdapter implements AIProviderAdapter {
 
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
+      const openai = await getOpenAIProvider()
       const { text, usage } = await generateText({
         model: openai(AI_MODELS.chatgpt),
         prompt,

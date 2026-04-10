@@ -3,7 +3,17 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
-import { Bot, Mail, Gauge, Calendar, RefreshCw, ArrowRight, Info } from 'lucide-react'
+import {
+  Bot,
+  Mail,
+  Gauge,
+  Calendar,
+  RefreshCw,
+  ArrowRight,
+  Info,
+  MessageSquare,
+  Search,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -71,6 +81,8 @@ function formatNumber(n: number): string {
 
 const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   anthropic: Bot,
+  openai: MessageSquare,
+  perplexity: Search,
   resend: Mail,
   pagespeed: Gauge,
   weekly_audits: Calendar,
