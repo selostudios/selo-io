@@ -17,7 +17,16 @@ export async function GET(
 
   const { researchId } = await params
 
-  const results = await getResearchResults(researchId)
-
-  return NextResponse.json(results)
+  try {
+    const results = await getResearchResults(researchId)
+    return NextResponse.json(results)
+  } catch (error) {
+    console.error('[Research Results Error]', {
+      type: 'results_fetch_failed',
+      researchId,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+    })
+    return NextResponse.json({ error: 'Failed to fetch results' }, { status: 500 })
+  }
 }
