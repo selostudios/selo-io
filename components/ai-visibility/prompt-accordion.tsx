@@ -99,9 +99,7 @@ function PromptRow({ prompt }: { prompt: PromptWithResults }) {
       )}
       {expanded && prompt.results.length === 0 && (
         <div className="border-t p-3">
-          <p className="text-muted-foreground text-center text-sm">
-            Awaiting first sync results
-          </p>
+          <p className="text-muted-foreground text-center text-sm">Awaiting first sync results</p>
         </div>
       )}
     </div>
