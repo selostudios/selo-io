@@ -1,7 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { InviteStatus } from '@/lib/enums'
 
 export async function signInWithEmail(
   formData: FormData,
@@ -78,4 +79,100 @@ export async function signInWithOAuth(
     timestamp: new Date().toISOString(),
   })
   return { error: 'Failed to initiate sign-in. Please try again.' }
+}
+
+export async function signUpWithInvite(
+  formData: FormData,
+  inviteId: string
+): Promise<{ error: string } | undefined> {
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirmPassword') as string
+
+  if (!email || !password || !confirmPassword) {
+    return { error: 'All fields are required' }
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: 'Invalid email format' }
+  }
+  if (password.length < 8) {
+    return { error: 'Password must be at least 8 characters' }
+  }
+  if (password !== confirmPassword) {
+    return { error: 'Passwords do not match' }
+  }
+
+  // Validate that a pending invite exists for this email
+  const serviceClient = createServiceClient()
+  const { data: invite, error: inviteError } = await serviceClient
+    .from('invites')
+    .select('id, email, status, expires_at')
+    .eq('id', inviteId)
+    .eq('status', InviteStatus.Pending)
+    .single()
+
+  if (inviteError || !invite) {
+    return { error: 'Invalid or expired invitation' }
+  }
+
+  if (new Date(invite.expires_at) < new Date()) {
+    return { error: 'This invitation has expired' }
+  }
+
+  if (invite.email.toLowerCase() !== email.toLowerCase()) {
+    return { error: 'Email does not match the invitation' }
+  }
+
+  // Create user via service client with auto-confirm (invite is the verification)
+  const { data: authData, error: createError } = await serviceClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+
+  if (createError) {
+    if (createError.message?.includes('already been registered')) {
+      return { error: 'An account with this email already exists. Please sign in instead.' }
+    }
+    console.error('[Auth Error]', {
+      type: 'invite_signup',
+      error: createError.message,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: 'Failed to create account. Please try again.' }
+  }
+
+  // Create public.users row
+  const { error: userRecordError } = await serviceClient.from('users').insert({
+    id: authData.user.id,
+  })
+
+  if (userRecordError) {
+    console.error('[Auth Error]', {
+      type: 'invite_signup_user_record',
+      error: userRecordError.message,
+      timestamp: new Date().toISOString(),
+    })
+    // Clean up auth user on failure
+    await serviceClient.auth.admin.deleteUser(authData.user.id)
+    return { error: 'Failed to create account. Please try again.' }
+  }
+
+  // Sign the user in
+  const supabase = await createClient()
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (signInError) {
+    console.error('[Auth Error]', {
+      type: 'invite_signup_signin',
+      error: signInError.message,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: 'Account created but sign-in failed. Please sign in manually.' }
+  }
+
+  redirect(`/accept-invite/${inviteId}`)
 }

@@ -3,27 +3,36 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { signInWithEmail, signInWithOAuth } from '@/app/login/actions'
+import { signInWithEmail, signInWithOAuth, signUpWithInvite } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 
 export function LoginForm() {
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || undefined
+  const initialMode = searchParams.get('mode') || 'signin'
+
+  // Extract invite ID from redirect path (e.g. /accept-invite/abc123)
+  const inviteId = redirectTo?.match(/^\/accept-invite\/(.+)$/)?.[1] ?? null
+  const isInviteFlow = !!inviteId
+
+  const [mode, setMode] = useState<'signin' | 'signup'>(
+    initialMode === 'signup' && isInviteFlow ? 'signup' : 'signin'
+  )
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || undefined
+  const [confirmPassword, setConfirmPassword] = useState('')
 
-  // Simple email validation
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
 
-  const isFormValid = isValidEmail(email) && password.length > 0
+  const isFormValid =
+    mode === 'signup'
+      ? isValidEmail(email) && password.length >= 8 && confirmPassword.length > 0
+      : isValidEmail(email) && password.length > 0
 
   async function handleEmailSignIn(formData: FormData) {
     setIsLoading(true)
@@ -34,8 +43,22 @@ export function LoginForm() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-      setPassword('') // Clear password on error
-      // Keep email value
+      setPassword('')
+    }
+  }
+
+  async function handleSignUp(formData: FormData) {
+    if (!inviteId) return
+    setIsLoading(true)
+    setError(null)
+
+    const result = await signUpWithInvite(formData, inviteId)
+
+    if (result?.error) {
+      setError(result.error)
+      setIsLoading(false)
+      setPassword('')
+      setConfirmPassword('')
     }
   }
 
@@ -51,6 +74,8 @@ export function LoginForm() {
     }
   }
 
+  const isSignUp = mode === 'signup'
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-2">
@@ -64,10 +89,12 @@ export function LoginForm() {
             className="object-contain"
           />
         </div>
-        <CardDescription className="text-center">Sign in to your account</CardDescription>
+        <CardDescription className="text-center">
+          {isSignUp ? 'Create your account to accept the invitation' : 'Sign in to your account'}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form action={handleEmailSignIn} className="space-y-4">
+        <form action={isSignUp ? handleSignUp : handleEmailSignIn} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -88,13 +115,31 @@ export function LoginForm() {
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
             />
+            {isSignUp && (
+              <p className="text-muted-foreground text-xs">Must be at least 8 characters</p>
+            )}
           </div>
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+          )}
           {error && (
             <div
               role="alert"
@@ -105,9 +150,52 @@ export function LoginForm() {
             </div>
           )}
           <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
-            {isLoading ? 'Signing in…' : 'Sign In'}
+            {isLoading
+              ? isSignUp
+                ? 'Creating account…'
+                : 'Signing in…'
+              : isSignUp
+                ? 'Create Account'
+                : 'Sign In'}
           </Button>
         </form>
+
+        {isInviteFlow && (
+          <p className="text-muted-foreground text-center text-sm">
+            {isSignUp ? (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signin')
+                    setError(null)
+                    setPassword('')
+                    setConfirmPassword('')
+                  }}
+                  className="text-primary font-medium hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Don&apos;t have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signup')
+                    setError(null)
+                    setPassword('')
+                  }}
+                  className="text-primary font-medium hover:underline"
+                >
+                  Create one
+                </button>
+              </>
+            )}
+          </p>
+        )}
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

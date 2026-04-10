@@ -20,7 +20,7 @@ export default async function AcceptInvitePage({ params }: AcceptInvitePageProps
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/login?redirect=/accept-invite/${id}`)
+    redirect(`/login?redirect=/accept-invite/${id}&mode=signup`)
   }
 
   // Get the invite
