@@ -158,51 +158,42 @@ export async function POST(request: Request) {
     return true
   }
 
-  for (const connection of connections || []) {
+  // Build sync tasks for all connections in parallel
+  const syncTasks = (connections || []).flatMap((connection) => {
     if (isBackfill) {
-      // Backfill mode: sync each date in the range
-      for (const targetDate of datesToSync) {
-        try {
-          const synced = await syncConnection(connection, targetDate)
-          if (synced) results.synced++
-        } catch (err) {
-          results.failed++
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-          results.errors.push({
-            connectionId: connection.id,
-            date: targetDate.toISOString().split('T')[0],
-            error: errorMessage,
-          })
-          console.error('[Cron Error]', {
-            type: 'sync_connection_failed',
-            connectionId: connection.id,
-            platformType: connection.platform_type,
-            date: targetDate.toISOString().split('T')[0],
-            timestamp: new Date().toISOString(),
-            error: errorMessage,
-          })
-        }
-      }
+      return datesToSync.map((targetDate) => ({ connection, targetDate }))
+    }
+    return [{ connection, targetDate: undefined as Date | undefined }]
+  })
+
+  const settled = await Promise.allSettled(
+    syncTasks.map(async ({ connection, targetDate }) => {
+      const synced = await syncConnection(connection, targetDate)
+      return { connectionId: connection.id, synced, targetDate }
+    })
+  )
+
+  for (let i = 0; i < settled.length; i++) {
+    const result = settled[i]
+    const { connection, targetDate } = syncTasks[i]
+    if (result.status === 'fulfilled') {
+      if (result.value.synced) results.synced++
     } else {
-      // Daily mode: sync yesterday only (no date = default behavior)
-      try {
-        const synced = await syncConnection(connection)
-        if (synced) results.synced++
-      } catch (err) {
-        results.failed++
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-        results.errors.push({
-          connectionId: connection.id,
-          error: errorMessage,
-        })
-        console.error('[Cron Error]', {
-          type: 'sync_connection_failed',
-          connectionId: connection.id,
-          platformType: connection.platform_type,
-          timestamp: new Date().toISOString(),
-          error: errorMessage,
-        })
-      }
+      results.failed++
+      const errorMessage = result.reason instanceof Error ? result.reason.message : 'Unknown error'
+      results.errors.push({
+        connectionId: connection.id,
+        ...(targetDate && { date: targetDate.toISOString().split('T')[0] }),
+        error: errorMessage,
+      })
+      console.error('[Cron Error]', {
+        type: 'sync_connection_failed',
+        connectionId: connection.id,
+        platformType: connection.platform_type,
+        ...(targetDate && { date: targetDate.toISOString().split('T')[0] }),
+        timestamp: new Date().toISOString(),
+        error: errorMessage,
+      })
     }
   }
 

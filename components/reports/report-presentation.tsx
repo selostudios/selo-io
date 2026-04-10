@@ -2,23 +2,34 @@
 
 import { useState, useCallback, useEffect, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { ChevronLeft, ChevronRight, Share2, Printer, X, Maximize2, Minimize2 } from 'lucide-react'
 import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
 import { ProgressDots } from './progress-dots'
 import type { ReportPresentationData } from '@/lib/reports/types'
 
-// Import slides
-import {
-  CoverSlide,
-  TocSlide,
-  AtAGlanceSlide,
-  ExecutiveSummarySlide,
-  OpportunitiesSlide,
-  BusinessImpactSlide,
-  RecommendationsSlide,
-  NextStepsSlide,
-} from './slides'
+// Lazy-load slides — only the visible slide is rendered at a time
+const CoverSlide = dynamic(() => import('./slides/cover-slide').then((m) => m.CoverSlide))
+const TocSlide = dynamic(() => import('./slides/toc-slide').then((m) => m.TocSlide))
+const AtAGlanceSlide = dynamic(() =>
+  import('./slides/at-a-glance-slide').then((m) => m.AtAGlanceSlide)
+)
+const ExecutiveSummarySlide = dynamic(() =>
+  import('./slides/executive-summary-slide').then((m) => m.ExecutiveSummarySlide)
+)
+const OpportunitiesSlide = dynamic(() =>
+  import('./slides/opportunities-slide').then((m) => m.OpportunitiesSlide)
+)
+const BusinessImpactSlide = dynamic(() =>
+  import('./slides/business-impact-slide').then((m) => m.BusinessImpactSlide)
+)
+const RecommendationsSlide = dynamic(() =>
+  import('./slides/recommendations-slide').then((m) => m.RecommendationsSlide)
+)
+const NextStepsSlide = dynamic(() =>
+  import('./slides/next-steps-slide').then((m) => m.NextStepsSlide)
+)
 
 interface ReportPresentationProps {
   data: ReportPresentationData

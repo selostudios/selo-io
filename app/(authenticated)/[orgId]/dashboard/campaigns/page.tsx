@@ -16,11 +16,19 @@ export default async function CampaignsPage({ params }: CampaignsPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: rawUser } = await supabase
-    .from('users')
-    .select('id, is_internal, team_members(organization_id, role)')
-    .eq('id', user!.id)
-    .single()
+  // Fetch user record and campaigns in parallel (independent queries)
+  const [{ data: rawUser }, { data: campaigns }] = await Promise.all([
+    supabase
+      .from('users')
+      .select('id, is_internal, team_members(organization_id, role)')
+      .eq('id', user!.id)
+      .single(),
+    supabase
+      .from('campaigns')
+      .select('id, name, status, start_date, end_date, created_at')
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: false }),
+  ])
 
   const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
   const userRecord = rawUser
@@ -34,12 +42,6 @@ export default async function CampaignsPage({ params }: CampaignsPageProps) {
   if (!userRecord) {
     redirect('/login')
   }
-
-  const { data: campaigns } = await supabase
-    .from('campaigns')
-    .select('id, name, status, start_date, end_date, created_at')
-    .eq('organization_id', organizationId)
-    .order('created_at', { ascending: false })
 
   const canCreateCampaign = canManageCampaigns(userRecord!.role)
 

@@ -82,13 +82,15 @@ export function UnifiedAuditDetailClient({
   const [checksByTab, setChecksByTab] = useState<Partial<Record<TabValue, AuditCheck[]>>>({})
   const [loadingTab, setLoadingTab] = useState<TabValue | null>(null)
   const fetchingRef = useRef<TabValue | null>(null)
+  const checksByTabRef = useRef(checksByTab)
+  checksByTabRef.current = checksByTab
 
   const fetcher = fetchChecks ?? getUnifiedAuditChecksByTab
 
   // Fetch checks for a tab if not already cached
   const fetchChecksForTab = useCallback(
     async (tab: TabValue) => {
-      if (checksByTab[tab] || fetchingRef.current === tab) return
+      if (checksByTabRef.current[tab] || fetchingRef.current === tab) return
       fetchingRef.current = tab
       setLoadingTab(tab)
       try {
@@ -107,7 +109,7 @@ export function UnifiedAuditDetailClient({
         fetchingRef.current = null
       }
     },
-    [audit.id, checksByTab, fetcher]
+    [audit.id, fetcher]
   )
 
   // Fetch checks for the current tab on mount and tab change
