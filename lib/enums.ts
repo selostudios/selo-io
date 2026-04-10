@@ -272,6 +272,7 @@ export enum UnifiedAuditStatus {
   Checking = 'checking',
   Analyzing = 'analyzing',
   Completed = 'completed',
+  CompletedWithErrors = 'completed_with_errors',
   Failed = 'failed',
   Stopped = 'stopped',
   BatchComplete = 'batch_complete',

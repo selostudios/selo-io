@@ -49,6 +49,11 @@ export interface UnifiedAudit {
   // Configuration
   use_relaxed_ssl: boolean
 
+  // Module execution metadata
+  module_timings: Record<string, number>
+  module_statuses: Record<string, ModuleStatus>
+  module_errors: Record<string, ModuleError>
+
   // Results
   executive_summary: string | null
   error_message: string | null
@@ -292,6 +297,38 @@ export interface PlatformReadiness {
     recommendations: string[]
   }[]
   overallReadiness: number
+}
+
+// =============================================================================
+// Module System Types
+// =============================================================================
+
+export type ModuleStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+export interface ModuleError {
+  phase: 'checks' | 'post_crawl' | 'scoring'
+  message: string
+  timestamp: string
+}
+
+export interface PostCrawlContext {
+  auditId: string
+  url: string
+  allPages: AuditPage[]
+  sampleSize: number
+  organizationId: string | null
+}
+
+export interface PostCrawlResult {
+  strategicScore: number | null
+  [key: string]: unknown
+}
+
+export interface AuditModule {
+  dimension: ScoreDimension
+  checks: AuditCheckDefinition[]
+  runPostCrawlPhase?: (context: PostCrawlContext) => Promise<PostCrawlResult>
+  calculateScore: (checks: AuditCheck[], phaseResult?: PostCrawlResult) => number
 }
 
 // =============================================================================
