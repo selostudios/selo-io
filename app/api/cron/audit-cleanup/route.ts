@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       runUnifiedAuditCleanup(),
     ])
 
-    console.log('[Cron Info]', {
+    console.error('[Cron Info]', {
       type: 'audit_cleanup_completed',
       timestamp: new Date().toISOString(),
       legacyResults,

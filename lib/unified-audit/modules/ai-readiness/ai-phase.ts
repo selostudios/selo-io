@@ -45,7 +45,7 @@ export async function runAIPhase(context: PostCrawlContext): Promise<PostCrawlRe
     .single()
 
   if (!audit?.ai_analysis_enabled) {
-    console.log('[AI Phase] Skipping — AI analysis disabled for this audit')
+    console.error('[AI Phase] Skipping — AI analysis disabled for this audit')
     return {
       strategicScore: null,
       pagesAnalyzed: 0,
@@ -88,7 +88,7 @@ export async function runAIPhase(context: PostCrawlContext): Promise<PostCrawlRe
   }
 
   if (pageContents.length === 0) {
-    console.log('[AI Phase] No pages could be fetched for analysis')
+    console.error('[AI Phase] No pages could be fetched for analysis')
     return {
       strategicScore: null,
       pagesAnalyzed: 0,
@@ -98,7 +98,7 @@ export async function runAIPhase(context: PostCrawlContext): Promise<PostCrawlRe
     }
   }
 
-  console.log(`[AI Phase] Analyzing ${pageContents.length} pages with Claude`)
+  console.error(`[AI Phase] Analyzing ${pageContents.length} pages with Claude`)
 
   const startTime = Date.now()
   const batchResult = await runAIAnalysis(pageContents)
@@ -162,7 +162,7 @@ export async function runAIPhase(context: PostCrawlContext): Promise<PostCrawlRe
 
   const strategicScore = calculateStrategicScore(batchResult.analyses)
 
-  console.log(
+  console.error(
     `[AI Phase] Completed: ${batchResult.analyses.length} pages, strategic score=${strategicScore}, cost=$${batchResult.totalCost.toFixed(4)}`
   )
 

@@ -51,7 +51,7 @@ export async function cleanupOlderUnifiedAuditDetails(
     return { deletedChecks: 0, deletedPages: 0 }
   }
 
-  console.log(
+  console.error(
     `[Unified Audit Cleanup] Cleaning up ${olderAuditIds.length} older audits for ${organizationId ? `org ${organizationId}` : `URL ${url}`}`
   )
 
@@ -65,7 +65,7 @@ export async function cleanupOlderUnifiedAuditDetails(
     .delete({ count: 'exact' })
     .in('audit_id', olderAuditIds)
 
-  console.log(
+  console.error(
     `[Unified Audit Cleanup] Deleted ${deletedChecks ?? 0} checks and ${deletedPages ?? 0} pages from older audits`
   )
 
@@ -87,7 +87,7 @@ export async function runUnifiedAuditCleanup(): Promise<{
 }> {
   const supabase = createServiceClient()
 
-  console.log('[Unified Audit Cleanup] Starting periodic cleanup...')
+  console.error('[Unified Audit Cleanup] Starting periodic cleanup...')
 
   const sixMonthsAgo = new Date()
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
@@ -130,7 +130,7 @@ export async function runUnifiedAuditCleanup(): Promise<{
     .is('organization_id', null)
     .lt('created_at', thirtyDaysAgoISO)
 
-  console.log(
+  console.error(
     `[Unified Audit Cleanup] Periodic cleanup complete: ${deletedChecks} checks, ${deletedPages} pages, ${deletedAudits ?? 0} one-time audits`
   )
 

@@ -110,7 +110,11 @@ export async function crawlBatch(
   while (pagesProcessed < BATCH_SIZE) {
     // Check time budget
     if (Date.now() - startTime > MAX_BATCH_DURATION_MS) {
-      console.log(`[Batch Crawler] Time budget exceeded after ${pagesProcessed} pages`)
+      console.error('[Batch Crawler]', {
+        type: 'time_budget_exceeded',
+        pagesProcessed,
+        timestamp: new Date().toISOString(),
+      })
       break
     }
 
@@ -157,7 +161,11 @@ export async function crawlBatch(
     )
 
     if (usedRelaxedSSL && !forceRelaxedSSL) {
-      console.log(`[Batch Crawler] SSL certificate issue detected, persisting relaxed SSL mode`)
+      console.error('[Batch Crawler]', {
+        type: 'ssl_relaxed_mode_enabled',
+        auditId,
+        timestamp: new Date().toISOString(),
+      })
       forceRelaxedSSL = true
       // Persist for future batches
       await supabase.from('site_audits').update({ use_relaxed_ssl: true }).eq('id', auditId)

@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { InviteStatus } from '@/lib/enums'
+import { sanitizeRedirectPath } from '@/lib/security/redirect'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = sanitizeRedirectPath(searchParams.get('next'))
 
   if (code) {
     const supabase = await createClient()
@@ -85,7 +86,10 @@ export async function GET(request: Request) {
             .eq('id', invite.id)
             .eq('status', InviteStatus.Pending)
 
-          console.log('[Auth Callback] Auto-accepted internal invite for:', user.email)
+          console.error('[Auth Callback]', {
+            type: 'internal_invite_accepted',
+            timestamp: new Date().toISOString(),
+          })
           return NextResponse.redirect(`${origin}${next}`)
         }
 
@@ -120,12 +124,18 @@ export async function GET(request: Request) {
           console.error('[Auth Callback] Failed to update invite status:', inviteUpdateError)
         }
 
-        console.log('[Auth Callback] Auto-accepted invite for:', user.email)
+        console.error('[Auth Callback]', {
+          type: 'invite_accepted',
+          timestamp: new Date().toISOString(),
+        })
         return NextResponse.redirect(`${origin}${next}`)
       }
 
       // No existing user and no pending invite - deny access
-      console.log('[Auth Callback] Access denied - no invite found for:', user.email)
+      console.error('[Auth Callback]', {
+        type: 'access_denied_no_invite',
+        timestamp: new Date().toISOString(),
+      })
       await supabase.auth.signOut()
       return NextResponse.redirect(`${origin}/access-denied`)
     }

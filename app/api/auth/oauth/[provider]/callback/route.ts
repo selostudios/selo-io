@@ -250,10 +250,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[OAuth Callback] Connection saved successfully', {
+      console.error('[OAuth Callback]', {
+        type: 'connection_saved',
         platform,
-        organizationId: selectedAccount.id,
-        organizationName: selectedAccount.name,
+        timestamp: new Date().toISOString(),
       })
     }
 

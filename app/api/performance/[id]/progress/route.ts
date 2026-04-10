@@ -70,7 +70,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const elapsed = now - startedAt
 
     if (elapsed > STALE_AUDIT_TIMEOUT_MS) {
-      console.log('[Performance] Marking stale audit as completed:', {
+      console.error('[Performance] Marking stale audit as completed:', {
         auditId: id,
         elapsedMs: elapsed,
         startedAt: audit.started_at,

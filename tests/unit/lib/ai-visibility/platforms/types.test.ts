@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import {
-  type AIProviderAdapter,
   type AIProviderResponse,
   PLATFORM_COSTS,
   estimateCostCents,

@@ -89,13 +89,17 @@ export async function crawlSite(
         lastError = result.error
 
         if (result.error) {
-          console.log(`[Audit Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[Audit Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
+          }
           if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
           continue
         }
 
         if (statusCode === 403) {
-          console.log(`[Audit Crawler] Seed URL attempt ${attempt}/3 returned 403`)
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[Audit Crawler] Seed URL attempt ${attempt}/3 returned 403`)
+          }
           if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
           continue
         }
@@ -130,9 +134,11 @@ export async function crawlSite(
 
     // SSL certs are at domain level - if one page needs relaxed SSL, all will
     if (usedRelaxedSSL && !forceRelaxedSSL) {
-      console.log(
-        `[Audit Crawler] SSL certificate issue detected, using relaxed SSL for remaining pages`
-      )
+      console.error('[Audit Crawler]', {
+        type: 'ssl_relaxed_mode_enabled',
+        url,
+        timestamp: new Date().toISOString(),
+      })
       forceRelaxedSSL = true
     }
 
@@ -154,9 +160,11 @@ export async function crawlSite(
     if (wasRedirected) {
       if (statusCode === 200) {
         const links = extractLinks(html, url, finalUrl)
-        console.log(
-          `[Audit Crawler] Redirected page ${url} → ${finalUrl}, found ${links.length} links`
-        )
+        if (process.env.NODE_ENV === 'development') {
+          console.error(
+            `[Audit Crawler] Redirected page ${url} → ${finalUrl}, found ${links.length} links`
+          )
+        }
         for (const link of links) {
           if (!visited.has(link) && !queue.includes(link)) {
             queue.push(link)
@@ -221,9 +229,11 @@ export async function crawlSite(
     if (statusCode === 200 && !isResource) {
       const links = extractLinks(html, url, finalUrl)
       const newLinks = links.filter((l) => !visited.has(l) && !queue.includes(l))
-      console.log(
-        `[Audit Crawler] Page ${url}: found ${links.length} links, ${newLinks.length} new`
-      )
+      if (process.env.NODE_ENV === 'development') {
+        console.error(
+          `[Audit Crawler] Page ${url}: found ${links.length} links, ${newLinks.length} new`
+        )
+      }
       for (const link of newLinks) {
         queue.push(link)
       }
@@ -233,9 +243,14 @@ export async function crawlSite(
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
 
-  console.log(
-    `[Audit Crawler] Finished: ${pages.length} pages, ${visited.size} visited, ${queue.length} remaining in queue, ${errors.length} errors`
-  )
+  console.error('[Audit Crawler]', {
+    type: 'crawl_finished',
+    pagesCount: pages.length,
+    visitedCount: visited.size,
+    remainingInQueue: queue.length,
+    errorsCount: errors.length,
+    timestamp: new Date().toISOString(),
+  })
   return { pages, errors, stopped }
 }
 

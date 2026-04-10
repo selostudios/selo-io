@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log('[Cron Info]', {
+  console.error('[Cron Info]', {
     type: 'weekly_audits_completed',
     timestamp: new Date().toISOString(),
     results,

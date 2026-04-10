@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { FeedbackCategory } from '@/lib/types/feedback'
+import { validateFileSignature } from '@/lib/security/file-validation'
 
 interface SubmitFeedbackResult {
   success?: boolean
@@ -80,7 +81,17 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
   let screenshotUrl: string | null = null
   if (screenshot && screenshot.size > 0) {
     try {
-      const fileExt = screenshot.name.split('.').pop() || 'png'
+      // Validate by magic bytes, not file extension
+      const screenshotValidation = await validateFileSignature(screenshot, [
+        'image/png',
+        'image/jpeg',
+        'image/webp',
+      ])
+      if (!screenshotValidation.valid) {
+        return { error: 'Screenshot must be a PNG, JPG, or WebP image' }
+      }
+
+      const fileExt = screenshotValidation.extension || 'png'
       const filePath = `${user.id}/${Date.now()}.${fileExt}`
 
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -139,7 +150,7 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
   }
 
   // Notify developers
-  await notifyDevelopers(feedback.id, title, description, category, user.email || 'Unknown user')
+  await notifyDevelopers(feedback.id, category)
 
   revalidatePath('/support')
 
@@ -149,25 +160,17 @@ export async function submitFeedback(formData: FormData): Promise<SubmitFeedback
   }
 }
 
-async function notifyDevelopers(
-  feedbackId: string,
-  title: string,
-  description: string,
-  category: FeedbackCategory,
-  submitterEmail: string
-): Promise<void> {
+async function notifyDevelopers(feedbackId: string, category: FeedbackCategory): Promise<void> {
   // Note: Email notifications to developers are disabled because
   // the email column is in auth.users, not public.users.
   // To re-enable, either:
   // 1. Add an email column to public.users synced from auth.users
   // 2. Create a database function to fetch developer emails
-  console.log('[Notify Developers]', {
+  console.error('[Notify Developers]', {
     type: 'notification_skipped',
     reason: 'Developer email notifications not yet implemented',
     feedbackId,
-    title,
     category,
-    submitterEmail,
     timestamp: new Date().toISOString(),
   })
 }

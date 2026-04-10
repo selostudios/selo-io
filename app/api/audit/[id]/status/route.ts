@@ -76,7 +76,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (audit.status === AuditStatus.BatchComplete) {
         // For stale batch_complete, auto-resume the audit
         // This handles cases where client disconnected before triggering continue
-        console.log('[Audit Status] Auto-resuming stale batch_complete audit', {
+        console.error('[Audit Status] Auto-resuming stale batch_complete audit', {
           auditId: id,
           timestamp: new Date().toISOString(),
         })
@@ -108,7 +108,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           audit = updatedAudit
         }
 
-        console.log('[Audit Status] Marked stale audit as failed', {
+        console.error('[Audit Status] Marked stale audit as failed', {
           auditId: id,
           timestamp: new Date().toISOString(),
         })

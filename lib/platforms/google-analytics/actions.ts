@@ -69,7 +69,7 @@ export async function syncMetricsForGoogleAnalyticsConnection(
 
   const records = adapter.normalizeDailyMetricsToDbRecords(dailyMetrics, organizationId)
 
-  console.log(
+  console.error(
     '[GA Sync] Storing',
     records.length,
     'metric records for',

@@ -131,7 +131,7 @@ export async function crawlBatch(
   while (pagesProcessed < BATCH_SIZE) {
     // Check time budget
     if (Date.now() - startTime > effectiveBudget) {
-      console.log(`[Batch Crawler] Time budget exceeded after ${pagesProcessed} pages`)
+      console.error(`[Batch Crawler] Time budget exceeded after ${pagesProcessed} pages`)
       break
     }
 
@@ -188,13 +188,13 @@ export async function crawlBatch(
         lastError = result.error
 
         if (result.error) {
-          console.log(`[Batch Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
+          console.error(`[Batch Crawler] Seed URL attempt ${attempt}/3 failed: ${result.error}`)
           if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
           continue
         }
 
         if (statusCode === 403) {
-          console.log(`[Batch Crawler] Seed URL attempt ${attempt}/3 returned 403`)
+          console.error(`[Batch Crawler] Seed URL attempt ${attempt}/3 returned 403`)
           if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
           continue
         }
@@ -242,7 +242,7 @@ export async function crawlBatch(
         const finalPath = new URL(finalUrl).pathname.replace(/\/+$/, '')
         if (originalPath !== finalPath) {
           wasRedirected = true
-          console.log(`[Batch Crawler] ${url} redirected to ${finalUrl}`)
+          console.error(`[Batch Crawler] ${url} redirected to ${finalUrl}`)
         }
       } catch {
         // If URL parsing fails, continue with the page

@@ -40,7 +40,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
         subject,
         html,
       })
-      console.log('[Email] Sent via Mailpit:', info.messageId)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Email] Sent via Mailpit:', info.messageId)
+      }
       return { data: { id: info.messageId }, error: null }
     } catch (err) {
       console.error('[Email] Mailpit error:', err)

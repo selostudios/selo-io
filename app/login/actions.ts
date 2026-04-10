@@ -3,11 +3,19 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { InviteStatus } from '@/lib/enums'
+import { sanitizeRedirectPath } from '@/lib/security/redirect'
+import { loginLimiter, signupLimiter, getIpFromHeaders } from '@/lib/rate-limit'
 
 export async function signInWithEmail(
   formData: FormData,
   redirectTo?: string
 ): Promise<{ error: string } | undefined> {
+  const ip = await getIpFromHeaders()
+  const limit = loginLimiter.check(ip)
+  if (!limit.success) {
+    return { error: 'Too many sign-in attempts. Please try again later.' }
+  }
+
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
@@ -31,7 +39,7 @@ export async function signInWithEmail(
     return { error: 'Invalid email or password' }
   }
 
-  redirect(redirectTo || '/dashboard')
+  redirect(sanitizeRedirectPath(redirectTo))
 }
 
 export async function signInWithOAuth(
@@ -46,8 +54,9 @@ export async function signInWithOAuth(
 
   // Pass the redirect path through to the auth callback via the `next` query param
   const callbackUrl = new URL(`${siteUrl}/auth/callback`)
-  if (redirectTo) {
-    callbackUrl.searchParams.set('next', redirectTo)
+  const safeRedirect = sanitizeRedirectPath(redirectTo, '')
+  if (safeRedirect) {
+    callbackUrl.searchParams.set('next', safeRedirect)
   }
 
   const supabase = await createClient()
@@ -85,6 +94,12 @@ export async function signUpWithInvite(
   formData: FormData,
   inviteId: string
 ): Promise<{ error: string } | undefined> {
+  const ip = await getIpFromHeaders()
+  const limit = signupLimiter.check(ip)
+  if (!limit.success) {
+    return { error: 'Too many sign-up attempts. Please try again later.' }
+  }
+
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { canManageOrg, isInternalUser } from '@/lib/permissions'
+import { validateFileSignature } from '@/lib/security/file-validation'
 
 export async function updateOrganization(
   formData: FormData
@@ -183,10 +184,11 @@ export async function uploadLogo(
     return { error: 'File size must be less than 2MB' }
   }
 
-  // Validate file type
-  const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: 'File must be PNG, JPG, or SVG' }
+  // Validate file type by magic bytes (not client-reported MIME type)
+  const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg']
+  const validation = await validateFileSignature(file, ALLOWED_IMAGE_TYPES)
+  if (!validation.valid) {
+    return { error: 'File must be a PNG or JPG image' }
   }
 
   const supabase = await createClient()
@@ -224,7 +226,7 @@ export async function uploadLogo(
   }
 
   const orgId = uploadUserRecord.organization_id
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png'
+  const fileExt = validation.extension || 'png'
   const filePath = `${orgId}/logo.${fileExt}`
 
   // Delete existing logo files first (there might be different extensions)

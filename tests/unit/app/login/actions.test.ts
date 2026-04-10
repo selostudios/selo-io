@@ -17,6 +17,20 @@ vi.mock('next/navigation', () => ({
   },
 }))
 
+vi.mock('next/headers', () => ({
+  headers: () =>
+    Promise.resolve({
+      get: () => '127.0.0.1',
+    }),
+}))
+
+// Mock rate limiter to always allow in tests
+vi.mock('@/lib/rate-limit', () => ({
+  loginLimiter: { check: () => ({ success: true, remaining: 99, reset: 0 }) },
+  signupLimiter: { check: () => ({ success: true, remaining: 99, reset: 0 }) },
+  getIpFromHeaders: () => Promise.resolve('127.0.0.1'),
+}))
+
 import { signUpWithInvite } from '@/app/login/actions'
 
 function makeFormData(data: Record<string, string>): FormData {

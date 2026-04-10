@@ -50,7 +50,7 @@ export class HubSpotClient {
 
     if (this.oauthProvider.shouldRefreshToken(this.credentials.expires_at)) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[HubSpot Client] Refreshing token', {
+        console.error('[HubSpot Client] Refreshing token', {
           expiresAt: this.credentials.expires_at,
           connectionId: this.connectionId,
         })
@@ -75,7 +75,7 @@ export class HubSpotClient {
         this.accessToken = newTokens.access_token
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[HubSpot Client] Token refreshed successfully')
+          console.error('[HubSpot Client] Token refreshed successfully')
         }
       } catch (error) {
         console.error('[HubSpot Client] Token refresh failed', {
@@ -107,7 +107,7 @@ export class HubSpotClient {
 
     const url = `${HUBSPOT_API_BASE}${endpoint}`
     if (!silent && process.env.NODE_ENV === 'development') {
-      console.log('[HubSpot Client] API request:', { url })
+      console.error('[HubSpot Client] API request:', { url })
     }
 
     const response = await fetch(url, {
@@ -123,8 +123,8 @@ export class HubSpotClient {
       // Retry on rate limit (429) with exponential backoff
       if (response.status === 429 && retryCount < MAX_RETRIES) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
-        if (!silent) {
-          console.log(
+        if (!silent && process.env.NODE_ENV === 'development') {
+          console.error(
             `[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
           )
         }
@@ -183,9 +183,11 @@ export class HubSpotClient {
       // Retry on rate limit (429) with exponential backoff
       if (response.status === 429 && retryCount < MAX_RETRIES) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount)
-        console.log(
-          `[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
-        )
+        if (process.env.NODE_ENV === 'development') {
+          console.error(
+            `[HubSpot Client] Rate limited, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+          )
+        }
         await sleep(delayMs)
         return this.postSearch<T>(endpoint, body, retryCount + 1)
       }
@@ -351,7 +353,7 @@ export class HubSpotClient {
       }
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('[HubSpot Client] CRM metrics:', metrics)
+        console.error('[HubSpot Client] CRM metrics:', metrics)
       }
       return metrics
     } catch (error) {
@@ -406,7 +408,7 @@ export class HubSpotClient {
       } catch {
         // Marketing Hub may not be available - this is expected for many accounts
         if (process.env.NODE_ENV === 'development') {
-          console.log('[HubSpot Client] Marketing emails not available (requires Marketing Hub)')
+          console.error('[HubSpot Client] Marketing emails not available (requires Marketing Hub)')
         }
       }
 
@@ -437,7 +439,9 @@ export class HubSpotClient {
             }
           }
         } catch (formsError) {
-          console.log('[HubSpot Client] Forms not available:', formsError)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[HubSpot Client] Forms not available:', formsError)
+          }
         }
       }
 
@@ -457,7 +461,7 @@ export class HubSpotClient {
       this.marketingMetricsCache = metrics
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('[HubSpot Client] Marketing metrics:', metrics)
+        console.error('[HubSpot Client] Marketing metrics:', metrics)
       }
       return metrics
     } catch (error) {

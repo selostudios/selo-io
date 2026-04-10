@@ -38,7 +38,11 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
     for (const url of urls) {
       // Check if audit was stopped before processing this URL
       if (await checkIfStopped(supabase, auditId)) {
-        console.log(`[Performance] Audit ${auditId} was stopped, exiting`)
+        console.error('[Performance]', {
+          type: 'audit_stopped',
+          auditId,
+          timestamp: new Date().toISOString(),
+        })
         return
       }
 
@@ -48,7 +52,9 @@ export async function runPerformanceAudit(auditId: string, urls: string[]): Prom
       // Run mobile and desktop audits in parallel
       const devicePromises = devices.map(async (device) => {
         try {
-          console.log(`[Performance] Auditing ${url} (${device})`)
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[Performance] Auditing ${url} (${device})`)
+          }
 
           const result = await fetchPageSpeedInsights({ url, device })
           const metrics = extractMetrics(result)

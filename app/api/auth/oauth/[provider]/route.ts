@@ -2,8 +2,10 @@
 import { NextResponse } from 'next/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { Platform } from '@/lib/oauth/types'
 import { getOAuthProvider, getRedirectUri } from '@/lib/oauth/registry'
+import { oauthLimiter, getIpFromRequest } from '@/lib/rate-limit'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -19,6 +21,22 @@ function extractOrgIdFromReferer(request: Request): string {
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
+  // Rate limit OAuth initiation
+  const ip = getIpFromRequest(request)
+  const limit = oauthLimiter.check(ip)
+  if (!limit.success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  // Require authentication — only logged-in users can connect platforms
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return redirect('/login')
+  }
+
   // Extract orgId from referer so the callback can redirect back correctly
   const orgId = extractOrgIdFromReferer(request)
   const integrationsPath = orgId ? `/${orgId}/settings/integrations` : '/settings/integrations'

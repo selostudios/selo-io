@@ -162,7 +162,7 @@ Return ONLY the JSON object, no explanation text before or after.`
       temperature: 0.3, // Lower temperature for more consistent scoring
     })
 
-    console.log(
+    console.error(
       `[AI Auditor] Analyzed ${batch.length} pages, tokens: ${result.usage.inputTokens ?? 0}/${result.usage.outputTokens ?? 0}`
     )
 
@@ -188,7 +188,7 @@ Return ONLY the JSON object, no explanation text before or after.`
     // Claude sometimes returns a bare array instead of wrapping it in an object
     // If we get an array, wrap it in the expected structure
     if (Array.isArray(parsedResponse)) {
-      console.log('[AI Auditor] Received bare array, wrapping in object structure')
+      console.error('[AI Auditor] Received bare array, wrapping in object structure')
       parsedResponse = {
         analyses: parsedResponse,
       }
@@ -237,7 +237,7 @@ export async function runAIAnalysis(
     }
   }
 
-  console.log(`[AI Auditor] Starting analysis of ${pages.length} pages`)
+  console.error(`[AI Auditor] Starting analysis of ${pages.length} pages`)
 
   const allAnalyses: AIOPageAnalysis[] = []
   let totalInputTokens = 0
@@ -274,7 +274,7 @@ export async function runAIAnalysis(
 
   const totalCost = totalInputTokens * INPUT_TOKEN_COST + totalOutputTokens * OUTPUT_TOKEN_COST
 
-  console.log(
+  console.error(
     `[AI Auditor] Completed analysis: ${allAnalyses.length} pages, ${totalInputTokens}/${totalOutputTokens} tokens, $${totalCost.toFixed(4)}`
   )
 

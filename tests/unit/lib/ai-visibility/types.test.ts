@@ -1,11 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { AIPlatform, BrandSentiment, SyncFrequency, PromptSource } from '@/lib/enums'
+import { AIPlatform, BrandSentiment, SyncFrequency } from '@/lib/enums'
 import {
   type AIVisibilityConfig,
-  type AIVisibilityTopic,
-  type AIVisibilityPrompt,
   type AIVisibilityResult,
-  type AIVisibilityScore,
   PLATFORM_DISPLAY_NAMES,
   SENTIMENT_DISPLAY_NAMES,
   ALL_PLATFORMS,

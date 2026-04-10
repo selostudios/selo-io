@@ -37,7 +37,7 @@ export class GoogleOAuthProvider extends OAuthProvider {
     const url = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Google OAuth] Authorization URL generated:', {
+      console.error('[Google OAuth] Authorization URL generated:', {
         state,
         redirectUri,
         scopes: 'analytics.readonly',
@@ -79,7 +79,7 @@ export class GoogleOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Google OAuth] Token exchange response:', {
+      console.error('[Google OAuth] Token exchange response:', {
         hasAccessToken: !!data.access_token,
         hasRefreshToken: !!data.refresh_token,
         expiresIn: data.expires_in,
@@ -125,7 +125,7 @@ export class GoogleOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Google OAuth] Token refreshed successfully:', {
+      console.error('[Google OAuth] Token refreshed successfully:', {
         hasAccessToken: !!data.access_token,
         expiresIn: data.expires_in,
       })
@@ -179,7 +179,7 @@ export class GoogleOAuthProvider extends OAuthProvider {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Google OAuth] Properties fetched:', {
+      console.error('[Google OAuth] Properties fetched:', {
         count: accounts.length,
         accounts: accounts.map((a: Account) => ({ id: a.id, name: a.name })),
       })

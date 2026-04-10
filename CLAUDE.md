@@ -482,8 +482,19 @@ Users with `is_internal: true` flag (Selo employees) have elevated privileges:
 console.error('[Context Error]', { type: 'error_type', timestamp: new Date().toISOString() })
 ```
 
+### Security Utilities
+
+**Redirect validation** (`lib/security/redirect.ts`): All user-controlled redirect paths must go through `sanitizeRedirectPath()` to prevent open redirect attacks. Never use raw URL params in `redirect()` or `NextResponse.redirect()`.
+
+**File upload validation** (`lib/security/file-validation.ts`): Always validate file uploads by magic bytes using `validateFileSignature()`, not by client-reported MIME type or file extension. SVG uploads are disallowed (XSS vector).
+
+**Rate limiting** (`lib/rate-limit.ts`): Reusable rate limiter with pre-configured instances for login, sign-up, OAuth, and general API use. Apply via `limiter.check(ip)` before processing requests.
+
+> **Rate Limiting Upgrade:** The current implementation uses in-memory storage which only persists within warm serverless instances. This provides partial protection but is not production-grade. **Before launch or when abuse is observed**, upgrade to a Redis-backed solution (Upstash with `@upstash/ratelimit` is the recommended drop-in). The `lib/rate-limit.ts` interface is designed so only the storage backend needs to change — all call sites remain the same.
+
+**Security headers**: Configured in `next.config.ts` `headers()`. Includes X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.
+
 ### LinkedIn OAuth Notes
 
 - App must be approved for "Marketing Developer Platform" product
 - Account selector is shown when a user manages multiple organizations; single-account connections auto-save
-- Production rate limiting recommended before deployment

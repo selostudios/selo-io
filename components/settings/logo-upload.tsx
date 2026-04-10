@@ -44,9 +44,9 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
       return
     }
 
-    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml']
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
     if (!ALLOWED_TYPES.includes(file.type)) {
-      showError('File must be PNG, JPG, or SVG')
+      showError('File must be a PNG or JPG image')
       return
     }
 
@@ -168,7 +168,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
           <DialogHeader>
             <DialogTitle>Organization Logo</DialogTitle>
             <DialogDescription>
-              Upload a logo for your organization. PNG, JPG, or SVG. Max 2MB.
+              Upload a logo for your organization. PNG or JPG. Max 2MB.
             </DialogDescription>
           </DialogHeader>
 
@@ -252,7 +252,7 @@ export function LogoUpload({ currentLogoUrl, organizationName, primaryColor }: L
               ref={fileInputRef}
               id="logo-file-input"
               type="file"
-              accept=".png,.jpg,.jpeg,.svg"
+              accept=".png,.jpg,.jpeg"
               onChange={handleInputChange}
               className="hidden"
             />

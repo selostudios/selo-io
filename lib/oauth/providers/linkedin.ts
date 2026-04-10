@@ -35,7 +35,7 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     const url = `https://www.linkedin.com/oauth/v2/authorization?${params}`
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[LinkedIn OAuth] Authorization URL generated:', {
+      console.error('[LinkedIn OAuth] Authorization URL generated:', {
         state,
         redirectUri,
         scopes: 'r_organization_social r_organization_admin rw_organization_admin',
@@ -77,7 +77,7 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[LinkedIn OAuth] Token exchange response:', {
+      console.error('[LinkedIn OAuth] Token exchange response:', {
         hasAccessToken: !!data.access_token,
         hasRefreshToken: !!data.refresh_token,
         expiresIn: data.expires_in,
@@ -123,7 +123,7 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[LinkedIn OAuth] Token refreshed successfully:', {
+      console.error('[LinkedIn OAuth] Token refreshed successfully:', {
         hasAccessToken: !!data.access_token,
         hasRefreshToken: !!data.refresh_token,
         expiresIn: data.expires_in,
@@ -177,7 +177,7 @@ export class LinkedInOAuthProvider extends OAuthProvider {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[LinkedIn OAuth] Accounts fetched:', {
+      console.error('[LinkedIn OAuth] Accounts fetched:', {
         count: accounts.length,
         accounts: accounts.map((a: Account) => ({ id: a.id, name: a.name })),
       })

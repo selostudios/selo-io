@@ -36,7 +36,7 @@ export class HubSpotOAuthProvider extends OAuthProvider {
     const url = `https://app.hubspot.com/oauth/authorize?${params}`
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[HubSpot OAuth] Authorization URL generated:', {
+      console.error('[HubSpot OAuth] Authorization URL generated:', {
         state,
         redirectUri,
         scopes,
@@ -78,7 +78,7 @@ export class HubSpotOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[HubSpot OAuth] Token exchange response:', {
+      console.error('[HubSpot OAuth] Token exchange response:', {
         hasAccessToken: !!data.access_token,
         hasRefreshToken: !!data.refresh_token,
         expiresIn: data.expires_in,
@@ -123,7 +123,7 @@ export class HubSpotOAuthProvider extends OAuthProvider {
     const data = await response.json()
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[HubSpot OAuth] Token refreshed successfully:', {
+      console.error('[HubSpot OAuth] Token refreshed successfully:', {
         hasAccessToken: !!data.access_token,
         hasRefreshToken: !!data.refresh_token,
         expiresIn: data.expires_in,
@@ -172,7 +172,7 @@ export class HubSpotOAuthProvider extends OAuthProvider {
     ]
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[HubSpot OAuth] Account fetched:', {
+      console.error('[HubSpot OAuth] Account fetched:', {
         hubId: data.hub_id,
         hubDomain: data.hub_domain,
       })

@@ -456,9 +456,11 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
     while (true) {
       const elapsed = Date.now() - functionStartTime
       if (elapsed > MAX_FUNCTION_DURATION_MS) {
-        console.log(
-          `[Unified Audit Batch] Approaching function timeout (${Math.round(elapsed / 1000)}s), triggering continuation`
-        )
+        console.error('[Unified Audit Batch]', {
+          type: 'function_timeout_approaching',
+          elapsedSeconds: Math.round(elapsed / 1000),
+          timestamp: new Date().toISOString(),
+        })
         await supabase
           .from('audits')
           .update({ status: UnifiedAuditStatus.BatchComplete })
@@ -483,9 +485,14 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
       const remainingMs = MAX_FUNCTION_DURATION_MS - (Date.now() - functionStartTime)
       const result = await crawlBatch(auditId, { dismissedChecks, timeBudgetMs: remainingMs })
 
-      console.log(
-        `[Unified Audit Batch] Batch ${currentBatch} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`
-      )
+      console.error('[Unified Audit Batch]', {
+        type: 'batch_complete',
+        batch: currentBatch,
+        pagesProcessed: result.pagesProcessed,
+        hasMorePages: result.hasMorePages,
+        stopped: result.stopped,
+        timestamp: new Date().toISOString(),
+      })
 
       if (result.stopped) {
         await finishUnifiedAudit(auditId, url, dismissedChecks, true)
@@ -716,9 +723,16 @@ async function completeAuditScoring(
     })
     .eq('id', auditId)
 
-  console.log(
-    `[Unified Audit] Audit ${auditId} ${finalStatus}. SEO=${seoScore}, Performance=${performanceScore}, AI=${aiReadinessScore}, Overall=${overallScore}`
-  )
+  console.error('[Unified Audit]', {
+    type: 'audit_scoring_complete',
+    auditId,
+    status: finalStatus,
+    seoScore,
+    performanceScore,
+    aiReadinessScore,
+    overallScore,
+    timestamp: new Date().toISOString(),
+  })
 }
 
 // =============================================================================

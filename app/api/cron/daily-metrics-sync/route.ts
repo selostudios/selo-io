@@ -108,7 +108,7 @@ export async function POST(request: Request) {
   }
 
   if (isBackfill) {
-    console.log('[Cron Info]', {
+    console.error('[Cron Info]', {
       type: 'backfill_started',
       timestamp: new Date().toISOString(),
       startDate: startDate?.toISOString().split('T')[0],
@@ -206,7 +206,7 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log('[Cron Info]', {
+  console.error('[Cron Info]', {
     type: isBackfill ? 'backfill_completed' : 'daily_metrics_sync_completed',
     timestamp: new Date().toISOString(),
     results: {

@@ -51,7 +51,9 @@ export async function runPSIPhase(context: PostCrawlContext): Promise<PostCrawlR
 
   // Skip if no API key configured
   if (!process.env.PAGESPEED_API_KEY) {
-    console.log('[PSI Phase] Skipping — PAGESPEED_API_KEY not set')
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[PSI Phase] Skipping — PAGESPEED_API_KEY not set')
+    }
     return { strategicScore: null, pagesAnalyzed: 0, checksUpserted: 0 }
   }
 
@@ -76,7 +78,9 @@ export async function runPSIPhase(context: PostCrawlContext): Promise<PostCrawlR
   // Process pages sequentially to respect rate limits
   for (const pageImportance of topPages) {
     try {
-      console.log(`[PSI Phase] Fetching PSI for ${pageImportance.url}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[PSI Phase] Fetching PSI for ${pageImportance.url}`)
+      }
 
       const psiResult = await fetchPageSpeedInsights({
         url: pageImportance.url,
@@ -145,9 +149,13 @@ export async function runPSIPhase(context: PostCrawlContext): Promise<PostCrawlR
     }
   }
 
-  console.log(
-    `[PSI Phase] Completed: ${pagesAnalyzed}/${topPages.length} pages, ${checksUpserted} checks upserted`
-  )
+  console.error('[PSI Phase]', {
+    type: 'phase_complete',
+    pagesAnalyzed,
+    totalPages: topPages.length,
+    checksUpserted,
+    timestamp: new Date().toISOString(),
+  })
 
   return { strategicScore: null, pagesAnalyzed, checksUpserted }
 }

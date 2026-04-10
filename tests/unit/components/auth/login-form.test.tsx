@@ -20,6 +20,7 @@ vi.mock('@/app/login/actions', () => ({
 vi.mock('next/image', () => ({
   default: (props: { alt: string; [key: string]: unknown }) => {
     const { alt, ...rest } = props
+    // eslint-disable-next-line @next/next/no-img-element
     return <img alt={alt} {...rest} />
   },
 }))

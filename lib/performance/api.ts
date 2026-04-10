@@ -51,7 +51,9 @@ export async function fetchPageSpeedInsights({
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`[Performance] Retry ${attempt}/${MAX_RETRIES} for ${url} (${device})`)
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[Performance] Retry ${attempt}/${MAX_RETRIES} for ${url} (${device})`)
+        }
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
       }
 

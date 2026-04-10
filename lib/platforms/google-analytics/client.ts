@@ -40,7 +40,7 @@ export class GoogleAnalyticsClient {
 
     if (this.oauthProvider.shouldRefreshToken(this.credentials.expires_at)) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[GA Client] Refreshing token', {
+        console.error('[GA Client] Refreshing token', {
           expiresAt: this.credentials.expires_at,
           connectionId: this.connectionId,
         })
@@ -66,7 +66,7 @@ export class GoogleAnalyticsClient {
         this.accessToken = newTokens.access_token
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[GA Client] Token refreshed successfully')
+          console.error('[GA Client] Token refreshed successfully')
         }
       } catch (error) {
         console.error('[GA Client] Token refresh failed', {
@@ -97,7 +97,7 @@ export class GoogleAnalyticsClient {
     await this.ensureFreshToken()
 
     const url = `${GA_DATA_API_BASE}${endpoint}`
-    console.log('[GA Client] API request:', { url, method: body ? 'POST' : 'GET' })
+    console.error('[GA Client] API request:', { url, method: body ? 'POST' : 'GET' })
 
     const response = await fetch(url, {
       method: body ? 'POST' : 'GET',
@@ -165,7 +165,7 @@ export class GoogleAnalyticsClient {
         ? this.propertyId
         : `properties/${this.propertyId}`
 
-      console.log('[GA Client] Fetching metrics:', {
+      console.error('[GA Client] Fetching metrics:', {
         propertyId: this.propertyId,
         propertyPath,
         startDate: this.formatDate(startDate),
@@ -186,7 +186,7 @@ export class GoogleAnalyticsClient {
         metrics: [{ name: 'activeUsers' }, { name: 'newUsers' }, { name: 'sessions' }],
       })
 
-      console.log('[GA Client] Basic metrics response:', JSON.stringify(basicData, null, 2))
+      console.error('[GA Client] Basic metrics response:', JSON.stringify(basicData, null, 2))
 
       // Fetch traffic acquisition by channel
       const trafficData = await this.fetch<{
@@ -205,7 +205,10 @@ export class GoogleAnalyticsClient {
         metrics: [{ name: 'sessions' }],
       })
 
-      console.log('[GA Client] Traffic acquisition response:', JSON.stringify(trafficData, null, 2))
+      console.error(
+        '[GA Client] Traffic acquisition response:',
+        JSON.stringify(trafficData, null, 2)
+      )
 
       // Parse basic metrics
       const basicRow = basicData.rows?.[0]
@@ -242,7 +245,7 @@ export class GoogleAnalyticsClient {
         }
       }
 
-      console.log('[GA Client] Parsed metrics:', metrics)
+      console.error('[GA Client] Parsed metrics:', metrics)
       return metrics
     } catch (error) {
       console.error('[GA Client] Metrics error:', error)
@@ -260,7 +263,7 @@ export class GoogleAnalyticsClient {
         ? this.propertyId
         : `properties/${this.propertyId}`
 
-      console.log('[GA Client] Fetching daily metrics:', {
+      console.error('[GA Client] Fetching daily metrics:', {
         propertyId: this.propertyId,
         startDate: this.formatDate(startDate),
         endDate: this.formatDate(endDate),
@@ -354,7 +357,7 @@ export class GoogleAnalyticsClient {
       const result = Array.from(dailyMetricsMap.values()).sort((a, b) =>
         a.date.localeCompare(b.date)
       )
-      console.log('[GA Client] Parsed daily metrics:', result.length, 'days')
+      console.error('[GA Client] Parsed daily metrics:', result.length, 'days')
       return result
     } catch (error) {
       console.error('[GA Client] Daily metrics error:', error)

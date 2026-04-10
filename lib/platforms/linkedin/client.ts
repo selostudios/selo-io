@@ -39,7 +39,7 @@ export class LinkedInClient {
     // Check if token needs refresh
     if (this.oauthProvider.shouldRefreshToken(this.credentials.expires_at)) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[LinkedIn Client] Refreshing token', {
+        console.error('[LinkedIn Client] Refreshing token', {
           expiresAt: this.credentials.expires_at,
           connectionId: this.connectionId,
         })
@@ -66,7 +66,7 @@ export class LinkedInClient {
         this.accessToken = newTokens.access_token
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[LinkedIn Client] Token refreshed successfully')
+          console.error('[LinkedIn Client] Token refreshed successfully')
         }
       } catch (error) {
         console.error('[LinkedIn Client] Token refresh failed', {
@@ -86,7 +86,7 @@ export class LinkedInClient {
               .eq('id', this.connectionId)
 
             if (process.env.NODE_ENV === 'development') {
-              console.log('[LinkedIn Client] Connection marked as failed', {
+              console.error('[LinkedIn Client] Connection marked as failed', {
                 connectionId: this.connectionId,
               })
             }
@@ -184,7 +184,9 @@ export class LinkedInClient {
             const paid = Number(item.followerCounts?.paidFollowerCount) || 0
             totalFollowers += organic + paid
           }
-          console.log('[LinkedIn] Total followers from seniority breakdown:', totalFollowers)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[LinkedIn] Total followers from seniority breakdown:', totalFollowers)
+          }
         }
       }
 
@@ -234,7 +236,9 @@ export class LinkedInClient {
         `/organizationPageStatistics?q=organization&organization=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
       )
 
-      console.log('[LinkedIn] Page stats response:', JSON.stringify(data, null, 2))
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[LinkedIn] Page stats response:', JSON.stringify(data, null, 2))
+      }
 
       let pageViews = 0
       let uniqueVisitors = 0
@@ -288,7 +292,9 @@ export class LinkedInClient {
         `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&timeIntervals=(timeGranularityType:DAY,timeRange:${timeRange})`
       )
 
-      console.log('[LinkedIn] Share stats response:', JSON.stringify(data, null, 2))
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[LinkedIn] Share stats response:', JSON.stringify(data, null, 2))
+      }
 
       // Sum up stats across all time intervals
       let impressions = 0

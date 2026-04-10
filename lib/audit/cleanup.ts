@@ -54,9 +54,12 @@ export async function cleanupOlderAuditDetails(
     return { deletedChecks: 0, deletedPages: 0 }
   }
 
-  console.log(
-    `[Audit Cleanup] Cleaning up ${olderAuditIds.length} older audits for ${organizationId ? `org ${organizationId}` : `URL ${url}`}`
-  )
+  console.error('[Audit Cleanup]', {
+    type: 'cleaning_older_audits',
+    count: olderAuditIds.length,
+    organizationId: organizationId ?? undefined,
+    timestamp: new Date().toISOString(),
+  })
 
   // Delete checks from older audits
   const { count: deletedChecks } = await supabase
@@ -73,9 +76,12 @@ export async function cleanupOlderAuditDetails(
   // Delete crawl queue entries from older audits
   await supabase.from('site_audit_crawl_queue').delete().in('audit_id', olderAuditIds)
 
-  console.log(
-    `[Audit Cleanup] Deleted ${deletedChecks ?? 0} checks and ${deletedPages ?? 0} pages from older audits`
-  )
+  console.error('[Audit Cleanup]', {
+    type: 'older_audits_cleaned',
+    deletedChecks: deletedChecks ?? 0,
+    deletedPages: deletedPages ?? 0,
+    timestamp: new Date().toISOString(),
+  })
 
   return {
     deletedChecks: deletedChecks ?? 0,
@@ -96,7 +102,12 @@ export async function cleanupCrawlQueue(auditId: string): Promise<number> {
     .eq('audit_id', auditId)
 
   if (count && count > 0) {
-    console.log(`[Audit Cleanup] Deleted ${count} crawl queue entries for audit ${auditId}`)
+    console.error('[Audit Cleanup]', {
+      type: 'crawl_queue_cleaned',
+      auditId,
+      deletedEntries: count,
+      timestamp: new Date().toISOString(),
+    })
   }
 
   return count ?? 0
@@ -116,7 +127,10 @@ export async function runPeriodicCleanup(): Promise<{
 }> {
   const supabase = createServiceClient()
 
-  console.log('[Audit Cleanup] Starting periodic cleanup...')
+  console.error('[Audit Cleanup]', {
+    type: 'periodic_cleanup_started',
+    timestamp: new Date().toISOString(),
+  })
 
   // Call optimized database function that performs all cleanup operations in one transaction
   // This reduces 6 round trips to 1 and ensures atomic cleanup
@@ -134,9 +148,14 @@ export async function runPeriodicCleanup(): Promise<{
     deleted_queue_entries: 0,
   }
 
-  console.log(
-    `[Audit Cleanup] Periodic cleanup complete: ${result.deleted_checks} checks, ${result.deleted_pages} pages, ${result.deleted_audits} one-time audits, ${result.deleted_queue_entries} queue entries`
-  )
+  console.error('[Audit Cleanup]', {
+    type: 'periodic_cleanup_complete',
+    deletedChecks: result.deleted_checks,
+    deletedPages: result.deleted_pages,
+    deletedAudits: result.deleted_audits,
+    deletedQueueEntries: result.deleted_queue_entries,
+    timestamp: new Date().toISOString(),
+  })
 
   return {
     deletedChecks: Number(result.deleted_checks),

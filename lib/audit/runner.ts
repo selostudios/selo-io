@@ -189,9 +189,11 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
         .eq('id', auditId)
     }
 
-    console.log(
-      `[Audit] Crawling complete. ${allPages.length} pages, ${allCheckResults.length} page-specific checks already done. Running site-wide checks...`
-    )
+    if (process.env.NODE_ENV === 'development') {
+      console.error(
+        `[Audit] Crawling complete. ${allPages.length} pages, ${allCheckResults.length} page-specific checks already done. Running site-wide checks...`
+      )
+    }
 
     // Find the homepage for site-wide checks
     const homepage =
@@ -260,7 +262,9 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
       }
     }
 
-    console.log(`[Audit] Finished all checks. Total: ${allCheckResults.length}`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit] Finished all checks. Total: ${allCheckResults.length}`)
+    }
 
     // Calculate scores
     const scores = calculateScores(allCheckResults)
@@ -274,7 +278,9 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
       })
       .eq('id', auditId)
 
-    console.log(`[Audit] Scores saved, generating executive summary...`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit] Scores saved, generating executive summary...`)
+    }
 
     // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
@@ -389,9 +395,11 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
       // Check if approaching function timeout before starting a new batch
       const elapsed = Date.now() - functionStartTime
       if (elapsed > MAX_FUNCTION_DURATION_MS) {
-        console.log(
-          `[Audit Batch] Approaching function timeout (${Math.round(elapsed / 1000)}s), triggering continuation`
-        )
+        console.error('[Audit Batch]', {
+          type: 'function_timeout_approaching',
+          elapsedSeconds: Math.round(elapsed / 1000),
+          timestamp: new Date().toISOString(),
+        })
         await supabase.from('site_audits').update({ status: 'batch_complete' }).eq('id', auditId)
         await triggerContinuation(auditId)
         return
@@ -412,9 +420,14 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
       // Run the batch crawl
       const result = await crawlBatch(auditId, { dismissedChecks })
 
-      console.log(
-        `[Audit Batch] Batch ${currentBatch} complete: ${result.pagesProcessed} pages, hasMore=${result.hasMorePages}, stopped=${result.stopped}`
-      )
+      console.error('[Audit Batch]', {
+        type: 'batch_complete',
+        batch: currentBatch,
+        pagesProcessed: result.pagesProcessed,
+        hasMorePages: result.hasMorePages,
+        stopped: result.stopped,
+        timestamp: new Date().toISOString(),
+      })
 
       if (result.stopped) {
         await completeAuditWithExistingChecks(auditId, url)
@@ -599,7 +612,9 @@ async function finishAudit(
     })
     .eq('id', auditId)
 
-  console.log(`[Audit Finish] Scores saved, generating executive summary...`)
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[Audit Finish] Scores saved, generating executive summary...`)
+  }
 
   // Generate executive summary (can be slow due to AI)
   let executive_summary: string | null = null
@@ -635,7 +650,11 @@ async function finishAudit(
   await cleanupOlderAuditDetails(auditId, auditForCleanup?.organization_id ?? null, url)
   await cleanupCrawlQueue(auditId)
 
-  console.log(`[Audit Finish] Audit ${auditId} completed successfully`)
+  console.error('[Audit Finish]', {
+    type: 'audit_completed',
+    auditId,
+    timestamp: new Date().toISOString(),
+  })
 }
 
 export function calculateScores(checks: SiteAuditCheck[]) {
@@ -720,7 +739,9 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     }
 
     const pages = existingPages as import('./types').SiteAuditPage[]
-    console.log(`[Audit Resume] Starting checks for ${pages.length} existing pages`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit Resume] Starting checks for ${pages.length} existing pages`)
+    }
 
     const allCheckResults: SiteAuditCheck[] = []
 
@@ -792,7 +813,11 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
     // Run page-specific checks on each HTML page (skip resources and error pages)
     const htmlPages = pages.filter((p) => !p.is_resource && isCheckablePage(p))
 
-    console.log(`[Audit Resume] Running page-specific checks for ${htmlPages.length} HTML pages`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(
+        `[Audit Resume] Running page-specific checks for ${htmlPages.length} HTML pages`
+      )
+    }
 
     for (let i = 0; i < htmlPages.length; i++) {
       const page = htmlPages[i]
@@ -841,11 +866,15 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
 
       // Log progress every 10 pages
       if (i > 0 && i % 10 === 0) {
-        console.log(`[Audit Resume] Processed ${i}/${htmlPages.length} pages`)
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[Audit Resume] Processed ${i}/${htmlPages.length} pages`)
+        }
       }
     }
 
-    console.log(`[Audit Resume] Finished all checks. Total: ${allCheckResults.length}`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit Resume] Finished all checks. Total: ${allCheckResults.length}`)
+    }
 
     // Calculate scores
     const scores = calculateScores(allCheckResults)
@@ -859,7 +888,9 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
       })
       .eq('id', auditId)
 
-    console.log(`[Audit Resume] Scores saved, generating executive summary...`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit Resume] Scores saved, generating executive summary...`)
+    }
 
     // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
@@ -879,7 +910,11 @@ export async function resumeAuditChecks(auditId: string, url: string): Promise<v
       })
       .eq('id', auditId)
 
-    console.log(`[Audit Resume] Audit ${auditId} completed successfully`)
+    console.error('[Audit Resume]', {
+      type: 'audit_completed',
+      auditId,
+      timestamp: new Date().toISOString(),
+    })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
 
@@ -912,7 +947,11 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
   const supabase = createServiceClient()
 
   try {
-    console.log(`[Audit Complete] Starting completion for audit ${auditId} with existing checks`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(
+        `[Audit Complete] Starting completion for audit ${auditId} with existing checks`
+      )
+    }
 
     // Fetch existing checks from the database
     const { data: existingChecks, error: checksError } = await supabase
@@ -925,13 +964,17 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
     }
 
     const allCheckResults = (existingChecks || []) as SiteAuditCheck[]
-    console.log(`[Audit Complete] Found ${allCheckResults.length} existing checks`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit Complete] Found ${allCheckResults.length} existing checks`)
+    }
 
     // Check if site-wide checks are already present
     const hasSiteWideChecks = allCheckResults.some((c) => c.is_site_wide)
 
     if (!hasSiteWideChecks) {
-      console.log(`[Audit Complete] Running site-wide checks...`)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[Audit Complete] Running site-wide checks...`)
+      }
 
       // Fetch pages for site-wide checks
       const { data: pages } = await supabase
@@ -1001,7 +1044,11 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
       }
     }
 
-    console.log(`[Audit Complete] Calculating scores from ${allCheckResults.length} total checks`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(
+        `[Audit Complete] Calculating scores from ${allCheckResults.length} total checks`
+      )
+    }
 
     // Calculate scores
     const scores = calculateScores(allCheckResults)
@@ -1021,7 +1068,9 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
       .select('*', { count: 'exact', head: true })
       .eq('audit_id', auditId)
 
-    console.log(`[Audit Complete] Scores saved, generating executive summary...`)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Audit Complete] Scores saved, generating executive summary...`)
+    }
 
     // Generate executive summary (can be slow due to AI)
     let executive_summary: string | null = null
@@ -1057,7 +1106,11 @@ export async function completeAuditWithExistingChecks(auditId: string, url: stri
     await cleanupOlderAuditDetails(auditId, auditForCleanup?.organization_id ?? null, url)
     await cleanupCrawlQueue(auditId)
 
-    console.log(`[Audit Complete] Audit ${auditId} completed successfully`)
+    console.error('[Audit Complete]', {
+      type: 'audit_completed',
+      auditId,
+      timestamp: new Date().toISOString(),
+    })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
 

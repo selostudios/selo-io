@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       })
       .eq('id', activeAudit.id)
 
-    console.log('[Audit Active Check] Marked stale audit as failed', {
+    console.error('[Audit Active Check] Marked stale audit as failed', {
       auditId: activeAudit.id,
       status: activeAudit.status,
       updatedAt: activeAudit.updated_at,

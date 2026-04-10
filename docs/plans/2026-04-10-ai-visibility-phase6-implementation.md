@@ -13,6 +13,7 @@
 ## Task 1: Database Migration — Research Columns
 
 **Files:**
+
 - Create: `supabase/migrations/20260410120000_add_research_columns_to_ai_visibility_results.sql`
 
 **Step 1: Create the migration**
@@ -48,7 +49,7 @@ In `lib/ai-visibility/types.ts`, update the `AIVisibilityResult` interface to ad
 ```typescript
 export interface AIVisibilityResult {
   id: string
-  prompt_id: string | null  // Changed: nullable for research results
+  prompt_id: string | null // Changed: nullable for research results
   organization_id: string
   platform: AIPlatform
   response_text: string
@@ -82,6 +83,7 @@ git commit -m "feat: add research mode columns to ai_visibility_results"
 ## Task 2: Generic Polling Hook
 
 **Files:**
+
 - Create: `hooks/use-polling.ts`
 - Create: `tests/unit/hooks/use-polling.test.ts`
 
@@ -341,6 +343,7 @@ git commit -m "feat: add generic usePolling hook for shared polling logic"
 ## Task 3: Refactor Audit Polling to Use Generic Hook
 
 **Files:**
+
 - Modify: `hooks/use-unified-audit-polling.ts`
 
 **Step 1: Refactor to use `usePolling`**
@@ -467,6 +470,7 @@ git commit -m "refactor: use generic usePolling hook in unified audit polling"
 ## Task 4: Insight Generator
 
 **Files:**
+
 - Create: `lib/ai-visibility/insights.ts`
 - Create: `tests/unit/lib/ai-visibility/insights.test.ts`
 
@@ -619,19 +623,24 @@ export function buildInsightPrompt(
 
   if (!analysis.brand_mentioned) {
     situationContext = `The brand "${brandName}" (${domain}) was not mentioned in this AI response.`
-    focus = 'Explain why the brand was likely not mentioned and provide 2-3 specific, actionable steps to get mentioned in responses to this type of query.'
+    focus =
+      'Explain why the brand was likely not mentioned and provide 2-3 specific, actionable steps to get mentioned in responses to this type of query.'
   } else if (analysis.brand_sentiment === BrandSentiment.Negative) {
     situationContext = `The brand "${brandName}" was mentioned but with negative sentiment.`
-    focus = 'Identify what in the response drives the negative sentiment toward the brand and suggest 2-3 specific actions to improve how AI platforms perceive the brand.'
+    focus =
+      'Identify what in the response drives the negative sentiment toward the brand and suggest 2-3 specific actions to improve how AI platforms perceive the brand.'
   } else if (analysis.brand_position !== null && analysis.brand_position >= 2) {
     situationContext = `The brand "${brandName}" was mentioned at position ${analysis.brand_position} (not first).`
-    focus = 'Explain why the brand appears lower and suggest 2-3 specific actions to move up in AI response rankings for this type of query.'
+    focus =
+      'Explain why the brand appears lower and suggest 2-3 specific actions to move up in AI response rankings for this type of query.'
   } else if (!analysis.domain_cited) {
     situationContext = `The brand "${brandName}" was mentioned but its website (${domain}) was not cited as a source.`
-    focus = 'Explain why the brand is mentioned but not cited and suggest 2-3 specific actions to become a cited source in AI responses.'
+    focus =
+      'Explain why the brand is mentioned but not cited and suggest 2-3 specific actions to become a cited source in AI responses.'
   } else {
     situationContext = `The brand "${brandName}" was mentioned positively at position ${analysis.brand_position ?? 'N/A'} and its website is cited.`
-    focus = 'Briefly explain what is working well for this brand in AI visibility and suggest 1-2 ways to maintain or strengthen this position.'
+    focus =
+      'Briefly explain what is working well for this brand in AI visibility and suggest 1-2 ways to maintain or strengthen this position.'
   }
 
   return `You are an AI visibility consultant. Analyze this AI platform response and provide actionable insights.
@@ -710,6 +719,7 @@ git commit -m "feat: add AI insight generator for research mode results"
 ## Task 5: Research Service
 
 **Files:**
+
 - Create: `lib/ai-visibility/research.ts`
 - Create: `tests/unit/lib/ai-visibility/research.test.ts`
 
@@ -780,7 +790,12 @@ vi.mock('@/lib/supabase/server', async (importOriginal) => {
 
 describe('prepareResearch', () => {
   test('returns research config with platforms and budget status', async () => {
-    const result = await prepareResearch('org-1', 'test prompt', 'https://example.com', 'Example Co')
+    const result = await prepareResearch(
+      'org-1',
+      'test prompt',
+      'https://example.com',
+      'Example Co'
+    )
 
     expect(result.researchId).toBeDefined()
     expect(result.platforms).toEqual([AIPlatform.ChatGPT, AIPlatform.Claude])
@@ -791,7 +806,12 @@ describe('prepareResearch', () => {
     const { getCurrentMonthSpend } = await import('@/lib/ai-visibility/budget')
     vi.mocked(getCurrentMonthSpend).mockResolvedValueOnce(15000) // $150 > $100
 
-    const result = await prepareResearch('org-1', 'test prompt', 'https://example.com', 'Example Co')
+    const result = await prepareResearch(
+      'org-1',
+      'test prompt',
+      'https://example.com',
+      'Example Co'
+    )
 
     expect(result.budgetWarning).toBe(true)
   })
@@ -860,7 +880,8 @@ export async function prepareResearch(
 
   // Check budget
   const monthlySpendCents = await getCurrentMonthSpend(orgId)
-  const budgetWarning = config.monthly_budget_cents > 0 && monthlySpendCents >= config.monthly_budget_cents
+  const budgetWarning =
+    config.monthly_budget_cents > 0 && monthlySpendCents >= config.monthly_budget_cents
 
   return {
     researchId: crypto.randomUUID(),
@@ -900,7 +921,8 @@ export async function executeResearch(
         const insightResult = await generateInsight(response.text, analysis, orgContext)
 
         // Calculate cost
-        const queryCost = response.costCents + analysis.sentiment_cost_cents + (insightResult?.costCents ?? 0)
+        const queryCost =
+          response.costCents + analysis.sentiment_cost_cents + (insightResult?.costCents ?? 0)
 
         // Store result
         await supabase.from('ai_visibility_results').insert({
@@ -947,9 +969,7 @@ export async function executeResearch(
  * Fetch research results by researchId.
  * Returns results that have arrived so far (for progressive polling).
  */
-export async function getResearchResults(
-  researchId: string
-): Promise<ResearchResult[]> {
+export async function getResearchResults(researchId: string): Promise<ResearchResult[]> {
   const supabase = createServiceClient()
 
   const { data } = await supabase
@@ -995,6 +1015,7 @@ git commit -m "feat: add research service for on-demand prompt querying"
 ## Task 6: Research API Route
 
 **Files:**
+
 - Create: `app/api/ai-visibility/research/start/route.ts`
 - Create: `app/api/ai-visibility/research/[researchId]/results/route.ts`
 
@@ -1104,6 +1125,7 @@ git commit -m "feat: add research API routes for start and results polling"
 ## Task 7: Research Result Card Component
 
 **Files:**
+
 - Create: `components/ai-visibility/research-result-card.tsx`
 - Create: `tests/unit/components/ai-visibility/research-result-card.test.tsx`
 
@@ -1333,6 +1355,7 @@ git commit -m "feat: add ResearchResultCard component with insight display"
 ## Task 8: Research Result List Component
 
 **Files:**
+
 - Create: `components/ai-visibility/research-result-list.tsx`
 
 **Step 1: Create the result list component**
@@ -1417,6 +1440,7 @@ git commit -m "feat: add ResearchResultList with progressive loading states"
 ## Task 9: Research Section Component
 
 **Files:**
+
 - Create: `components/ai-visibility/research-section.tsx`
 - Create: `tests/unit/components/ai-visibility/research-section.test.tsx`
 
@@ -1722,6 +1746,7 @@ git commit -m "feat: add ResearchSection component with input, polling, and budg
 ## Task 10: Update AddPromptDialog for Pre-fill Support
 
 **Files:**
+
 - Modify: `components/ai-visibility/add-prompt-dialog.tsx`
 
 **Step 1: Read the current AddPromptDialog**
@@ -1767,6 +1792,7 @@ git commit -m "feat: add pre-fill and controlled open support to AddPromptDialog
 ## Task 11: Wire Research Section into Prompts Page
 
 **Files:**
+
 - Modify: `app/(authenticated)/[orgId]/ai-visibility/prompts/page.tsx`
 - Modify: `app/(authenticated)/[orgId]/ai-visibility/actions.ts`
 
@@ -1885,6 +1911,7 @@ git commit -m "feat: wire Research Section into Prompts page"
 ## Task 12: Save to Monitoring — Link Results to Prompt
 
 **Files:**
+
 - Modify: `app/(authenticated)/[orgId]/ai-visibility/actions.ts`
 
 **Step 1: Add action to link research results to a prompt**

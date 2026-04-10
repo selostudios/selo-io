@@ -43,6 +43,7 @@ Uses a new generic `usePolling<T>` hook shared between Research Mode and the exi
 ### Result Storage
 
 Results are stored in the existing `ai_visibility_results` table with:
+
 - `prompt_id = null` (ephemeral — not linked to a tracked prompt)
 - `research_id` = shared UUID grouping results from one research query
 - `source = 'research'` (distinguishes from scheduled sync results)
@@ -58,11 +59,11 @@ Results appear in cost tracking but not in the Prompts page's per-prompt result 
 
 New columns on `ai_visibility_results`:
 
-| Column | Type | Default | Description |
-|--------|------|---------|-------------|
-| `research_id` | UUID nullable | null | Groups results from one research query |
-| `source` | TEXT | `'sync'` | `'sync'` or `'research'` |
-| `insight` | TEXT nullable | null | AI-generated insight (research only) |
+| Column        | Type          | Default  | Description                            |
+| ------------- | ------------- | -------- | -------------------------------------- |
+| `research_id` | UUID nullable | null     | Groups results from one research query |
+| `source`      | TEXT          | `'sync'` | `'sync'` or `'research'`               |
+| `insight`     | TEXT nullable | null     | AI-generated insight (research only)   |
 
 No new tables needed.
 
@@ -75,8 +76,8 @@ No new tables needed.
 interface UsePollingOptions<T> {
   fetcher: () => Promise<T>
   enabled: boolean
-  intervalMs?: number        // default 2000
-  errorIntervalMs?: number   // default 5000
+  intervalMs?: number // default 2000
+  errorIntervalMs?: number // default 5000
   isComplete: (data: T) => boolean
   onComplete?: (data: T) => void
 }
@@ -96,6 +97,7 @@ function usePolling<T>(options: UsePollingOptions<T>): UsePollingResult<T>
 ### Consumers
 
 **Research Mode:**
+
 ```typescript
 const { data: results, isLoading } = usePolling({
   fetcher: () => getResearchResults(researchId),
@@ -106,6 +108,7 @@ const { data: results, isLoading } = usePolling({
 ```
 
 **Audit progress** (refactored from existing `use-unified-audit-polling.ts`):
+
 ```typescript
 const { data: progress, isLoading } = usePolling({
   fetcher: () => fetchAuditStatus(auditId),
@@ -122,13 +125,13 @@ Audit-specific extras (batch continuation, stale detection, stop) stay in the au
 
 Every research result gets an insight via Claude Haiku, tailored to the situation:
 
-| Situation | Insight focus |
-|-----------|---------------|
-| Not mentioned | Why absent, how to get mentioned |
-| Mentioned, low position (2nd/3rd) | How to move up |
-| Mentioned, negative sentiment | What's driving the negative tone |
-| Mentioned, not cited | How to become a cited source |
-| Mentioned + cited + positive | What's working, keep doing this |
+| Situation                         | Insight focus                    |
+| --------------------------------- | -------------------------------- |
+| Not mentioned                     | Why absent, how to get mentioned |
+| Mentioned, low position (2nd/3rd) | How to move up                   |
+| Mentioned, negative sentiment     | What's driving the negative tone |
+| Mentioned, not cited              | How to become a cited source     |
+| Mentioned + cited + positive      | What's working, keep doing this  |
 
 ### Insight prompt context
 
@@ -243,19 +246,20 @@ Skeleton card per expected platform with spinner. Cards appear one by one as res
 
 ## Error Handling
 
-| Scenario | Behavior |
-|----------|----------|
-| Budget exceeded before start | Warning shown, user confirms to proceed |
-| Platform query fails | That platform's card shows error state, others unaffected |
-| All platforms fail | Results section shows error with "Try again" button |
-| Insight generation fails | Result card renders normally, insight section hidden |
-| Polling timeout (30s) | Stop polling, show arrived results + "timed out" for missing platforms |
+| Scenario                     | Behavior                                                               |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| Budget exceeded before start | Warning shown, user confirms to proceed                                |
+| Platform query fails         | That platform's card shows error state, others unaffected              |
+| All platforms fail           | Results section shows error with "Try again" button                    |
+| Insight generation fails     | Result card renders normally, insight section hidden                   |
+| Polling timeout (30s)        | Stop polling, show arrived results + "timed out" for missing platforms |
 
 ## Server-Side Files
 
 ### `lib/ai-visibility/research.ts`
 
 **`startResearch(orgId, promptText)`:**
+
 1. Budget check — warn if exceeded, but proceed regardless
 2. Generate `researchId` (UUID)
 3. Load org config (platforms, competitors, website URL, brand name)
@@ -269,12 +273,14 @@ Skeleton card per expected platform with spinner. Cards appear one by one as res
    - `logUsage()`
 
 **`getResearchResults(researchId)`:**
+
 1. Query `ai_visibility_results` where `research_id = researchId`
 2. Return array of results
 
 ### `lib/ai-visibility/insights.ts`
 
 **`generateInsight(response, analysis, orgContext)`:**
+
 1. Build prompt with response text, brand context, competitor info, analysis results
 2. Call Claude Haiku via `generateText()`
 3. Return insight text (string) or null on failure
@@ -282,12 +288,12 @@ Skeleton card per expected platform with spinner. Cards appear one by one as res
 
 ## Testing Strategy
 
-| Test file | Coverage |
-|-----------|----------|
-| `hooks/use-polling.test.ts` | Generic hook: polls at interval, stops on complete, error backoff, cleanup on unmount, onComplete callback |
-| `lib/ai-visibility/research.test.ts` | startResearch: budget warning flag, parallel platform dispatch, results stored with research_id and source='research'. getResearchResults: returns only matching research_id |
-| `lib/ai-visibility/insights.test.ts` | Generates correct prompt for each scenario (not mentioned, low position, negative sentiment, positive). Returns null on failure without throwing |
-| `components/ai-visibility/research-section.test.tsx` | Input + Run button, budget warning display, polling starts on submit, results appear progressively |
-| `components/ai-visibility/research-result-card.test.tsx` | Renders platform name + badges, shows insight when present, hides insight when null, expandable response text, Save to monitoring button |
+| Test file                                                | Coverage                                                                                                                                                                     |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hooks/use-polling.test.ts`                              | Generic hook: polls at interval, stops on complete, error backoff, cleanup on unmount, onComplete callback                                                                   |
+| `lib/ai-visibility/research.test.ts`                     | startResearch: budget warning flag, parallel platform dispatch, results stored with research_id and source='research'. getResearchResults: returns only matching research_id |
+| `lib/ai-visibility/insights.test.ts`                     | Generates correct prompt for each scenario (not mentioned, low position, negative sentiment, positive). Returns null on failure without throwing                             |
+| `components/ai-visibility/research-section.test.tsx`     | Input + Run button, budget warning display, polling starts on submit, results appear progressively                                                                           |
+| `components/ai-visibility/research-result-card.test.tsx` | Renders platform name + badges, shows insight when present, hides insight when null, expandable response text, Save to monitoring button                                     |
 
 Existing audit polling tests get refactored to use `usePolling` — no net new tests, just updating the hook under test.

@@ -127,7 +127,6 @@ export async function generateReportSummary(input: SummaryInput): Promise<string
     siteAudit,
     siteChecks,
     performanceResults,
-    aioAudit,
     aioChecks,
   } = input
 
@@ -199,16 +198,8 @@ Maximum 150 words. Warm, confident, consultative tone — like a trusted advisor
  * Generate a fallback summary when AI is unavailable
  */
 export function generateFallbackReportSummary(input: SummaryInput): string {
-  const {
-    domain,
-    combinedScore,
-    seoScore,
-    pageSpeedScore,
-    aioScore,
-    siteAudit,
-    aioChecks,
-    siteChecks,
-  } = input
+  const { combinedScore, seoScore, pageSpeedScore, aioScore, siteAudit, aioChecks, siteChecks } =
+    input
 
   const criticalCount = countCriticalIssues(siteChecks, aioChecks)
 

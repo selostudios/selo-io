@@ -77,7 +77,9 @@ export async function fetchPage(url: string, options?: FetchOptions): Promise<Fe
       (cause as { code?: string })?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
 
     if (isSSLError) {
-      console.log(`[Audit Fetcher] SSL error for ${url}, retrying with relaxed verification`)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[Audit Fetcher] SSL error for ${url}, retrying with relaxed verification`)
+      }
       return fetchWithRelaxedSSL(url)
     }
 
