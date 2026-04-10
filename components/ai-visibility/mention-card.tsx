@@ -48,6 +48,7 @@ export function MentionCard({ mention }: MentionCardProps) {
           {hasMore && (
             <button
               onClick={() => setExpanded(!expanded)}
+              aria-expanded={expanded}
               className="text-primary mt-1 text-xs font-medium hover:underline"
             >
               {expanded ? 'Show less' : 'Show more'}

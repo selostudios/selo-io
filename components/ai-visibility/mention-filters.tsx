@@ -50,7 +50,7 @@ export function MentionFilters() {
         className="w-[200px]"
       />
       <Select value={currentPlatform} onValueChange={(v) => updateFilter('platform', v)}>
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-[160px]" aria-label="Filter by platform">
           <SelectValue placeholder="All Platforms" />
         </SelectTrigger>
         <SelectContent>
@@ -64,7 +64,7 @@ export function MentionFilters() {
       </Select>
 
       <Select value={currentSentiment} onValueChange={(v) => updateFilter('sentiment', v)}>
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-[160px]" aria-label="Filter by sentiment">
           <SelectValue placeholder="All Sentiment" />
         </SelectTrigger>
         <SelectContent>
@@ -78,7 +78,7 @@ export function MentionFilters() {
       </Select>
 
       <Select value={currentDays} onValueChange={(v) => updateFilter('days', v)}>
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-[140px]" aria-label="Filter by time period">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

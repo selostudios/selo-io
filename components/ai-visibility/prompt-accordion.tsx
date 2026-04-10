@@ -72,6 +72,7 @@ function PromptRow({ prompt }: { prompt: PromptWithResults }) {
     <div className="rounded-md border">
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
         className="hover:bg-muted/50 flex w-full items-center justify-between gap-4 p-3 text-left text-sm"
       >
         <span className="min-w-0 flex-1 truncate">{prompt.prompt_text}</span>
