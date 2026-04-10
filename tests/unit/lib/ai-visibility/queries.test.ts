@@ -29,6 +29,9 @@ function makeResult(overrides: Partial<AIVisibilityResult> = {}): AIVisibilityRe
     queried_at: '2026-04-09T04:00:00Z',
     raw_response: null,
     created_at: '2026-04-09T04:00:00Z',
+    research_id: null,
+    source: 'sync',
+    insight: null,
     ...overrides,
   }
 }
