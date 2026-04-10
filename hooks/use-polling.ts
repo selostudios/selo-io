@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 export interface UsePollingOptions<T> {
+  /** Must be stable (wrap in useCallback) — a new reference restarts the polling loop. */
   fetcher: () => Promise<T>
   enabled: boolean
   intervalMs?: number
