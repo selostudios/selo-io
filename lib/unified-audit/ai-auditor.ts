@@ -1,9 +1,47 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { generateText } from 'ai'
 import * as cheerio from 'cheerio'
-import { AIOBatchAnalysisSchema } from './types'
-import type { AIOPageAnalysis } from './types'
+import { z } from 'zod'
 import { AIO_QUALITY_SKILL } from './skill'
+
+// Zod schemas for AI analysis validation (moved from lib/aio/types)
+const AIOPageAnalysisSchema = z.object({
+  url: z.string().url(),
+  scores: z.object({
+    dataQuality: z.number().min(0).max(100),
+    expertCredibility: z.number().min(0).max(100),
+    comprehensiveness: z.number().min(0).max(100),
+    citability: z.number().min(0).max(100),
+    authority: z.number().min(0).max(100),
+    overall: z.number().min(0).max(100),
+  }),
+  findings: z.any().optional(),
+  recommendations: z
+    .array(
+      z.object({
+        priority: z.string(),
+        category: z.string(),
+        issue: z.string(),
+        recommendation: z.string(),
+        expectedImpact: z.string().optional(),
+        learnMoreUrl: z.string().optional(),
+      })
+    )
+    .max(10),
+})
+
+const AIOBatchAnalysisSchema = z.object({
+  analyses: z.array(AIOPageAnalysisSchema),
+  batchMetadata: z
+    .object({
+      pagesAnalyzed: z.number().optional(),
+      averageScore: z.number().optional(),
+      commonIssues: z.array(z.string()).optional(),
+    })
+    .optional(),
+})
+
+export type AIOPageAnalysis = z.infer<typeof AIOPageAnalysisSchema>
 
 const MODEL = 'claude-opus-4-20250514'
 

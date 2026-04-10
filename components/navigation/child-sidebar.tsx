@@ -19,7 +19,6 @@ import {
   Eye,
   MessageSquareText,
   AtSign,
-  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -59,7 +58,6 @@ const homeNavigation: NavigationGroup[] = [
       { name: 'Overview', href: '/ai-visibility', icon: Eye },
       { name: 'Prompts', href: '/ai-visibility/prompts', icon: MessageSquareText },
       { name: 'Brand Mentions', href: '/ai-visibility/mentions', icon: AtSign },
-      { name: 'Site Audit', href: '/seo/aio', icon: Bot },
     ],
   },
   {

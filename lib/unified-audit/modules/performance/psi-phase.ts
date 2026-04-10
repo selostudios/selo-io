@@ -5,7 +5,7 @@ import {
   extractDiagnostics,
 } from '@/lib/performance/api'
 import type { PageSpeedResult } from '@/lib/performance/types'
-import { selectTopPages } from '@/lib/aio/importance'
+import { selectTopPages } from '../../importance'
 import { lighthouseScores } from '../../checks/performance/lighthouse-scores'
 import { coreWebVitals } from '../../checks/performance/core-web-vitals'
 import { pageResponseTime } from '../../checks/performance/page-response-time'

@@ -1,5 +1,10 @@
 import type { SiteAuditPage } from '@/lib/audit/types'
-import type { PageImportance } from './types'
+
+export interface PageImportance {
+  url: string
+  importanceScore: number
+  reasons: string[]
+}
 
 /**
  * Calculate importance score for a page based on multiple signals
