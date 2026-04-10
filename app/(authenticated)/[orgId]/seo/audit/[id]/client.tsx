@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Share2, Search, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ExternalLink, Share2, Search, X } from 'lucide-react'
 import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ShareModal } from '@/components/share/share-modal'
 import { UnifiedScoreCards } from '@/components/audit/unified-score-cards'
 import { UnifiedCheckList } from '@/components/audit/unified-check-list'
-import { getUnifiedAuditChecksByTab, rerunCheck } from './actions'
-import { SharedResourceType, UnifiedAuditStatus } from '@/lib/enums'
+import { EmptyState } from '@/components/ui/empty-state'
+import { getUnifiedAuditChecksByTab, rerunCheck, rerunModule } from './actions'
+import { SharedResourceType, UnifiedAuditStatus, ScoreDimension } from '@/lib/enums'
 import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 import type { TabCounts } from './actions'
@@ -46,6 +47,20 @@ const TAB_TO_COUNTS_KEY: Record<TabValue, keyof TabCounts> = {
   'ai-readiness': 'aiReadiness',
 }
 
+// Map tab values to score dimensions for module status lookups
+const TAB_TO_DIMENSION: Record<TabValue, ScoreDimension | null> = {
+  overview: null,
+  seo: ScoreDimension.SEO,
+  performance: ScoreDimension.Performance,
+  'ai-readiness': ScoreDimension.AIReadiness,
+}
+
+const DIMENSION_LABELS: Record<string, string> = {
+  [ScoreDimension.SEO]: 'SEO',
+  [ScoreDimension.Performance]: 'Performance',
+  [ScoreDimension.AIReadiness]: 'AI Readiness',
+}
+
 export function UnifiedAuditDetailClient({
   audit,
   tabCounts,
@@ -58,6 +73,7 @@ export function UnifiedAuditDetailClient({
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isRetrying, startRetry] = useTransition()
 
   // Tab state synced with URL
   const currentTab = (searchParams.get('tab') as TabValue) || 'overview'
@@ -127,6 +143,20 @@ export function UnifiedAuditDetailClient({
       return { passed: result.passed, failed: result.failed, warnings: result.warnings }
     },
     [audit.id, router, currentTab]
+  )
+
+  const handleRetryModule = useCallback(
+    (dimension: ScoreDimension) => {
+      startRetry(async () => {
+        const result = await rerunModule(audit.id, dimension)
+        if (result.success) {
+          // Clear cached checks for this tab and refresh
+          setChecksByTab({})
+          router.refresh()
+        }
+      })
+    },
+    [audit.id, router]
   )
 
   const currentChecks = useMemo(() => checksByTab[currentTab] ?? [], [checksByTab, currentTab])
@@ -218,6 +248,7 @@ export function UnifiedAuditDetailClient({
           seo={audit.seo_score}
           performance={audit.performance_score}
           aiReadiness={audit.ai_readiness_score}
+          moduleStatuses={audit.module_statuses as Record<string, string> | undefined}
         />
 
         {/* Tabbed Content */}
@@ -238,74 +269,121 @@ export function UnifiedAuditDetailClient({
           </TabsList>
 
           <TabsContent value={currentTab} className="space-y-4">
-            {/* Filters scoped to active tab */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant={activeFilter === 'all' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('all')}
-              >
-                All ({currentTabCounts.total})
-              </Badge>
-              <Badge
-                variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
-                className={
-                  currentTabCounts.failed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-                }
-                onClick={() => currentTabCounts.failed > 0 && setActiveFilter('failed')}
-              >
-                Failed ({currentTabCounts.failed})
-              </Badge>
-              <Badge
-                variant={activeFilter === 'warning' ? 'warning' : 'outline'}
-                className={
-                  currentTabCounts.warning === 0
-                    ? 'cursor-not-allowed opacity-50'
-                    : 'cursor-pointer'
-                }
-                onClick={() => currentTabCounts.warning > 0 && setActiveFilter('warning')}
-              >
-                Warnings ({currentTabCounts.warning})
-              </Badge>
-              <Badge
-                variant={activeFilter === 'passed' ? 'success' : 'outline'}
-                className={
-                  currentTabCounts.passed === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-                }
-                onClick={() => currentTabCounts.passed > 0 && setActiveFilter('passed')}
-              >
-                Passed ({currentTabCounts.passed})
-              </Badge>
-              <div className="relative ml-auto">
-                <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-                <Input
-                  type="text"
-                  placeholder="Search checks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-48 pr-8 pl-8 text-sm"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-            </div>
+            {(() => {
+              const dimension = TAB_TO_DIMENSION[currentTab]
+              const moduleStatus = dimension
+                ? (audit.module_statuses as Record<string, string> | undefined)?.[dimension]
+                : null
+              const moduleError = dimension
+                ? (
+                    audit.module_errors as
+                      | Record<string, { phase: string; message: string; timestamp: string }>
+                      | undefined
+                  )?.[dimension]
+                : null
 
-            {isLoading ? (
-              <CheckListSkeleton />
-            ) : (
-              <UnifiedCheckList
-                checks={statusFilteredChecks}
-                groupBy="category"
-                totalPages={audit.pages_crawled}
-                onRerunCheck={handleRerunCheck}
-              />
-            )}
+              if (moduleStatus === 'failed' && dimension) {
+                return (
+                  <div className="space-y-4">
+                    <EmptyState
+                      icon={AlertTriangle}
+                      title={`${DIMENSION_LABELS[dimension] || dimension} encountered an error`}
+                      description={
+                        moduleError?.message || 'An unexpected error occurred during analysis.'
+                      }
+                    />
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRetryModule(dimension)}
+                        disabled={isRetrying}
+                        data-testid="retry-module-button"
+                      >
+                        {isRetrying ? 'Retrying...' : 'Retry'}
+                      </Button>
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <>
+                  {/* Filters scoped to active tab */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant={activeFilter === 'all' ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => setActiveFilter('all')}
+                    >
+                      All ({currentTabCounts.total})
+                    </Badge>
+                    <Badge
+                      variant={activeFilter === 'failed' ? 'destructive' : 'outline'}
+                      className={
+                        currentTabCounts.failed === 0
+                          ? 'cursor-not-allowed opacity-50'
+                          : 'cursor-pointer'
+                      }
+                      onClick={() => currentTabCounts.failed > 0 && setActiveFilter('failed')}
+                    >
+                      Failed ({currentTabCounts.failed})
+                    </Badge>
+                    <Badge
+                      variant={activeFilter === 'warning' ? 'warning' : 'outline'}
+                      className={
+                        currentTabCounts.warning === 0
+                          ? 'cursor-not-allowed opacity-50'
+                          : 'cursor-pointer'
+                      }
+                      onClick={() => currentTabCounts.warning > 0 && setActiveFilter('warning')}
+                    >
+                      Warnings ({currentTabCounts.warning})
+                    </Badge>
+                    <Badge
+                      variant={activeFilter === 'passed' ? 'success' : 'outline'}
+                      className={
+                        currentTabCounts.passed === 0
+                          ? 'cursor-not-allowed opacity-50'
+                          : 'cursor-pointer'
+                      }
+                      onClick={() => currentTabCounts.passed > 0 && setActiveFilter('passed')}
+                    >
+                      Passed ({currentTabCounts.passed})
+                    </Badge>
+                    <div className="relative ml-auto">
+                      <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+                      <Input
+                        type="text"
+                        placeholder="Search checks..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-8 w-48 pr-8 pl-8 text-sm"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {isLoading ? (
+                    <CheckListSkeleton />
+                  ) : (
+                    <UnifiedCheckList
+                      checks={statusFilteredChecks}
+                      groupBy="category"
+                      totalPages={audit.pages_crawled}
+                      onRerunCheck={handleRerunCheck}
+                    />
+                  )}
+                </>
+              )
+            })()}
           </TabsContent>
         </Tabs>
       </div>

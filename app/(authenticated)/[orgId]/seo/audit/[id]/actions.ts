@@ -24,6 +24,7 @@ const AUDIT_SELECT = `id, organization_id, created_by, domain, url, status,
   pages_crawled, crawl_mode, max_pages,
   passed_count, warning_count, failed_count,
   executive_summary, error_message,
+  module_timings, module_statuses, module_errors,
   started_at, completed_at, created_at` as '*'
 
 const CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, status,
