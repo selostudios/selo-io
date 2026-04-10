@@ -12,12 +12,14 @@ import {
   ExternalLink,
   MessageSquare,
   Search,
+  Info,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -259,9 +261,19 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
   const keyDialogContent = (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>
-          {configured ? 'Update' : 'Add'} {provider.name} Key
-        </DialogTitle>
+        <div className="flex items-center gap-2">
+          <DialogTitle>
+            {configured ? 'Update' : 'Add'} {provider.name} Key
+          </DialogTitle>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="text-muted-foreground h-4 w-4 shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-72">
+              {provider.setupHint}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </DialogHeader>
       <div className="space-y-2 py-4">
         <Label htmlFor={`key-${provider.key}`}>API Key</Label>
@@ -272,6 +284,17 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
           value={newValue}
           onChange={(e) => setNewValue(e.target.value)}
         />
+        {provider.docsUrl && (
+          <a
+            href={provider.docsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs underline underline-offset-2"
+          >
+            {provider.docsLabel ?? 'Get API Key'}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </div>
       <DialogFooter>
         <Button onClick={handleUpdateKey} disabled={saving || !newValue.trim()}>
