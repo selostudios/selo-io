@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { UnifiedAuditStatus } from '@/lib/enums'
+import { usePolling } from './use-polling'
 
 interface UnifiedAuditProgress {
   id: string
@@ -31,9 +32,14 @@ interface UnifiedAuditProgress {
   }
 }
 
+const TERMINAL_STATUSES = new Set([
+  UnifiedAuditStatus.Completed,
+  UnifiedAuditStatus.CompletedWithErrors,
+  UnifiedAuditStatus.Failed,
+  UnifiedAuditStatus.Stopped,
+])
+
 export function useUnifiedAuditPolling(auditId: string, enabled: boolean) {
-  const [progress, setProgress] = useState<UnifiedAuditProgress | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [isContinuing, setIsContinuing] = useState(false)
   const isContinuingRef = useRef(false)
 
@@ -69,50 +75,25 @@ export function useUnifiedAuditPolling(auditId: string, enabled: boolean) {
     }
   }, [auditId])
 
-  useEffect(() => {
-    if (!enabled) return
+  const fetcher = useCallback(async (): Promise<UnifiedAuditProgress> => {
+    const response = await fetch(`/api/unified-audit/${auditId}/status`)
+    const data = await response.json()
 
-    let timeoutId: NodeJS.Timeout
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/unified-audit/${auditId}/status`)
-        const data = await response.json()
-        setProgress(data)
-        setIsLoading(false)
-
-        // Auto-trigger continuation for batch_complete
-        if (data.status === UnifiedAuditStatus.BatchComplete && !isContinuingRef.current) {
-          triggerContinue()
-          timeoutId = setTimeout(poll, 2000)
-          return
-        }
-
-        // Continue polling if not in a terminal state
-        if (
-          data.status === UnifiedAuditStatus.Pending ||
-          data.status === UnifiedAuditStatus.Crawling ||
-          data.status === UnifiedAuditStatus.Checking ||
-          data.status === UnifiedAuditStatus.Analyzing ||
-          data.status === UnifiedAuditStatus.BatchComplete ||
-          data.status === UnifiedAuditStatus.AwaitingConfirmation
-        ) {
-          timeoutId = setTimeout(poll, 2000)
-        }
-      } catch {
-        console.error('[Unified Audit Polling Error]', {
-          type: 'fetch_error',
-          auditId,
-          timestamp: new Date().toISOString(),
-        })
-        timeoutId = setTimeout(poll, 5000)
-      }
+    // Trigger batch continuation if needed (side effect during fetch)
+    if (data.status === UnifiedAuditStatus.BatchComplete && !isContinuingRef.current) {
+      triggerContinue()
     }
 
-    poll()
+    return data
+  }, [auditId, triggerContinue])
 
-    return () => clearTimeout(timeoutId)
-  }, [auditId, enabled, triggerContinue])
+  const { data: progress, isLoading } = usePolling<UnifiedAuditProgress>({
+    fetcher,
+    enabled,
+    intervalMs: 2000,
+    errorIntervalMs: 5000,
+    isComplete: (data) => TERMINAL_STATUSES.has(data.status as UnifiedAuditStatus),
+  })
 
   return { progress, isLoading, isContinuing }
 }
