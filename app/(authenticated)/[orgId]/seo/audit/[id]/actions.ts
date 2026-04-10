@@ -8,9 +8,11 @@ import { canAccessAllAudits } from '@/lib/permissions'
 import { ScoreDimension } from '@/lib/enums'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { getCheckByName } from '@/lib/unified-audit/checks'
-import { buildCheckRecord } from '@/lib/unified-audit/runner'
-import type { CheckContext } from '@/lib/unified-audit/types'
+import { buildCheckRecord, executeModules } from '@/lib/unified-audit/runner'
+import { getModule } from '@/lib/unified-audit/modules/registry'
+import type { CheckContext, AuditPage, PostCrawlContext } from '@/lib/unified-audit/types'
 import type { UnifiedAudit, AuditCheck, AuditAIAnalysis } from '@/lib/unified-audit/types'
+import { revalidatePath } from 'next/cache'
 
 // =============================================================================
 // Types
@@ -398,4 +400,234 @@ export async function rerunCheck(
     failed,
     warnings,
   }
+}
+
+// =============================================================================
+// Re-run Module Action
+// =============================================================================
+
+export async function rerunModule(
+  auditId: string,
+  dimension: ScoreDimension
+): Promise<{ success: boolean; error?: string }> {
+  // Auth
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Not authenticated' }
+
+  const { data: rawUser } = await supabase
+    .from('users')
+    .select('id, is_internal, team_members(organization_id, role)')
+    .eq('id', user.id)
+    .single()
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = rawUser
+    ? {
+        organization_id: membership?.organization_id ?? null,
+        role: membership?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
+  if (!userRecord) return { success: false, error: 'User not found' }
+
+  // Verify audit access
+  const serviceClient = createServiceClient()
+  const { data: audit } = await serviceClient
+    .from('audits')
+    .select('id, organization_id, created_by, url, sample_size, ai_analysis_enabled')
+    .eq('id', auditId)
+    .single()
+  if (!audit) return { success: false, error: 'Audit not found' }
+
+  const hasAccess =
+    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id === null && audit.created_by === user.id) ||
+    canAccessAllAudits(userRecord)
+  if (!hasAccess) return { success: false, error: 'Access denied' }
+
+  // Find the module
+  const mod = getModule(dimension)
+  if (!mod) return { success: false, error: 'Module not found' }
+
+  // Get all crawled pages
+  const { data: pages } = await serviceClient
+    .from('audit_pages')
+    .select('*')
+    .eq('audit_id', auditId)
+  if (!pages?.length) return { success: false, error: 'No pages found for audit' }
+
+  // Delete existing checks for this dimension
+  const dimensionCheckNames = mod.checks.map((c) => c.name)
+  if (dimensionCheckNames.length > 0) {
+    await serviceClient
+      .from('audit_checks')
+      .delete()
+      .eq('audit_id', auditId)
+      .in('check_name', dimensionCheckNames)
+  }
+
+  // Delete existing AI analyses if re-running AI Readiness
+  if (dimension === ScoreDimension.AIReadiness) {
+    await serviceClient.from('audit_ai_analyses').delete().eq('audit_id', auditId)
+  }
+
+  // Re-run page-specific checks for this module
+  const pageSpecific = mod.checks.filter((c) => !c.isSiteWide)
+  const siteWide = mod.checks.filter((c) => c.isSiteWide)
+  const newChecks: AuditCheck[] = []
+
+  // Page-specific checks
+  const htmlPages = pages.filter(
+    (p: { is_resource: boolean; status_code: number | null }) =>
+      !p.is_resource && (!p.status_code || p.status_code < 400)
+  )
+
+  for (const page of htmlPages) {
+    try {
+      const { html, error } = await fetchPage(page.url)
+      if (error || !html) continue
+
+      const context: CheckContext = {
+        url: page.url,
+        html,
+        title: page.title ?? undefined,
+        statusCode: page.status_code ?? 200,
+        allPages: pages.map((p: AuditPage) => ({
+          url: p.url,
+          title: p.title,
+          statusCode: p.status_code,
+          metaDescription: p.meta_description,
+          isResource: p.is_resource,
+        })),
+      }
+
+      for (const check of pageSpecific) {
+        try {
+          const result = await check.run(context)
+          newChecks.push(buildCheckRecord(auditId, page.url, check, result))
+        } catch {
+          // Continue on individual check failure
+        }
+      }
+    } catch {
+      // Continue on page fetch failure
+    }
+  }
+
+  // Site-wide checks
+  if (siteWide.length > 0 && htmlPages.length > 0) {
+    const homepage =
+      htmlPages.find((p: AuditPage) => {
+        const pageUrl = new URL(p.url)
+        return pageUrl.pathname === '/' || pageUrl.pathname === ''
+      }) || htmlPages[0]
+
+    const { html } = await fetchPage(homepage.url)
+    if (html) {
+      const context: CheckContext = {
+        url: homepage.url,
+        html,
+        title: homepage.title ?? undefined,
+        statusCode: homepage.status_code ?? 200,
+        allPages: pages.map((p: AuditPage) => ({
+          url: p.url,
+          title: p.title,
+          statusCode: p.status_code,
+          metaDescription: p.meta_description,
+          isResource: p.is_resource,
+        })),
+      }
+
+      for (const check of siteWide) {
+        try {
+          const result = await check.run(context)
+          newChecks.push(buildCheckRecord(auditId, null, check, result))
+        } catch {
+          // Continue
+        }
+      }
+    }
+  }
+
+  // Insert new checks
+  if (newChecks.length > 0) {
+    await serviceClient.from('audit_checks').insert(newChecks)
+  }
+
+  // Run post-crawl phase and calculate score
+  const postCrawlContext: PostCrawlContext = {
+    auditId,
+    url: audit.url,
+    allPages: pages as AuditPage[],
+    sampleSize: audit.sample_size ?? 5,
+    organizationId: audit.organization_id,
+  }
+
+  const moduleResults = await executeModules([mod], [...newChecks], postCrawlContext)
+  const moduleResult = moduleResults[0]
+
+  // Update the dimension score and module metadata
+  const scoreField =
+    dimension === ScoreDimension.SEO
+      ? 'seo_score'
+      : dimension === ScoreDimension.Performance
+        ? 'performance_score'
+        : 'ai_readiness_score'
+
+  // Get current module metadata
+  const { data: currentAudit } = await serviceClient
+    .from('audits')
+    .select(
+      'seo_score, performance_score, ai_readiness_score, module_timings, module_statuses, module_errors'
+    )
+    .eq('id', auditId)
+    .single()
+
+  const updatedTimings = {
+    ...((currentAudit?.module_timings as Record<string, number>) ?? {}),
+    [dimension]: moduleResult.durationMs,
+  }
+  const updatedStatuses = {
+    ...((currentAudit?.module_statuses as Record<string, string>) ?? {}),
+    [dimension]: moduleResult.status,
+  }
+  const updatedErrors = { ...((currentAudit?.module_errors as Record<string, unknown>) ?? {}) }
+  if (moduleResult.error) {
+    updatedErrors[dimension] = moduleResult.error
+  } else {
+    delete updatedErrors[dimension]
+  }
+
+  // Recalculate overall score
+  const scores: Record<string, number | null> = {
+    [ScoreDimension.SEO]: currentAudit?.seo_score ?? null,
+    [ScoreDimension.Performance]: currentAudit?.performance_score ?? null,
+    [ScoreDimension.AIReadiness]: currentAudit?.ai_readiness_score ?? null,
+  }
+  scores[dimension] = moduleResult.score
+
+  const { calculateOverallScore } = await import('@/lib/unified-audit/scoring')
+  const overallScore = calculateOverallScore(
+    scores[ScoreDimension.SEO],
+    scores[ScoreDimension.Performance],
+    scores[ScoreDimension.AIReadiness]
+  )
+
+  await serviceClient
+    .from('audits')
+    .update({
+      [scoreField]: moduleResult.score,
+      overall_score: overallScore,
+      module_timings: updatedTimings,
+      module_statuses: updatedStatuses,
+      module_errors: updatedErrors,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', auditId)
+
+  revalidatePath(`/seo/audit/${auditId}`)
+
+  return { success: true }
 }
