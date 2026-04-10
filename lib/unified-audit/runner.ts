@@ -9,8 +9,15 @@ import {
   calculateAIReadinessScore,
   calculateOverallScore,
 } from './scoring'
-import { UnifiedAuditStatus, CheckStatus } from '@/lib/enums'
+import { UnifiedAuditStatus, CheckStatus, ScoreDimension } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext, AuditCheckDefinition } from './types'
+import type {
+  AuditModule,
+  ModuleStatus,
+  ModuleError,
+  PostCrawlContext,
+  PostCrawlResult,
+} from './types'
 import { runPSIAnalysis } from './psi-runner'
 import { runAIAnalysisPhase } from './ai-runner'
 
@@ -89,6 +96,100 @@ export function buildCheckRecord(
     feeds_scores: check.feedsScores,
     created_at: new Date().toISOString(),
   }
+}
+
+// =============================================================================
+// Module Execution Engine
+// =============================================================================
+
+export interface ModuleResult {
+  dimension: ScoreDimension
+  score: number | null
+  status: ModuleStatus
+  durationMs: number
+  error?: ModuleError
+  phaseResult?: PostCrawlResult
+}
+
+/**
+ * Execute audit modules in parallel.
+ * Each module: filter checks by dimension -> run post-crawl phase -> calculate score.
+ * Module failures are isolated — one module crashing never takes down the others.
+ */
+export async function executeModules(
+  modules: AuditModule[],
+  allCheckResults: AuditCheck[],
+  postCrawlContext?: PostCrawlContext
+): Promise<ModuleResult[]> {
+  const results = await Promise.allSettled(
+    modules.map(async (mod): Promise<ModuleResult> => {
+      const startTime = Date.now()
+      try {
+        let phaseResult: PostCrawlResult | undefined
+        if (mod.runPostCrawlPhase && postCrawlContext) {
+          try {
+            phaseResult = await mod.runPostCrawlPhase(postCrawlContext)
+          } catch (phaseError) {
+            console.error('[Unified Audit]', {
+              type: 'module_phase_failed',
+              module: mod.dimension,
+              phase: 'post_crawl',
+              error: phaseError instanceof Error ? phaseError.message : String(phaseError),
+              timestamp: new Date().toISOString(),
+            })
+            // Continue with checks-only scoring (no phase result)
+          }
+        }
+
+        const dimensionChecks = allCheckResults.filter((c) =>
+          c.feeds_scores.includes(mod.dimension)
+        )
+        const score = mod.calculateScore(dimensionChecks, phaseResult)
+
+        return {
+          dimension: mod.dimension,
+          score,
+          status: 'completed' as ModuleStatus,
+          durationMs: Date.now() - startTime,
+          phaseResult,
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error('[Unified Audit]', {
+          type: 'module_failed',
+          module: mod.dimension,
+          error: errorMessage,
+          timestamp: new Date().toISOString(),
+        })
+        return {
+          dimension: mod.dimension,
+          score: null,
+          status: 'failed' as ModuleStatus,
+          durationMs: Date.now() - startTime,
+          error: {
+            phase: 'scoring',
+            message: errorMessage,
+            timestamp: new Date().toISOString(),
+          },
+        }
+      }
+    })
+  )
+
+  return results.map((r) => {
+    if (r.status === 'fulfilled') return r.value
+    return {
+      dimension: ScoreDimension.SEO,
+      score: null,
+      status: 'failed' as ModuleStatus,
+      durationMs: 0,
+      error: {
+        phase: 'scoring' as const,
+        message: r.reason instanceof Error ? r.reason.message : String(r.reason),
+        timestamp: new Date().toISOString(),
+      },
+    }
+  })
 }
 
 async function loadDismissedChecks(
