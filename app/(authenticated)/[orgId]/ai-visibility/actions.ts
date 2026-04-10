@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { syncOrganization } from '@/lib/ai-visibility/sync'
 import { withAdminAuth } from '@/lib/actions/with-auth'
 import { revalidatePath } from 'next/cache'
-import { PromptSource } from '@/lib/enums'
+import { PromptSource, AIPlatform, SyncFrequency } from '@/lib/enums'
 
 export async function runAIVisibilitySync(orgId: string) {
   return withAdminAuth(async () => {
@@ -102,6 +102,62 @@ export async function addPrompt(
     }
 
     revalidatePath(`/${orgId}/ai-visibility/prompts`)
+    return { success: true as const }
+  })
+}
+
+export async function updateAIVisibilityConfig(
+  orgId: string,
+  data: {
+    isActive: boolean
+    platforms: AIPlatform[]
+    syncFrequency: SyncFrequency
+    monthlyBudgetCents: number
+    budgetAlertThreshold: number
+    competitors: { name: string; domain: string }[]
+  }
+) {
+  return withAdminAuth(async () => {
+    if (data.isActive && data.platforms.length === 0) {
+      return { success: false as const, error: 'Select at least one platform when active' }
+    }
+    if (data.monthlyBudgetCents < 100) {
+      return { success: false as const, error: 'Minimum budget is $1.00' }
+    }
+    if (data.budgetAlertThreshold < 50 || data.budgetAlertThreshold > 100) {
+      return { success: false as const, error: 'Alert threshold must be between 50% and 100%' }
+    }
+    if (data.competitors.length > 10) {
+      return { success: false as const, error: 'Maximum 10 competitors allowed' }
+    }
+
+    const supabase = createServiceClient()
+
+    const { error } = await supabase.from('ai_visibility_configs').upsert(
+      {
+        organization_id: orgId,
+        is_active: data.isActive,
+        platforms: data.platforms,
+        sync_frequency: data.syncFrequency,
+        monthly_budget_cents: data.monthlyBudgetCents,
+        budget_alert_threshold: data.budgetAlertThreshold,
+        competitors: data.competitors,
+      },
+      { onConflict: 'organization_id' }
+    )
+
+    if (error) {
+      console.error('[AI Visibility Config]', {
+        type: 'update_failed',
+        organizationId: orgId,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      })
+      return { success: false as const, error: 'Failed to save configuration' }
+    }
+
+    revalidatePath(`/${orgId}/settings/organization`)
+    revalidatePath(`/${orgId}/ai-visibility`)
     return { success: true as const }
   })
 }
