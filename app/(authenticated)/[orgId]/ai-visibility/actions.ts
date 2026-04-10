@@ -106,6 +106,32 @@ export async function addPrompt(
   })
 }
 
+export async function getResearchPageData(orgId: string) {
+  const supabase = createServiceClient()
+
+  const [configResult, orgResult] = await Promise.all([
+    supabase.from('ai_visibility_configs').select('*').eq('organization_id', orgId).maybeSingle(),
+    supabase.from('organizations').select('name, website_url').eq('id', orgId).single(),
+  ])
+
+  const config = configResult.data
+  const org = orgResult.data
+
+  if (!config || !org) return null
+
+  const { getCurrentMonthSpend } = await import('@/lib/ai-visibility/budget')
+  const monthlySpendCents = await getCurrentMonthSpend(orgId)
+
+  return {
+    orgName: org.name,
+    websiteUrl: org.website_url,
+    competitors: config.competitors as { name: string; domain: string }[],
+    monthlySpendCents,
+    monthlyBudgetCents: config.monthly_budget_cents,
+    isActive: config.is_active,
+  }
+}
+
 export async function updateAIVisibilityConfig(
   orgId: string,
   data: {

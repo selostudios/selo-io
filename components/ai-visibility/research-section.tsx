@@ -139,7 +139,7 @@ export function ResearchSection({
       </div>
 
       {/* Budget info */}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Budget: {formatCents(monthlySpendCents)} / {formatCents(monthlyBudgetCents)} used this month
       </p>
 

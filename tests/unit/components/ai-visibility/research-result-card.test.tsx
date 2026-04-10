@@ -32,7 +32,9 @@ describe('ResearchResultCard', () => {
 
   test('shows not-mentioned status when brand is absent', () => {
     render(
-      <ResearchResultCard result={{ ...baseResult, brand_mentioned: false, brand_position: null }} />
+      <ResearchResultCard
+        result={{ ...baseResult, brand_mentioned: false, brand_position: null }}
+      />
     )
     // StatusChip renders "Mentioned" with an X icon when positive=false
     expect(screen.getByTestId('research-result-card')).toBeDefined()
