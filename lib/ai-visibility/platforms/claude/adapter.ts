@@ -3,8 +3,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
-
-const MODEL = 'claude-sonnet-4-20250514'
+import { AI_MODELS } from '../models'
 
 export class ClaudeAdapter implements AIProviderAdapter {
   platform = AIPlatform.Claude
@@ -12,7 +11,7 @@ export class ClaudeAdapter implements AIProviderAdapter {
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
       const { text, usage } = await generateText({
-        model: anthropic(MODEL),
+        model: anthropic(AI_MODELS.claude),
         prompt,
       })
 
@@ -22,7 +21,7 @@ export class ClaudeAdapter implements AIProviderAdapter {
       return {
         text,
         citations: [],
-        model: MODEL,
+        model: AI_MODELS.claude,
         inputTokens,
         outputTokens,
         costCents: estimateCostCents(AIPlatform.Claude, inputTokens, outputTokens),

@@ -3,8 +3,7 @@ import { perplexity } from '@ai-sdk/perplexity'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
-
-const MODEL = 'sonar'
+import { AI_MODELS } from '../models'
 
 interface PerplexitySource {
   url: string
@@ -17,7 +16,7 @@ export class PerplexityAdapter implements AIProviderAdapter {
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
       const result = await generateText({
-        model: perplexity(MODEL),
+        model: perplexity(AI_MODELS.perplexity),
         prompt,
         providerOptions: {
           perplexity: {
@@ -36,7 +35,7 @@ export class PerplexityAdapter implements AIProviderAdapter {
       return {
         text: result.text,
         citations,
-        model: MODEL,
+        model: AI_MODELS.perplexity,
         inputTokens,
         outputTokens,
         costCents: estimateCostCents(AIPlatform.Perplexity, inputTokens, outputTokens),

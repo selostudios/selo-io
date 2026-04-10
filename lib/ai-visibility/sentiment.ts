@@ -2,8 +2,7 @@ import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { BrandSentiment, AIPlatform } from '@/lib/enums'
 import { estimateCostCents } from './platforms/types'
-
-const MODEL = 'claude-haiku-4-5-20251001'
+import { AI_MODELS } from './platforms/models'
 
 interface SentimentResult {
   sentiment: BrandSentiment
@@ -37,7 +36,7 @@ export async function analyzeSentiment(
 ): Promise<SentimentResult> {
   try {
     const { text, usage } = await generateText({
-      model: anthropic(MODEL),
+      model: anthropic(AI_MODELS.haiku),
       prompt: `Classify the sentiment toward "${brandName}" in the following text. Reply with exactly one word: positive, neutral, or negative.\n\nText: ${responseText}`,
       maxOutputTokens: 10,
     })
@@ -74,7 +73,7 @@ export async function analyzeSentimentBatch(
       .join('\n\n')
 
     const { text, usage } = await generateText({
-      model: anthropic(MODEL),
+      model: anthropic(AI_MODELS.haiku),
       prompt: `Classify the sentiment toward each brand in the texts below. Return a JSON array with objects containing "index" (number) and "sentiment" (one of: "positive", "neutral", "negative").\n\n${itemList}`,
       maxOutputTokens: items.length * 30,
     })

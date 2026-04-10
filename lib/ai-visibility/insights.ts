@@ -2,8 +2,7 @@ import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { BrandSentiment } from '@/lib/enums'
 import type { AnalyzedResponse, OrgContext } from './analyzer'
-
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
+import { AI_MODELS } from './platforms/models'
 
 /**
  * Build the prompt for Claude Haiku to generate an actionable insight.
@@ -87,7 +86,7 @@ export async function generateInsight(
     const prompt = buildInsightPrompt(responseText, analysis, context)
 
     const result = await generateText({
-      model: anthropic(HAIKU_MODEL),
+      model: anthropic(AI_MODELS.haiku),
       prompt,
       maxOutputTokens: 300,
     })

@@ -3,8 +3,7 @@ import { openai } from '@ai-sdk/openai'
 import { AIPlatform } from '@/lib/enums'
 import type { AIProviderAdapter, AIProviderResponse } from '../types'
 import { estimateCostCents } from '../types'
-
-const MODEL = 'gpt-4o-mini'
+import { AI_MODELS } from '../models'
 
 export class ChatGPTAdapter implements AIProviderAdapter {
   platform = AIPlatform.ChatGPT
@@ -12,7 +11,7 @@ export class ChatGPTAdapter implements AIProviderAdapter {
   async query(prompt: string): Promise<AIProviderResponse> {
     try {
       const { text, usage } = await generateText({
-        model: openai(MODEL),
+        model: openai(AI_MODELS.chatgpt),
         prompt,
       })
 
@@ -22,7 +21,7 @@ export class ChatGPTAdapter implements AIProviderAdapter {
       return {
         text,
         citations: [],
-        model: MODEL,
+        model: AI_MODELS.chatgpt,
         inputTokens,
         outputTokens,
         costCents: estimateCostCents(AIPlatform.ChatGPT, inputTokens, outputTokens),
