@@ -9,7 +9,6 @@ import {
   Gauge,
   KeyRound,
   Loader2,
-  Info,
   ExternalLink,
   MessageSquare,
   Search,
@@ -19,7 +18,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -155,18 +153,20 @@ export function IntegrationsClient({ settings, isAdmin }: IntegrationsClientProp
 
   return (
     <div className="space-y-6">
-      {PROVIDERS.map((provider) => {
-        const setting = settingsMap.get(provider.key)
-        return (
-          <ProviderCard
-            key={provider.key}
-            provider={provider}
-            setting={setting ?? null}
-            isAdmin={isAdmin}
-            onMutationSuccess={() => router.refresh()}
-          />
-        )
-      })}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {PROVIDERS.map((provider) => {
+          const setting = settingsMap.get(provider.key)
+          return (
+            <ProviderCard
+              key={provider.key}
+              provider={provider}
+              setting={setting ?? null}
+              isAdmin={isAdmin}
+              onMutationSuccess={() => router.refresh()}
+            />
+          )
+        })}
+      </div>
 
       <EmailConfigCard
         setting={emailConfig ?? null}
@@ -274,50 +274,40 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
   )
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Icon className="text-muted-foreground h-5 w-5" />
-            <div>
-              <CardTitle className="text-base">{provider.name}</CardTitle>
-              <CardDescription>{provider.description}</CardDescription>
-            </div>
+    <Card className="flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
+            <Icon className="text-muted-foreground h-4 w-4" />
           </div>
-          <div className="flex items-center gap-2">
-            {!configured && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-72">
-                  {provider.setupHint}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <Badge variant={configured ? 'default' : 'secondary'}>
-              {configured ? 'Configured' : 'Not configured'}
-            </Badge>
-          </div>
+          <Badge variant={configured ? 'default' : 'secondary'}>
+            {configured ? 'Configured' : 'Not configured'}
+          </Badge>
+        </div>
+        <div className="pt-2">
+          <CardTitle className="text-sm font-medium">{provider.name}</CardTitle>
+          <CardDescription className="text-xs">{provider.description}</CardDescription>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col justify-end">
         {!configured ? (
-          <div className="rounded-md border border-dashed p-3">
-            <p className="text-muted-foreground text-sm">{provider.setupHint}</p>
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-xs">{provider.setupHint}</p>
             {isAdmin && (
-              <div className="mt-3 flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm">Add Key</Button>
+                    <Button size="sm" className="h-7 text-xs">
+                      Add Key
+                    </Button>
                   </DialogTrigger>
                   {keyDialogContent}
                 </Dialog>
                 {provider.docsUrl && (
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
                     <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer">
                       {provider.docsLabel}
-                      <ExternalLink className="ml-1.5 h-3 w-3" />
+                      <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
                   </Button>
                 )}
@@ -325,10 +315,12 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className="space-y-3">
             <div className="space-y-1">
               {setting?.maskedValue && (
-                <p className="text-muted-foreground font-mono text-sm">{setting.maskedValue}</p>
+                <p className="text-muted-foreground truncate font-mono text-xs">
+                  {setting.maskedValue}
+                </p>
               )}
               {setting?.updatedAt && (
                 <p className="text-muted-foreground text-xs">
@@ -338,18 +330,24 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
               )}
             </div>
             {isAdmin && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {provider.testable && (
-                  <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleTest}
+                    disabled={testing}
+                  >
                     {testing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                    Test Connection
+                    Test
                   </Button>
                 )}
 
                 <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Update Key
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      Update
                     </Button>
                   </DialogTrigger>
                   {keyDialogContent}
@@ -357,7 +355,12 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" disabled={removing}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-7 text-xs"
+                      disabled={removing}
+                    >
                       {removing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
                       Remove
                     </Button>
