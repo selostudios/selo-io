@@ -1,22 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { ConnectionStatus } from '@/lib/enums'
-import {
-  Bot,
-  Mail,
-  Gauge,
-  Calendar,
-  RefreshCw,
-  ArrowRight,
-  Info,
-  MessageSquare,
-  Search,
-} from 'lucide-react'
+import { Bot, Mail, Gauge, Calendar, RefreshCw, Info, MessageSquare, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -35,8 +23,6 @@ interface HealthStatus {
   status: 'healthy' | 'unconfigured' | 'inactive'
   lastActivity: string | null
   hint: string | null
-  actionLabel: string | null
-  actionHref: string | null
 }
 
 interface ServiceTotal {
@@ -131,46 +117,32 @@ export function SystemClient({ health, initialUsage }: SystemClientProps) {
             const statusConfig = STATUS_CONFIG[item.status]
 
             return (
-              <Card key={item.service}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
-                      <CardTitle className="text-sm font-medium">{item.name}</CardTitle>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {item.hint && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="text-muted-foreground h-3.5 w-3.5" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-64">
-                            {item.hint}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      <div className={`h-2 w-2 rounded-full ${statusConfig.color}`} />
-                      <span className="text-muted-foreground text-xs">{statusConfig.label}</span>
-                    </div>
+              <Card key={item.service} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
+                    <span className="text-sm font-medium">{item.name}</span>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-muted-foreground text-xs">
-                      {item.lastActivity
-                        ? `Last activity ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
-                        : 'No activity recorded'}
-                    </p>
-                    {item.actionHref && item.actionLabel && (
-                      <Button variant="ghost" size="sm" className="h-auto px-2 py-1" asChild>
-                        <Link href={item.actionHref}>
-                          <span className="text-xs">{item.actionLabel}</span>
-                          <ArrowRight className="ml-1 h-3 w-3" />
-                        </Link>
-                      </Button>
+                  <div className="flex items-center gap-1.5">
+                    {item.hint && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-3.5 w-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-64">
+                          {item.hint}
+                        </TooltipContent>
+                      </Tooltip>
                     )}
+                    <div className={`h-2 w-2 rounded-full ${statusConfig.color}`} />
+                    <span className="text-muted-foreground text-xs">{statusConfig.label}</span>
                   </div>
-                </CardContent>
+                </div>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {item.lastActivity
+                    ? `Last activity ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
+                    : 'No activity recorded'}
+                </p>
               </Card>
             )
           })}

@@ -147,9 +147,10 @@ function formatRelativeTime(dateString: string): string {
 interface IntegrationsClientProps {
   settings: AppSettingDisplay[]
   isAdmin: boolean
+  logos?: Record<string, string>
 }
 
-export function IntegrationsClient({ settings, isAdmin }: IntegrationsClientProps) {
+export function IntegrationsClient({ settings, isAdmin, logos = {} }: IntegrationsClientProps) {
   const router = useRouter()
   const settingsMap = new Map(settings.map((s) => [s.key, s]))
   const emailConfig = settingsMap.get('email_config')
@@ -173,6 +174,7 @@ export function IntegrationsClient({ settings, isAdmin }: IntegrationsClientProp
               provider={provider}
               setting={setting ?? null}
               isAdmin={isAdmin}
+              logoUrl={logos[provider.key] ?? null}
               onMutationSuccess={() => router.refresh()}
             />
           )
@@ -192,10 +194,17 @@ interface ProviderCardProps {
   provider: (typeof PROVIDERS)[number]
   setting: AppSettingDisplay | null
   isAdmin: boolean
+  logoUrl: string | null
   onMutationSuccess: () => void
 }
 
-function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: ProviderCardProps) {
+function ProviderCard({
+  provider,
+  setting,
+  isAdmin,
+  logoUrl,
+  onMutationSuccess,
+}: ProviderCardProps) {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const [newValue, setNewValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -309,8 +318,13 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
     <Card className="flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="bg-muted flex h-9 w-9 items-center justify-center rounded-lg">
-            <Icon className="text-muted-foreground h-4 w-4" />
+          <div className="bg-muted flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg">
+            {logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={logoUrl} alt={`${provider.name} logo`} className="h-5 w-5 object-contain" />
+            ) : (
+              <Icon className="text-muted-foreground h-4 w-4" />
+            )}
           </div>
           <Badge variant={configured ? 'default' : 'secondary'}>
             {configured ? ConnectionStatus.Connected : ConnectionStatus.NotConnected}

@@ -287,3 +287,44 @@ export async function updateEmailConfig(fromName: string, fromEmail: string) {
     JSON.stringify({ from_name: fromName, from_email: fromEmail })
   )
 }
+
+/** Map provider keys to their company domains for Brandfetch logo lookup */
+const PROVIDER_DOMAINS: Record<string, string> = {
+  anthropic: 'anthropic.com',
+  openai: 'openai.com',
+  perplexity: 'perplexity.ai',
+  resend: 'resend.com',
+  pagespeed: 'google.com',
+}
+
+/** Module-level cache so logos are fetched once per server cold start */
+let logoCache: Record<string, string> | null = null
+
+/**
+ * Fetch brand logos for all providers via Brandfetch API.
+ * Returns a map of provider key → logo URL. Cached in-memory across requests.
+ */
+export async function getProviderLogos(): Promise<Record<string, string>> {
+  if (logoCache) return logoCache
+
+  const { fetchBrandfetch, normalizeBrandData } = await import('@/lib/brandfetch/client')
+
+  const entries = Object.entries(PROVIDER_DOMAINS)
+  const results = await Promise.allSettled(
+    entries.map(async ([key, domain]) => {
+      const response = await fetchBrandfetch(domain)
+      const brand = normalizeBrandData(response)
+      return [key, brand.logo?.url] as const
+    })
+  )
+
+  const logos: Record<string, string> = {}
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value[1]) {
+      logos[result.value[0]] = result.value[1]
+    }
+  }
+
+  logoCache = logos
+  return logos
+}
