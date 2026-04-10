@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { encryptCredentials, decryptCredentials } from '@/lib/utils/crypto'
-import { maskCredential } from '@/lib/app-settings/credentials'
+import { maskCredential, ENV_VAR_MAP } from '@/lib/app-settings/credentials'
 import { requireInternalUser } from '@/lib/app-settings/auth'
 
 interface AppSettingDisplay {
@@ -72,7 +72,21 @@ export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: s
 
   return allKeys.map((key) => {
     const setting = settingsMap.get(key)
+
+    // Check env var fallback for configured status
+    const envVar = ENV_VAR_MAP[key]
+    const hasEnvVar = envVar ? !!process.env[envVar] : false
+
     if (!setting) {
+      if (hasEnvVar) {
+        return {
+          key,
+          configured: true,
+          maskedValue: '(set via environment variable)',
+          updatedAt: null,
+          updatedByEmail: null,
+        }
+      }
       return { key, configured: false, maskedValue: null, updatedAt: null, updatedByEmail: null }
     }
 
@@ -103,7 +117,8 @@ export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: s
 export async function updateAppSetting(key: string, value: string) {
   const { error, supabase, user, userRecord } = await requireInternalUser()
   if (error) return { error }
-  if (userRecord!.role !== 'admin') return { error: 'Admin access required' }
+  if (userRecord!.role !== 'admin' && !userRecord!.is_internal)
+    return { error: 'Admin access required' }
 
   const field = CREDENTIAL_FIELD[key]
   if (!field) return { error: 'Unknown setting key' }
@@ -146,7 +161,8 @@ export async function updateAppSetting(key: string, value: string) {
 export async function removeAppSetting(key: string) {
   const { error, supabase, userRecord } = await requireInternalUser()
   if (error) return { error }
-  if (userRecord!.role !== 'admin') return { error: 'Admin access required' }
+  if (userRecord!.role !== 'admin' && !userRecord!.is_internal)
+    return { error: 'Admin access required' }
 
   const { error: deleteError } = await supabase!.from('app_settings').delete().eq('key', key)
 
@@ -169,7 +185,8 @@ export async function testAppConnection(
 ): Promise<{ success: boolean; message: string }> {
   const { error, userRecord } = await requireInternalUser()
   if (error) return { success: false, message: error }
-  if (userRecord!.role !== 'admin') return { success: false, message: 'Admin access required' }
+  if (userRecord!.role !== 'admin' && !userRecord!.is_internal)
+    return { success: false, message: 'Admin access required' }
 
   const { getAppCredential } = await import('@/lib/app-settings/credentials')
   const credential = await getAppCredential(key)

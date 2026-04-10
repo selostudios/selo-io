@@ -1,11 +1,12 @@
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { isInternalUser } from '@/lib/permissions'
 import { getAppSettings } from './actions'
 import { IntegrationsClient } from './client'
 
 export default async function AppSettingsIntegrationsPage() {
   const user = await getAuthUser()
   const userRecord = await getUserRecord(user!.id)
-  const isAdmin = userRecord?.role === 'admin'
+  const isAdmin = userRecord?.role === 'admin' || (userRecord != null && isInternalUser(userRecord))
 
   const settings = await getAppSettings()
   if ('error' in settings) {
