@@ -80,80 +80,92 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
   const queriedAt = new Date().toISOString()
 
   for (const prompt of prompts) {
-    for (const platform of config.platforms) {
-      if (!canContinueSync(runningSpend, config.monthly_budget_cents)) {
-        result.budgetExceeded = true
-        break
-      }
+    if (!canContinueSync(runningSpend, config.monthly_budget_cents)) {
+      result.budgetExceeded = true
+      break
+    }
 
-      try {
+    const platformResults = await Promise.allSettled(
+      config.platforms.map(async (platform) => {
         const adapter = getAdapter(platform)
         const response = await adapter.query(prompt.prompt_text)
         const analysis = await analyzeResponse(response, orgContext)
 
         const queryCost = response.costCents + analysis.sentiment_cost_cents
-        runningSpend += queryCost
-        result.totalCostCents += queryCost
-        result.queriesCompleted++
 
-        if (analysis.brand_mentioned) {
-          mentionedCount++
-          allSentiments.push(analysis.brand_sentiment as BrandSentiment)
-        }
-        if (analysis.domain_cited) {
-          citedCount++
-          analysis.cited_urls.forEach((url) => allCitedUrls.add(url))
-        }
+        return { platform, response, analysis, queryCost }
+      })
+    )
 
-        if (!platformBreakdown[platform]) {
-          platformBreakdown[platform] = { mentions: 0, citations: 0 }
-        }
-        if (analysis.brand_mentioned) platformBreakdown[platform].mentions++
-        if (analysis.domain_cited) platformBreakdown[platform].citations++
-
-        await supabase.from('ai_visibility_results').insert({
-          prompt_id: prompt.id,
-          organization_id: organizationId,
-          platform,
-          response_text: response.text,
-          brand_mentioned: analysis.brand_mentioned,
-          brand_sentiment: analysis.brand_sentiment,
-          brand_position: analysis.brand_position,
-          domain_cited: analysis.domain_cited,
-          cited_urls: analysis.cited_urls,
-          competitor_mentions: analysis.competitor_mentions,
-          tokens_used: response.inputTokens + response.outputTokens,
-          cost_cents: queryCost,
-          queried_at: queriedAt,
-          raw_response: null,
-        })
-
-        await logUsage(platform === 'chatgpt' ? 'openai' : platform, 'ai_visibility_query', {
-          organizationId,
-          feature: UsageFeature.AIVisibility,
-          tokensInput: response.inputTokens,
-          tokensOutput: response.outputTokens,
-          cost: queryCost,
-          metadata: { promptId: prompt.id, platform },
-        })
-      } catch (error) {
+    for (const settled of platformResults) {
+      if (settled.status === 'rejected') {
         result.errors.push({
           promptId: prompt.id,
-          platform,
-          error: error instanceof Error ? error.message : String(error),
+          platform: 'unknown',
+          error:
+            settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
         })
+        continue
+      }
+
+      const { platform, response, analysis, queryCost } = settled.value
+
+      runningSpend += queryCost
+      result.totalCostCents += queryCost
+      result.queriesCompleted++
+
+      if (analysis.brand_mentioned) {
+        mentionedCount++
+        allSentiments.push(analysis.brand_sentiment as BrandSentiment)
+      }
+      if (analysis.domain_cited) {
+        citedCount++
+        analysis.cited_urls.forEach((url) => allCitedUrls.add(url))
+      }
+
+      if (!platformBreakdown[platform]) {
+        platformBreakdown[platform] = { mentions: 0, citations: 0 }
+      }
+      if (analysis.brand_mentioned) platformBreakdown[platform].mentions++
+      if (analysis.domain_cited) platformBreakdown[platform].citations++
+
+      const { error: insertError } = await supabase.from('ai_visibility_results').insert({
+        prompt_id: prompt.id,
+        organization_id: organizationId,
+        platform,
+        response_text: response.text,
+        brand_mentioned: analysis.brand_mentioned,
+        brand_sentiment: analysis.brand_sentiment,
+        brand_position: analysis.brand_position,
+        domain_cited: analysis.domain_cited,
+        cited_urls: analysis.cited_urls,
+        competitor_mentions: analysis.competitor_mentions,
+        tokens_used: response.inputTokens + response.outputTokens,
+        cost_cents: queryCost,
+        queried_at: queriedAt,
+        raw_response: null,
+      })
+
+      if (insertError) {
         console.error('[AI Visibility Sync]', {
-          type: 'query_failed',
+          type: 'result_insert_failed',
           organizationId,
           promptId: prompt.id,
           platform,
-          error: error instanceof Error ? error.message : String(error),
+          error: insertError.message,
           timestamp: new Date().toISOString(),
         })
       }
-    }
 
-    if (result.budgetExceeded) break
+      await logUsage(platform === 'chatgpt' ? 'openai' : platform, 'ai_visibility_query', {
+        organizationId,
+        feature: UsageFeature.AIVisibility,
+        tokensInput: response.inputTokens,
+        tokensOutput: response.outputTokens,
+        cost: queryCost,
+        metadata: { promptId: prompt.id, platform },
+      })
+    }
   }
 
   if (result.queriesCompleted > 0) {
