@@ -1,8 +1,9 @@
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { BrandSentiment } from '@/lib/enums'
-import type { AnalyzedResponse } from './analyzer'
-import type { OrgContext } from './analyzer'
+import type { AnalyzedResponse, OrgContext } from './analyzer'
+
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
 /**
  * Build the prompt for Claude Haiku to generate an actionable insight.
@@ -86,7 +87,7 @@ export async function generateInsight(
     const prompt = buildInsightPrompt(responseText, analysis, context)
 
     const result = await generateText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model: anthropic(HAIKU_MODEL),
       prompt,
       maxOutputTokens: 300,
     })
@@ -94,7 +95,7 @@ export async function generateInsight(
     // Haiku pricing: $1 input / $5 output per million tokens
     const inputTokens = result.usage?.inputTokens ?? 0
     const outputTokens = result.usage?.outputTokens ?? 0
-    const costCents = (inputTokens * 1) / 10000 + (outputTokens * 5) / 10000
+    const costCents = Math.round((inputTokens * 1) / 10000 + (outputTokens * 5) / 10000)
 
     return {
       insight: result.text,
