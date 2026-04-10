@@ -54,7 +54,7 @@ export function ResearchSection({
   })
 
   // Timeout handling
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined)
   useEffect(() => {
     if (!researchId) return
     timeoutRef.current = setTimeout(() => {

@@ -27,16 +27,29 @@ import type { AIVisibilityTopic } from '@/lib/ai-visibility/types'
 interface AddPromptDialogProps {
   orgId: string
   existingTopics: AIVisibilityTopic[]
+  defaultPromptText?: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const NEW_TOPIC_VALUE = '__new__'
 
-export function AddPromptDialog({ orgId, existingTopics }: AddPromptDialogProps) {
-  const [open, setOpen] = useState(false)
+export function AddPromptDialog({
+  orgId,
+  existingTopics,
+  defaultPromptText,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+}: AddPromptDialogProps) {
+  const isControlled = openProp !== undefined
+  const [internalOpen, setInternalOpen] = useState(false)
+  const dialogOpen = isControlled ? openProp : internalOpen
+  const setDialogOpen = isControlled ? (onOpenChangeProp ?? setInternalOpen) : setInternalOpen
+
   const [isPending, startTransition] = useTransition()
   const [selectedTopicId, setSelectedTopicId] = useState<string>('')
   const [newTopicName, setNewTopicName] = useState('')
-  const [promptText, setPromptText] = useState('')
+  const [promptText, setPromptText] = useState(defaultPromptText ?? '')
 
   const isNewTopic = selectedTopicId === NEW_TOPIC_VALUE
 
@@ -68,21 +81,23 @@ export function AddPromptDialog({ orgId, existingTopics }: AddPromptDialogProps)
       }
 
       toast.success('Prompt added')
-      setOpen(false)
+      setDialogOpen(false)
       setSelectedTopicId('')
       setNewTopicName('')
-      setPromptText('')
+      setPromptText(defaultPromptText ?? '')
     })
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Prompt
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Prompt
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Prompt</DialogTitle>
