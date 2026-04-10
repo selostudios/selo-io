@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { ConnectionStatus } from '@/lib/enums'
 import { updateAppSetting, removeAppSetting, testAppConnection, updateEmailConfig } from './actions'
 
 interface AppSettingDisplay {
@@ -151,10 +152,18 @@ export function IntegrationsClient({ settings, isAdmin }: IntegrationsClientProp
   const settingsMap = new Map(settings.map((s) => [s.key, s]))
   const emailConfig = settingsMap.get('email_config')
 
+  // Sort: connected first, then alphabetical within each group
+  const sortedProviders = [...PROVIDERS].sort((a, b) => {
+    const aConnected = settingsMap.get(a.key)?.configured ?? false
+    const bConnected = settingsMap.get(b.key)?.configured ?? false
+    if (aConnected !== bConnected) return aConnected ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {PROVIDERS.map((provider) => {
+        {sortedProviders.map((provider) => {
           const setting = settingsMap.get(provider.key)
           return (
             <ProviderCard
@@ -281,7 +290,7 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
             <Icon className="text-muted-foreground h-4 w-4" />
           </div>
           <Badge variant={configured ? 'default' : 'secondary'}>
-            {configured ? 'Configured' : 'Not configured'}
+            {configured ? ConnectionStatus.Connected : ConnectionStatus.NotConnected}
           </Badge>
         </div>
         <div className="pt-2">

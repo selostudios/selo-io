@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader, SyncButton } from '@/components/ai-visibility/page-header'
 import { PlatformBreakdown } from '@/components/ai-visibility/platform-breakdown'
+import Link from 'next/link'
 import { Eye, Settings } from 'lucide-react'
 import { ScoreStatus } from '@/lib/enums'
 import { getScoreStatus } from '@/lib/reports/types'
@@ -26,6 +27,7 @@ interface OverviewDashboardProps {
   previousScore: AIVisibilityScore | null
   scoreHistory: ScoreHistoryPoint[]
   config: AIVisibilityConfig | null
+  isInternal?: boolean
 }
 
 export function OverviewDashboard({
@@ -34,6 +36,7 @@ export function OverviewDashboard({
   previousScore,
   scoreHistory,
   config,
+  isInternal = false,
 }: OverviewDashboardProps) {
   const hasData = latestScore !== null
 
@@ -65,7 +68,12 @@ export function OverviewDashboard({
   return (
     <div className="flex-1 space-y-6 p-6">
       <PageHeader title="AI Visibility">
-        <SyncButton orgId={orgId} lastSyncAt={config?.last_sync_at} />
+        <SyncButton
+          orgId={orgId}
+          lastSyncAt={config?.last_sync_at}
+          isInternal={isInternal}
+          disabled={!config}
+        />
       </PageHeader>
 
       {!hasData ? (
@@ -79,15 +87,21 @@ export function OverviewDashboard({
           <EmptyState
             icon={Settings}
             title="AI Visibility not configured"
-            description="Set up AI Visibility in your organization settings to start tracking how your brand appears in AI responses."
+            description={
+              isInternal
+                ? 'Configure AI platform API keys in App Settings to start tracking how this brand appears in AI responses.'
+                : 'Contact your Selo admin to enable AI Visibility tracking for your organization.'
+            }
           >
-            <a
-              href={`/${orgId}/settings/organization`}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Go to Settings
-            </a>
+            {isInternal && (
+              <Link
+                href="/app-settings/integrations"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Go to Settings
+              </Link>
+            )}
           </EmptyState>
         )
       ) : (

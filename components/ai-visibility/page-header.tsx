@@ -28,9 +28,16 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
 interface SyncButtonProps {
   orgId: string
   lastSyncAt?: string | null
+  isInternal?: boolean
+  disabled?: boolean
 }
 
-export function SyncButton({ orgId, lastSyncAt }: SyncButtonProps) {
+export function SyncButton({
+  orgId,
+  lastSyncAt,
+  isInternal = false,
+  disabled = false,
+}: SyncButtonProps) {
   const [isPending, startTransition] = useTransition()
   const [lastSync, setLastSync] = useState(lastSyncAt)
   const router = useRouter()
@@ -43,12 +50,13 @@ export function SyncButton({ orgId, lastSyncAt }: SyncButtonProps) {
         const errorMsg = 'error' in result ? result.error : 'Sync failed'
         const isNotConfigured = errorMsg.includes('not configured')
         toast.error(errorMsg, {
-          action: isNotConfigured
-            ? {
-                label: 'Go to Settings',
-                onClick: () => router.push(`/${orgId}/settings/organization`),
-              }
-            : undefined,
+          action:
+            isNotConfigured && isInternal
+              ? {
+                  label: 'Go to Settings',
+                  onClick: () => router.push('/app-settings/integrations'),
+                }
+              : undefined,
         })
         return
       }
@@ -74,7 +82,7 @@ export function SyncButton({ orgId, lastSyncAt }: SyncButtonProps) {
           })}
         </span>
       )}
-      <Button onClick={handleSync} disabled={isPending} variant="outline" size="sm">
+      <Button onClick={handleSync} disabled={isPending || disabled} variant="outline" size="sm">
         {isPending ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (

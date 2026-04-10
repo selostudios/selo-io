@@ -126,6 +126,11 @@ export enum PlatformType {
   Instagram = 'instagram',
 }
 
+export enum ConnectionStatus {
+  Connected = 'Connected',
+  NotConnected = 'Not connected',
+}
+
 // =============================================================================
 // Campaign Enums
 // =============================================================================

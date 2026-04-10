@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { ConnectionStatus } from '@/lib/enums'
 import {
   Bot,
   Mail,
@@ -92,7 +93,7 @@ const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 const STATUS_CONFIG = {
   healthy: { color: 'bg-green-500', label: 'Healthy' },
   inactive: { color: 'bg-yellow-500', label: 'Inactive' },
-  unconfigured: { color: 'bg-gray-400', label: 'Not configured' },
+  unconfigured: { color: 'bg-gray-400', label: ConnectionStatus.NotConnected },
 } as const
 
 export function SystemClient({ health, initialUsage }: SystemClientProps) {

@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { isInternalUser } from '@/lib/permissions'
 import { OverviewDashboard } from '@/components/ai-visibility/overview-dashboard'
 import {
   getLatestScores,
@@ -16,11 +18,15 @@ export default async function AIVisibilityPage({ params }: PageProps) {
   const { orgId } = await params
   const supabase = await createClient()
 
-  const [scores, history, config] = await Promise.all([
+  const [scores, history, config, user] = await Promise.all([
     getLatestScores(supabase, orgId),
     getScoreHistory(supabase, orgId),
     getAIVisibilityConfig(supabase, orgId),
+    getAuthUser(),
   ])
+
+  const userRecord = user ? await getUserRecord(user.id) : null
+  const isInternal = userRecord != null && isInternalUser(userRecord)
 
   return (
     <OverviewDashboard
@@ -29,6 +35,7 @@ export default async function AIVisibilityPage({ params }: PageProps) {
       previousScore={scores.previous}
       scoreHistory={history}
       config={config}
+      isInternal={isInternal}
     />
   )
 }
