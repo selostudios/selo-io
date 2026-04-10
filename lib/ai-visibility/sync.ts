@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdapter } from './platforms/registry'
+import { PLATFORM_PROVIDER_KEYS } from './platforms/provider-keys'
 import { analyzeResponse } from './analyzer'
 import { buildOrgContext } from './context'
 import { getCurrentMonthSpend, canContinueSync, checkBudgetThresholds } from './budget'
@@ -157,7 +158,7 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
         })
       }
 
-      await logUsage(platform === 'chatgpt' ? 'openai' : platform, 'ai_visibility_query', {
+      await logUsage(PLATFORM_PROVIDER_KEYS[platform], 'ai_visibility_query', {
         organizationId,
         feature: UsageFeature.AIVisibility,
         tokensInput: response.inputTokens,

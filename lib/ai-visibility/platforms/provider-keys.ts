@@ -1,0 +1,11 @@
+import { AIPlatform } from '@/lib/enums'
+
+/**
+ * Map AI platform enum to the provider key used in usage logging.
+ * ChatGPT uses the 'openai' provider key; others match their enum value.
+ */
+export const PLATFORM_PROVIDER_KEYS: Record<AIPlatform, string> = {
+  [AIPlatform.ChatGPT]: 'openai',
+  [AIPlatform.Claude]: 'claude',
+  [AIPlatform.Perplexity]: 'perplexity',
+}

@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentMonthSpend } from './budget'
 import { buildOrgContext } from './context'
 import { getAdapter } from './platforms/registry'
+import { PLATFORM_PROVIDER_KEYS } from './platforms/provider-keys'
 import { analyzeResponse } from './analyzer'
 import { generateInsight } from './insights'
 import { logUsage } from '@/lib/app-settings/usage'
@@ -113,7 +114,7 @@ export async function executeResearch(
         }
 
         // Log usage
-        await logUsage(platform === 'chatgpt' ? 'openai' : platform, 'research_query', {
+        await logUsage(PLATFORM_PROVIDER_KEYS[platform], 'research_query', {
           organizationId: orgId,
           feature: UsageFeature.AIVisibility,
           tokensInput: response.inputTokens,
