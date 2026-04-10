@@ -203,18 +203,30 @@ export async function getTopicsWithPrompts(
   })
 }
 
+export interface MentionsPage {
+  mentions: MentionResult[]
+  hasMore: boolean
+}
+
 export async function getMentions(
   supabase: SupabaseClient,
   orgId: string,
-  filters: MentionFilters = {}
-): Promise<MentionResult[]> {
+  filters: MentionFilters = {},
+  cursor?: string
+): Promise<MentionsPage> {
+  const PAGE_SIZE = 50
+
   let query = supabase
     .from('ai_visibility_results')
     .select('*, ai_visibility_prompts!inner(prompt_text)')
     .eq('organization_id', orgId)
     .eq('brand_mentioned', true)
     .order('queried_at', { ascending: false })
-    .limit(100)
+    .limit(PAGE_SIZE + 1) // Fetch one extra to detect hasMore
+
+  if (cursor) {
+    query = query.lt('queried_at', cursor)
+  }
 
   if (filters.platform) {
     query = query.eq('platform', filters.platform)
@@ -230,8 +242,15 @@ export async function getMentions(
 
   const { data } = await query
 
-  return (data ?? []).map((row) => ({
-    ...row,
-    prompt_text: (row.ai_visibility_prompts as unknown as { prompt_text: string }).prompt_text,
-  }))
+  const rows = data ?? []
+  const hasMore = rows.length > PAGE_SIZE
+  const page = hasMore ? rows.slice(0, PAGE_SIZE) : rows
+
+  return {
+    mentions: page.map((row) => ({
+      ...row,
+      prompt_text: (row.ai_visibility_prompts as unknown as { prompt_text: string }).prompt_text,
+    })),
+    hasMore,
+  }
 }

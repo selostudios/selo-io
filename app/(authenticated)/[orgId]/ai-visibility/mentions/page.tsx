@@ -17,13 +17,13 @@ export default async function MentionsPage({ params, searchParams }: PageProps) 
   const filters = await searchParams
   const supabase = await createClient()
 
-  const mentions = await getMentions(supabase, orgId, {
+  const parsedFilters = {
     platform: filters.platform,
     sentiment: filters.sentiment,
     days: filters.days ? parseInt(filters.days, 10) : 30,
-  })
+  }
 
-  const hasFilters = !!(filters.platform || filters.sentiment)
+  const { mentions, hasMore } = await getMentions(supabase, orgId, parsedFilters)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -33,7 +33,13 @@ export default async function MentionsPage({ params, searchParams }: PageProps) 
         <MentionFilters />
       </Suspense>
 
-      <MentionsList mentions={mentions} hasFilters={hasFilters} />
+      <MentionsList
+        orgId={orgId}
+        initialMentions={mentions}
+        initialHasMore={hasMore}
+        hasFilters={!!(filters.platform || filters.sentiment)}
+        filters={parsedFilters}
+      />
     </div>
   )
 }
