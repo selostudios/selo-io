@@ -103,8 +103,7 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
         result.errors.push({
           promptId: prompt.id,
           platform: 'unknown',
-          error:
-            settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
+          error: settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
         })
         continue
       }
