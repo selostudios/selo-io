@@ -38,8 +38,7 @@ export function UnifiedScoreCards({
     : []
   const hasPartialScore = failedModules.length > 0 && completedModules.length > 0
 
-  let overallDescription =
-    'Weighted average: SEO (40%), Performance (30%), AI Readiness (30%).'
+  let overallDescription = 'Weighted average: SEO (40%), Performance (30%), AI Readiness (30%).'
   if (hasPartialScore) {
     overallDescription = `This score only reflects ${completedModules.join(' and ')}. ${failedModules.join(' and ')} encountered errors and ${failedModules.length === 1 ? 'is' : 'are'} not included. Re-run failed modules for a complete score.`
   } else if (failedModules.length > 0 && completedModules.length === 0) {
