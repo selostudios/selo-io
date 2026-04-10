@@ -1,17 +1,34 @@
-import { EmptyState } from '@/components/ui/empty-state'
-import { Eye } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { OverviewDashboard } from '@/components/ai-visibility/overview-dashboard'
+import {
+  getLatestScores,
+  getScoreHistory,
+  getAIVisibilityConfig,
+} from '@/lib/ai-visibility/queries'
 
-export default function AIVisibilityOverviewPage() {
+export const dynamic = 'force-dynamic'
+
+interface PageProps {
+  params: Promise<{ orgId: string }>
+}
+
+export default async function AIVisibilityPage({ params }: PageProps) {
+  const { orgId } = await params
+  const supabase = await createClient()
+
+  const [scores, history, config] = await Promise.all([
+    getLatestScores(supabase, orgId),
+    getScoreHistory(supabase, orgId),
+    getAIVisibilityConfig(supabase, orgId),
+  ])
+
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-2xl font-bold" data-testid="ai-visibility-page-title">
-        AI Visibility
-      </h1>
-      <EmptyState
-        icon={Eye}
-        title="Coming soon"
-        description="Track how your brand appears in AI-generated responses across ChatGPT, Claude, and Perplexity."
-      />
-    </div>
+    <OverviewDashboard
+      orgId={orgId}
+      latestScore={scores.latest}
+      previousScore={scores.previous}
+      scoreHistory={history}
+      config={config}
+    />
   )
 }

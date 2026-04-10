@@ -1,17 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import AIVisibilityOverviewPage from '@/app/(authenticated)/[orgId]/ai-visibility/page'
 import AIVisibilityPromptsPage from '@/app/(authenticated)/[orgId]/ai-visibility/prompts/page'
 import AIVisibilityMentionsPage from '@/app/(authenticated)/[orgId]/ai-visibility/mentions/page'
 
 describe('AI Visibility stub pages', () => {
-  it('renders overview page with coming soon state', () => {
-    render(<AIVisibilityOverviewPage />)
-
-    expect(screen.getByTestId('ai-visibility-page-title')).toHaveTextContent('AI Visibility')
-    expect(screen.getByText('Coming soon')).toBeInTheDocument()
-  })
-
   it('renders prompts page with empty state', () => {
     render(<AIVisibilityPromptsPage />)
 
