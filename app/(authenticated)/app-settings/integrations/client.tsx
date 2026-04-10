@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Bot, Mail, Gauge, KeyRound, Loader2 } from 'lucide-react'
+import { Bot, Mail, Gauge, KeyRound, Loader2, Info, ExternalLink } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,9 @@ const PROVIDERS = [
     icon: Bot,
     placeholder: 'sk-ant-...',
     testable: true,
+    setupHint: 'Required for AI-powered audit analysis, report summaries, and AI visibility.',
+    docsUrl: 'https://console.anthropic.com/settings/keys',
+    docsLabel: 'Get API Key',
   },
   {
     key: 'resend',
@@ -54,6 +58,9 @@ const PROVIDERS = [
     icon: Mail,
     placeholder: 're_...',
     testable: true,
+    setupHint: 'Required for sending invites, weekly summaries, and budget alerts.',
+    docsUrl: 'https://resend.com/api-keys',
+    docsLabel: 'Get API Key',
   },
   {
     key: 'pagespeed',
@@ -62,6 +69,9 @@ const PROVIDERS = [
     icon: Gauge,
     placeholder: 'AIza...',
     testable: true,
+    setupHint: 'Required for Lighthouse performance scores in unified audits.',
+    docsUrl: 'https://developers.google.com/speed/docs/insights/v5/get-started',
+    docsLabel: 'Get API Key',
   },
   {
     key: 'cron_secret',
@@ -70,6 +80,10 @@ const PROVIDERS = [
     icon: KeyRound,
     testable: false,
     placeholder: '',
+    setupHint:
+      'Required for scheduled jobs (weekly audits, daily metrics sync, weekly summaries). Must match the CRON_SECRET env var in Vercel.',
+    docsUrl: null,
+    docsLabel: null,
   },
 ] as const
 
@@ -201,6 +215,32 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
     }
   }
 
+  const keyDialogContent = (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>
+          {configured ? 'Update' : 'Add'} {provider.name} Key
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-2 py-4">
+        <Label htmlFor={`key-${provider.key}`}>API Key</Label>
+        <Input
+          id={`key-${provider.key}`}
+          type="password"
+          placeholder={provider.placeholder}
+          value={newValue}
+          onChange={(e) => setNewValue(e.target.value)}
+        />
+      </div>
+      <DialogFooter>
+        <Button onClick={handleUpdateKey} disabled={saving || !newValue.trim()}>
+          {saving && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+          Save
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+
   return (
     <Card>
       <CardHeader>
@@ -212,65 +252,77 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
               <CardDescription>{provider.description}</CardDescription>
             </div>
           </div>
-          <Badge variant={configured ? 'default' : 'secondary'}>
-            {configured ? 'Configured' : 'Not configured'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {!configured && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="text-muted-foreground h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-72">
+                  {provider.setupHint}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Badge variant={configured ? 'default' : 'secondary'}>
+              {configured ? 'Configured' : 'Not configured'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            {configured && setting?.maskedValue && (
-              <p className="text-muted-foreground font-mono text-sm">{setting.maskedValue}</p>
-            )}
-            {configured && setting?.updatedAt && (
-              <p className="text-muted-foreground text-xs">
-                Updated {formatRelativeTime(setting.updatedAt)}
-                {setting.updatedByEmail && ` by ${setting.updatedByEmail}`}
-              </p>
+        {!configured ? (
+          <div className="rounded-md border border-dashed p-3">
+            <p className="text-muted-foreground text-sm">{provider.setupHint}</p>
+            {isAdmin && (
+              <div className="mt-3 flex items-center gap-2">
+                <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">Add Key</Button>
+                  </DialogTrigger>
+                  {keyDialogContent}
+                </Dialog>
+                {provider.docsUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer">
+                      {provider.docsLabel}
+                      <ExternalLink className="ml-1.5 h-3 w-3" />
+                    </a>
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-          {isAdmin && (
-            <div className="flex items-center gap-2">
-              {provider.testable && configured && (
-                <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
-                  {testing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                  Test Connection
-                </Button>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              {setting?.maskedValue && (
+                <p className="text-muted-foreground font-mono text-sm">{setting.maskedValue}</p>
               )}
-
-              <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    {configured ? 'Update Key' : 'Add Key'}
+              {setting?.updatedAt && (
+                <p className="text-muted-foreground text-xs">
+                  Updated {formatRelativeTime(setting.updatedAt)}
+                  {setting.updatedByEmail && ` by ${setting.updatedByEmail}`}
+                </p>
+              )}
+            </div>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                {provider.testable && (
+                  <Button variant="outline" size="sm" onClick={handleTest} disabled={testing}>
+                    {testing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                    Test Connection
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {configured ? 'Update' : 'Add'} {provider.name} Key
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-2 py-4">
-                    <Label htmlFor={`key-${provider.key}`}>API Key</Label>
-                    <Input
-                      id={`key-${provider.key}`}
-                      type="password"
-                      placeholder={provider.placeholder}
-                      value={newValue}
-                      onChange={(e) => setNewValue(e.target.value)}
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleUpdateKey} disabled={saving || !newValue.trim()}>
-                      {saving && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                      Save
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                )}
 
-              {configured && (
+                <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Update Key
+                    </Button>
+                  </DialogTrigger>
+                  {keyDialogContent}
+                </Dialog>
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm" disabled={removing}>
@@ -292,10 +344,10 @@ function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: Provide
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
