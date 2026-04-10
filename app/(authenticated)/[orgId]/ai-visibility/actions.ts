@@ -89,16 +89,43 @@ export async function addPrompt(
       topicId = topic.id
     }
 
-    const { error } = await supabase.from('ai_visibility_prompts').insert({
-      topic_id: topicId,
-      organization_id: orgId,
-      prompt_text: data.promptText.trim(),
-      source: PromptSource.Manual,
-      is_active: true,
-    })
+    const { data: prompt, error } = await supabase
+      .from('ai_visibility_prompts')
+      .insert({
+        topic_id: topicId,
+        organization_id: orgId,
+        prompt_text: data.promptText.trim(),
+        source: PromptSource.Manual,
+        is_active: true,
+      })
+      .select('id')
+      .single()
 
     if (error) {
       return { success: false as const, error: 'Failed to create prompt' }
+    }
+
+    revalidatePath(`/${orgId}/ai-visibility/prompts`)
+    return { success: true as const, promptId: prompt.id as string }
+  })
+}
+
+export async function linkResearchResultsToPrompt(
+  orgId: string,
+  researchId: string,
+  promptId: string
+) {
+  return withAdminAuth(async () => {
+    const supabase = createServiceClient()
+
+    const { error } = await supabase
+      .from('ai_visibility_results')
+      .update({ prompt_id: promptId })
+      .eq('research_id', researchId)
+      .eq('organization_id', orgId)
+
+    if (error) {
+      return { success: false as const, error: 'Failed to link results' }
     }
 
     revalidatePath(`/${orgId}/ai-visibility/prompts`)

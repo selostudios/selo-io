@@ -30,6 +30,7 @@ interface AddPromptDialogProps {
   defaultPromptText?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  onSaved?: (promptId: string) => void
 }
 
 const NEW_TOPIC_VALUE = '__new__'
@@ -40,6 +41,7 @@ export function AddPromptDialog({
   defaultPromptText,
   open: openProp,
   onOpenChange: onOpenChangeProp,
+  onSaved,
 }: AddPromptDialogProps) {
   const isControlled = openProp !== undefined
   const [internalOpen, setInternalOpen] = useState(false)
@@ -81,6 +83,9 @@ export function AddPromptDialog({
       }
 
       toast.success('Prompt added')
+      if ('promptId' in result && result.promptId) {
+        onSaved?.(result.promptId)
+      }
       setDialogOpen(false)
       setSelectedTopicId('')
       setNewTopicName('')

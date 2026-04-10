@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { usePolling } from '@/hooks/use-polling'
 import { ResearchResultList } from './research-result-list'
+import { AddPromptDialog } from './add-prompt-dialog'
+import { linkResearchResultsToPrompt } from '@/app/(authenticated)/[orgId]/ai-visibility/actions'
 import type { AIPlatform } from '@/lib/enums'
 import type { ResearchResult } from '@/lib/ai-visibility/research'
 import type { TopicWithPrompts } from '@/lib/ai-visibility/queries'
@@ -27,7 +29,6 @@ export function ResearchSection({
   orgName,
   websiteUrl,
   competitors,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- wired in Task 12 (save-to-monitoring)
   existingTopics,
   monthlySpendCents,
   monthlyBudgetCents,
@@ -39,6 +40,8 @@ export function ResearchSection({
   const [showConfirm, setShowConfirm] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [savedPromptText, setSavedPromptText] = useState<string | null>(null)
 
   const fetchResults = useCallback(async (): Promise<ResearchResult[]> => {
     const response = await fetch(`/api/ai-visibility/research/${researchId}/results`)
@@ -104,6 +107,7 @@ export function ResearchSection({
       const data = await response.json()
       setResearchId(data.researchId)
       setExpectedPlatforms(data.platforms)
+      setSavedPromptText(promptText.trim())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -112,6 +116,15 @@ export function ResearchSection({
   }
 
   const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`
+
+  const handleSaveToMonitoring = () => {
+    setSaveDialogOpen(true)
+  }
+
+  const handleSaved = async (promptId: string) => {
+    if (!researchId) return
+    await linkResearchResultsToPrompt(orgId, researchId, promptId)
+  }
 
   return (
     <div className="space-y-4">
@@ -174,7 +187,20 @@ export function ResearchSection({
         <ResearchResultList
           results={results ?? []}
           expectedPlatforms={expectedPlatforms}
+          onSaveToMonitoring={handleSaveToMonitoring}
           timedOut={timedOut}
+        />
+      )}
+
+      {/* Save to monitoring dialog */}
+      {saveDialogOpen && savedPromptText && (
+        <AddPromptDialog
+          orgId={orgId}
+          existingTopics={existingTopics}
+          defaultPromptText={savedPromptText}
+          open={saveDialogOpen}
+          onOpenChange={setSaveDialogOpen}
+          onSaved={handleSaved}
         />
       )}
     </div>

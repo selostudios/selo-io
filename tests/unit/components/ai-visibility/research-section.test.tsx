@@ -12,6 +12,11 @@ vi.mock('@/components/ai-visibility/add-prompt-dialog', () => ({
   AddPromptDialog: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
+// Mock the server actions
+vi.mock('@/app/(authenticated)/[orgId]/ai-visibility/actions', () => ({
+  linkResearchResultsToPrompt: vi.fn(),
+}))
+
 describe('ResearchSection', () => {
   test('renders input and run button', () => {
     render(

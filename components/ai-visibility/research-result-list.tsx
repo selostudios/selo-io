@@ -8,7 +8,7 @@ import type { ResearchResult } from '@/lib/ai-visibility/research'
 interface ResearchResultListProps {
   results: ResearchResult[]
   expectedPlatforms: AIPlatform[]
-  onSaveToMonitoring?: (promptText: string) => void
+  onSaveToMonitoring?: () => void
   timedOut?: boolean
 }
 
@@ -28,9 +28,7 @@ export function ResearchResultList({
         <ResearchResultCard
           key={result.id}
           result={result}
-          onSaveToMonitoring={
-            onSaveToMonitoring ? () => onSaveToMonitoring(result.response_text) : undefined
-          }
+          onSaveToMonitoring={onSaveToMonitoring}
         />
       ))}
 
