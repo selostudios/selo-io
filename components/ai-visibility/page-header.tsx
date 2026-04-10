@@ -54,7 +54,7 @@ export function SyncButton({
             isNotConfigured && isInternal
               ? {
                   label: 'Go to Settings',
-                  onClick: () => router.push('/app-settings/integrations'),
+                  onClick: () => router.push(`/${orgId}/settings/integrations`),
                 }
               : undefined,
         })

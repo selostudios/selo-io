@@ -173,13 +173,11 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
     const lastLog = logResults[i].data
     const hints = SERVICE_HINTS[service]
 
+    // For API services, "configured" = "healthy" — the key is ready to use.
+    // Activity tracking is handled by the Usage section, not health status.
     let status: HealthStatus['status'] = 'unconfigured'
     if (isConfigured) {
-      if (lastLog && new Date(lastLog.created_at) > new Date(sevenDaysAgo)) {
-        status = 'healthy'
-      } else {
-        status = 'inactive'
-      }
+      status = 'healthy'
     }
 
     return {

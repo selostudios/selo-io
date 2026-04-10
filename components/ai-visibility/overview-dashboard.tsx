@@ -95,7 +95,7 @@ export function OverviewDashboard({
           >
             {isInternal && (
               <Link
-                href="/app-settings/integrations"
+                href={`/${orgId}/settings/integrations`}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
               >
                 <Settings className="mr-2 h-4 w-4" />

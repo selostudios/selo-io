@@ -140,8 +140,8 @@ export function SystemClient({ health, initialUsage }: SystemClientProps) {
                 </div>
                 <p className="text-muted-foreground mt-2 text-xs">
                   {item.lastActivity
-                    ? `Last activity ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
-                    : 'No activity recorded'}
+                    ? `Last used ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
+                    : 'Never used'}
                 </p>
               </Card>
             )
