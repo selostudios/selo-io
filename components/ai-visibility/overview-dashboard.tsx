@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader, SyncButton } from '@/components/ai-visibility/page-header'
 import { PlatformBreakdown } from '@/components/ai-visibility/platform-breakdown'
-import { Eye } from 'lucide-react'
+import { Eye, Settings } from 'lucide-react'
 import { ScoreStatus } from '@/lib/enums'
 import { getScoreStatus } from '@/lib/reports/types'
 import type { AIVisibilityScore, AIVisibilityConfig } from '@/lib/ai-visibility/types'
@@ -69,11 +69,27 @@ export function OverviewDashboard({
       </PageHeader>
 
       {!hasData ? (
-        <EmptyState
-          icon={Eye}
-          title="No visibility data yet"
-          description="Run your first sync to start tracking how your brand appears in AI responses."
-        />
+        config ? (
+          <EmptyState
+            icon={Eye}
+            title="No visibility data yet"
+            description="Run your first sync to start tracking how your brand appears in AI responses."
+          />
+        ) : (
+          <EmptyState
+            icon={Settings}
+            title="AI Visibility not configured"
+            description="Set up AI Visibility in your organization settings to start tracking how your brand appears in AI responses."
+          >
+            <a
+              href={`/${orgId}/settings/organization`}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Go to Settings
+            </a>
+          </EmptyState>
+        )
       ) : (
         <>
           {/* Hero: Score Ring + Trend Chart */}

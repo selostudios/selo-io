@@ -19,6 +19,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
+    "test:e2e:update-snapshots": "playwright test tests/e2e/visual.spec.ts --update-snapshots",
     "test:watch": "vitest watch",
     "test:seed": "tsx tests/helpers/seed.ts",
     "test:coverage": "vitest run --coverage",

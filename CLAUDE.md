@@ -362,6 +362,37 @@ await page.locator('[data-testid="new-report-button"]').click()
 
 **Login helpers**: Always use the shared helpers from `tests/e2e/helpers.ts` (`loginAsAdmin`, `loginAsTeamMember`, `loginAsDeveloper`). These navigate to `/` after form submission to resolve the org cookie via the proxy middleware. Inline login flows that skip this step cause flaky tests because `page.goto('/settings/team')` relies on the `selo-org` cookie being set for the proxy redirect to `/{orgId}/settings/team`.
 
+#### Visual Snapshot Testing
+
+We use Playwright's built-in `toHaveScreenshot()` for visual regression testing. Baseline screenshots are committed to git and compared on every CI run to catch unintended UI changes.
+
+**How it works:**
+
+- Baselines live in `tests/e2e/visual.spec.ts-snapshots/` (committed to git)
+- Config: 1% max pixel diff ratio, animations disabled (`playwright.config.ts`)
+- CI uploads snapshot diffs as artifacts on failure for easy visual review
+
+**When to add visual snapshots:**
+
+- Every new page or major UI surface should have a corresponding screenshot test in `tests/e2e/visual.spec.ts`
+- Follow the existing pattern: navigate to the page, wait for a stable `data-testid` element, then call `toHaveScreenshot()`
+
+```typescript
+test('new feature page', async ({ page }) => {
+  await page.goto('/path/to/page')
+  await page.waitForSelector('[data-testid="feature-page-title"]')
+  await expect(page).toHaveScreenshot('feature-page.png', { fullPage: true })
+})
+```
+
+**When snapshots fail:**
+
+- If the UI change was **intentional**: run `npm run test:e2e:update-snapshots` to regenerate baselines, review the new screenshots, and commit them
+- If the UI change was **unintentional**: the snapshot diff is a real bug — investigate and fix the regression before merging
+- CI artifacts include the baseline, actual, and diff images for side-by-side comparison
+
+**Snapshot naming**: Use descriptive kebab-case names that identify the page and state: `dashboard-overview.png`, `settings-team.png`, `login-page.png`.
+
 ### Before Pushing
 
 **MANDATORY: A task is not done until all checks pass.** Every push must be preceded by the full verification suite. Do not push code that fails any check. Do not skip checks to save time. Quality over speed, always.
@@ -376,11 +407,12 @@ npm run lint && npm run test:unit && npm run build
 2. **Lint** — All ESLint rules must pass. Do not disable rules to work around failures.
 3. **Unit tests** — All tests must pass. If a test fails, investigate and fix the root cause. Do not skip or `.only()` tests to get a green run.
 4. **Build** — The production build must succeed. TypeScript errors, missing imports, and type mismatches are all blockers.
-5. **Review your diff** — Before committing, read `git diff` to verify you haven't introduced unintended changes, debug artifacts (`console.log`), or leftover code.
+5. **Visual snapshots** — If you changed any UI, run `npm run test:e2e` (or at minimum the visual spec: `npx playwright test tests/e2e/visual.spec.ts`) to check for snapshot regressions. If the change was intentional, update baselines with `npm run test:e2e:update-snapshots` and commit the new snapshots alongside your code changes.
+6. **Review your diff** — Before committing, read `git diff` to verify you haven't introduced unintended changes, debug artifacts (`console.log`), or leftover code. This includes reviewing any updated snapshot images.
 
 **If any check fails, stop and fix it before proceeding.** Do not push with the intention of "fixing it in the next commit." The main branch must always be in a working state.
 
-**After pushing:** Confirm CI passes. If CI fails on something that passed locally (e.g., E2E tests), investigate and fix in a follow-up commit.
+**After pushing:** Confirm CI passes. If CI fails on something that passed locally (e.g., E2E tests, snapshot diffs), investigate and fix in a follow-up commit. Download the `snapshot-diffs` artifact from CI to see exactly what changed.
 
 ### Permissions & Access Control
 

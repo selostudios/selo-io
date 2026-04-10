@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -32,13 +33,23 @@ interface SyncButtonProps {
 export function SyncButton({ orgId, lastSyncAt }: SyncButtonProps) {
   const [isPending, startTransition] = useTransition()
   const [lastSync, setLastSync] = useState(lastSyncAt)
+  const router = useRouter()
 
   const handleSync = () => {
     startTransition(async () => {
       const result = await runAIVisibilitySync(orgId)
 
-      if ('error' in result) {
-        toast.error(result.error)
+      if (!('success' in result) || !result.success) {
+        const errorMsg = 'error' in result ? result.error : 'Sync failed'
+        const isNotConfigured = errorMsg.includes('not configured')
+        toast.error(errorMsg, {
+          action: isNotConfigured
+            ? {
+                label: 'Go to Settings',
+                onClick: () => router.push(`/${orgId}/settings/organization`),
+              }
+            : undefined,
+        })
         return
       }
 
