@@ -70,6 +70,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         if: always()
+        continue-on-error: true
 
   e2e:
     runs-on: ubuntu-latest
