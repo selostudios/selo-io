@@ -20,7 +20,7 @@ import { getUsageSummary } from './actions'
 interface HealthStatus {
   service: string
   name: string
-  status: 'healthy' | 'unconfigured' | 'inactive'
+  status: 'healthy' | 'unconfigured' | 'inactive' | 'error'
   lastActivity: string | null
   hint: string | null
 }
@@ -78,6 +78,7 @@ const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 
 const STATUS_CONFIG = {
   healthy: { color: 'bg-green-500', label: 'Healthy' },
+  error: { color: 'bg-red-500', label: 'Error' },
   inactive: { color: 'bg-yellow-500', label: 'Inactive' },
   unconfigured: { color: 'bg-gray-400', label: ConnectionStatus.NotConnected },
 } as const

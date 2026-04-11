@@ -240,7 +240,7 @@ describe('executeResearch', () => {
       []
     )
 
-    expect(logUsage).toHaveBeenCalledWith('claude', 'research_query', expect.anything())
+    expect(logUsage).toHaveBeenCalledWith('anthropic', 'research_query', expect.anything())
   })
 
   test('continues with other platforms when one fails', async () => {

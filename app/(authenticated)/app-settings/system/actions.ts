@@ -7,7 +7,7 @@ import { requireInternalUser } from '@/lib/app-settings/auth'
 interface HealthStatus {
   service: string
   name: string
-  status: 'healthy' | 'unconfigured' | 'inactive'
+  status: 'healthy' | 'unconfigured' | 'inactive' | 'error'
   lastActivity: string | null
   hint: string | null
   actionLabel: string | null
@@ -61,35 +61,35 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
     await Promise.all([
       serviceClient
         .from('usage_logs')
-        .select('created_at')
+        .select('created_at, event_type, metadata')
         .eq('service', 'anthropic')
         .order('created_at', { ascending: false })
         .limit(1)
         .single(),
       serviceClient
         .from('usage_logs')
-        .select('created_at')
+        .select('created_at, event_type, metadata')
         .eq('service', 'openai')
         .order('created_at', { ascending: false })
         .limit(1)
         .single(),
       serviceClient
         .from('usage_logs')
-        .select('created_at')
+        .select('created_at, event_type, metadata')
         .eq('service', 'perplexity')
         .order('created_at', { ascending: false })
         .limit(1)
         .single(),
       serviceClient
         .from('usage_logs')
-        .select('created_at')
+        .select('created_at, event_type, metadata')
         .eq('service', 'resend')
         .order('created_at', { ascending: false })
         .limit(1)
         .single(),
       serviceClient
         .from('usage_logs')
-        .select('created_at')
+        .select('created_at, event_type, metadata')
         .eq('service', 'pagespeed')
         .order('created_at', { ascending: false })
         .limit(1)
@@ -173,19 +173,35 @@ export async function getSystemHealth(): Promise<HealthStatus[] | { error: strin
     const lastLog = logResults[i].data
     const hints = SERVICE_HINTS[service]
 
-    // For API services, "configured" = "healthy" — the key is ready to use.
-    // Activity tracking is handled by the Usage section, not health status.
+    // Check if the most recent usage log was an error
+    const isLastEventError = lastLog?.event_type?.endsWith('_error') ?? false
+    const lastErrorMessage =
+      isLastEventError && lastLog?.metadata && typeof lastLog.metadata === 'object'
+        ? (lastLog.metadata as Record<string, unknown>).error
+        : null
+
     let status: HealthStatus['status'] = 'unconfigured'
-    if (isConfigured) {
+    if (isConfigured && isLastEventError) {
+      status = 'error'
+    } else if (isConfigured) {
       status = 'healthy'
     }
+
+    const hint =
+      status === 'error'
+        ? typeof lastErrorMessage === 'string'
+          ? lastErrorMessage
+          : 'Last API call failed'
+        : status === 'healthy'
+          ? null
+          : (hints?.[status] ?? null)
 
     return {
       service,
       name: nameMap[service] ?? service,
       status,
       lastActivity: lastLog?.created_at ?? null,
-      hint: status === 'healthy' ? null : (hints?.[status] ?? null),
+      hint,
       actionLabel: status === 'healthy' ? null : (hints?.actionLabel ?? null),
       actionHref: status === 'healthy' ? null : (hints?.actionHref ?? null),
     }

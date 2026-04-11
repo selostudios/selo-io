@@ -126,11 +126,21 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
         const reason = settled.reason as { platform?: string; error?: unknown }
         const errMsg =
           reason.error instanceof Error ? reason.error.message : String(reason.error ?? reason)
+        const failedPlatform = (reason.platform ?? 'unknown') as AIPlatform
         result.errors.push({
           promptId: prompt.id,
-          platform: reason.platform ?? 'unknown',
+          platform: failedPlatform,
           error: errMsg,
         })
+
+        // Log the error to usage_logs so it surfaces in system health
+        if (failedPlatform !== ('unknown' as AIPlatform)) {
+          await logUsage(PLATFORM_PROVIDER_KEYS[failedPlatform], 'ai_visibility_error', {
+            organizationId: organizationId,
+            feature: UsageFeature.AIVisibility,
+            metadata: { error: errMsg, promptId: prompt.id, platform: failedPlatform },
+          })
+        }
         continue
       }
 

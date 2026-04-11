@@ -8,7 +8,7 @@ import { ALL_PLATFORMS } from '@/lib/ai-visibility/types'
  */
 export const PLATFORM_PROVIDER_KEYS: Record<AIPlatform, string> = {
   [AIPlatform.ChatGPT]: 'openai',
-  [AIPlatform.Claude]: 'claude',
+  [AIPlatform.Claude]: 'anthropic',
   [AIPlatform.Perplexity]: 'perplexity',
 }
 
