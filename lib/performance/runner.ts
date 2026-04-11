@@ -8,7 +8,7 @@ async function checkIfStopped(supabase: SupabaseClient, auditId: string): Promis
     .from('performance_audits')
     .select('status')
     .eq('id', auditId)
-    .single()
+    .maybeSingle()
   return data?.status === PerformanceAuditStatus.Stopped
 }
 

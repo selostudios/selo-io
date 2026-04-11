@@ -68,7 +68,7 @@ async function checkIfStopped(
   supabase: ReturnType<typeof createServiceClient>,
   auditId: string
 ): Promise<boolean> {
-  const { data } = await supabase.from('audits').select('status').eq('id', auditId).single()
+  const { data } = await supabase.from('audits').select('status').eq('id', auditId).maybeSingle()
   return data?.status === UnifiedAuditStatus.Stopped
 }
 
