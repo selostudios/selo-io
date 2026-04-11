@@ -5,6 +5,7 @@ import type { PlatformBreakdown as PlatformBreakdownType } from '@/lib/ai-visibi
 
 interface PlatformBreakdownProps {
   breakdown: PlatformBreakdownType | null
+  configuredPlatforms?: AIPlatform[]
 }
 
 const PLATFORM_BAR_COLORS: Record<string, string> = {
@@ -13,13 +14,16 @@ const PLATFORM_BAR_COLORS: Record<string, string> = {
   [AIPlatform.Perplexity]: 'bg-blue-500',
 }
 
-export function PlatformBreakdown({ breakdown }: PlatformBreakdownProps) {
-  if (!breakdown) return null
+export function PlatformBreakdown({ breakdown, configuredPlatforms }: PlatformBreakdownProps) {
+  if (!breakdown && !configuredPlatforms?.length) return null
 
-  const platforms = Object.entries(breakdown)
-  if (platforms.length === 0) return null
+  const activePlatforms = Object.entries(breakdown ?? {})
+  const maxMentions = Math.max(...activePlatforms.map(([, v]) => v.mentions), 1)
 
-  const maxMentions = Math.max(...platforms.map(([, v]) => v.mentions), 1)
+  // Platforms in config but not in breakdown (no API key configured)
+  const missingPlatforms = (configuredPlatforms ?? []).filter((p) => !breakdown?.[p])
+
+  if (activePlatforms.length === 0 && missingPlatforms.length === 0) return null
 
   return (
     <Card>
@@ -27,7 +31,7 @@ export function PlatformBreakdown({ breakdown }: PlatformBreakdownProps) {
         <CardTitle className="text-base font-medium">Platform Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {platforms.map(([platform, stats]) => (
+        {activePlatforms.map(([platform, stats]) => (
           <div key={platform} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">
@@ -43,6 +47,17 @@ export function PlatformBreakdown({ breakdown }: PlatformBreakdownProps) {
                 style={{ width: `${(stats.mentions / maxMentions) * 100}%` }}
               />
             </div>
+          </div>
+        ))}
+        {missingPlatforms.map((platform) => (
+          <div key={platform} className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground font-medium">
+                {PLATFORM_DISPLAY_NAMES[platform] ?? platform}
+              </span>
+              <span className="text-muted-foreground text-xs italic">Not configured</span>
+            </div>
+            <div className="bg-muted h-2 rounded-full" />
           </div>
         ))}
       </CardContent>

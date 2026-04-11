@@ -154,7 +154,10 @@ export function OverviewDashboard({
           </div>
 
           {/* Platform Breakdown */}
-          <PlatformBreakdown breakdown={latestScore.platform_breakdown} />
+          <PlatformBreakdown
+            breakdown={latestScore.platform_breakdown}
+            configuredPlatforms={config?.platforms}
+          />
         </>
       )}
     </div>

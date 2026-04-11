@@ -61,9 +61,14 @@ export function SyncButton({
         return
       }
 
+      const skipped =
+        'skippedPlatforms' in result && result.skippedPlatforms.length > 0
+          ? ` (${result.skippedPlatforms.join(', ')} skipped — no API key)`
+          : ''
       toast.success(
         `Sync complete: ${result.queriesCompleted} queries run` +
-          (result.budgetExceeded ? ' (budget limit reached)' : '')
+          (result.budgetExceeded ? ' (budget limit reached)' : '') +
+          skipped
       )
       setLastSync(new Date().toISOString())
     })

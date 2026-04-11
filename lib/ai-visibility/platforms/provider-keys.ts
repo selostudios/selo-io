@@ -9,3 +9,13 @@ export const PLATFORM_PROVIDER_KEYS: Record<AIPlatform, string> = {
   [AIPlatform.Claude]: 'claude',
   [AIPlatform.Perplexity]: 'perplexity',
 }
+
+/**
+ * Map AI platform enum to the credential key used in getAppCredential().
+ * Claude uses the 'anthropic' credential; ChatGPT uses 'openai'.
+ */
+export const PLATFORM_CREDENTIAL_KEYS: Record<AIPlatform, string> = {
+  [AIPlatform.ChatGPT]: 'openai',
+  [AIPlatform.Claude]: 'anthropic',
+  [AIPlatform.Perplexity]: 'perplexity',
+}

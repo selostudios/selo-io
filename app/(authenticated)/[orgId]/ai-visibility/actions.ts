@@ -46,6 +46,14 @@ export async function runAIVisibilitySync(orgId: string) {
       config,
     })
 
+    if (result.queriesCompleted === 0 && result.skippedPlatforms.length > 0) {
+      return {
+        success: false as const,
+        error:
+          'No AI platform API keys are configured. Add at least one in App Settings > Integrations.',
+      }
+    }
+
     revalidatePath(`/${orgId}/ai-visibility`)
 
     return {
@@ -54,6 +62,7 @@ export async function runAIVisibilitySync(orgId: string) {
       totalCostCents: result.totalCostCents,
       budgetExceeded: result.budgetExceeded,
       errors: result.errors.length,
+      skippedPlatforms: result.skippedPlatforms,
     }
   })
 }

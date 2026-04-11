@@ -35,6 +35,10 @@ vi.mock('@/lib/app-settings/usage', () => ({
   logUsage: vi.fn(),
 }))
 
+vi.mock('@/lib/app-settings/credentials', () => ({
+  getAppCredential: vi.fn().mockResolvedValue('test-api-key'),
+}))
+
 import { syncOrganization } from '@/lib/ai-visibility/sync'
 import { getAdapter } from '@/lib/ai-visibility/platforms/registry'
 import { analyzeResponse } from '@/lib/ai-visibility/analyzer'

@@ -1,14 +1,15 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdapter } from './platforms/registry'
-import { PLATFORM_PROVIDER_KEYS } from './platforms/provider-keys'
+import { PLATFORM_PROVIDER_KEYS, PLATFORM_CREDENTIAL_KEYS } from './platforms/provider-keys'
 import { analyzeResponse } from './analyzer'
 import { buildOrgContext } from './context'
 import { getCurrentMonthSpend, canContinueSync, checkBudgetThresholds } from './budget'
 import { sendBudgetAlert } from './alerts'
 import { calculateVisibilityScore } from './scorer'
 import { logUsage } from '@/lib/app-settings/usage'
+import { getAppCredential } from '@/lib/app-settings/credentials'
 import { UsageFeature } from '@/lib/enums'
-import type { BrandSentiment } from '@/lib/enums'
+import type { AIPlatform, BrandSentiment } from '@/lib/enums'
 import type { AIVisibilityConfig } from './types'
 
 interface SyncInput {
@@ -23,6 +24,7 @@ export interface SyncResult {
   totalCostCents: number
   budgetExceeded: boolean
   errors: { promptId: string; platform: string; error: string }[]
+  skippedPlatforms: AIPlatform[]
 }
 
 /**
@@ -38,6 +40,23 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
     totalCostCents: 0,
     budgetExceeded: false,
     errors: [],
+    skippedPlatforms: [],
+  }
+
+  // Filter to platforms that have credentials configured
+  const credentialChecks = await Promise.all(
+    config.platforms.map(async (platform) => {
+      const credKey = PLATFORM_CREDENTIAL_KEYS[platform]
+      const credential = await getAppCredential(credKey)
+      return { platform, hasCredential: !!credential }
+    })
+  )
+
+  const activePlatforms = credentialChecks.filter((c) => c.hasCredential).map((c) => c.platform)
+  result.skippedPlatforms = credentialChecks.filter((c) => !c.hasCredential).map((c) => c.platform)
+
+  if (activePlatforms.length === 0) {
+    return result
   }
 
   // Check budget before starting
@@ -87,7 +106,7 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
     }
 
     const platformResults = await Promise.allSettled(
-      config.platforms.map(async (platform) => {
+      activePlatforms.map(async (platform) => {
         const adapter = getAdapter(platform)
         const response = await adapter.query(prompt.prompt_text)
         const analysis = await analyzeResponse(response, orgContext)
@@ -169,7 +188,7 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
   }
 
   if (result.queriesCompleted > 0) {
-    const totalPromptPlatformPairs = prompts.length * config.platforms.length
+    const totalPromptPlatformPairs = prompts.length * activePlatforms.length
     const score = calculateVisibilityScore({
       totalPrompts: totalPromptPlatformPairs,
       mentionedCount,
