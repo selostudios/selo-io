@@ -3,7 +3,17 @@
 import { useState, useTransition } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { ConnectionStatus } from '@/lib/enums'
-import { Bot, Mail, Gauge, Calendar, RefreshCw, Info, MessageSquare, Search } from 'lucide-react'
+import {
+  Bot,
+  Mail,
+  Gauge,
+  Calendar,
+  RefreshCw,
+  Info,
+  MessageSquare,
+  Search,
+  ExternalLink,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -139,11 +149,24 @@ export function SystemClient({ health, initialUsage }: SystemClientProps) {
                     <span className="text-muted-foreground text-xs">{statusConfig.label}</span>
                   </div>
                 </div>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {item.lastActivity
-                    ? `Last used ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
-                    : 'Never used'}
-                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-muted-foreground text-xs">
+                    {item.lastActivity
+                      ? `Last used ${formatDistanceToNow(new Date(item.lastActivity), { addSuffix: true })}`
+                      : 'Never used'}
+                  </p>
+                  {item.service === 'anthropic' && item.status !== 'unconfigured' && (
+                    <a
+                      href="https://console.anthropic.com/settings/billing"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs underline"
+                    >
+                      Manage Plan
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
               </Card>
             )
           })}
