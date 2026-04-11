@@ -139,7 +139,7 @@ export function ChildSidebar({
   }))
 
   return (
-    <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[304px]')}>
+    <div className={cn('flex flex-col bg-white', isCollapsed ? 'w-12' : 'w-[244px]')}>
       {/* Navigation */}
       <nav className={cn('flex-1 pt-3', isCollapsed ? 'space-y-2 px-1' : 'space-y-4 px-3')}>
         {navigation
