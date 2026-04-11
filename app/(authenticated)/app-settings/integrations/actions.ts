@@ -115,7 +115,7 @@ export async function getAppSettings(): Promise<AppSettingDisplay[] | { error: s
 }
 
 export async function updateAppSetting(key: string, value: string) {
-  const { error, supabase, user, userRecord } = await requireInternalUser()
+  const { error, user, userRecord } = await requireInternalUser()
   if (error) return { error }
   if (userRecord!.role !== 'admin' && !userRecord!.is_internal)
     return { error: 'Admin access required' }
@@ -134,7 +134,9 @@ export async function updateAppSetting(key: string, value: string) {
     credentials = encryptCredentials({ [field]: value })
   }
 
-  const { error: upsertError } = await supabase!.from('app_settings').upsert(
+  // Use service client to bypass RLS — auth is already verified above
+  const serviceClient = createServiceClient()
+  const { error: upsertError } = await serviceClient.from('app_settings').upsert(
     {
       key,
       credentials,
@@ -151,7 +153,7 @@ export async function updateAppSetting(key: string, value: string) {
       timestamp: new Date().toISOString(),
       error: upsertError.message,
     })
-    return { error: 'Failed to update setting' }
+    return { error: `Failed to update setting: ${upsertError.message}` }
   }
 
   revalidatePath('/app-settings/integrations')
@@ -159,12 +161,14 @@ export async function updateAppSetting(key: string, value: string) {
 }
 
 export async function removeAppSetting(key: string) {
-  const { error, supabase, userRecord } = await requireInternalUser()
+  const { error, userRecord } = await requireInternalUser()
   if (error) return { error }
   if (userRecord!.role !== 'admin' && !userRecord!.is_internal)
     return { error: 'Admin access required' }
 
-  const { error: deleteError } = await supabase!.from('app_settings').delete().eq('key', key)
+  // Use service client to bypass RLS — auth is already verified above
+  const serviceClient = createServiceClient()
+  const { error: deleteError } = await serviceClient.from('app_settings').delete().eq('key', key)
 
   if (deleteError) {
     console.error('[App Settings Error]', {
@@ -173,7 +177,7 @@ export async function removeAppSetting(key: string) {
       timestamp: new Date().toISOString(),
       error: deleteError.message,
     })
-    return { error: 'Failed to remove setting' }
+    return { error: `Failed to remove setting: ${deleteError.message}` }
   }
 
   revalidatePath('/app-settings/integrations')
