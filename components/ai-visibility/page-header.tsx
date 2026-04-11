@@ -75,7 +75,15 @@ export function SyncButton({
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-end gap-1">
+      <Button onClick={handleSync} disabled={isPending || disabled} variant="outline" size="sm">
+        {isPending ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <RefreshCw className="mr-2 h-4 w-4" />
+        )}
+        Sync Now
+      </Button>
       {lastSync && (
         <span className="text-muted-foreground text-xs">
           Last synced{' '}
@@ -87,14 +95,6 @@ export function SyncButton({
           })}
         </span>
       )}
-      <Button onClick={handleSync} disabled={isPending || disabled} variant="outline" size="sm">
-        {isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <RefreshCw className="mr-2 h-4 w-4" />
-        )}
-        Sync Now
-      </Button>
     </div>
   )
 }

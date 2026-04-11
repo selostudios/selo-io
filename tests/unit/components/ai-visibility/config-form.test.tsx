@@ -86,7 +86,9 @@ describe('AIVisibilityConfigForm', () => {
       const checkboxes = screen.getAllByRole('checkbox')
       // Filter to platform checkboxes (exclude the Enable toggle switch)
       const platformCheckboxes = checkboxes.filter(
-        (cb) => cb.getAttribute('data-state') === 'checked' || cb.getAttribute('data-state') === 'unchecked'
+        (cb) =>
+          cb.getAttribute('data-state') === 'checked' ||
+          cb.getAttribute('data-state') === 'unchecked'
       )
       // Both available platforms should be checked by default
       const checkedPlatforms = platformCheckboxes.filter(
