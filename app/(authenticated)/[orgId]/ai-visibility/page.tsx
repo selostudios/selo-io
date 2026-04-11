@@ -19,12 +19,18 @@ export default async function AIVisibilityPage({ params }: PageProps) {
   const { orgId } = await params
   const supabase = await createClient()
 
-  const [scores, history, config, user, availablePlatforms] = await Promise.all([
+  const [scores, history, config, user, availablePlatforms, promptCount] = await Promise.all([
     getLatestScores(supabase, orgId),
     getScoreHistory(supabase, orgId),
     getAIVisibilityConfig(supabase, orgId),
     getAuthUser(),
     getAvailablePlatforms(),
+    supabase
+      .from('ai_visibility_prompts')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+      .then((r) => r.count ?? 0),
   ])
 
   const userRecord = user ? await getUserRecord(user.id) : null
@@ -39,6 +45,7 @@ export default async function AIVisibilityPage({ params }: PageProps) {
       config={config}
       isInternal={isInternal}
       availablePlatforms={availablePlatforms}
+      hasPrompts={promptCount > 0}
     />
   )
 }

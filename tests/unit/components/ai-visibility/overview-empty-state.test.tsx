@@ -53,17 +53,49 @@ describe('AIVisibilityEmptyState', () => {
       ).toBeInTheDocument()
     })
 
-    test('shows Sync Now button when config and platforms are available', () => {
+    test('shows Sync Now button when config, platforms, and prompts are available', () => {
       render(
         <AIVisibilityEmptyState
           orgId={orgId}
           config={makeConfig()}
           isInternal={false}
           availablePlatforms={[AIPlatform.Claude]}
+          hasPrompts={true}
         />
       )
 
       expect(screen.getByRole('button', { name: /Sync Now/i })).toBeInTheDocument()
+    })
+
+    test('shows Add Prompts button instead of Sync Now when no prompts exist', () => {
+      render(
+        <AIVisibilityEmptyState
+          orgId={orgId}
+          config={makeConfig()}
+          isInternal={false}
+          availablePlatforms={[AIPlatform.Claude]}
+          hasPrompts={false}
+        />
+      )
+
+      expect(screen.queryByRole('button', { name: /Sync Now/i })).not.toBeInTheDocument()
+      const addPromptsLink = screen.getByRole('link', { name: /Add Prompts/i })
+      expect(addPromptsLink).toBeInTheDocument()
+      expect(addPromptsLink).toHaveAttribute('href', `/${orgId}/ai-visibility/prompts`)
+    })
+
+    test('shows prompt-specific description when no prompts exist', () => {
+      render(
+        <AIVisibilityEmptyState
+          orgId={orgId}
+          config={makeConfig()}
+          isInternal={false}
+          availablePlatforms={[AIPlatform.Claude]}
+          hasPrompts={false}
+        />
+      )
+
+      expect(screen.getByText(/Add prompts to define what to track/)).toBeInTheDocument()
     })
 
     test('lists only the available platform when one platform is configured', () => {

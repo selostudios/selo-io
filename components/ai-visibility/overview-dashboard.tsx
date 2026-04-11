@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader, SyncButton } from '@/components/ai-visibility/page-header'
 import { PlatformBreakdown } from '@/components/ai-visibility/platform-breakdown'
 import Link from 'next/link'
-import { Eye, Settings, Plus } from 'lucide-react'
+import { Eye, Settings, Plus, MessageSquarePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AIPlatform, ScoreStatus } from '@/lib/enums'
 import { PLATFORM_DISPLAY_NAMES } from '@/lib/ai-visibility/types'
@@ -32,6 +32,7 @@ interface OverviewDashboardProps {
   config: AIVisibilityConfig | null
   isInternal?: boolean
   availablePlatforms?: AIPlatform[]
+  hasPrompts?: boolean
 }
 
 export function OverviewDashboard({
@@ -42,6 +43,7 @@ export function OverviewDashboard({
   config,
   isInternal = false,
   availablePlatforms = [],
+  hasPrompts = false,
 }: OverviewDashboardProps) {
   const hasData = latestScore !== null
 
@@ -73,12 +75,21 @@ export function OverviewDashboard({
   return (
     <div className="flex-1 space-y-6 p-6">
       <PageHeader title="AI Visibility">
-        <SyncButton
-          orgId={orgId}
-          lastSyncAt={config?.last_sync_at}
-          isInternal={isInternal}
-          disabled={!config || availablePlatforms.length === 0}
-        />
+        {config && hasPrompts ? (
+          <SyncButton
+            orgId={orgId}
+            lastSyncAt={config.last_sync_at}
+            isInternal={isInternal}
+            disabled={availablePlatforms.length === 0}
+          />
+        ) : config && !hasPrompts ? (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/${orgId}/ai-visibility/prompts`}>
+              <MessageSquarePlus className="mr-2 h-4 w-4" />
+              Add Prompts
+            </Link>
+          </Button>
+        ) : null}
       </PageHeader>
 
       {!hasData ? (
@@ -87,6 +98,7 @@ export function OverviewDashboard({
           config={config}
           isInternal={isInternal}
           availablePlatforms={availablePlatforms}
+          hasPrompts={hasPrompts}
         />
       ) : (
         <>
@@ -157,6 +169,7 @@ interface AIVisibilityEmptyStateProps {
   config: AIVisibilityConfig | null
   isInternal: boolean
   availablePlatforms: AIPlatform[]
+  hasPrompts?: boolean
 }
 
 export function AIVisibilityEmptyState({
@@ -164,6 +177,7 @@ export function AIVisibilityEmptyState({
   config,
   isInternal,
   availablePlatforms,
+  hasPrompts = false,
 }: AIVisibilityEmptyStateProps) {
   const missingPlatforms = ALL_PLATFORMS.filter((p) => !availablePlatforms.includes(p))
   const hasSomePlatforms = availablePlatforms.length > 0
@@ -176,10 +190,23 @@ export function AIVisibilityEmptyState({
       <EmptyState
         icon={Eye}
         title="No visibility data yet"
-        description={`AI Visibility is enabled for ${enabledNames}. Run your first sync to start tracking.`}
+        description={
+          hasPrompts
+            ? `AI Visibility is enabled for ${enabledNames}. Run your first sync to start tracking.`
+            : `AI Visibility is enabled for ${enabledNames}. Add prompts to define what to track.`
+        }
       >
         <div className="mt-4 flex items-center gap-2">
-          <SyncButton orgId={orgId} lastSyncAt={config.last_sync_at} isInternal={isInternal} />
+          {hasPrompts ? (
+            <SyncButton orgId={orgId} lastSyncAt={config.last_sync_at} isInternal={isInternal} />
+          ) : (
+            <Button size="sm" asChild>
+              <Link href={`/${orgId}/ai-visibility/prompts`}>
+                <MessageSquarePlus className="mr-1 h-3.5 w-3.5" />
+                Add Prompts
+              </Link>
+            </Button>
+          )}
           {!hasAllPlatforms && isInternal && (
             <Button variant="outline" size="sm" asChild>
               <Link href="/app-settings/integrations">
