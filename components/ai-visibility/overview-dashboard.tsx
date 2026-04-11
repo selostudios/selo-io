@@ -89,13 +89,13 @@ export function OverviewDashboard({
             title="AI Visibility not configured"
             description={
               isInternal
-                ? 'Configure AI platform API keys in App Settings to start tracking how this brand appears in AI responses.'
+                ? 'Enable AI Visibility in organization settings to start tracking how this brand appears in AI responses.'
                 : 'Contact your Selo admin to enable AI Visibility tracking for your organization.'
             }
           >
             {isInternal && (
               <Link
-                href={`/${orgId}/settings/integrations`}
+                href={`/${orgId}/settings/organization`}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
               >
                 <Settings className="mr-2 h-4 w-4" />
