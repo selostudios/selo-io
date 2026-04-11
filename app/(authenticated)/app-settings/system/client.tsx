@@ -211,7 +211,7 @@ export function SystemClient({ health, initialUsage }: SystemClientProps) {
                   <TableHead className="text-right">AI Tokens</TableHead>
                   <TableHead className="text-right">Est. Cost</TableHead>
                   <TableHead className="text-right">Emails</TableHead>
-                  <TableHead className="text-right">PSI Calls</TableHead>
+                  <TableHead className="text-right">PageSpeed Insights</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
