@@ -107,22 +107,29 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
 
     const platformResults = await Promise.allSettled(
       activePlatforms.map(async (platform) => {
-        const adapter = getAdapter(platform)
-        const response = await adapter.query(prompt.prompt_text)
-        const analysis = await analyzeResponse(response, orgContext)
+        try {
+          const adapter = getAdapter(platform)
+          const response = await adapter.query(prompt.prompt_text)
+          const analysis = await analyzeResponse(response, orgContext)
 
-        const queryCost = response.costCents + analysis.sentiment_cost_cents
+          const queryCost = response.costCents + analysis.sentiment_cost_cents
 
-        return { platform, response, analysis, queryCost }
+          return { platform, response, analysis, queryCost }
+        } catch (err) {
+          throw { platform, error: err }
+        }
       })
     )
 
     for (const settled of platformResults) {
       if (settled.status === 'rejected') {
+        const reason = settled.reason as { platform?: string; error?: unknown }
+        const errMsg =
+          reason.error instanceof Error ? reason.error.message : String(reason.error ?? reason)
         result.errors.push({
           promptId: prompt.id,
-          platform: 'unknown',
-          error: settled.reason instanceof Error ? settled.reason.message : String(settled.reason),
+          platform: reason.platform ?? 'unknown',
+          error: errMsg,
         })
         continue
       }

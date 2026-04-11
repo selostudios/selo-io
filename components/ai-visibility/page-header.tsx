@@ -65,11 +65,23 @@ export function SyncButton({
         'skippedPlatforms' in result && result.skippedPlatforms.length > 0
           ? ` (${result.skippedPlatforms.join(', ')} skipped — no API key)`
           : ''
-      toast.success(
-        `Sync complete: ${result.queriesCompleted} queries run` +
-          (result.budgetExceeded ? ' (budget limit reached)' : '') +
-          skipped
-      )
+      const errorMessages =
+        'errorMessages' in result && (result.errorMessages as string[]).length > 0
+          ? result.errorMessages
+          : []
+      if ((errorMessages as string[]).length > 0) {
+        toast.warning(
+          `Sync partially complete: ${result.queriesCompleted} queries run, ${(errorMessages as string[]).length} failed` +
+            skipped,
+          { description: (errorMessages as string[])[0] }
+        )
+      } else {
+        toast.success(
+          `Sync complete: ${result.queriesCompleted} queries run` +
+            (result.budgetExceeded ? ' (budget limit reached)' : '') +
+            skipped
+        )
+      }
       setLastSync(new Date().toISOString())
     })
   }

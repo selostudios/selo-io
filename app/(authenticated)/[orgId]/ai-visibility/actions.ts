@@ -54,6 +54,13 @@ export async function runAIVisibilitySync(orgId: string) {
       }
     }
 
+    if (result.queriesCompleted === 0 && result.errors.length > 0) {
+      return {
+        success: false as const,
+        error: result.errors[0].error,
+      }
+    }
+
     revalidatePath(`/${orgId}/ai-visibility`)
 
     return {
@@ -61,7 +68,7 @@ export async function runAIVisibilitySync(orgId: string) {
       queriesCompleted: result.queriesCompleted,
       totalCostCents: result.totalCostCents,
       budgetExceeded: result.budgetExceeded,
-      errors: result.errors.length,
+      errorMessages: result.errors.map((e) => `${e.platform}: ${e.error}`),
       skippedPlatforms: result.skippedPlatforms,
     }
   })

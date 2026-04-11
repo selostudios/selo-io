@@ -205,4 +205,103 @@ describe('syncOrganization', () => {
     expect(result.queriesCompleted).toBe(0)
     expect(result.budgetExceeded).toBe(true)
   })
+
+  it('records platform name and error message when a platform query fails', async () => {
+    const failingAdapter = {
+      platform: AIPlatform.ChatGPT,
+      query: vi
+        .fn()
+        .mockRejectedValue(new Error('Your credit balance is too low to access the API')),
+    }
+    vi.mocked(getAdapter).mockReturnValue(failingAdapter)
+
+    const result = await syncOrganization({
+      organizationId: 'org-1',
+      orgName: 'Test Brand',
+      websiteUrl: 'https://testbrand.com',
+      config: makeConfig(),
+    })
+
+    expect(result.queriesCompleted).toBe(0)
+    expect(result.errors).toHaveLength(2) // 2 prompts × 1 platform
+    expect(result.errors[0]).toEqual(
+      expect.objectContaining({
+        platform: AIPlatform.ChatGPT,
+        error: 'Your credit balance is too low to access the API',
+      })
+    )
+  })
+
+  it('completes successful queries when only some platforms fail', async () => {
+    // Configure two platforms
+    const config = makeConfig({ platforms: [AIPlatform.ChatGPT, AIPlatform.Claude] })
+
+    // Single prompt to simplify counting
+    mockSelectPrompts.mockResolvedValue({
+      data: [{ id: 'prompt-1', prompt_text: 'Tell me about Test Brand' }],
+      error: null,
+    })
+
+    // ChatGPT succeeds, Claude fails
+    vi.mocked(getAdapter).mockImplementation((platform) => {
+      if (platform === AIPlatform.Claude) {
+        return {
+          platform: AIPlatform.Claude,
+          query: vi.fn().mockRejectedValue(new Error('Insufficient credits')),
+        }
+      }
+      return {
+        platform: AIPlatform.ChatGPT,
+        query: vi.fn().mockResolvedValue({
+          text: 'Brand X is great.',
+          citations: [],
+          model: 'gpt-4o-mini',
+          inputTokens: 100,
+          outputTokens: 200,
+          costCents: 3,
+        }),
+      }
+    })
+
+    const result = await syncOrganization({
+      organizationId: 'org-1',
+      orgName: 'Test Brand',
+      websiteUrl: 'https://testbrand.com',
+      config,
+    })
+
+    expect(result.queriesCompleted).toBe(1) // ChatGPT succeeded
+    expect(result.errors).toHaveLength(1) // Claude failed
+    expect(result.errors[0]).toEqual(
+      expect.objectContaining({
+        platform: AIPlatform.Claude,
+        error: 'Insufficient credits',
+      })
+    )
+  })
+
+  it('reports skipped platforms that have no credentials', async () => {
+    const { getAppCredential } = await import('@/lib/app-settings/credentials')
+    vi.mocked(getAppCredential).mockImplementation(async (key) => {
+      if (key === 'openai') return 'test-key'
+      return null // anthropic has no key
+    })
+
+    const config = makeConfig({ platforms: [AIPlatform.ChatGPT, AIPlatform.Claude] })
+
+    mockSelectPrompts.mockResolvedValue({
+      data: [{ id: 'prompt-1', prompt_text: 'Tell me about Test Brand' }],
+      error: null,
+    })
+
+    const result = await syncOrganization({
+      organizationId: 'org-1',
+      orgName: 'Test Brand',
+      websiteUrl: 'https://testbrand.com',
+      config,
+    })
+
+    expect(result.skippedPlatforms).toEqual([AIPlatform.Claude])
+    expect(result.queriesCompleted).toBe(1) // Only ChatGPT ran
+  })
 })
