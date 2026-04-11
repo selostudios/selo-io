@@ -1,7 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { syncOrganization } from '@/lib/ai-visibility/sync'
+import { syncOrganization, syncSinglePrompt } from '@/lib/ai-visibility/sync'
 import { withAdminAuth } from '@/lib/actions/with-auth'
 import { revalidatePath } from 'next/cache'
 import { PromptSource, AIPlatform, SyncFrequency } from '@/lib/enums'
@@ -122,7 +122,39 @@ export async function addPrompt(
     }
 
     revalidatePath(`/${orgId}/ai-visibility/prompts`)
-    return { success: true as const, promptId: prompt.id as string }
+
+    // Fire-and-forget: immediately analyze the new prompt across all platforms
+    const promptId = prompt.id as string
+    Promise.all([
+      supabase.from('organizations').select('name, website_url').eq('id', orgId).single(),
+      supabase.from('ai_visibility_configs').select('*').eq('organization_id', orgId).single(),
+    ])
+      .then(async ([orgResult, configResult]) => {
+        if (orgResult.error || !orgResult.data || configResult.error || !configResult.data) return
+        if (!configResult.data.is_active) return
+
+        await syncSinglePrompt({
+          organizationId: orgId,
+          orgName: orgResult.data.name,
+          websiteUrl: orgResult.data.website_url,
+          config: configResult.data,
+          promptId,
+          promptText: data.promptText.trim(),
+        })
+
+        revalidatePath(`/${orgId}/ai-visibility/prompts`)
+      })
+      .catch((err) => {
+        console.error('[AI Visibility]', {
+          type: 'immediate_prompt_sync_failed',
+          organizationId: orgId,
+          promptId,
+          error: err instanceof Error ? err.message : String(err),
+          timestamp: new Date().toISOString(),
+        })
+      })
+
+    return { success: true as const, promptId }
   })
 }
 

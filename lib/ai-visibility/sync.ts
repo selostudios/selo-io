@@ -256,3 +256,84 @@ export async function syncOrganization(input: SyncInput): Promise<SyncResult> {
 
   return result
 }
+
+/**
+ * Run analysis for a single prompt across all active platforms.
+ * Used to immediately analyze a newly added prompt without waiting for a full sync.
+ */
+export async function syncSinglePrompt(input: {
+  organizationId: string
+  orgName: string
+  websiteUrl: string | null
+  config: AIVisibilityConfig
+  promptId: string
+  promptText: string
+}): Promise<void> {
+  const { organizationId, orgName, websiteUrl, config, promptId, promptText } = input
+  const supabase = createServiceClient()
+
+  // Filter to platforms with credentials
+  const credentialChecks = await Promise.all(
+    config.platforms.map(async (platform) => {
+      const credential = await getAppCredential(PLATFORM_CREDENTIAL_KEYS[platform])
+      return { platform, hasCredential: !!credential }
+    })
+  )
+  const activePlatforms = credentialChecks.filter((c) => c.hasCredential).map((c) => c.platform)
+
+  if (activePlatforms.length === 0) return
+
+  const orgContext = buildOrgContext({
+    orgName,
+    websiteUrl,
+    competitors: config.competitors,
+  })
+
+  const queriedAt = new Date().toISOString()
+
+  await Promise.allSettled(
+    activePlatforms.map(async (platform) => {
+      try {
+        const adapter = getAdapter(platform)
+        const response = await adapter.query(promptText)
+        const analysis = await analyzeResponse(response, orgContext)
+        const queryCost = response.costCents + analysis.sentiment_cost_cents
+
+        await supabase.from('ai_visibility_results').insert({
+          prompt_id: promptId,
+          organization_id: organizationId,
+          platform,
+          response_text: response.text,
+          brand_mentioned: analysis.brand_mentioned,
+          brand_sentiment: analysis.brand_sentiment,
+          brand_position: analysis.brand_position,
+          domain_cited: analysis.domain_cited,
+          cited_urls: analysis.cited_urls,
+          competitor_mentions: analysis.competitor_mentions,
+          tokens_used: response.inputTokens + response.outputTokens,
+          cost_cents: queryCost,
+          queried_at: queriedAt,
+          raw_response: null,
+        })
+
+        await logUsage(PLATFORM_PROVIDER_KEYS[platform], 'ai_visibility_query', {
+          organizationId,
+          feature: UsageFeature.AIVisibility,
+          tokensInput: response.inputTokens,
+          tokensOutput: response.outputTokens,
+          cost: queryCost,
+          metadata: { promptId, platform },
+        })
+      } catch (error) {
+        console.error('[AI Visibility Sync]', {
+          type: 'single_prompt_query_failed',
+          organizationId,
+          promptId,
+          platform,
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString(),
+        })
+      }
+    })
+  )
+}
