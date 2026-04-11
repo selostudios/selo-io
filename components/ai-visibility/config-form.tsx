@@ -18,12 +18,13 @@ import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateAIVisibilityConfig } from '@/app/(authenticated)/[orgId]/ai-visibility/actions'
 import { AIPlatform, SyncFrequency } from '@/lib/enums'
-import { PLATFORM_DISPLAY_NAMES, ALL_PLATFORMS } from '@/lib/ai-visibility/types'
+import { PLATFORM_DISPLAY_NAMES } from '@/lib/ai-visibility/types'
 import type { AIVisibilityConfig } from '@/lib/ai-visibility/types'
 
 interface ConfigFormProps {
   orgId: string
   config: AIVisibilityConfig | null
+  availablePlatforms: AIPlatform[]
 }
 
 const FREQUENCY_LABELS: Record<SyncFrequency, string> = {
@@ -32,10 +33,10 @@ const FREQUENCY_LABELS: Record<SyncFrequency, string> = {
   [SyncFrequency.Monthly]: 'Monthly',
 }
 
-export function AIVisibilityConfigForm({ orgId, config }: ConfigFormProps) {
+export function AIVisibilityConfigForm({ orgId, config, availablePlatforms }: ConfigFormProps) {
   const [isPending, startTransition] = useTransition()
   const [isActive, setIsActive] = useState(config?.is_active ?? false)
-  const [platforms, setPlatforms] = useState<AIPlatform[]>(config?.platforms ?? ALL_PLATFORMS)
+  const [platforms, setPlatforms] = useState<AIPlatform[]>(config?.platforms ?? availablePlatforms)
   const [syncFrequency, setSyncFrequency] = useState<SyncFrequency>(
     (config?.sync_frequency as SyncFrequency) ?? SyncFrequency.Daily
   )
@@ -114,7 +115,7 @@ export function AIVisibilityConfigForm({ orgId, config }: ConfigFormProps) {
           <div className="space-y-3">
             <Label>Platforms</Label>
             <div className="flex flex-wrap gap-4">
-              {ALL_PLATFORMS.map((platform) => (
+              {availablePlatforms.map((platform) => (
                 <label key={platform} className="flex items-center gap-2">
                   <Checkbox
                     checked={platforms.includes(platform)}

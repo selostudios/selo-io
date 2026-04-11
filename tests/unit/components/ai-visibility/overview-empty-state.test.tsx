@@ -133,9 +133,7 @@ describe('AIVisibilityEmptyState', () => {
       )
 
       expect(screen.getByText('No AI platform API keys configured')).toBeInTheDocument()
-      expect(
-        screen.getByText(/Add at least one AI platform API key/)
-      ).toBeInTheDocument()
+      expect(screen.getByText(/Add at least one AI platform API key/)).toBeInTheDocument()
     })
 
     test('shows contact admin message for non-internal users', () => {
@@ -366,9 +364,7 @@ describe('AIVisibilityEmptyState', () => {
       )
 
       expect(screen.queryByRole('button', { name: /Sync Now/i })).not.toBeInTheDocument()
-      expect(
-        screen.queryByRole('link', { name: /Enable AI Visibility/i })
-      ).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /Enable AI Visibility/i })).not.toBeInTheDocument()
     })
   })
 })
