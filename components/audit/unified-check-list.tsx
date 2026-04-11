@@ -400,85 +400,87 @@ function GroupedCheckItem({ group, totalPages, onDismiss, onRerun }: GroupedChec
 
       {expanded && hasExpandableContent && (
         <div className="bg-muted/30">
-          {/* Main content area — flex with invisible icon spacer to align with title text */}
-          <div className="flex gap-3 px-6 py-3">
-            {/* Spacer matching the icon width */}
-            <span className="shrink-0 text-lg leading-none opacity-0" aria-hidden="true">
-              {getStatusIcon(worstStatus)}
-            </span>
-            <div className="min-w-0 flex-1 space-y-2">
-              {/* Detail message above page list for site-wide checks with extracted URLs */}
-              {pageEntries.length > 1 && affectedPageCount === 0 && detailMessage && (
-                <p className="text-muted-foreground text-sm">{detailMessage}</p>
-              )}
-              {/* Affected pages list (grouped page checks or site-wide with extracted URLs) */}
-              {pageEntries.length > 1 && (
-                <div className="space-y-1">
-                  {visiblePages.map((page) => (
-                    <div key={page.url} className="flex items-start gap-2 text-xs">
-                      <span className="text-muted-foreground mt-0.5 shrink-0">–</span>
-                      <div className="min-w-0 flex-1">
-                        {page.snippet ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a
-                                href={page.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground font-medium hover:underline"
-                                style={{ cursor: 'pointer' }}
-                              >
-                                {page.path}
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-xs">
-                              {page.snippet}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <a
-                            href={page.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground font-medium hover:underline"
-                          >
-                            {page.path}
-                          </a>
-                        )}
+          {/* Main content area — only render when there's content to show */}
+          {(pageEntries.length > 1 || detailMessage) && (
+            <div className="flex gap-3 px-6 py-3">
+              {/* Spacer matching the icon width */}
+              <span className="shrink-0 text-lg leading-none opacity-0" aria-hidden="true">
+                {getStatusIcon(worstStatus)}
+              </span>
+              <div className="min-w-0 flex-1 space-y-2">
+                {/* Detail message above page list for site-wide checks with extracted URLs */}
+                {pageEntries.length > 1 && affectedPageCount === 0 && detailMessage && (
+                  <p className="text-muted-foreground text-sm">{detailMessage}</p>
+                )}
+                {/* Affected pages list (grouped page checks or site-wide with extracted URLs) */}
+                {pageEntries.length > 1 && (
+                  <div className="space-y-1">
+                    {visiblePages.map((page) => (
+                      <div key={page.url} className="flex items-start gap-2 text-xs">
+                        <span className="text-muted-foreground mt-0.5 shrink-0">–</span>
+                        <div className="min-w-0 flex-1">
+                          {page.snippet ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <a
+                                  href={page.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-muted-foreground font-medium hover:underline"
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  {page.path}
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                {page.snippet}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <a
+                              href={page.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground font-medium hover:underline"
+                            >
+                              {page.path}
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {!showAllPages && hiddenCount > 0 && (
-                    <button
-                      className="text-muted-foreground hover:text-foreground text-xs underline"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowAllPages(true)
-                      }}
-                    >
-                      + {hiddenCount} more page{hiddenCount !== 1 ? 's' : ''}
-                    </button>
-                  )}
-                  {showAllPages && hiddenCount > 0 && (
-                    <button
-                      className="text-muted-foreground hover:text-foreground text-xs underline"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowAllPages(false)
-                      }}
-                    >
-                      Show less
-                    </button>
-                  )}
-                </div>
-              )}
+                    ))}
+                    {!showAllPages && hiddenCount > 0 && (
+                      <button
+                        className="text-muted-foreground hover:text-foreground text-xs underline"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowAllPages(true)
+                        }}
+                      >
+                        + {hiddenCount} more page{hiddenCount !== 1 ? 's' : ''}
+                      </button>
+                    )}
+                    {showAllPages && hiddenCount > 0 && (
+                      <button
+                        className="text-muted-foreground hover:text-foreground text-xs underline"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowAllPages(false)
+                        }}
+                      >
+                        Show less
+                      </button>
+                    )}
+                  </div>
+                )}
 
-              {/* Detail message — show when no page list, or above page list for site-wide checks */}
-              {pageEntries.length <= 1 && detailMessage && (
-                <p className="text-muted-foreground text-sm">{detailMessage}</p>
-              )}
+                {/* Detail message — show when no page list */}
+                {pageEntries.length <= 1 && detailMessage && (
+                  <p className="text-muted-foreground text-sm">{detailMessage}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Footer with fix guidance + dismiss + re-run */}
           {((check.fix_guidance && check.fix_guidance !== detailMessage) ||
