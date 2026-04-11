@@ -67,6 +67,16 @@ export function createRateLimiter(name: string, options: RateLimiterOptions) {
 
   return {
     check(key: string): RateLimitResult {
+      // Skip rate limiting in development/test — the in-memory store causes
+      // E2E tests (20+ logins from the same IP) to hit the limit and time out.
+      if (process.env.NODE_ENV !== 'production') {
+        return {
+          success: true,
+          remaining: options.maxRequests,
+          reset: Date.now() + options.interval,
+        }
+      }
+
       const store = stores.get(name)!
       const now = Date.now()
       const entry = store.get(key)
