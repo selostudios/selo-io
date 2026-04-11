@@ -7,6 +7,7 @@ import {
   getScoreHistory,
   getAIVisibilityConfig,
 } from '@/lib/ai-visibility/queries'
+import { getAvailablePlatforms } from '@/lib/ai-visibility/platforms/provider-keys'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,11 +19,12 @@ export default async function AIVisibilityPage({ params }: PageProps) {
   const { orgId } = await params
   const supabase = await createClient()
 
-  const [scores, history, config, user] = await Promise.all([
+  const [scores, history, config, user, availablePlatforms] = await Promise.all([
     getLatestScores(supabase, orgId),
     getScoreHistory(supabase, orgId),
     getAIVisibilityConfig(supabase, orgId),
     getAuthUser(),
+    getAvailablePlatforms(),
   ])
 
   const userRecord = user ? await getUserRecord(user.id) : null
@@ -36,6 +38,7 @@ export default async function AIVisibilityPage({ params }: PageProps) {
       scoreHistory={history}
       config={config}
       isInternal={isInternal}
+      availablePlatforms={availablePlatforms}
     />
   )
 }

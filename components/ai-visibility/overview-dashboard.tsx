@@ -8,8 +8,11 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader, SyncButton } from '@/components/ai-visibility/page-header'
 import { PlatformBreakdown } from '@/components/ai-visibility/platform-breakdown'
 import Link from 'next/link'
-import { Eye, Settings } from 'lucide-react'
-import { ScoreStatus } from '@/lib/enums'
+import { Eye, Settings, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AIPlatform, ScoreStatus } from '@/lib/enums'
+import { PLATFORM_DISPLAY_NAMES } from '@/lib/ai-visibility/types'
+import { ALL_PLATFORMS } from '@/lib/ai-visibility/types'
 import { getScoreStatus } from '@/lib/reports/types'
 import type { AIVisibilityScore, AIVisibilityConfig } from '@/lib/ai-visibility/types'
 import type { ScoreHistoryPoint } from '@/lib/ai-visibility/queries'
@@ -28,6 +31,7 @@ interface OverviewDashboardProps {
   scoreHistory: ScoreHistoryPoint[]
   config: AIVisibilityConfig | null
   isInternal?: boolean
+  availablePlatforms?: AIPlatform[]
 }
 
 export function OverviewDashboard({
@@ -37,6 +41,7 @@ export function OverviewDashboard({
   scoreHistory,
   config,
   isInternal = false,
+  availablePlatforms = [],
 }: OverviewDashboardProps) {
   const hasData = latestScore !== null
 
@@ -72,38 +77,17 @@ export function OverviewDashboard({
           orgId={orgId}
           lastSyncAt={config?.last_sync_at}
           isInternal={isInternal}
-          disabled={!config}
+          disabled={!config || availablePlatforms.length === 0}
         />
       </PageHeader>
 
       {!hasData ? (
-        config ? (
-          <EmptyState
-            icon={Eye}
-            title="No visibility data yet"
-            description="Run your first sync to start tracking how your brand appears in AI responses."
-          />
-        ) : (
-          <EmptyState
-            icon={Settings}
-            title="AI Visibility not configured"
-            description={
-              isInternal
-                ? 'Enable AI Visibility in organization settings to start tracking how this brand appears in AI responses.'
-                : 'Contact your Selo admin to enable AI Visibility tracking for your organization.'
-            }
-          >
-            {isInternal && (
-              <Link
-                href={`/${orgId}/settings/organization`}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Go to Settings
-              </Link>
-            )}
-          </EmptyState>
-        )
+        <AIVisibilityEmptyState
+          orgId={orgId}
+          config={config}
+          isInternal={isInternal}
+          availablePlatforms={availablePlatforms}
+        />
       ) : (
         <>
           {/* Hero: Score Ring + Trend Chart */}
@@ -161,5 +145,126 @@ export function OverviewDashboard({
         </>
       )}
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Empty State Sub-Component
+// ---------------------------------------------------------------------------
+
+interface AIVisibilityEmptyStateProps {
+  orgId: string
+  config: AIVisibilityConfig | null
+  isInternal: boolean
+  availablePlatforms: AIPlatform[]
+}
+
+export function AIVisibilityEmptyState({
+  orgId,
+  config,
+  isInternal,
+  availablePlatforms,
+}: AIVisibilityEmptyStateProps) {
+  const missingPlatforms = ALL_PLATFORMS.filter((p) => !availablePlatforms.includes(p))
+  const hasSomePlatforms = availablePlatforms.length > 0
+  const hasAllPlatforms = missingPlatforms.length === 0
+
+  // Case 1: Config exists, at least one platform available → ready to sync
+  if (config && hasSomePlatforms) {
+    const enabledNames = availablePlatforms.map((p) => PLATFORM_DISPLAY_NAMES[p]).join(', ')
+    return (
+      <EmptyState
+        icon={Eye}
+        title="No visibility data yet"
+        description={`AI Visibility is enabled for ${enabledNames}. Run your first sync to start tracking.`}
+      >
+        <div className="mt-4 flex items-center gap-2">
+          <SyncButton orgId={orgId} lastSyncAt={config.last_sync_at} isInternal={isInternal} />
+          {!hasAllPlatforms && isInternal && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/app-settings/integrations">
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Add AI Models
+              </Link>
+            </Button>
+          )}
+        </div>
+      </EmptyState>
+    )
+  }
+
+  // Case 2: Config exists but no platforms have credentials
+  if (config) {
+    return (
+      <EmptyState
+        icon={Settings}
+        title="No AI platform API keys configured"
+        description={
+          isInternal
+            ? 'Add at least one AI platform API key to start tracking visibility.'
+            : 'Contact your Selo admin to configure AI platform API keys.'
+        }
+      >
+        {isInternal && (
+          <Button className="mt-4" size="sm" asChild>
+            <Link href="/app-settings/integrations">
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Add AI Models
+            </Link>
+          </Button>
+        )}
+      </EmptyState>
+    )
+  }
+
+  // Case 3: No config, but some platforms available → encourage setup
+  if (hasSomePlatforms) {
+    const enabledNames = availablePlatforms.map((p) => PLATFORM_DISPLAY_NAMES[p]).join(', ')
+    return (
+      <EmptyState
+        icon={Eye}
+        title="AI Visibility ready"
+        description={`${enabledNames} ${availablePlatforms.length === 1 ? 'is' : 'are'} available. Enable AI Visibility in organization settings to start tracking.`}
+      >
+        <div className="mt-4 flex items-center gap-2">
+          <Button size="sm" asChild>
+            <Link href={`/${orgId}/settings/organization`}>
+              <Settings className="mr-1 h-3.5 w-3.5" />
+              Enable AI Visibility
+            </Link>
+          </Button>
+          {!hasAllPlatforms && isInternal && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/app-settings/integrations">
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Add AI Models
+              </Link>
+            </Button>
+          )}
+        </div>
+      </EmptyState>
+    )
+  }
+
+  // Case 4: No config, no platforms → fully unconfigured
+  return (
+    <EmptyState
+      icon={Settings}
+      title="AI Visibility not configured"
+      description={
+        isInternal
+          ? 'Configure AI platform API keys to start tracking how this brand appears in AI responses.'
+          : 'Contact your Selo admin to enable AI Visibility tracking for your organization.'
+      }
+    >
+      {isInternal && (
+        <Button className="mt-4" size="sm" asChild>
+          <Link href="/app-settings/integrations">
+            <Plus className="mr-1 h-3.5 w-3.5" />
+            Add AI Models
+          </Link>
+        </Button>
+      )}
+    </EmptyState>
   )
 }
