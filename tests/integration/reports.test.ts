@@ -11,7 +11,6 @@ describe('Reports Database Operations', () => {
   let testOrg: { id: string }
   let testSiteAudit: { id: string }
   let testPerformanceAudit: { id: string }
-  let testAIOAudit: { id: string }
 
   const testId = `reports-${Date.now()}`
 
@@ -69,23 +68,6 @@ describe('Reports Database Operations', () => {
       best_practices_score: 100,
       seo_score: 92,
     })
-
-    // Create test AIO audit
-    const { data: aioAudit, error: aioError } = await testDb
-      .from('aio_audits')
-      .insert({
-        organization_id: testOrg.id,
-        created_by: testUser.id,
-        url: 'https://example.com',
-        status: 'completed',
-        overall_aio_score: 75,
-        technical_score: 80,
-        strategic_score: 70,
-      })
-      .select()
-      .single()
-    if (aioError) throw new Error(`Failed to create AIO audit: ${aioError.message}`)
-    testAIOAudit = aioAudit!
   })
 
   afterAll(async () => {
@@ -111,10 +93,6 @@ describe('Reports Database Operations', () => {
           .from('performance_audit_results')
           .delete()
           .eq('audit_id', testPerformanceAudit.id)
-      }
-      if (testAIOAudit?.id) {
-        await testDb.from('aio_checks').delete().eq('audit_id', testAIOAudit.id)
-        await testDb.from('aio_audits').delete().eq('id', testAIOAudit.id)
       }
       if (testPerformanceAudit?.id) {
         await testDb.from('performance_audits').delete().eq('id', testPerformanceAudit.id)
@@ -154,7 +132,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
           executive_summary: 'Test summary',
@@ -169,7 +147,7 @@ describe('Reports Database Operations', () => {
         organization_id: testOrg.id,
         site_audit_id: testSiteAudit.id,
         performance_audit_id: testPerformanceAudit.id,
-        aio_audit_id: testAIOAudit.id,
+        aio_audit_id: null,
         domain: 'example.com',
         combined_score: 84,
         view_count: 0,
@@ -184,7 +162,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
         })
@@ -211,7 +189,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
           executive_summary: 'Original summary',
@@ -290,7 +268,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
         })
@@ -310,8 +288,7 @@ describe('Reports Database Operations', () => {
           `
           *,
           site_audit:site_audits(*),
-          performance_audit:performance_audits(*),
-          aio_audit:aio_audits(*)
+          performance_audit:performance_audits(*)
         `
         )
         .eq('id', reportId)
@@ -321,7 +298,6 @@ describe('Reports Database Operations', () => {
       expect(data?.site_audit).toBeDefined()
       expect(data?.site_audit?.url).toBe('https://example.com')
       expect(data?.performance_audit).toBeDefined()
-      expect(data?.aio_audit).toBeDefined()
     })
   })
 
@@ -337,7 +313,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
         })
@@ -452,7 +428,7 @@ describe('Reports Database Operations', () => {
           created_by: testUser.id,
           site_audit_id: testSiteAudit.id,
           performance_audit_id: testPerformanceAudit.id,
-          aio_audit_id: testAIOAudit.id,
+          aio_audit_id: null,
           domain: 'example.com',
           combined_score: 84,
         })
