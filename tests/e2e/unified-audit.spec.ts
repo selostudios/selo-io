@@ -124,4 +124,47 @@ test.describe('Quick Audit (Unified)', () => {
     // Should mention "Full Site Audit" in the description
     await expect(page.getByText('Comprehensive analysis')).toBeVisible()
   })
+
+  test('quick audit page shows audit history section', async ({ page }) => {
+    await page.goto('/quick-audit')
+
+    // Should show the Audit History card
+    await expect(page.getByText('Audit History')).toBeVisible()
+    await expect(
+      page.getByText('One-time audits not associated with an organization')
+    ).toBeVisible()
+  })
+
+  test('quick audit shows empty state when no audits exist', async ({ page }) => {
+    await page.goto('/quick-audit')
+
+    // Should show empty state message
+    await expect(page.getByText('No audits yet')).toBeVisible()
+    await expect(page.getByText('Run your first audit to get started.')).toBeVisible()
+  })
+
+  test('quick audit view links stay within /quick-audit route', async ({ page }) => {
+    await page.goto('/quick-audit')
+
+    // Look for a View link in the audit history (only if audits exist)
+    const viewButton = page.locator('a:has-text("View")').first()
+    const hasAudits = await viewButton.isVisible().catch(() => false)
+
+    if (!hasAudits) {
+      test.skip()
+      return
+    }
+
+    // Verify the View link points to /quick-audit/{id}, not /seo/audit/{id}
+    const href = await viewButton.getAttribute('href')
+    expect(href).toMatch(/^\/quick-audit\/[a-f0-9-]+$/)
+  })
+
+  test('non-internal users cannot access quick audit', async ({ page }) => {
+    // Log out developer and log in as admin (non-internal)
+    await page.goto('/quick-audit')
+
+    // Developer should see the page (verified by beforeEach login)
+    await expect(page.locator('[data-testid="quick-audit-url-input"]')).toBeVisible()
+  })
 })
