@@ -318,7 +318,7 @@ function ProviderCard({
     <Card className="flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="bg-muted flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-neutral-800">
             {logoUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={logoUrl} alt={`${provider.name} logo`} className="h-5 w-5 object-contain" />
