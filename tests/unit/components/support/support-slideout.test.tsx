@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { SupportSlideout } from '@/components/support/support-slideout'
 import type { FeedbackWithRelations } from '@/lib/types/feedback'
 
@@ -23,47 +23,69 @@ const mockFeedback: FeedbackWithRelations = {
 }
 
 describe('SupportSlideout', () => {
-  it('renders edit form when readOnly is false', () => {
+  it('opens in view mode showing static values when canEdit is true', () => {
     render(
       <SupportSlideout
         feedback={mockFeedback}
         open={true}
         onClose={vi.fn()}
         onUpdate={vi.fn()}
-        readOnly={false}
+        canEdit={true}
       />
     )
 
     expect(screen.getByText('Test Bug Report')).toBeInTheDocument()
-    expect(screen.getByText('Save Changes')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Add a note about this feedback...')).toBeInTheDocument()
-  })
-
-  it('renders static values when readOnly is true', () => {
-    render(
-      <SupportSlideout
-        feedback={mockFeedback}
-        open={true}
-        onClose={vi.fn()}
-        onUpdate={vi.fn()}
-        readOnly={true}
-      />
-    )
-
-    expect(screen.getByText('Test Bug Report')).toBeInTheDocument()
-    // Should show static status/priority text
+    // Should show static values (view mode is the default)
     expect(screen.getByText('New')).toBeInTheDocument()
     expect(screen.getByText('High')).toBeInTheDocument()
-    // Should show the note as static text
     expect(screen.getByText('Looking into it')).toBeInTheDocument()
-    // Should NOT show edit controls
+    // Should NOT show edit controls yet
     expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
-    expect(
-      screen.queryByPlaceholderText('Add a note about this feedback...')
-    ).not.toBeInTheDocument()
+    // Should show Edit button
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
   })
 
-  it('hides note section in readOnly mode when no note exists', () => {
+  it('toggles to edit mode when Edit button is clicked', () => {
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        canEdit={true}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+
+    // Should now show edit controls
+    expect(screen.getByText('Save Changes')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Add a note about this feedback...')).toBeInTheDocument()
+    // Edit button should be hidden
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
+  })
+
+  it('renders static values when canEdit is false', () => {
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        canEdit={false}
+      />
+    )
+
+    expect(screen.getByText('Test Bug Report')).toBeInTheDocument()
+    expect(screen.getByText('New')).toBeInTheDocument()
+    expect(screen.getByText('High')).toBeInTheDocument()
+    expect(screen.getByText('Looking into it')).toBeInTheDocument()
+    expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
+    // Should NOT show Edit button
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
+  })
+
+  it('hides note section in view mode when no note exists', () => {
     const feedbackNoNote = { ...mockFeedback, status_note: null }
     render(
       <SupportSlideout
@@ -71,13 +93,11 @@ describe('SupportSlideout', () => {
         open={true}
         onClose={vi.fn()}
         onUpdate={vi.fn()}
-        readOnly={true}
+        canEdit={false}
       />
     )
 
-    // Note label should not appear since there's no note to display
     expect(screen.queryByText('Note')).not.toBeInTheDocument()
-    // Save button should not be present
     expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
   })
 

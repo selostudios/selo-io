@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
+import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -37,7 +38,7 @@ interface SupportSlideoutProps {
   open: boolean
   onClose: () => void
   onUpdate: () => void
-  readOnly?: boolean
+  canEdit?: boolean
 }
 
 export function SupportSlideout({
@@ -45,21 +46,30 @@ export function SupportSlideout({
   open,
   onClose,
   onUpdate,
-  readOnly = false,
+  canEdit = false,
 }: SupportSlideoutProps) {
   const [status, setStatus] = useState<FeedbackStatus | undefined>(undefined)
   const [priority, setPriority] = useState<FeedbackPriority | undefined>(undefined)
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
-  // Reset form when feedback changes
+  // Reset form and editing state when feedback changes or slideout opens
   useEffect(() => {
     if (feedback) {
       setStatus(feedback.status)
       setPriority(feedback.priority ?? undefined)
       setNote(feedback.status_note ?? '')
+      setIsEditing(false)
     }
   }, [feedback])
+
+  const handleClose = useCallback(() => {
+    setIsEditing(false)
+    onClose()
+  }, [onClose])
+
+  const readOnly = !canEdit || !isEditing
 
   const hasChanges =
     feedback &&
@@ -86,8 +96,9 @@ export function SupportSlideout({
           timestamp: new Date().toISOString(),
         })
       } else {
+        setIsEditing(false)
         onUpdate()
-        onClose()
+        handleClose()
       }
     } finally {
       setIsSaving(false)
@@ -110,15 +121,28 @@ export function SupportSlideout({
   const submitterDisplay = orgName ? `${submitterName} (${orgName})` : submitterName
 
   return (
-    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <Badge
-            className={`mb-1 w-fit ${CATEGORY_COLORS[feedback.category]}`}
-            style={{ marginLeft: '-2px' }}
-          >
-            {CATEGORY_LABELS[feedback.category]}
-          </Badge>
+          <div className="flex items-start justify-between">
+            <Badge
+              className={`mb-1 w-fit ${CATEGORY_COLORS[feedback.category]}`}
+              style={{ marginLeft: '-2px' }}
+            >
+              {CATEGORY_LABELS[feedback.category]}
+            </Badge>
+            {canEdit && !isEditing && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="shrink-0"
+              >
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit
+              </Button>
+            )}
+          </div>
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">

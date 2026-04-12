@@ -1,8 +1,9 @@
 'use client'
 
 import { formatDistanceToNow } from 'date-fns'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   Table,
@@ -24,10 +25,12 @@ import {
 
 interface SupportTableProps {
   feedback: FeedbackWithRelations[]
-  onRowClick: (feedback: FeedbackWithRelations) => void
+  onView: (feedback: FeedbackWithRelations) => void
+  onDelete?: (feedback: FeedbackWithRelations) => void
+  canEdit?: boolean
 }
 
-export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
+export function SupportTable({ feedback, onView, onDelete, canEdit = false }: SupportTableProps) {
   if (feedback.length === 0) {
     return (
       <EmptyState
@@ -48,15 +51,12 @@ export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
           <TableHead>Priority</TableHead>
           <TableHead>Submitted By</TableHead>
           <TableHead>Created</TableHead>
+          {canEdit && <TableHead className="w-[100px]" />}
         </TableRow>
       </TableHeader>
       <TableBody>
         {feedback.map((item) => (
-          <TableRow
-            key={item.id}
-            onClick={() => onRowClick(item)}
-            className="hover:bg-muted/50 cursor-pointer"
-          >
+          <TableRow key={item.id} className="hover:bg-muted/50">
             <TableCell className="font-medium">{item.title}</TableCell>
             <TableCell>
               <Badge className={CATEGORY_COLORS[item.category]}>
@@ -85,6 +85,29 @@ export function SupportTable({ feedback, onRowClick }: SupportTableProps) {
             <TableCell className="text-muted-foreground">
               {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
             </TableCell>
+            {canEdit && (
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onView(item)}
+                    aria-label="View feedback"
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete?.(item)}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label="Delete feedback"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>

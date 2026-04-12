@@ -8,6 +8,7 @@ import { useFeedback } from '@/components/feedback/feedback-provider'
 import { SupportTable } from '@/components/support/support-table'
 import { SupportFilters } from '@/components/support/support-filters'
 import { SupportSlideout } from '@/components/support/support-slideout'
+import { deleteFeedback } from '@/app/(authenticated)/support/actions'
 import type {
   FeedbackWithRelations,
   FeedbackStatus,
@@ -50,7 +51,7 @@ export function SupportPageClient({
     return true
   })
 
-  const handleRowClick = (item: FeedbackWithRelations) => {
+  const handleView = (item: FeedbackWithRelations) => {
     setSelectedFeedback(item)
     setSlideoutOpen(true)
     router.push(`/support?issue=${item.id}`, { scroll: false })
@@ -64,6 +65,22 @@ export function SupportPageClient({
 
   const handleUpdate = () => {
     router.refresh()
+  }
+
+  const handleDelete = async (item: FeedbackWithRelations) => {
+    const result = await deleteFeedback(item.id)
+    if (result.error) {
+      console.error('[Support Delete Error]', {
+        type: 'delete_error',
+        error: result.error,
+        timestamp: new Date().toISOString(),
+      })
+    } else {
+      if (selectedFeedback?.id === item.id) {
+        handleClose()
+      }
+      router.refresh()
+    }
   }
 
   const clearFilters = () => {
@@ -101,14 +118,19 @@ export function SupportPageClient({
         onClear={clearFilters}
       />
 
-      <SupportTable feedback={filteredFeedback} onRowClick={handleRowClick} />
+      <SupportTable
+        feedback={filteredFeedback}
+        onView={handleView}
+        onDelete={canEdit ? handleDelete : undefined}
+        canEdit={canEdit}
+      />
 
       <SupportSlideout
         feedback={selectedFeedback}
         open={slideoutOpen}
         onClose={handleClose}
         onUpdate={handleUpdate}
-        readOnly={!canEdit}
+        canEdit={canEdit}
       />
     </div>
   )

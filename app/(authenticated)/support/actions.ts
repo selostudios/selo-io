@@ -95,6 +95,48 @@ export async function updateFeedbackStatus({
   return { success: true }
 }
 
+export async function deleteFeedback(feedbackId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify user has feedback management permission
+  const { data: rawUser } = await supabase
+    .from('users')
+    .select('id, team_members(role)')
+    .eq('id', user.id)
+    .single()
+
+  const userRecord = rawUser
+    ? { role: (rawUser.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer' }
+    : null
+
+  if (!userRecord || !canManageFeedback(userRecord.role)) {
+    return { error: 'Only developers can delete feedback' }
+  }
+
+  const { error } = await supabase.from('feedback').delete().eq('id', feedbackId)
+
+  if (error) {
+    console.error('[Feedback Delete Error]', {
+      type: 'database_error',
+      error,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: 'Failed to delete feedback' }
+  }
+
+  revalidatePath('/support')
+
+  return { success: true }
+}
+
 async function notifySubmitter(
   feedbackId: string,
   oldStatus: FeedbackStatus,
