@@ -7,9 +7,11 @@ async function login(page: Page, email: string, password: string) {
   await page.fill('input[name="password"]', password)
   await page.click('button[type="submit"]')
 
-  // Login triggers a redirect chain that settles at /{orgId}/dashboard (non-internal
-  // users) or /organizations (internal users). The proxy sets the selo-org cookie
-  // when the browser hits /{orgId}/dashboard.
+  // Login redirects to /dashboard, which the proxy may redirect to /organizations
+  // if the selo-org cookie isn't set yet. Navigate to / which resolves the org
+  // from team membership and redirects to /{orgId}/dashboard, setting the cookie.
+  await page.waitForURL(/\/(dashboard|organizations)/)
+  await page.goto('/')
   await page.waitForURL(/\/(dashboard|organizations)/)
 }
 
