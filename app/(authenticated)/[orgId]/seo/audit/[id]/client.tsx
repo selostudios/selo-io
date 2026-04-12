@@ -26,6 +26,8 @@ interface UnifiedAuditDetailClientProps {
   audit: UnifiedAudit
   tabCounts: TabCounts
   fetchChecks?: FetchChecksFn
+  backHref?: string
+  backLabel?: string
 }
 
 type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'
@@ -65,6 +67,8 @@ export function UnifiedAuditDetailClient({
   audit,
   tabCounts,
   fetchChecks,
+  backHref,
+  backLabel = 'Back to Audits',
 }: UnifiedAuditDetailClientProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -192,11 +196,11 @@ export function UnifiedAuditDetailClient({
         {/* Header */}
         <div className="flex items-center justify-between">
           <Link
-            href={buildOrgHref('/seo/audit')}
+            href={backHref ?? buildOrgHref('/seo/audit')}
             className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Audits
+            {backLabel}
           </Link>
           <Button variant="outline" size="sm" onClick={() => setShareModalOpen(true)}>
             <Share2 className="mr-2 h-4 w-4" />

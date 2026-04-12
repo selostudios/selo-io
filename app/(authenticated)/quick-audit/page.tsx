@@ -1,12 +1,17 @@
 import { getCurrentUser } from '@/lib/organizations/actions'
 import { redirect } from 'next/navigation'
+import { getQuickAudits } from './actions'
 import { QuickAuditClient } from './client'
+
+export const dynamic = 'force-dynamic'
 
 export default async function QuickAuditPage() {
   const currentUser = await getCurrentUser()
 
   if (!currentUser) redirect('/login')
   if (!currentUser.isInternal) redirect('/dashboard')
+
+  const audits = await getQuickAudits()
 
   return (
     <div className="space-y-6 p-8">
@@ -16,7 +21,7 @@ export default async function QuickAuditPage() {
           Run a one-time audit on any URL without linking to an organization.
         </p>
       </div>
-      <QuickAuditClient />
+      <QuickAuditClient audits={audits} />
     </div>
   )
 }
