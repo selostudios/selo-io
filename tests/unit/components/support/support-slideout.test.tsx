@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { SupportSlideout } from '@/components/support/support-slideout'
 import type { FeedbackWithRelations } from '@/lib/types/feedback'
 
@@ -23,7 +23,7 @@ const mockFeedback: FeedbackWithRelations = {
 }
 
 describe('SupportSlideout', () => {
-  it('opens in view mode showing static values when canEdit is true', () => {
+  it('shows editable controls when canEdit is true', () => {
     render(
       <SupportSlideout
         feedback={mockFeedback}
@@ -35,37 +35,14 @@ describe('SupportSlideout', () => {
     )
 
     expect(screen.getByText('Test Bug Report')).toBeInTheDocument()
-    // Should show static values (view mode is the default)
-    expect(screen.getByText('New')).toBeInTheDocument()
-    expect(screen.getByText('High')).toBeInTheDocument()
-    expect(screen.getByText('Looking into it')).toBeInTheDocument()
-    // Should NOT show edit controls yet
-    expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
-    // Should show Edit button
+    // Status and priority should be editable selects
+    expect(screen.getByText('Save Changes')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Add a note about this feedback...')).toBeInTheDocument()
+    // Edit button for ticket body should be present
     expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
   })
 
-  it('toggles to edit mode when Edit button is clicked', () => {
-    render(
-      <SupportSlideout
-        feedback={mockFeedback}
-        open={true}
-        onClose={vi.fn()}
-        onUpdate={vi.fn()}
-        canEdit={true}
-      />
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
-
-    // Should now show edit controls
-    expect(screen.getByText('Save Changes')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Add a note about this feedback...')).toBeInTheDocument()
-    // Edit button should be hidden
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
-  })
-
-  it('renders static values when canEdit is false', () => {
+  it('shows static values when canEdit is false', () => {
     render(
       <SupportSlideout
         feedback={mockFeedback}
@@ -81,11 +58,10 @@ describe('SupportSlideout', () => {
     expect(screen.getByText('High')).toBeInTheDocument()
     expect(screen.getByText('Looking into it')).toBeInTheDocument()
     expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
-    // Should NOT show Edit button
     expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
   })
 
-  it('hides note section in view mode when no note exists', () => {
+  it('hides note section in read-only mode when no note exists', () => {
     const feedbackNoNote = { ...mockFeedback, status_note: null }
     render(
       <SupportSlideout

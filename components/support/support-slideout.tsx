@@ -52,24 +52,19 @@ export function SupportSlideout({
   const [priority, setPriority] = useState<FeedbackPriority | undefined>(undefined)
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
 
-  // Reset form and editing state when feedback changes or slideout opens
+  // Reset form when feedback changes
   useEffect(() => {
     if (feedback) {
       setStatus(feedback.status)
       setPriority(feedback.priority ?? undefined)
       setNote(feedback.status_note ?? '')
-      setIsEditing(false)
     }
   }, [feedback])
 
   const handleClose = useCallback(() => {
-    setIsEditing(false)
     onClose()
   }, [onClose])
-
-  const readOnly = !canEdit || !isEditing
 
   const hasChanges =
     feedback &&
@@ -96,7 +91,6 @@ export function SupportSlideout({
           timestamp: new Date().toISOString(),
         })
       } else {
-        setIsEditing(false)
         onUpdate()
         handleClose()
       }
@@ -124,25 +118,12 @@ export function SupportSlideout({
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <SheetContent className="flex h-full w-full flex-col sm:max-w-lg">
         <SheetHeader className="gap-1 px-6 pt-6 pb-0">
-          <div className="flex items-start justify-between">
-            <Badge
-              className={`mb-1 w-fit ${CATEGORY_COLORS[feedback.category]}`}
-              style={{ marginLeft: '-2px' }}
-            >
-              {CATEGORY_LABELS[feedback.category]}
-            </Badge>
-            {canEdit && !isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="shrink-0"
-              >
-                <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                Edit
-              </Button>
-            )}
-          </div>
+          <Badge
+            className={`mb-1 w-fit ${CATEGORY_COLORS[feedback.category]}`}
+            style={{ marginLeft: '-2px' }}
+          >
+            {CATEGORY_LABELS[feedback.category]}
+          </Badge>
           <SheetTitle className="pr-8">{feedback.title}</SheetTitle>
           <SheetDescription asChild>
             <p className="text-muted-foreground text-sm">
@@ -204,20 +185,25 @@ export function SupportSlideout({
               )}
             </div>
           )}
+
+          {/* Edit ticket button */}
+          {canEdit && (
+            <div className="border-border mt-4 flex justify-end border-t pt-3">
+              <Button variant="outline" size="sm">
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Form - anchored to bottom */}
+        {/* Bottom panel - status, priority, note */}
         <div className="border-border space-y-4 border-t px-6 py-4">
           {/* Status & Priority */}
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
               <Label htmlFor="status">Status</Label>
-              {readOnly ? (
-                <p className="text-sm">
-                  {STATUS_OPTIONS.find((o) => o.value === feedback.status)?.label ??
-                    feedback.status}
-                </p>
-              ) : (
+              {canEdit ? (
                 <Select
                   value={status}
                   onValueChange={(value) => setStatus(value as FeedbackStatus)}
@@ -233,18 +219,17 @@ export function SupportSlideout({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : (
+                <p className="text-sm">
+                  {STATUS_OPTIONS.find((o) => o.value === feedback.status)?.label ??
+                    feedback.status}
+                </p>
               )}
             </div>
 
             <div className="flex-1 space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              {readOnly ? (
-                <p className="text-sm">
-                  {PRIORITY_OPTIONS.find((o) => o.value === feedback.priority)?.label ??
-                    feedback.priority ??
-                    'Not set'}
-                </p>
-              ) : (
+              {canEdit ? (
                 <Select
                   value={priority ?? ''}
                   onValueChange={(value) =>
@@ -262,19 +247,18 @@ export function SupportSlideout({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : (
+                <p className="text-sm">
+                  {PRIORITY_OPTIONS.find((o) => o.value === feedback.priority)?.label ??
+                    feedback.priority ??
+                    'Not set'}
+                </p>
               )}
             </div>
           </div>
 
           {/* Note */}
-          {readOnly ? (
-            feedback.status_note && (
-              <div className="space-y-2">
-                <Label>Note</Label>
-                <p className="text-sm whitespace-pre-wrap">{feedback.status_note}</p>
-              </div>
-            )
-          ) : (
+          {canEdit ? (
             <>
               <div className="space-y-2">
                 <Label htmlFor="note">Note</Label>
@@ -287,11 +271,17 @@ export function SupportSlideout({
                 />
               </div>
 
-              {/* Save Button */}
               <Button onClick={handleSave} disabled={!hasChanges || isSaving} className="w-full">
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </>
+          ) : (
+            feedback.status_note && (
+              <div className="space-y-2">
+                <Label>Note</Label>
+                <p className="text-sm whitespace-pre-wrap">{feedback.status_note}</p>
+              </div>
+            )
           )}
         </div>
       </SheetContent>
