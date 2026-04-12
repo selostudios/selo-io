@@ -52,8 +52,8 @@ test.describe('Full Site Audit', () => {
     // Navigate to audit list and click the first completed audit
     await page.goto('/seo/audit')
 
-    // Look for a "View" link to a completed audit
-    const viewButton = page.locator('a:has-text("View")').first()
+    // Look for a "View" link to a completed audit (scoped to main content to avoid sidebar matches)
+    const viewButton = page.locator('main a:has-text("View")').first()
     const hasCompletedAudit = await viewButton.isVisible().catch(() => false)
 
     if (!hasCompletedAudit) {
