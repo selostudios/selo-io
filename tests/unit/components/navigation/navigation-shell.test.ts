@@ -35,4 +35,28 @@ describe('getSectionFromPathname', () => {
   it('maps /support to support section', () => {
     expect(getSectionFromPathname('/support')).toBe('support')
   })
+
+  it('maps /support with query params to support section', () => {
+    expect(getSectionFromPathname('/support?issue=abc')).toBe('support')
+  })
+})
+
+describe('standalone route sections', () => {
+  it('support, quick-audit, and organizations are standalone (no org UUID prefix)', () => {
+    // These routes should NOT be prefixed with /{orgId} by the navigation
+    // Verify they resolve to their own section (not 'home')
+    const standaloneRoutes = ['/quick-audit', '/organizations', '/support']
+    for (const route of standaloneRoutes) {
+      const section = getSectionFromPathname(route)
+      expect(section).not.toBe('home')
+    }
+  })
+
+  it('org-scoped routes resolve to home section', () => {
+    // These routes are under [orgId] and should resolve to 'home'
+    const orgRoutes = ['/dashboard', '/seo/audit', '/settings/organization', '/ai-visibility']
+    for (const route of orgRoutes) {
+      expect(getSectionFromPathname(route)).toBe('home')
+    }
+  })
 })

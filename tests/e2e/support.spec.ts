@@ -1,45 +1,52 @@
 import { test, expect } from '@playwright/test'
-import { testUsers } from '../fixtures'
-
-async function loginAs(page: import('@playwright/test').Page, email: string, password: string) {
-  await page.goto('/login')
-  await page.fill('input[name="email"]', email)
-  await page.fill('input[name="password"]', password)
-  await page.click('button[type="submit"]')
-  await page.waitForURL(/\/(dashboard|organizations)/)
-  // Navigate to / to resolve org and set selo-org cookie
-  await page.goto('/')
-  await page.waitForURL(/\/dashboard/)
-}
+import { loginAsAdmin, loginAsDeveloper, loginAsTeamMember } from './helpers'
 
 test.describe('Support Section - Access Control', () => {
-  test('non-developer is redirected to dashboard', async ({ page }) => {
-    await loginAs(page, testUsers.teamMember.email, testUsers.teamMember.password)
+  test('team member without feedback permission is redirected', async ({ page }) => {
+    await loginAsTeamMember(page)
 
-    // Try to access support directly
     await page.goto('/support')
 
-    // Should be redirected to dashboard (may include org prefix)
+    // Should be redirected to dashboard (team_member lacks feedback:view)
     await expect(page).toHaveURL(/\/dashboard/)
+  })
+
+  test('admin can access support', async ({ page }) => {
+    await loginAsAdmin(page)
+
+    await page.goto('/support')
+
+    // Admin has feedback:view — should stay on support
+    await expect(page).toHaveURL(/\/support/)
+    await expect(page.getByRole('heading', { name: 'Support', level: 1 })).toBeVisible()
   })
 })
 
-test.describe('Support Section - Developer Access', () => {
-  test('developer can view support section', async ({ page }) => {
-    await loginAs(page, testUsers.developer.email, testUsers.developer.password)
+test.describe('Support Section - Standalone Route', () => {
+  test('support page loads at /support without org prefix', async ({ page }) => {
+    await loginAsDeveloper(page)
 
-    // Navigate to support (standalone route, no org prefix)
     await page.goto('/support')
 
-    // Should remain on support page (not redirected)
-    await expect(page).toHaveURL(/\/support/)
-
-    // Should see support page heading
+    // Should remain at /support (no org UUID in URL)
+    await expect(page).toHaveURL('/support')
     await expect(page.getByRole('heading', { name: 'Support', level: 1 })).toBeVisible()
   })
 
+  test('support URL does not contain org UUID', async ({ page }) => {
+    await loginAsDeveloper(page)
+
+    await page.goto('/support')
+
+    // Verify URL has no UUID prefix
+    const url = page.url()
+    const pathname = new URL(url).pathname
+    expect(pathname).toBe('/support')
+    expect(pathname).not.toMatch(/^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)
+  })
+
   test('developer can filter feedback', async ({ page }) => {
-    await loginAs(page, testUsers.developer.email, testUsers.developer.password)
+    await loginAsDeveloper(page)
 
     await page.goto('/support')
 
@@ -52,15 +59,5 @@ test.describe('Support Section - Developer Access', () => {
 
     // Filter should be applied - Clear button becomes visible
     await expect(page.getByRole('button', { name: 'Clear' })).toBeVisible()
-  })
-
-  test.skip('developer can open feedback slideout', async ({ page }) => {
-    // This requires seeded feedback data
-    await loginAs(page, testUsers.developer.email, testUsers.developer.password)
-
-    await page.goto('/support')
-
-    // Click on a feedback row (would need seeded data)
-    // Slideout should open
   })
 })

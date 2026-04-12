@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { canViewFeedback } from '@/lib/permissions'
+import { canViewFeedback, isInternalUser } from '@/lib/permissions'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 
 export default async function SupportLayout({ children }: { children: React.ReactNode }) {
@@ -11,7 +11,7 @@ export default async function SupportLayout({ children }: { children: React.Reac
 
   const userRecord = await getUserRecord(user.id)
 
-  if (!userRecord || !canViewFeedback(userRecord.role)) {
+  if (!userRecord || (!isInternalUser(userRecord) && !canViewFeedback(userRecord.role))) {
     redirect('/dashboard')
   }
 
