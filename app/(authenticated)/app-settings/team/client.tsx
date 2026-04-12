@@ -195,7 +195,9 @@ export function TeamClient({ employees, isAdmin, currentUserId }: TeamClientProp
                         <Button
                           variant="destructive"
                           size="icon"
-                          disabled={employee.userId === currentUserId || isPending}
+                          disabled={
+                            employee.userId === currentUserId || employees.length <= 1 || isPending
+                          }
                           data-testid={`remove-employee-button-${employee.userId}`}
                         >
                           <Trash2 className="h-4 w-4" />

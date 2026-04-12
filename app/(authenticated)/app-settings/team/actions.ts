@@ -208,6 +208,15 @@ export async function removeInternalEmployee(
 
   const serviceClient = createServiceClient()
 
+  // Cannot remove the last internal employee
+  const { count } = await serviceClient
+    .from('internal_employees')
+    .select('id', { count: 'exact', head: true })
+
+  if (count !== null && count <= 1) {
+    return { success: false, error: 'Cannot remove the last internal employee' }
+  }
+
   // Delete from internal_employees
   const { error: deleteError } = await serviceClient
     .from('internal_employees')
