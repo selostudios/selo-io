@@ -78,7 +78,6 @@ export function OverviewDashboard({
         {config && hasPrompts ? (
           <SyncButton
             orgId={orgId}
-            lastSyncAt={config.last_sync_at}
             isInternal={isInternal}
             disabled={availablePlatforms.length === 0}
           />
@@ -196,24 +195,37 @@ export function AIVisibilityEmptyState({
             : `AI Visibility is enabled for ${enabledNames}. Add prompts to define what to track.`
         }
       >
-        <div className="mt-4 flex items-center gap-2">
-          {hasPrompts ? (
-            <SyncButton orgId={orgId} lastSyncAt={config.last_sync_at} isInternal={isInternal} />
-          ) : (
-            <Button size="sm" asChild>
-              <Link href={`/${orgId}/ai-visibility/prompts`}>
-                <MessageSquarePlus className="mr-1 h-3.5 w-3.5" />
-                Add Prompts
-              </Link>
-            </Button>
-          )}
-          {!hasAllPlatforms && isInternal && (
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/app-settings/integrations">
-                <Plus className="mr-1 h-3.5 w-3.5" />
-                Add AI Models
-              </Link>
-            </Button>
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2">
+            {hasPrompts ? (
+              <SyncButton orgId={orgId} isInternal={isInternal} />
+            ) : (
+              <Button size="sm" asChild>
+                <Link href={`/${orgId}/ai-visibility/prompts`}>
+                  <MessageSquarePlus className="mr-1 h-3.5 w-3.5" />
+                  Add Prompts
+                </Link>
+              </Button>
+            )}
+            {!hasAllPlatforms && isInternal && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/app-settings/integrations">
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  Add AI Models
+                </Link>
+              </Button>
+            )}
+          </div>
+          {hasPrompts && config.last_sync_at && (
+            <span className="text-muted-foreground text-xs">
+              Last synced{' '}
+              {new Date(config.last_sync_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
+            </span>
           )}
         </div>
       </EmptyState>
@@ -251,11 +263,11 @@ export function AIVisibilityEmptyState({
       <EmptyState
         icon={Eye}
         title="AI Visibility ready"
-        description={`${enabledNames} ${availablePlatforms.length === 1 ? 'is' : 'are'} available. Enable AI Visibility in organization settings to start tracking.`}
+        description={`${enabledNames} ${availablePlatforms.length === 1 ? 'is' : 'are'} available. Enable AI Visibility in settings to start tracking.`}
       >
         <div className="mt-4 flex items-center gap-2">
           <Button size="sm" asChild>
-            <Link href={`/${orgId}/settings/organization`}>
+            <Link href={`/${orgId}/settings/ai-visibility`}>
               <Settings className="mr-1 h-3.5 w-3.5" />
               Enable AI Visibility
             </Link>

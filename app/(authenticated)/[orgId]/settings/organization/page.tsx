@@ -1,9 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationForm } from '@/components/settings/organization-form'
-import { AIVisibilityConfigForm } from '@/components/ai-visibility/config-form'
-import { getAIVisibilityConfig } from '@/lib/ai-visibility/queries'
-import { getAvailablePlatforms } from '@/lib/ai-visibility/platforms/provider-keys'
 import { canManageOrg } from '@/lib/permissions'
 import { withSettingsAuth } from '@/lib/auth/settings-auth'
 
@@ -51,22 +48,15 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
         .select('id, name')
         .order('name', { ascending: true })
 
-      const [aiVisConfig, availablePlatforms] = await Promise.all([
-        getAIVisibilityConfig(supabase, organizationId),
-        getAvailablePlatforms(),
-      ])
-
       return {
         org,
         auditCount: auditCount || 0,
         industries: industries || [],
-        aiVisConfig,
-        availablePlatforms,
       }
     }
   )
 
-  const { org, auditCount, industries, aiVisConfig, availablePlatforms } = result.data
+  const { org, auditCount, industries } = result.data
 
   return (
     <div className="space-y-6">
@@ -94,14 +84,6 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
         country={org.country || ''}
         socialLinks={org.social_links || []}
       />
-
-      {availablePlatforms.length > 0 && (
-        <AIVisibilityConfigForm
-          orgId={org.id}
-          config={aiVisConfig}
-          availablePlatforms={availablePlatforms}
-        />
-      )}
     </div>
   )
 }

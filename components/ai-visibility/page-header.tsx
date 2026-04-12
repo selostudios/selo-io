@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Loader2 } from 'lucide-react'
@@ -27,19 +27,12 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
 
 interface SyncButtonProps {
   orgId: string
-  lastSyncAt?: string | null
   isInternal?: boolean
   disabled?: boolean
 }
 
-export function SyncButton({
-  orgId,
-  lastSyncAt,
-  isInternal = false,
-  disabled = false,
-}: SyncButtonProps) {
+export function SyncButton({ orgId, isInternal = false, disabled = false }: SyncButtonProps) {
   const [isPending, startTransition] = useTransition()
-  const [lastSync, setLastSync] = useState(lastSyncAt)
   const router = useRouter()
 
   const handleSync = () => {
@@ -82,31 +75,18 @@ export function SyncButton({
             skipped
         )
       }
-      setLastSync(new Date().toISOString())
+      // Sync completed successfully
     })
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <Button onClick={handleSync} disabled={isPending || disabled} variant="outline" size="sm">
-        {isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <RefreshCw className="mr-2 h-4 w-4" />
-        )}
-        Sync Now
-      </Button>
-      {lastSync && (
-        <span className="text-muted-foreground text-xs">
-          Last synced{' '}
-          {new Date(lastSync).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          })}
-        </span>
+    <Button onClick={handleSync} disabled={isPending || disabled} variant="outline" size="sm">
+      {isPending ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <RefreshCw className="mr-2 h-4 w-4" />
       )}
-    </div>
+      Sync Now
+    </Button>
   )
 }

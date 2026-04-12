@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { canManageIntegrations } from '@/lib/permissions'
+import { canManageIntegrations, canManageOrg } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { useOrgId } from '@/hooks/use-org-context'
 
@@ -17,12 +17,14 @@ const allSettingsTabs: SettingsTab[] = [
   { name: 'Team', href: '/settings/team' },
   { name: 'Integrations', href: '/settings/integrations' },
   { name: 'Monitoring', href: '/settings/monitoring' },
+  { name: 'AI Visibility', href: '/settings/ai-visibility' },
 ]
 
 function getVisibleTabs(userRole?: string, isInternal?: boolean): SettingsTab[] {
   return allSettingsTabs.filter((tab) => {
     if (tab.href === '/settings/integrations') return isInternal || canManageIntegrations(userRole)
     if (tab.href === '/settings/monitoring') return userRole !== UserRole.ExternalDeveloper
+    if (tab.href === '/settings/ai-visibility') return isInternal || canManageOrg(userRole)
     return true
   })
 }

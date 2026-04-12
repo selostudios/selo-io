@@ -254,7 +254,7 @@ describe('AIVisibilityEmptyState', () => {
       expect(screen.getByText(/Claude is available/)).toBeInTheDocument()
     })
 
-    test('shows Enable AI Visibility button linking to org settings', () => {
+    test('shows Enable AI Visibility button linking to AI visibility settings', () => {
       render(
         <AIVisibilityEmptyState
           orgId={orgId}
@@ -266,7 +266,7 @@ describe('AIVisibilityEmptyState', () => {
 
       const enableButton = screen.getByRole('link', { name: /Enable AI Visibility/i })
       expect(enableButton).toBeInTheDocument()
-      expect(enableButton).toHaveAttribute('href', `/${orgId}/settings/organization`)
+      expect(enableButton).toHaveAttribute('href', `/${orgId}/settings/ai-visibility`)
     })
 
     test('shows Add AI Models for internal users when some platforms are missing', () => {

@@ -106,12 +106,7 @@ test.describe('Full Site Audit', () => {
     await expect(page.getByText('Go to Full Site Audit')).toBeVisible()
   })
 
-  test('old aio page shows deprecation banner', async ({ page }) => {
-    await page.goto('/seo/aio')
-
-    await expect(page.getByText('has been replaced by the')).toBeVisible()
-    await expect(page.getByText('Go to Full Site Audit')).toBeVisible()
-  })
+  // Note: old /seo/aio route was removed when AIO tables were dropped
 })
 
 test.describe('Quick Audit (Unified)', () => {
