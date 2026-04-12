@@ -29,7 +29,7 @@ import {
   CATEGORY_LABELS,
   CATEGORY_COLORS,
 } from '@/lib/types/feedback'
-import { updateFeedbackStatus } from '@/app/(authenticated)/[orgId]/support/actions'
+import { updateFeedbackStatus } from '@/app/(authenticated)/support/actions'
 import { ImageIcon } from 'lucide-react'
 
 interface SupportSlideoutProps {

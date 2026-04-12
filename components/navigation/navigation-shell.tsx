@@ -6,7 +6,6 @@ import { ParentSidebar, type ParentSection } from './parent-sidebar'
 import { ChildSidebar } from './child-sidebar'
 import { useActiveAudit } from '@/hooks/use-active-audit'
 import { useOrgId } from '@/hooks/use-org-context'
-import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
 
 export function getSectionFromPathname(pathname: string): ParentSection {
   // Strip leading UUID segment if present
@@ -39,12 +38,6 @@ interface NavigationShellProps {
   canViewFeedback?: boolean
 }
 
-function getOrgIdFromCookie(): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(new RegExp(`(?:^|; )${SELO_ORG_COOKIE}=([^;]+)`))
-  return match?.[1] ?? null
-}
-
 export function NavigationShell({
   isInternal = false,
   userRole,
@@ -66,12 +59,8 @@ export function NavigationShell({
       // Only navigate if we're changing to a different section
       if (section !== activeSection) {
         const baseRoute = sectionDefaultRoutes[section]
-        const needsOrg = ['/dashboard', '/seo', '/settings', '/support'].some((p) =>
-          baseRoute.startsWith(p)
-        )
-        // Fall back to cookie when URL has no org (e.g. navigating from /quick-audit)
-        const resolvedOrgId = orgId || getOrgIdFromCookie()
-        const href = needsOrg && resolvedOrgId ? `/${resolvedOrgId}${baseRoute}` : baseRoute
+        const needsOrg = ['/dashboard', '/seo', '/settings'].some((p) => baseRoute.startsWith(p))
+        const href = needsOrg && orgId ? `/${orgId}${baseRoute}` : baseRoute
         router.push(href)
       }
     },

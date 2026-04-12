@@ -176,8 +176,7 @@ export function ChildSidebar({
                     (item.href.startsWith('/seo') ||
                       item.href.startsWith('/ai-visibility') ||
                       item.href.startsWith('/settings') ||
-                      item.href.startsWith('/dashboard') ||
-                      item.href.startsWith('/support'))
+                      item.href.startsWith('/dashboard'))
                   ) {
                     href = `/${orgId}${item.href}`
                   }
