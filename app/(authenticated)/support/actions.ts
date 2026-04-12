@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { FeedbackStatus, FeedbackPriority } from '@/lib/types/feedback'
-import { canManageFeedback } from '@/lib/permissions'
+import { canManageFeedback, isInternalUser } from '@/lib/permissions'
 
 interface UpdateFeedbackStatusParams {
   feedbackId: string
@@ -28,19 +28,17 @@ export async function updateFeedbackStatus({
     return { error: 'Not authenticated' }
   }
 
-  // Verify user is a developer
+  // Verify user has permission (internal user OR feedback:manage role)
   const { data: rawUser } = await supabase
     .from('users')
-    .select('id, team_members(role)')
+    .select('id, is_internal, team_members(role)')
     .eq('id', user.id)
     .single()
 
-  const userRecord = rawUser
-    ? { role: (rawUser.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer' }
-    : null
+  const userRole = (rawUser?.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer'
 
-  if (!userRecord || !canManageFeedback(userRecord.role)) {
-    return { error: 'Only developers can update feedback' }
+  if (!rawUser || (!isInternalUser(rawUser) && !canManageFeedback(userRole))) {
+    return { error: 'Insufficient permissions to update feedback' }
   }
 
   // Get the current feedback to check for status changes
@@ -106,19 +104,17 @@ export async function deleteFeedback(feedbackId: string) {
     return { error: 'Not authenticated' }
   }
 
-  // Verify user has feedback management permission
+  // Verify user has permission (internal user OR feedback:manage role)
   const { data: rawUser } = await supabase
     .from('users')
-    .select('id, team_members(role)')
+    .select('id, is_internal, team_members(role)')
     .eq('id', user.id)
     .single()
 
-  const userRecord = rawUser
-    ? { role: (rawUser.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer' }
-    : null
+  const userRole = (rawUser?.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer'
 
-  if (!userRecord || !canManageFeedback(userRecord.role)) {
-    return { error: 'Only developers can delete feedback' }
+  if (!rawUser || (!isInternalUser(rawUser) && !canManageFeedback(userRole))) {
+    return { error: 'Insufficient permissions to delete feedback' }
   }
 
   const { error } = await supabase.from('feedback').delete().eq('id', feedbackId)
