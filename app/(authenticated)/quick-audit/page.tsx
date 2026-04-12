@@ -14,7 +14,7 @@ export default async function QuickAuditPage() {
   const audits = await getQuickAudits()
 
   return (
-    <div className="space-y-6 p-8">
+    <>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Quick Audit</h1>
         <p className="text-sm text-neutral-500">
@@ -22,6 +22,6 @@ export default async function QuickAuditPage() {
         </p>
       </div>
       <QuickAuditClient audits={audits} />
-    </div>
+    </>
   )
 }
