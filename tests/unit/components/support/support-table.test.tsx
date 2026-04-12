@@ -46,14 +46,14 @@ describe('SupportTable', () => {
       <SupportTable feedback={mockFeedback} onView={vi.fn()} onDelete={vi.fn()} canEdit={true} />
     )
 
-    expect(screen.getByRole('button', { name: 'View feedback' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit feedback' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete feedback' })).toBeInTheDocument()
   })
 
   it('hides action buttons when canEdit is false', () => {
     render(<SupportTable feedback={mockFeedback} onView={vi.fn()} canEdit={false} />)
 
-    expect(screen.queryByRole('button', { name: 'View feedback' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit feedback' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete feedback' })).not.toBeInTheDocument()
   })
 
@@ -63,7 +63,7 @@ describe('SupportTable', () => {
       <SupportTable feedback={mockFeedback} onView={onView} onDelete={vi.fn()} canEdit={true} />
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'View feedback' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit feedback' }))
     expect(onView).toHaveBeenCalledWith(mockFeedback[0])
   })
 

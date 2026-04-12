@@ -1,7 +1,7 @@
 'use client'
 
 import { formatDistanceToNow } from 'date-fns'
-import { MessageSquare, Trash2 } from 'lucide-react'
+import { MessageSquare, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -89,16 +89,16 @@ export function SupportTable({ feedback, onView, onDelete, canEdit = false }: Su
               <TableCell>
                 <div className="flex items-center gap-1">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onView(item)}
-                    aria-label="View feedback"
+                    aria-label="Edit feedback"
                   >
-                    View
+                    <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => onDelete?.(item)}
                     className="text-muted-foreground hover:text-destructive"
                     aria-label="Delete feedback"

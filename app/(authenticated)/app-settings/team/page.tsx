@@ -1,4 +1,5 @@
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { isInternalUser } from '@/lib/permissions'
 import { getInternalEmployees } from './actions'
 import { TeamClient } from './client'
 
@@ -6,7 +7,7 @@ export default async function AppSettingsTeamPage() {
   const user = await getAuthUser()
   if (!user) return null
   const userRecord = await getUserRecord(user.id)
-  const isAdmin = userRecord?.role === 'admin'
+  const isAdmin = userRecord?.role === 'admin' || !!(userRecord && isInternalUser(userRecord))
 
   const employees = await getInternalEmployees()
   if ('error' in employees) {
