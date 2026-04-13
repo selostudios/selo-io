@@ -3,9 +3,17 @@ import { fetchPage, extractLinks } from '@/lib/audit/fetcher'
 import { pageSpecificChecks } from './checks'
 import { UnifiedAuditStatus } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext } from './types'
+import {
+  fetchRobotsTxt,
+  resolveRobotsTxtRules,
+  isPathAllowed,
+  type ResolvedRobotsTxtRules,
+} from './robots-txt'
 
 const BATCH_SIZE = 50
 const MAX_BATCH_DURATION_MS = 240_000 // 4 minutes (leave 1 min buffer for DB ops)
+const DEFAULT_CRAWL_DELAY_MS = 500
+const MAX_CRAWL_DELAY_MS = 2000
 
 // Resource file extensions grouped by type
 const RESOURCE_EXTENSIONS: Record<string, string[]> = {
@@ -80,24 +88,34 @@ export interface BatchCrawlOptions {
 }
 
 /**
- * Initialize the crawl queue with the start URL (first batch only)
+ * Initialize the crawl queue with the start URL (first batch only).
+ * Fetches robots.txt, resolves rules for SeloIOBot, and stores as JSON
+ * on the audit record for efficient reuse across batch continuations.
  */
 export async function initializeCrawlQueue(auditId: string, startUrl: string): Promise<void> {
   const supabase = createServiceClient()
 
   const normalizedUrl = normalizeUrl(startUrl)
 
-  await supabase.from('audit_crawl_queue').upsert(
-    {
-      audit_id: auditId,
-      url: normalizedUrl,
-      depth: 0,
-    },
-    { onConflict: 'audit_id,url' }
-  )
+  // Fetch and resolve robots.txt rules before any page crawling
+  const robotsTxt = await fetchRobotsTxt(startUrl)
+  const resolvedRules = robotsTxt ? resolveRobotsTxtRules(robotsTxt) : null
 
-  // Update urls_discovered count
-  await supabase.from('audits').update({ urls_discovered: 1 }).eq('id', auditId)
+  // Store resolved rules on the audit record and seed the queue in parallel
+  await Promise.all([
+    supabase
+      .from('audits')
+      .update({ urls_discovered: 1, robots_txt_rules: resolvedRules })
+      .eq('id', auditId),
+    supabase.from('audit_crawl_queue').upsert(
+      {
+        audit_id: auditId,
+        url: normalizedUrl,
+        depth: 0,
+      },
+      { onConflict: 'audit_id,url' }
+    ),
+  ])
 }
 
 /**
@@ -117,6 +135,22 @@ export async function crawlBatch(
 
   let pagesProcessed = 0
   let stopped = false
+
+  // Load pre-resolved robots.txt rules from audit record (stored at queue initialization as JSONB)
+  const { data: auditRecord } = await supabase
+    .from('audits')
+    .select('robots_txt_rules')
+    .eq('id', auditId)
+    .single()
+
+  const robotsRules: ResolvedRobotsTxtRules | null =
+    (auditRecord?.robots_txt_rules as ResolvedRobotsTxtRules) ?? null
+
+  // Determine crawl delay: respect robots.txt Crawl-delay, clamp to [500ms, 2000ms]
+  const crawlDelayMs = Math.min(
+    Math.max(robotsRules?.crawlDelayMs ?? DEFAULT_CRAWL_DELAY_MS, DEFAULT_CRAWL_DELAY_MS),
+    MAX_CRAWL_DELAY_MS
+  )
 
   // Get all already-crawled pages for context (needed for page-specific checks)
   const { data: existingPages } = await supabase
@@ -168,8 +202,21 @@ export async function crawlBatch(
     // Mark as crawled immediately to prevent duplicate processing
     await supabase.from('audit_crawl_queue').update({ status: 'crawled' }).eq('id', queueItem.id)
 
-    // Fetch the page (with retry logic for the seed URL)
+    // Check robots.txt rules before fetching (skip seed URL — always fetch it)
     const isSeedUrl = allPages.length === 0 && pagesProcessed === 0
+    if (!isSeedUrl && robotsRules) {
+      try {
+        const urlPath = new URL(url).pathname
+        if (!isPathAllowed(robotsRules, urlPath)) {
+          continue
+        }
+      } catch {
+        // Invalid URL, skip
+        continue
+      }
+    }
+
+    // Fetch the page (with retry logic for the seed URL — network errors only, not 403)
     let html = ''
     let statusCode = 0
     let lastModified: string | null = null
@@ -193,10 +240,19 @@ export async function crawlBatch(
           continue
         }
 
+        // 403 = WAF block — fail immediately, don't retry
         if (statusCode === 403) {
-          console.error(`[Batch Crawler] Seed URL attempt ${attempt}/3 returned 403`)
-          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
-          continue
+          await supabase
+            .from('audits')
+            .update({
+              status: UnifiedAuditStatus.Failed,
+              error_message:
+                'Website blocked our crawler (HTTP 403). To allow SeloBot, whitelist the User-Agent "SeloBot/1.0" in your firewall settings. See https://selo.io/bot for details.',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', auditId)
+
+          return { pagesProcessed: 0, hasMorePages: false, stopped: false }
         }
 
         succeeded = true
@@ -204,12 +260,8 @@ export async function crawlBatch(
       }
 
       if (!succeeded) {
-        const reason =
-          statusCode! === 403
-            ? 'Website blocked our crawler (HTTP 403). The site may have a firewall that blocks automated requests.'
-            : lastError || `The website returned HTTP ${statusCode!}`
+        const reason = lastError || `The website returned HTTP ${statusCode!}`
 
-        // Update audit with error and mark as failed
         await supabase
           .from('audits')
           .update({
@@ -256,6 +308,17 @@ export async function crawlBatch(
 
       for (const link of links) {
         const normalized = normalizeUrl(link)
+
+        // Filter out URLs disallowed by robots.txt before adding to queue
+        if (robotsRules) {
+          try {
+            const linkPath = new URL(normalized).pathname
+            if (!isPathAllowed(robotsRules, linkPath)) continue
+          } catch {
+            continue
+          }
+        }
+
         newUrls.push({
           audit_id: auditId,
           url: normalized,
@@ -396,8 +459,8 @@ export async function crawlBatch(
       }
     }
 
-    // Small delay to be respectful
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    // Delay between requests to avoid triggering WAFs
+    await new Promise((resolve) => setTimeout(resolve, crawlDelayMs))
   }
 
   // Update pages_crawled count once at end of batch

@@ -158,6 +158,8 @@ export interface CheckContext {
     isResource?: boolean
   }[]
   robotsTxt?: string
+  /** Pre-resolved robots.txt rules for our bot (loaded from audits.robots_txt_rules) */
+  robotsTxtRules?: { rules: { type: string; path: string }[]; crawlDelayMs: number | null }
   /** PageSpeed Insights data for performance checks */
   psiData?: Record<string, unknown>
   /** Top performance opportunities extracted from PSI (sorted by impact) */

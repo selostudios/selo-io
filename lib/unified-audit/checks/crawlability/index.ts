@@ -1,5 +1,6 @@
 import type { AuditCheckDefinition } from '../../types'
 import { robotsTxtValidation } from './robots-txt-validation'
+import { robotsTxtSkippedPaths } from './robots-txt-skipped-paths'
 import { aiCrawlerAccess } from './ai-crawler-access'
 import { sitemapDetection } from './sitemap-detection'
 import { noindexDetection } from './noindex-detection'
@@ -9,6 +10,7 @@ import { jsRendering } from './js-rendering'
 
 export const crawlabilityChecks: AuditCheckDefinition[] = [
   robotsTxtValidation,
+  robotsTxtSkippedPaths,
   aiCrawlerAccess,
   sitemapDetection,
   noindexDetection,
@@ -19,6 +21,7 @@ export const crawlabilityChecks: AuditCheckDefinition[] = [
 
 export {
   robotsTxtValidation,
+  robotsTxtSkippedPaths,
   aiCrawlerAccess,
   sitemapDetection,
   noindexDetection,

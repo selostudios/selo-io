@@ -567,6 +567,13 @@ async function runSiteWideChecks(
 
   await supabase.from('audits').update({ status: UnifiedAuditStatus.Checking }).eq('id', auditId)
 
+  // Load resolved robots.txt rules from audit record for the skipped paths check
+  const { data: auditRecord } = await supabase
+    .from('audits')
+    .select('robots_txt_rules')
+    .eq('id', auditId)
+    .single()
+
   // Find homepage
   const homepage =
     allPages.find((p) => {
@@ -582,6 +589,7 @@ async function runSiteWideChecks(
     title: homepage.title ?? undefined,
     statusCode: homepage.status_code ?? 200,
     allPages: toCheckContextPages(allPages),
+    robotsTxtRules: auditRecord?.robots_txt_rules ?? undefined,
   }
 
   const baseUrl = new URL(url).origin

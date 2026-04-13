@@ -1,5 +1,14 @@
 import { fetchPage, extractLinks } from './fetcher'
 import type { SiteAuditPage } from './types'
+import {
+  fetchRobotsTxt,
+  resolveRobotsTxtRules,
+  isPathAllowed,
+  type ResolvedRobotsTxtRules,
+} from '@/lib/unified-audit/robots-txt'
+
+const DEFAULT_CRAWL_DELAY_MS = 500
+const MAX_CRAWL_DELAY_MS = 2000
 
 // Resource file extensions grouped by type
 const RESOURCE_EXTENSIONS: Record<string, string[]> = {
@@ -35,6 +44,7 @@ export interface CrawlResult {
   pages: SiteAuditPage[]
   errors: string[]
   stopped: boolean
+  robotsTxtRules: ResolvedRobotsTxtRules | null
 }
 
 export async function crawlSite(
@@ -48,6 +58,16 @@ export async function crawlSite(
   const pages: SiteAuditPage[] = []
   const errors: string[] = []
   let stopped = false
+
+  // Fetch and resolve robots.txt rules before crawling any pages
+  const robotsTxt = await fetchRobotsTxt(startUrl)
+  const robotsRules = robotsTxt ? resolveRobotsTxtRules(robotsTxt) : null
+
+  // Determine crawl delay: respect robots.txt Crawl-delay, clamp to [500ms, 2000ms]
+  const crawlDelayMs = Math.min(
+    Math.max(robotsRules?.crawlDelayMs ?? DEFAULT_CRAWL_DELAY_MS, DEFAULT_CRAWL_DELAY_MS),
+    MAX_CRAWL_DELAY_MS
+  )
 
   // SSL certs are domain-level, so switch to relaxed mode after first SSL error
   let forceRelaxedSSL = false
@@ -67,6 +87,16 @@ export async function crawlSite(
     visited.add(url)
 
     const isSeedUrl = pages.length === 0 && visited.size === 1
+
+    // Check robots.txt rules before fetching (skip seed URL — always fetch it)
+    if (!isSeedUrl && robotsRules) {
+      try {
+        const urlPath = new URL(url).pathname
+        if (!isPathAllowed(robotsRules, urlPath)) continue
+      } catch {
+        continue
+      }
+    }
 
     let html = ''
     let statusCode = 0
@@ -96,12 +126,12 @@ export async function crawlSite(
           continue
         }
 
+        // 403 = WAF block — fail immediately, don't retry
         if (statusCode === 403) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error(`[Audit Crawler] Seed URL attempt ${attempt}/3 returned 403`)
-          }
-          if (attempt < 3) await new Promise((r) => setTimeout(r, 2000 * attempt))
-          continue
+          errors.push(
+            'Website blocked our crawler (HTTP 403). To allow SeloBot, whitelist the User-Agent "SeloBot/1.0" in your firewall settings. See https://selo.io/bot for details.'
+          )
+          break
         }
 
         succeeded = true
@@ -109,12 +139,9 @@ export async function crawlSite(
       }
 
       if (!succeeded) {
-        const reason =
-          statusCode! === 403
-            ? 'Website blocked our crawler (HTTP 403). The site may have a firewall that blocks automated requests.'
-            : lastError
-              ? `Failed to fetch ${url}: ${lastError}`
-              : `The website returned HTTP ${statusCode!}. Unable to crawl.`
+        const reason = lastError
+          ? `Failed to fetch ${url}: ${lastError}`
+          : `The website returned HTTP ${statusCode!}. Unable to crawl.`
         errors.push(reason)
         break
       }
@@ -166,9 +193,16 @@ export async function crawlSite(
           )
         }
         for (const link of links) {
-          if (!visited.has(link) && !queue.includes(link)) {
-            queue.push(link)
+          if (visited.has(link) || queue.includes(link)) continue
+          // Filter through robots.txt
+          if (robotsRules) {
+            try {
+              if (!isPathAllowed(robotsRules, new URL(link).pathname)) continue
+            } catch {
+              continue
+            }
           }
+          queue.push(link)
         }
       }
       continue
@@ -228,7 +262,18 @@ export async function crawlSite(
     // Extract and queue new links (only from HTML pages, not resources)
     if (statusCode === 200 && !isResource) {
       const links = extractLinks(html, url, finalUrl)
-      const newLinks = links.filter((l) => !visited.has(l) && !queue.includes(l))
+      const newLinks = links.filter((l) => {
+        if (visited.has(l) || queue.includes(l)) return false
+        // Filter through robots.txt
+        if (robotsRules) {
+          try {
+            if (!isPathAllowed(robotsRules, new URL(l).pathname)) return false
+          } catch {
+            return false
+          }
+        }
+        return true
+      })
       if (process.env.NODE_ENV === 'development') {
         console.error(
           `[Audit Crawler] Page ${url}: found ${links.length} links, ${newLinks.length} new`
@@ -239,8 +284,8 @@ export async function crawlSite(
       }
     }
 
-    // Small delay to be respectful
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    // Delay between requests to avoid triggering WAFs
+    await new Promise((resolve) => setTimeout(resolve, crawlDelayMs))
   }
 
   console.error('[Audit Crawler]', {
@@ -251,7 +296,7 @@ export async function crawlSite(
     errorsCount: errors.length,
     timestamp: new Date().toISOString(),
   })
-  return { pages, errors, stopped }
+  return { pages, errors, stopped, robotsTxtRules: robotsRules }
 }
 
 function normalizeUrl(url: string): string {
