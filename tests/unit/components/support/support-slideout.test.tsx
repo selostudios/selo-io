@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { SupportSlideout } from '@/components/support/support-slideout'
 import type { FeedbackWithRelations } from '@/lib/types/feedback'
+
+vi.mock('@/app/(authenticated)/support/actions', () => ({
+  updateFeedbackStatus: vi.fn().mockResolvedValue({ success: true }),
+  updateFeedback: vi.fn().mockResolvedValue({ success: true }),
+}))
 
 const mockFeedback: FeedbackWithRelations = {
   id: '1',
@@ -35,10 +40,8 @@ describe('SupportSlideout', () => {
     )
 
     expect(screen.getByText('Test Bug Report')).toBeInTheDocument()
-    // Status and priority should be editable selects
     expect(screen.getByText('Save Changes')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Add a note about this feedback...')).toBeInTheDocument()
-    // Edit button for ticket body should be present
     expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
   })
 
@@ -83,5 +86,98 @@ describe('SupportSlideout', () => {
     )
 
     expect(container.innerHTML).toBe('')
+  })
+
+  it('enters edit mode when Edit button is clicked', () => {
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        canEdit={true}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Test Bug Report')
+    expect(screen.getByLabelText('Description')).toHaveValue('Something is broken')
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^save$/i })).toBeInTheDocument()
+  })
+
+  it('cancels edit mode and reverts to read view', () => {
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        canEdit={true}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+    expect(screen.getByLabelText('Title')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(screen.queryByLabelText('Title')).not.toBeInTheDocument()
+    expect(screen.getByText('Something is broken')).toBeInTheDocument()
+  })
+
+  it('calls updateFeedback on save and triggers onUpdate', async () => {
+    const { updateFeedback } = await import('@/app/(authenticated)/support/actions')
+    const onUpdate = vi.fn()
+
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={onUpdate}
+        canEdit={true}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+
+    const titleInput = screen.getByLabelText('Title')
+    fireEvent.change(titleInput, { target: { value: 'Updated Title' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(updateFeedback).toHaveBeenCalledWith({
+        feedbackId: '1',
+        title: 'Updated Title',
+        description: 'Something is broken',
+        category: 'bug',
+      })
+    })
+
+    await waitFor(() => {
+      expect(onUpdate).toHaveBeenCalled()
+    })
+  })
+
+  it('disables save button when title is empty in edit mode', () => {
+    render(
+      <SupportSlideout
+        feedback={mockFeedback}
+        open={true}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        canEdit={true}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }))
+
+    const titleInput = screen.getByLabelText('Title')
+    fireEvent.change(titleInput, { target: { value: '' } })
+
+    expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled()
   })
 })

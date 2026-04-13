@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { FeedbackStatus, FeedbackPriority } from '@/lib/types/feedback'
+import type { FeedbackStatus, FeedbackPriority, FeedbackCategory } from '@/lib/types/feedback'
 import { canManageFeedback, isInternalUser } from '@/lib/permissions'
 
 interface UpdateFeedbackStatusParams {
@@ -86,6 +86,69 @@ export async function updateFeedbackStatus({
       })
       // Don't fail the update if email fails
     }
+  }
+
+  revalidatePath('/support')
+
+  return { success: true }
+}
+
+interface UpdateFeedbackParams {
+  feedbackId: string
+  title: string
+  description: string
+  category: FeedbackCategory
+}
+
+export async function updateFeedback({
+  feedbackId,
+  title,
+  description,
+  category,
+}: UpdateFeedbackParams) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: rawUser } = await supabase
+    .from('users')
+    .select('id, is_internal, team_members(role)')
+    .eq('id', user.id)
+    .single()
+
+  const userRole = (rawUser?.team_members as { role: string }[])?.[0]?.role ?? 'client_viewer'
+
+  if (!rawUser || (!isInternalUser(rawUser) && !canManageFeedback(userRole))) {
+    return { error: 'Insufficient permissions to update feedback' }
+  }
+
+  if (!title.trim()) {
+    return { error: 'Title is required' }
+  }
+
+  const { error } = await supabase
+    .from('feedback')
+    .update({
+      title: title.trim(),
+      description: description.trim(),
+      category,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', feedbackId)
+
+  if (error) {
+    console.error('[Feedback Update Error]', {
+      type: 'database_error',
+      error,
+      timestamp: new Date().toISOString(),
+    })
+    return { error: 'Failed to update feedback' }
   }
 
   revalidatePath('/support')

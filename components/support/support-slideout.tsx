@@ -25,12 +25,15 @@ import {
   type FeedbackWithRelations,
   type FeedbackStatus,
   type FeedbackPriority,
+  type FeedbackCategory,
   STATUS_OPTIONS,
   PRIORITY_OPTIONS,
   CATEGORY_LABELS,
   CATEGORY_COLORS,
+  CATEGORY_OPTIONS,
 } from '@/lib/types/feedback'
-import { updateFeedbackStatus } from '@/app/(authenticated)/support/actions'
+import { updateFeedbackStatus, updateFeedback } from '@/app/(authenticated)/support/actions'
+import { Input } from '@/components/ui/input'
 import { ImageIcon } from 'lucide-react'
 
 interface SupportSlideoutProps {
@@ -52,6 +55,11 @@ export function SupportSlideout({
   const [priority, setPriority] = useState<FeedbackPriority | undefined>(undefined)
   const [note, setNote] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editCategory, setEditCategory] = useState<FeedbackCategory | undefined>(undefined)
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   // Reset form when feedback changes
   useEffect(() => {
@@ -59,6 +67,7 @@ export function SupportSlideout({
       setStatus(feedback.status)
       setPriority(feedback.priority ?? undefined)
       setNote(feedback.status_note ?? '')
+      setIsEditing(false)
     }
   }, [feedback])
 
@@ -96,6 +105,45 @@ export function SupportSlideout({
       }
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleStartEdit = () => {
+    if (!feedback) return
+    setEditTitle(feedback.title)
+    setEditDescription(feedback.description)
+    setEditCategory(feedback.category)
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!feedback || !editTitle.trim()) return
+
+    setIsSavingEdit(true)
+    try {
+      const result = await updateFeedback({
+        feedbackId: feedback.id,
+        title: editTitle,
+        description: editDescription,
+        category: editCategory!,
+      })
+
+      if (result.error) {
+        console.error('[Support Slideout Error]', {
+          type: 'edit_error',
+          error: result.error,
+          timestamp: new Date().toISOString(),
+        })
+      } else {
+        setIsEditing(false)
+        onUpdate()
+      }
+    } finally {
+      setIsSavingEdit(false)
     }
   }
 
@@ -141,59 +189,118 @@ export function SupportSlideout({
 
         {/* Content area - scrollable and grows */}
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4">
-          {/* Description */}
-          <p className="mb-4 text-sm whitespace-pre-wrap">{feedback.description}</p>
-
-          {/* Screenshot Attachment */}
-          {feedback.screenshot_url && (
-            <div className="mt-3">
-              <hr className="border-border mb-2" />
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <ImageIcon className="text-muted-foreground h-3 w-3" />
-                <a
-                  href={feedback.screenshot_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 transition-colors hover:text-blue-800 hover:underline"
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Ticket title"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Category</Label>
+                <Select
+                  value={editCategory}
+                  onValueChange={(value) => setEditCategory(value as FeedbackCategory)}
                 >
-                  {(() => {
-                    const url = feedback.screenshot_url
-                    const filename = url.split('/').pop() || 'screenshot'
-                    return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
-                  })()}
-                </a>
+                  <SelectTrigger id="edit-category" className="w-full">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Describe the issue..."
+                  rows={6}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  disabled={!editTitle.trim() || isSavingEdit}
+                >
+                  {isSavingEdit ? 'Saving...' : 'Save'}
+                </Button>
               </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Description */}
+              <p className="mb-4 text-sm whitespace-pre-wrap">{feedback.description}</p>
 
-          {/* Context */}
-          {(feedback.page_url || feedback.user_agent) && (
-            <div className="mt-4 space-y-2">
-              <Label className="text-muted-foreground text-xs tracking-wider uppercase">
-                Context
-              </Label>
-              {feedback.page_url && (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Page: </span>
-                  {feedback.page_url}
-                </p>
+              {/* Screenshot Attachment */}
+              {feedback.screenshot_url && (
+                <div className="mt-3">
+                  <hr className="border-border mb-2" />
+                  <div className="mt-2 flex items-center gap-2 text-xs">
+                    <ImageIcon className="text-muted-foreground h-3 w-3" />
+                    <a
+                      href={feedback.screenshot_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 transition-colors hover:text-blue-800 hover:underline"
+                    >
+                      {(() => {
+                        const url = feedback.screenshot_url
+                        const filename = url.split('/').pop() || 'screenshot'
+                        return filename.length > 40 ? filename.slice(0, 40) + '...' : filename
+                      })()}
+                    </a>
+                  </div>
+                </div>
               )}
-              {feedback.user_agent && (
-                <p className="text-muted-foreground truncate text-sm" title={feedback.user_agent}>
-                  {feedback.user_agent}
-                </p>
-              )}
-            </div>
-          )}
 
-          {/* Edit ticket button */}
-          {canEdit && (
-            <div className="border-border mt-4 flex justify-end border-t pt-3">
-              <Button variant="outline" size="sm">
-                <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                Edit
-              </Button>
-            </div>
+              {/* Context */}
+              {(feedback.page_url || feedback.user_agent) && (
+                <div className="mt-4 space-y-2">
+                  <Label className="text-muted-foreground text-xs tracking-wider uppercase">
+                    Context
+                  </Label>
+                  {feedback.page_url && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Page: </span>
+                      {feedback.page_url}
+                    </p>
+                  )}
+                  {feedback.user_agent && (
+                    <p
+                      className="text-muted-foreground truncate text-sm"
+                      title={feedback.user_agent}
+                    >
+                      {feedback.user_agent}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Edit ticket button */}
+              {canEdit && (
+                <div className="border-border mt-4 flex justify-end border-t pt-3">
+                  <Button variant="outline" size="sm" onClick={handleStartEdit}>
+                    <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
