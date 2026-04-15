@@ -3,6 +3,8 @@ import { crawlSite } from '@/lib/audit/crawler'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { siteWideChecks, pageSpecificChecks } from './checks'
+import { triggerAuditContinuation } from './trigger-continuation'
+import { notifyAuditContinuationFailure } from '@/lib/alerts/notify-audit-failure'
 import { UnifiedAuditStatus, CheckStatus, ScoreDimension } from '@/lib/enums'
 import type { AuditPage, AuditCheck, CheckContext, AuditCheckDefinition } from './types'
 import type {
@@ -463,9 +465,16 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
         })
         await supabase
           .from('audits')
-          .update({ status: UnifiedAuditStatus.BatchComplete })
+          .update({
+            status: UnifiedAuditStatus.BatchComplete,
+            updated_at: new Date().toISOString(),
+          })
           .eq('id', auditId)
-        await triggerContinuation(auditId)
+        await triggerAuditContinuation({
+          auditId,
+          kind: 'unified',
+          notifyOnFailure: notifyAuditContinuationFailure,
+        })
         return
       }
 
@@ -826,37 +835,6 @@ async function finishUnifiedAudit(
     wasStopped ? false : (auditConfig?.ai_analysis_enabled ?? true),
     auditConfig?.organization_id ?? null
   )
-}
-
-// =============================================================================
-// Self-continuation
-// =============================================================================
-
-async function triggerContinuation(auditId: string): Promise<void> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-
-  if (!baseUrl) {
-    console.error('[Unified Audit Continuation] No base URL configured, cannot self-trigger')
-    return
-  }
-
-  try {
-    const response = await fetch(`${baseUrl}/api/unified-audit/${auditId}/continue`, {
-      method: 'POST',
-      headers: {
-        'x-cron-secret': process.env.CRON_SECRET || '',
-      },
-      signal: AbortSignal.timeout(10_000),
-    })
-
-    if (!response.ok) {
-      console.error('[Unified Audit Continuation] Failed to trigger:', response.status)
-    }
-  } catch (err) {
-    console.error('[Unified Audit Continuation] Failed to self-trigger:', err)
-  }
 }
 
 // =============================================================================

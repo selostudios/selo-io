@@ -6,6 +6,8 @@ import { generateExecutiveSummary } from './summary'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { cleanupOlderAuditDetails, cleanupCrawlQueue } from './cleanup'
 import { isCheckablePage } from './utils'
+import { triggerAuditContinuation } from '@/lib/unified-audit/trigger-continuation'
+import { notifyAuditContinuationFailure } from '@/lib/alerts/notify-audit-failure'
 import { AuditStatus, CheckStatus } from '@/lib/enums'
 import type {
   SiteAuditCheck,
@@ -404,8 +406,15 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
           elapsedSeconds: Math.round(elapsed / 1000),
           timestamp: new Date().toISOString(),
         })
-        await supabase.from('site_audits').update({ status: 'batch_complete' }).eq('id', auditId)
-        await triggerContinuation(auditId)
+        await supabase
+          .from('site_audits')
+          .update({ status: 'batch_complete', updated_at: new Date().toISOString() })
+          .eq('id', auditId)
+        await triggerAuditContinuation({
+          auditId,
+          kind: 'legacy',
+          notifyOnFailure: notifyAuditContinuationFailure,
+        })
         return
       }
 
@@ -465,38 +474,6 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
         completed_at: new Date().toISOString(),
       })
       .eq('id', auditId)
-  }
-}
-
-/**
- * Self-trigger the next function invocation to continue processing batches.
- * Falls back to batch_complete status if the trigger fails (browser polling can resume).
- */
-async function triggerContinuation(auditId: string): Promise<void> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-
-  if (!baseUrl) {
-    console.error('[Audit Continuation] No base URL configured, cannot self-trigger')
-    return
-  }
-
-  try {
-    const response = await fetch(`${baseUrl}/api/audit/${auditId}/continue`, {
-      method: 'POST',
-      headers: {
-        'x-cron-secret': process.env.CRON_SECRET || '',
-      },
-      signal: AbortSignal.timeout(10_000),
-    })
-
-    if (!response.ok) {
-      console.error('[Audit Continuation] Failed to trigger:', response.status)
-    }
-  } catch (err) {
-    console.error('[Audit Continuation] Failed to self-trigger:', err)
-    // batch_complete status already set before this call, so browser polling can still resume
   }
 }
 

@@ -45,6 +45,24 @@ npm run sync:metrics              # Sync metrics from all platforms (local dev)
 npm run sync:metrics:prod         # Sync metrics from all platforms (production)
 npm run backfill:metrics -- 2026-01-24        # Backfill from specific date (local)
 npm run backfill:metrics -- 2026-01-24 --prod # Backfill from specific date (prod)
+
+# Vercel CLI (project is linked — no --scope needed)
+vercel ls selo_io                             # List recent deployments (URL, env, status)
+vercel inspect <deployment-url>               # Detailed info for a deployment
+vercel logs <deployment-url>                  # Stream runtime logs (from NOW, 5 min max)
+vercel logs <deployment-url> --json | jq '.'  # JSON logs for filtering
+vercel env ls production                      # List production env vars (names only)
+vercel env pull .env.local                    # Pull env vars into local file
+vercel promote <deployment-url>               # Promote a preview to production (fast rollback)
+vercel rollback                               # Roll back to previous production deployment
+vercel deploy --prod                          # Deploy current directory to production
+vercel whoami                                 # Verify auth + current team
+
+# Live log tips
+# - `vercel logs` only streams from NOW — it cannot fetch historical logs.
+#   For historical logs, use the Vercel dashboard (Deployments → Logs) or a log drain.
+# - Filter JSON logs by level: vercel logs <url> --json | jq 'select(.level=="error")'
+# - Filter by path: vercel logs <url> --json | jq 'select(.message | test("unified-audit"))'
 ```
 
 ## Architecture
@@ -139,6 +157,7 @@ Located in `app/api/cron/`. All cron jobs require `CRON_SECRET` environment vari
 | `daily-metrics-sync` | Daily 3 AM UTC | Syncs metrics from all active platform connections (LinkedIn, HubSpot, GA) |
 | `audit-cleanup`      | Sun 4 AM UTC   | Cleans up old audit data to reduce storage                                 |
 | `weekly-summary`     | Mon 7 AM UTC   | Sends weekly marketing performance digest emails to org team members       |
+| `audit-resume`       | Every 10 min   | Watchdog that resumes stale `batch_complete` audits and fails stuck ones   |
 
 **Audit Cleanup Strategy:**
 
