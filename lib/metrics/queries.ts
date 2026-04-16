@@ -16,12 +16,22 @@ export async function getMetricsFromDb(
   period: Period
 ): Promise<CachedMetricsResult> {
   // Check last_sync_at from platform_connections
-  const { data: connection } = await supabase
+  const { data: connection, error: connectionError } = await supabase
     .from('platform_connections')
     .select('last_sync_at')
     .eq('organization_id', organizationId)
     .eq('platform_type', platformType)
     .single()
+
+  if (connectionError) {
+    console.error('[Metrics Error]', {
+      type: 'fetch_connection_failed',
+      organizationId,
+      platformType,
+      error: connectionError.message,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   const lastSyncAt = connection?.last_sync_at || null
   const oneHourAgo = new Date(Date.now() - CACHE_DURATION_MS)
@@ -33,7 +43,7 @@ export async function getMetricsFromDb(
   const endDateStr = formatDateString(currentEnd)
 
   // Query metrics for the full range (current + previous period)
-  const { data: metrics } = await supabase
+  const { data: metrics, error: metricsError } = await supabase
     .from('campaign_metrics')
     .select('date, metric_type, value')
     .eq('organization_id', organizationId)
@@ -41,6 +51,17 @@ export async function getMetricsFromDb(
     .gte('date', startDateStr)
     .lte('date', endDateStr)
     .order('date', { ascending: true })
+
+  if (metricsError) {
+    console.error('[Metrics Error]', {
+      type: 'fetch_metrics_failed',
+      organizationId,
+      platformType,
+      period,
+      error: metricsError.message,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   return {
     metrics: metrics || [],
@@ -79,8 +100,17 @@ export async function upsertMetricsAndUpdateSync(
     throw new Error(`Failed to save metrics: ${error.message}`)
   }
 
-  await supabase
+  const { error: updateError } = await supabase
     .from('platform_connections')
     .update({ last_sync_at: new Date().toISOString() })
     .eq('id', connectionId)
+
+  if (updateError) {
+    console.error('[Metrics Error]', {
+      type: 'update_sync_timestamp_failed',
+      connectionId,
+      error: updateError.message,
+      timestamp: new Date().toISOString(),
+    })
+  }
 }

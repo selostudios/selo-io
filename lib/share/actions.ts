@@ -191,7 +191,9 @@ export async function getSharedLinksForResource(
 
   const { data, error } = await supabase
     .from('shared_links')
-    .select('*')
+    .select(
+      'id, resource_type, resource_id, token, expires_at, password_hash, max_views, view_count, last_viewed_at, created_by, organization_id, created_at'
+    )
     .eq('resource_type', resourceType)
     .eq('resource_id', resourceId)
     .order('created_at', { ascending: false })

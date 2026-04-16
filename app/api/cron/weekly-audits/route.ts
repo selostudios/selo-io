@@ -13,7 +13,9 @@ export async function POST(request: Request) {
   const supabase = createServiceClient()
 
   // Get all monitored sites
-  const { data: sites, error } = await supabase.from('monitored_sites').select('*')
+  const { data: sites, error } = await supabase
+    .from('monitored_sites')
+    .select('id, organization_id, url, run_site_audit, run_performance_audit')
 
   if (error) {
     console.error('[Cron Error]', {
@@ -29,6 +31,9 @@ export async function POST(request: Request) {
     errors: [] as string[],
   }
 
+  // Collect site IDs that were processed so we can batch-update timestamps
+  const processedSiteIds: string[] = []
+
   for (const site of sites || []) {
     // Run unified audit if any audit type is enabled
     if (site.run_site_audit || site.run_performance_audit) {
@@ -42,7 +47,7 @@ export async function POST(request: Request) {
             status: UnifiedAuditStatus.Pending,
             crawl_mode: 'full',
           })
-          .select()
+          .select('id')
           .single()
 
         if (insertError) {
@@ -73,21 +78,22 @@ export async function POST(request: Request) {
               ])
           })
           results.audits_started++
-
-          // Update last audit timestamps
-          await supabase
-            .from('monitored_sites')
-            .update({
-              last_site_audit_at: new Date().toISOString(),
-              last_performance_audit_at: new Date().toISOString(),
-            })
-            .eq('id', site.id)
+          processedSiteIds.push(site.id)
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         results.errors.push(`Audit for ${site.url}: ${errorMessage}`)
       }
     }
+  }
+
+  // Batch-update last audit timestamps for all processed sites in one query
+  if (processedSiteIds.length > 0) {
+    const now = new Date().toISOString()
+    await supabase
+      .from('monitored_sites')
+      .update({ last_site_audit_at: now, last_performance_audit_at: now })
+      .in('id', processedSiteIds)
   }
 
   console.error('[Cron Info]', {

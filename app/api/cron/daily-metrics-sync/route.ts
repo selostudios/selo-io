@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const supabase = createServiceClient()
 
   // Create execution log entry
-  const { data: logEntry } = await supabase
+  const { data: logEntry, error: logError } = await supabase
     .from('cron_execution_log')
     .insert({
       job_name: 'daily-metrics-sync',
@@ -41,6 +41,15 @@ export async function POST(request: Request) {
     })
     .select('id')
     .single()
+
+  if (logError) {
+    console.error('[Cron Warning]', {
+      type: 'log_entry_creation_failed',
+      job: 'daily-metrics-sync',
+      error: logError.message,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   const logId = logEntry?.id
 
