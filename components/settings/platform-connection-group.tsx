@@ -83,7 +83,7 @@ export function PlatformConnectionGroup({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <Icon className={`size-5 ${info.iconColor}`} />
+              <Icon className={`size-6 ${info.iconColor}`} />
               <div>
                 <CardTitle>{info.name}</CardTitle>
                 <CardDescription className="mt-1">{info.description}</CardDescription>
@@ -110,7 +110,7 @@ export function PlatformConnectionGroup({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Icon className={`size-5 ${info.iconColor}`} />
+            <Icon className={`size-6 ${info.iconColor}`} />
             <div>
               <CardTitle>{info.name}</CardTitle>
               <CardDescription className="mt-1">{info.description}</CardDescription>
