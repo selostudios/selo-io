@@ -12,6 +12,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const cronSecret = request.headers.get('x-cron-secret')
   const isInternalCall = cronSecret === process.env.CRON_SECRET && !!cronSecret
 
+  // Chain depth tracks how many sequential self-continuation invocations have
+  // occurred.  The runner uses this to stop self-continuing before Vercel's
+  // loop detector (HTTP 508) kicks in.  The watchdog cron doesn't send this
+  // header, so it defaults to 0 — starting a fresh chain.
+  const chainDepth = parseInt(request.headers.get('x-chain-depth') || '0', 10) || 0
+
   if (!isInternalCall) {
     const supabase = await createClient()
     const {
@@ -41,7 +47,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Resume in background
   after(async () => {
     try {
-      await runUnifiedAuditBatch(auditId, claimed.url)
+      await runUnifiedAuditBatch(auditId, claimed.url, chainDepth)
     } catch (err) {
       console.error('[Unified Audit Continue] Background batch failed:', err)
     }

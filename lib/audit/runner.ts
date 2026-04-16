@@ -350,7 +350,15 @@ export async function runAudit(auditId: string, url: string): Promise<void> {
 // (each batch can take up to 240s, plus time for DB ops and self-trigger)
 const MAX_FUNCTION_DURATION_MS = 500_000
 
-export async function runAuditBatch(auditId: string, url: string): Promise<void> {
+// Maximum sequential self-continuation invocations before deferring to the
+// watchdog cron.  Vercel detects function chains > ~20 as loops (HTTP 508).
+const MAX_CHAIN_DEPTH = 15
+
+export async function runAuditBatch(
+  auditId: string,
+  url: string,
+  chainDepth: number = 0
+): Promise<void> {
   const supabase = createServiceClient()
   const functionStartTime = Date.now()
 
@@ -404,17 +412,30 @@ export async function runAuditBatch(auditId: string, url: string): Promise<void>
         console.error('[Audit Batch]', {
           type: 'function_timeout_approaching',
           elapsedSeconds: Math.round(elapsed / 1000),
+          chainDepth,
           timestamp: new Date().toISOString(),
         })
         await supabase
           .from('site_audits')
           .update({ status: 'batch_complete', updated_at: new Date().toISOString() })
           .eq('id', auditId)
-        await triggerAuditContinuation({
-          auditId,
-          kind: 'legacy',
-          notifyOnFailure: notifyAuditContinuationFailure,
-        })
+
+        if (chainDepth >= MAX_CHAIN_DEPTH) {
+          console.error('[Audit Batch]', {
+            type: 'chain_depth_limit_reached',
+            auditId,
+            chainDepth,
+            message: 'Deferring to watchdog cron to avoid Vercel 508 loop detection',
+            timestamp: new Date().toISOString(),
+          })
+        } else {
+          await triggerAuditContinuation({
+            auditId,
+            kind: 'legacy',
+            chainDepth: chainDepth + 1,
+            notifyOnFailure: notifyAuditContinuationFailure,
+          })
+        }
         return
       }
 

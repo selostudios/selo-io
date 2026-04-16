@@ -25,6 +25,13 @@ export interface TriggerAuditContinuationOptions {
   auditId: string
   kind: AuditKind
   /**
+   * Current depth of the self-continuation chain. The continue endpoint
+   * increments this on each invocation. When the runner sees it exceed
+   * MAX_CHAIN_DEPTH it stops self-continuing and lets the watchdog cron
+   * resume the audit (starting a fresh chain at depth 0).
+   */
+  chainDepth?: number
+  /**
    * Called once if every retry fails. The caller is responsible for
    * recording the failure (e.g. sending an email alert or updating the
    * audit record with a failure note).
@@ -64,8 +71,10 @@ function jitter(baseMs: number): number {
 }
 
 function isRetryable(status: number): boolean {
-  // 5xx is always retryable. 408 (request timeout) and 429 (rate limited) are
-  // transient. Other 4xx (401/403/404/etc.) is a semantic failure — don't retry.
+  // Most 5xx is retryable. 408 (request timeout) and 429 (rate limited) are
+  // transient. 508 (Loop Detected) is Vercel's permanent rejection of deep
+  // function chains — retrying won't help. Other 4xx is a semantic failure.
+  if (status === 508) return false
   return status >= 500 || status === 408 || status === 429
 }
 
@@ -75,12 +84,16 @@ async function sleep(ms: number): Promise<void> {
 
 async function attemptContinuation(
   url: string,
-  cronSecret: string
+  cronSecret: string,
+  chainDepth: number
 ): Promise<{ ok: boolean; status?: number; error?: string }> {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'x-cron-secret': cronSecret },
+      headers: {
+        'x-cron-secret': cronSecret,
+        'x-chain-depth': String(chainDepth),
+      },
       signal: AbortSignal.timeout(PER_ATTEMPT_TIMEOUT_MS),
     })
 
@@ -101,7 +114,7 @@ async function attemptContinuation(
 export async function triggerAuditContinuation(
   options: TriggerAuditContinuationOptions
 ): Promise<TriggerAuditContinuationResult> {
-  const { auditId, kind, notifyOnFailure } = options
+  const { auditId, kind, chainDepth = 0, notifyOnFailure } = options
 
   const baseUrl = resolveBaseUrl()
   if (!baseUrl) {
@@ -129,7 +142,7 @@ export async function triggerAuditContinuation(
   let lastStatus: number | undefined
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const result = await attemptContinuation(url, cronSecret)
+    const result = await attemptContinuation(url, cronSecret, chainDepth)
 
     if (result.ok) {
       console.error('[Audit Continuation]', {

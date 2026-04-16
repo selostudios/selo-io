@@ -120,6 +120,41 @@ describe('triggerAuditContinuation', () => {
     expect(result.attempts).toBe(2)
   })
 
+  it('does NOT retry on HTTP 508 (Vercel loop detection is permanent)', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 508 }))
+
+    const promise = triggerAuditContinuation({
+      auditId: 'audit-123',
+      kind: 'unified',
+      notifyOnFailure: notifyMock,
+    })
+    await vi.runAllTimersAsync()
+    const result = await promise
+
+    expect(result.success).toBe(false)
+    expect(result.attempts).toBe(1)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(notifyMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes chainDepth as x-chain-depth header', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }))
+
+    await triggerAuditContinuation({
+      auditId: 'audit-123',
+      kind: 'unified',
+      chainDepth: 7,
+      notifyOnFailure: notifyMock,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'x-chain-depth': '7' }),
+      })
+    )
+  })
+
   it('does NOT retry on 4xx (except 408 and 429)', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }))
 

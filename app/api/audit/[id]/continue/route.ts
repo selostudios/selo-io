@@ -12,6 +12,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const cronSecret = request.headers.get('x-cron-secret')
   const isInternalCall = cronSecret === process.env.CRON_SECRET && !!cronSecret
 
+  // Chain depth — see unified-audit continue endpoint for details.
+  const chainDepth = parseInt(request.headers.get('x-chain-depth') || '0', 10) || 0
+
   if (!isInternalCall) {
     const supabase = await createClient()
     const {
@@ -43,7 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Run next batch in background
   after(async () => {
     try {
-      await runAuditBatch(auditId, claimed.url)
+      await runAuditBatch(auditId, claimed.url, chainDepth)
     } catch (err) {
       console.error('[Audit Continue] Background batch failed:', err)
     }

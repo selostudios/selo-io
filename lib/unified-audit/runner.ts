@@ -20,6 +20,13 @@ import { auditModules } from './modules/registry'
 // Budget for starting new batches: 800s max function timeout minus 300s buffer
 const MAX_FUNCTION_DURATION_MS = 500_000
 
+// Maximum sequential self-continuation invocations before deferring to the
+// watchdog cron.  Vercel detects function chains > ~20 as loops (HTTP 508).
+// By stopping self-continuation at 15 we stay well under the limit.  The
+// audit-resume cron picks up the batch_complete audit within 10 minutes and
+// starts a fresh chain (chainDepth = 0), so large sites still complete.
+const MAX_CHAIN_DEPTH = 15
+
 // Explicit column selects to avoid fetching unused columns (cast as '*' for Supabase type inference)
 const AUDIT_CHECK_SELECT = `id, audit_id, page_url, category, check_name, priority, status,
   display_name, display_name_passed, description, fix_guidance,
@@ -418,7 +425,11 @@ export async function runUnifiedAudit(auditId: string, url: string): Promise<voi
  * Reuses initializeCrawlQueue/crawlBatch from lib/audit/batch-crawler.ts
  * but saves pages to unified `audit_pages` table.
  */
-export async function runUnifiedAuditBatch(auditId: string, url: string): Promise<void> {
+export async function runUnifiedAuditBatch(
+  auditId: string,
+  url: string,
+  chainDepth: number = 0
+): Promise<void> {
   const supabase = createServiceClient()
   const functionStartTime = Date.now()
 
@@ -461,6 +472,7 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
         console.error('[Unified Audit Batch]', {
           type: 'function_timeout_approaching',
           elapsedSeconds: Math.round(elapsed / 1000),
+          chainDepth,
           timestamp: new Date().toISOString(),
         })
         await supabase
@@ -470,11 +482,23 @@ export async function runUnifiedAuditBatch(auditId: string, url: string): Promis
             updated_at: new Date().toISOString(),
           })
           .eq('id', auditId)
-        await triggerAuditContinuation({
-          auditId,
-          kind: 'unified',
-          notifyOnFailure: notifyAuditContinuationFailure,
-        })
+
+        if (chainDepth >= MAX_CHAIN_DEPTH) {
+          console.error('[Unified Audit Batch]', {
+            type: 'chain_depth_limit_reached',
+            auditId,
+            chainDepth,
+            message: 'Deferring to watchdog cron to avoid Vercel 508 loop detection',
+            timestamp: new Date().toISOString(),
+          })
+        } else {
+          await triggerAuditContinuation({
+            auditId,
+            kind: 'unified',
+            chainDepth: chainDepth + 1,
+            notifyOnFailure: notifyAuditContinuationFailure,
+          })
+        }
         return
       }
 
