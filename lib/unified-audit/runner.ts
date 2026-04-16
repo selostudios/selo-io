@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
+import { paginateQuery } from '@/lib/supabase/paginate'
 import { crawlSite } from '@/lib/audit/crawler'
 import { initializeCrawlQueue, crawlBatch } from './batch-crawler'
 import { fetchPage } from '@/lib/audit/fetcher'
@@ -682,13 +683,19 @@ async function completeAuditScoring(
   const psiResult = moduleResults.find((r) => r.dimension === ScoreDimension.Performance)
   let finalCheckResults = allCheckResults
   if (psiResult?.phaseResult && (psiResult.phaseResult.checksUpserted as number) > 0) {
-    const { data: freshChecks } = await supabase
-      .from('audit_checks')
-      .select(AUDIT_CHECK_SELECT)
-      .eq('audit_id', auditId)
+    const freshChecks = await paginateQuery<AuditCheck>(
+      (sb, range) =>
+        sb
+          .from('audit_checks')
+          .select(AUDIT_CHECK_SELECT)
+          .eq('audit_id', auditId)
+          .order('created_at', { ascending: true })
+          .range(range.from, range.to),
+      supabase
+    )
 
-    if (freshChecks) {
-      finalCheckResults = freshChecks as AuditCheck[]
+    if (freshChecks.length > 0) {
+      finalCheckResults = freshChecks
 
       // Re-run scoring with fresh checks
       const refreshedResults = await executeModules(auditModules, finalCheckResults)
@@ -797,13 +804,19 @@ async function finishUnifiedAudit(
     await supabase.from('audits').update({ status: UnifiedAuditStatus.Checking }).eq('id', auditId)
   }
 
-  // Get all pages from the audit_pages table
-  const { data: pages } = await supabase
-    .from('audit_pages')
-    .select(AUDIT_PAGE_SELECT)
-    .eq('audit_id', auditId)
+  // Get all pages from the audit_pages table (paginated to overcome 1000-row limit)
+  const rawPages = await paginateQuery<Record<string, unknown>>(
+    (sb, range) =>
+      sb
+        .from('audit_pages')
+        .select(AUDIT_PAGE_SELECT)
+        .eq('audit_id', auditId)
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to),
+    supabase
+  )
 
-  const allPages: AuditPage[] = (pages || []).map((p: Record<string, unknown>) => ({
+  const allPages: AuditPage[] = rawPages.map((p) => ({
     id: p.id as string,
     audit_id: p.audit_id as string,
     url: p.url as string,
@@ -829,13 +842,17 @@ async function finishUnifiedAudit(
     return
   }
 
-  // Get existing page-specific check results
-  const { data: existingChecks } = await supabase
-    .from('audit_checks')
-    .select(AUDIT_CHECK_SELECT)
-    .eq('audit_id', auditId)
-
-  const allCheckResults: AuditCheck[] = (existingChecks || []) as AuditCheck[]
+  // Get existing page-specific check results (paginated to overcome 1000-row limit)
+  const allCheckResults: AuditCheck[] = await paginateQuery<AuditCheck>(
+    (sb, range) =>
+      sb
+        .from('audit_checks')
+        .select(AUDIT_CHECK_SELECT)
+        .eq('audit_id', auditId)
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to),
+    supabase
+  )
 
   // Run site-wide checks if not stopped
   if (!wasStopped) {
