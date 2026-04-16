@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Search, Clock, Loader2, Trash2, Gauge, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { Input } from '@/components/ui/input'
 import { PerformanceDashboard } from '@/components/performance/performance-dashboard'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
@@ -35,6 +36,7 @@ export function PageSpeedClient({
   const buildOrgHref = useBuildOrgHref()
   const [searchQuery, setSearchQuery] = useState('')
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
+  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
 
   // Determine audit target from URL params (managed by header selector)
   const selectedTarget = useMemo(() => {
@@ -52,6 +54,7 @@ export function PageSpeedClient({
   }, [selectedOrganizationId, organizations])
 
   const handleDeleteAudit = async (auditId: string) => {
+    setDeletingAuditId(auditId)
     try {
       const response = await fetch(`/api/performance/${auditId}`, { method: 'DELETE' })
       if (response.ok) {
@@ -59,6 +62,8 @@ export function PageSpeedClient({
       }
     } catch (err) {
       console.error('[PageSpeed Client] Failed to delete audit:', err)
+    } finally {
+      setDeletingAuditId(null)
     }
   }
 
@@ -316,15 +321,15 @@ export function PageSpeedClient({
                             className={`h-4 w-4 ${refreshingAuditId === audit.id ? 'animate-spin' : ''}`}
                           />
                         </Button>
-                        <Button
+                        <LoadingButton
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteAudit(audit.id)}
+                          loading={deletingAuditId === audit.id}
+                          icon={<Trash2 />}
                           className="text-muted-foreground hover:text-destructive"
                           aria-label="Delete audit"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        />
                       </div>
                     </div>
                   ))}

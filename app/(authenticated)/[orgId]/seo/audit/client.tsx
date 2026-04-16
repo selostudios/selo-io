@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Search, FileSearch, Loader2, Trash2, Clock, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -45,6 +46,7 @@ export function UnifiedAuditClient({
   const [searchQuery, setSearchQuery] = useState('')
   const [oneTimeUrl, setOneTimeUrl] = useState('')
   const [isStarting, setIsStarting] = useState(false)
+  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Determine audit target
@@ -99,9 +101,14 @@ export function UnifiedAuditClient({
   }
 
   const handleDeleteAudit = async (auditId: string) => {
-    const result = await deleteUnifiedAudit(auditId)
-    if (!result.error) {
-      router.refresh()
+    setDeletingAuditId(auditId)
+    try {
+      const result = await deleteUnifiedAudit(auditId)
+      if (!result.error) {
+        router.refresh()
+      }
+    } finally {
+      setDeletingAuditId(null)
     }
   }
 
@@ -363,16 +370,16 @@ export function UnifiedAuditClient({
                         <RefreshCw className={`h-4 w-4 ${isStarting ? 'animate-spin' : ''}`} />
                       </Button>
                     )}
-                    <Button
+                    <LoadingButton
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteAudit(audit.id)}
                       disabled={isInProgress(audit.status)}
+                      loading={deletingAuditId === audit.id}
+                      icon={<Trash2 />}
                       className="text-muted-foreground hover:text-destructive"
                       aria-label="Delete audit"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    />
                   </div>
                 </div>
               ))}

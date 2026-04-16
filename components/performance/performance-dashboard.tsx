@@ -1,11 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Clock, Gauge, Loader2, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AuditRunControl } from '@/components/audit/audit-run-control'
 import { ScoreTrendChart, type ScoreDataPoint } from '@/components/audit/score-trend-chart'
@@ -32,6 +33,7 @@ export function PerformanceDashboard({
   const router = useRouter()
   const buildOrgHref = useBuildOrgHref()
   const [isPending, startTransition] = useTransition()
+  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
 
   const handleRunAudit = async (url: string, orgId?: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -62,6 +64,7 @@ export function PerformanceDashboard({
   }
 
   const handleDeleteAudit = async (auditId: string) => {
+    setDeletingAuditId(auditId)
     try {
       const response = await fetch(`/api/performance/${auditId}`, { method: 'DELETE' })
       if (response.ok) {
@@ -69,6 +72,8 @@ export function PerformanceDashboard({
       }
     } catch (err) {
       console.error('[Performance Dashboard] Failed to delete audit:', err)
+    } finally {
+      setDeletingAuditId(null)
     }
   }
 
@@ -188,15 +193,15 @@ export function PerformanceDashboard({
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/seo/page-speed/${audit.id}`}>View</Link>
                     </Button>
-                    <Button
+                    <LoadingButton
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteAudit(audit.id)}
+                      loading={deletingAuditId === audit.id}
+                      icon={<Trash2 />}
                       className="text-muted-foreground hover:text-destructive"
                       aria-label="Delete audit"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    />
                   </div>
                 </div>
               ))}

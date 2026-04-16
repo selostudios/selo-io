@@ -166,7 +166,7 @@ export function UnifiedAuditDetailClient({
   )
 
   const currentChecks = useMemo(() => checksByTab[currentTab] ?? [], [checksByTab, currentTab])
-  const isLoading = loadingTab === currentTab && !checksByTab[currentTab]
+  const isLoading = loadingTab === currentTab
 
   // Filter checks by search query
   const searchFilteredChecks = useMemo(() => {

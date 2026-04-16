@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Clock, FileSearch, Loader2, Trash2, RefreshCw } from 'lucide-react'
@@ -25,8 +26,10 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
   const router = useRouter()
   const buildOrgHref = useBuildOrgHref()
   const [refreshingAuditId, setRefreshingAuditId] = useState<string | null>(null)
+  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
 
   const handleDeleteAudit = async (auditId: string) => {
+    setDeletingAuditId(auditId)
     try {
       const response = await fetch(`/api/audit/${auditId}`, { method: 'DELETE' })
       if (response.ok) {
@@ -34,6 +37,8 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
       }
     } catch (err) {
       console.error('[Audit History] Failed to delete audit:', err)
+    } finally {
+      setDeletingAuditId(null)
     }
   }
 
@@ -152,15 +157,15 @@ export function AuditHistoryList({ audits, showUrl = false }: AuditHistoryListPr
                 />
               </Button>
             )}
-            <Button
+            <LoadingButton
               variant="ghost"
               size="sm"
               onClick={() => handleDeleteAudit(audit.id)}
+              loading={deletingAuditId === audit.id}
+              icon={<Trash2 />}
               className="text-muted-foreground hover:text-destructive"
               aria-label="Delete audit"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            />
           </div>
         </div>
       ))}

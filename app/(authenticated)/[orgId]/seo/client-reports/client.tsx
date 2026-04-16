@@ -72,6 +72,7 @@ export function ClientReportsClient({
   const [searchQuery, setSearchQuery] = useState('')
   const [creatingForAudit, setCreatingForAudit] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [reportToDelete, setReportToDelete] = useState<{
     id: string
     domain: string
@@ -175,11 +176,16 @@ export function ClientReportsClient({
 
   const handleDeleteReport = async () => {
     if (!reportToDelete) return
-    const result = await deleteReport(reportToDelete.id)
-    if (result.success) {
-      setDeleteDialogOpen(false)
-      setReportToDelete(null)
-      router.refresh()
+    setIsDeleting(true)
+    try {
+      const result = await deleteReport(reportToDelete.id)
+      if (result.success) {
+        setDeleteDialogOpen(false)
+        setReportToDelete(null)
+        router.refresh()
+      }
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -441,9 +447,17 @@ export function ClientReportsClient({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteReport}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Report
+              {isDeleting ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Report'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
