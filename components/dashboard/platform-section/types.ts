@@ -25,6 +25,7 @@ export interface PlatformConfig {
 export interface PlatformSectionProps<TMetrics> {
   connections: PlatformConnection[]
   period: Period
+  refreshKey?: number
   config: PlatformConfig
   getMetrics: (
     connectionId: string,

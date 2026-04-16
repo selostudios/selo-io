@@ -34,6 +34,7 @@ type Connection = {
 interface GoogleAnalyticsSectionProps {
   connections: Connection[]
   period: Period
+  refreshKey?: number
 }
 
 const GA_COLOR = '#E37400'
@@ -154,11 +155,16 @@ function renderGAMetrics(metrics: GAMetrics, timeSeries: MetricTimeSeries[], per
   )
 }
 
-export function GoogleAnalyticsSection({ connections, period }: GoogleAnalyticsSectionProps) {
+export function GoogleAnalyticsSection({
+  connections,
+  period,
+  refreshKey,
+}: GoogleAnalyticsSectionProps) {
   return (
     <PlatformSection<GAMetrics>
       connections={connections}
       period={period}
+      refreshKey={refreshKey}
       config={{
         name: 'Google Analytics',
         color: GA_COLOR,

@@ -18,6 +18,7 @@ import { syncLinkedInMetrics } from '@/lib/platforms/linkedin/actions'
 import { syncGoogleAnalyticsMetrics } from '@/lib/platforms/google-analytics/actions'
 import { syncHubSpotMetrics } from '@/lib/platforms/hubspot/actions'
 import { showSuccess, showError } from '@/components/ui/sonner'
+import { invalidateAllCacheEntries } from '@/lib/metrics/client-cache'
 import { Period } from '@/lib/enums'
 
 type Connection = {
@@ -118,6 +119,7 @@ export function IntegrationsPanel({
       showSuccess(`${successCount} integration${successCount > 1 ? 's' : ''} synced`)
     }
 
+    invalidateAllCacheEntries()
     setRefreshKey((k) => k + 1)
     setLastSyncAt(new Date().toISOString())
     setIsRefreshing(false)
@@ -164,20 +166,16 @@ export function IntegrationsPanel({
 
       <div className="space-y-6">
         <LinkedInSection
-          key={`linkedin-${refreshKey}`}
           connections={linkedInConnections}
           period={period}
+          refreshKey={refreshKey}
         />
         <GoogleAnalyticsSection
-          key={`ga-${refreshKey}`}
           connections={googleAnalyticsConnections}
           period={period}
+          refreshKey={refreshKey}
         />
-        <HubSpotSection
-          key={`hubspot-${refreshKey}`}
-          connections={hubspotConnections}
-          period={period}
-        />
+        <HubSpotSection connections={hubspotConnections} period={period} refreshKey={refreshKey} />
       </div>
     </div>
   )

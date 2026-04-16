@@ -37,6 +37,7 @@ type Connection = {
 interface HubSpotSectionProps {
   connections: Connection[]
   period: Period
+  refreshKey?: number
 }
 
 const HUBSPOT_COLOR = '#FF7A59'
@@ -156,11 +157,12 @@ function renderHubSpotMetrics(
   )
 }
 
-export function HubSpotSection({ connections, period }: HubSpotSectionProps) {
+export function HubSpotSection({ connections, period, refreshKey }: HubSpotSectionProps) {
   return (
     <PlatformSection<HubSpotMetricsWithChanges>
       connections={connections}
       period={period}
+      refreshKey={refreshKey}
       config={{
         name: 'HubSpot',
         color: HUBSPOT_COLOR,

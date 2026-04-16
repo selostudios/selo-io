@@ -22,6 +22,7 @@ type Connection = {
 interface LinkedInSectionProps {
   connections: Connection[]
   period: Period
+  refreshKey?: number
 }
 
 const LINKEDIN_COLOR = '#0A66C2'
@@ -74,11 +75,12 @@ function renderLinkedInMetrics(metrics: Metric[], timeSeries: MetricTimeSeries[]
   )
 }
 
-export function LinkedInSection({ connections, period }: LinkedInSectionProps) {
+export function LinkedInSection({ connections, period, refreshKey }: LinkedInSectionProps) {
   return (
     <PlatformSection<Metric[]>
       connections={connections}
       period={period}
+      refreshKey={refreshKey}
       config={{
         name: 'LinkedIn',
         color: LINKEDIN_COLOR,

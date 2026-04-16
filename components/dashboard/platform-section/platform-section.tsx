@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Loader2, ChevronDown, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { getCacheEntry, isCacheEntryFresh, setCacheEntry } from '@/lib/metrics/client-cache'
 import type { PlatformSectionProps, PlatformConnection } from './types'
 import { getConnectionLabel } from './types'
 import { Period } from '@/lib/enums'
@@ -16,6 +17,7 @@ import type { MetricTimeSeries } from '@/lib/metrics/types'
 interface ConnectionMetricsProps<TMetrics> {
   connection: PlatformConnection
   period: Period
+  refreshKey?: number
   getMetrics: PlatformSectionProps<TMetrics>['getMetrics']
   renderMetrics: PlatformSectionProps<TMetrics>['renderMetrics']
   onMetricsLoaded?: (metrics: TMetrics) => void
@@ -24,28 +26,69 @@ interface ConnectionMetricsProps<TMetrics> {
 function ConnectionMetrics<TMetrics>({
   connection,
   period,
+  refreshKey,
   getMetrics,
   renderMetrics,
   onMetricsLoaded,
 }: ConnectionMetricsProps<TMetrics>) {
   const [metrics, setMetrics] = useState<TMetrics | null>(null)
   const [timeSeries, setTimeSeries] = useState<MetricTimeSeries[]>([])
-  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Stable callback ref to avoid re-triggering the effect when parent re-renders
+  const onMetricsLoadedRef = useCallback(
+    (m: TMetrics) => onMetricsLoaded?.(m),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   useEffect(() => {
-    startTransition(async () => {
-      const result = await getMetrics(connection.id, period)
-      if (result.metrics) {
-        setMetrics(result.metrics)
-        onMetricsLoaded?.(result.metrics)
-      }
-      if (result.timeSeries) {
-        setTimeSeries(result.timeSeries)
-      }
-    })
-  }, [connection.id, period, getMetrics, onMetricsLoaded])
+    let cancelled = false
 
-  if (isPending) {
+    // Check cache first
+    const cached = getCacheEntry(connection.id, period)
+    if (cached) {
+      const cachedMetrics = cached.metrics as TMetrics
+      setMetrics(cachedMetrics)
+      setTimeSeries(cached.timeSeries)
+      onMetricsLoadedRef(cachedMetrics)
+
+      // If fresh, no server call needed
+      if (isCacheEntryFresh(cached)) {
+        return
+      }
+    }
+
+    // Show spinner only if no cached data to display
+    if (!cached) {
+      setIsLoading(true)
+    }
+
+    getMetrics(connection.id, period)
+      .then((result) => {
+        if (cancelled) return
+
+        if (result.metrics) {
+          setMetrics(result.metrics)
+          onMetricsLoadedRef(result.metrics)
+          setCacheEntry(connection.id, period, result.metrics, result.timeSeries ?? [])
+        }
+        if (result.timeSeries) {
+          setTimeSeries(result.timeSeries)
+        }
+        setIsLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [connection.id, period, refreshKey, getMetrics, onMetricsLoadedRef])
+
+  if (isLoading && !metrics) {
     return (
       <div className="flex h-[100px] items-center justify-center">
         <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden="true" />
@@ -63,6 +106,7 @@ function ConnectionMetrics<TMetrics>({
 export function PlatformSection<TMetrics>({
   connections,
   period,
+  refreshKey,
   config,
   getMetrics,
   formatMetricsForClipboard,
@@ -141,6 +185,7 @@ export function PlatformSection<TMetrics>({
           <ConnectionMetrics
             connection={connections[0]}
             period={period}
+            refreshKey={refreshKey}
             getMetrics={getMetrics}
             renderMetrics={renderMetrics}
             onMetricsLoaded={setSingleMetrics}
@@ -175,6 +220,7 @@ export function PlatformSection<TMetrics>({
             <ConnectionMetrics
               connection={connection}
               period={period}
+              refreshKey={refreshKey}
               getMetrics={getMetrics}
               renderMetrics={renderMetrics}
             />
