@@ -139,6 +139,7 @@ export function UnifiedLiveProgress({ auditId, initialStatus }: UnifiedLiveProgr
           auditId,
           timestamp: new Date().toISOString(),
         })
+        setIsStopping(false)
       }
     } catch (error) {
       console.error('[Unified Audit Stop Error]', {

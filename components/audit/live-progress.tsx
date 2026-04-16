@@ -166,6 +166,7 @@ export function LiveProgress({ auditId, initialStatus }: LiveProgressProps) {
           status: response.status,
           timestamp: new Date().toISOString(),
         })
+        setIsStopping(false)
       }
       // The polling will detect the status change and trigger a refresh
     } catch (error) {

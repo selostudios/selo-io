@@ -83,7 +83,7 @@ export const sslCertificate: AuditCheckDefinition = {
   isSiteWide: true,
   fixGuidance:
     "Enable HTTPS on your server with a valid SSL certificate from a trusted Certificate Authority (e.g., Let's Encrypt).",
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.Performance],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const url = new URL(context.url)

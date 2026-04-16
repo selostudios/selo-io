@@ -9,7 +9,7 @@ describe('readability check', () => {
     expect(readability.category).toBe(CheckCategory.ContentQuality)
     expect(readability.priority).toBe(CheckPriority.Recommended)
     expect(readability.isSiteWide).toBe(false)
-    expect(readability.feedsScores).toEqual([ScoreDimension.SEO, ScoreDimension.AIReadiness])
+    expect(readability.feedsScores).toEqual([ScoreDimension.SEO])
   })
 
   it('should pass for simple, readable content', async () => {

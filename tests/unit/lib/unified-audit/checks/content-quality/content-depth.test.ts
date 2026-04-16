@@ -9,7 +9,7 @@ describe('contentDepth check', () => {
     expect(contentDepth.category).toBe(CheckCategory.ContentQuality)
     expect(contentDepth.priority).toBe(CheckPriority.Recommended)
     expect(contentDepth.isSiteWide).toBe(false)
-    expect(contentDepth.feedsScores).toEqual([ScoreDimension.SEO, ScoreDimension.AIReadiness])
+    expect(contentDepth.feedsScores).toEqual([ScoreDimension.SEO])
   })
 
   it('should fail for very thin content (< 300 words)', async () => {

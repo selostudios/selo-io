@@ -62,6 +62,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     UnifiedAuditStatus.Checking,
     UnifiedAuditStatus.Analyzing,
     UnifiedAuditStatus.BatchComplete,
+    UnifiedAuditStatus.AwaitingConfirmation,
   ]
 
   if (!stoppableStatuses.includes(audit.status as UnifiedAuditStatus)) {

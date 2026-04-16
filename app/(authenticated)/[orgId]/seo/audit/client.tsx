@@ -29,6 +29,7 @@ function isInProgress(status: string): boolean {
     status === 'pending' ||
     status === 'crawling' ||
     status === 'checking' ||
+    status === 'analyzing' ||
     status === 'batch_complete' ||
     status === 'awaiting_confirmation'
   )

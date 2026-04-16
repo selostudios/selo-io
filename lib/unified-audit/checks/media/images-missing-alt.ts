@@ -13,7 +13,7 @@ export const imagesMissingAlt: AuditCheckDefinition = {
     'https://developers.google.com/search/docs/appearance/google-images#use-descriptive-alt-text',
   fixGuidance:
     'Add descriptive alt="description" attributes to all <img> elements for accessibility and SEO.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

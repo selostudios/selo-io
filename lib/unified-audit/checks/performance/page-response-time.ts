@@ -13,7 +13,7 @@ export const pageResponseTime: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Optimize server response time, enable compression, use a CDN, and reduce render-blocking resources.',
-  feedsScores: [ScoreDimension.Performance, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.Performance],
 
   async run(context: CheckContext): Promise<CheckResult> {
     // Try PSI data first (most accurate)

@@ -61,7 +61,7 @@ export const aiCrawlerAccess: AuditCheckDefinition = {
   isSiteWide: true,
   fixGuidance:
     'Review your robots.txt to ensure critical AI crawlers (GPTBot, ClaudeBot, PerplexityBot) are not blocked. Remove or modify Disallow rules for these user agents.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     let robotsTxt = context.robotsTxt

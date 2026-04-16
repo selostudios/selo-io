@@ -13,7 +13,7 @@ export const contentDepth: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Expand content to at least 800-1000 words with detailed explanations, examples, and insights.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

@@ -15,7 +15,7 @@ export const mobileFriendly: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Add <meta name="viewport" content="width=device-width, initial-scale=1"> and use responsive CSS with media queries.',
-  feedsScores: [ScoreDimension.Performance, ScoreDimension.SEO],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

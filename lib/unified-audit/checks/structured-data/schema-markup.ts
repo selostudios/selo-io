@@ -14,7 +14,7 @@ export const schemaMarkup: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Add JSON-LD structured data to help search engines and AI understand your content. Common types include Organization, Article, Product, and FAQ.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

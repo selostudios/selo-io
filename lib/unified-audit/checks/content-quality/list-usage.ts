@@ -14,7 +14,7 @@ export const listUsage: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Add bullet points for key takeaways, features, or steps. Lists improve content scannability.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

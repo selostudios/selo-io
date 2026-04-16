@@ -15,7 +15,7 @@ export const contentFreshness: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Update content regularly with new information, examples, and dates. Add a visible last-updated timestamp.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const now = new Date()

@@ -146,8 +146,7 @@ describe('ssl-certificate', () => {
 
   it('has correct category, priority, and score dimensions', () => {
     expect(sslCertificate.category).toBe(CheckCategory.Security)
-    expect(sslCertificate.feedsScores).toContain(ScoreDimension.SEO)
-    expect(sslCertificate.feedsScores).toContain(ScoreDimension.Performance)
+    expect(sslCertificate.feedsScores).toEqual([ScoreDimension.SEO])
     expect(sslCertificate.isSiteWide).toBe(true)
   })
 

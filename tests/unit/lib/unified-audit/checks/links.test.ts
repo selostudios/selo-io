@@ -238,7 +238,6 @@ describe('internal-linking', () => {
 
   it('has correct category and score dimensions', () => {
     expect(internalLinking.category).toBe(CheckCategory.Links)
-    expect(internalLinking.feedsScores).toContain(ScoreDimension.SEO)
-    expect(internalLinking.feedsScores).toContain(ScoreDimension.AIReadiness)
+    expect(internalLinking.feedsScores).toEqual([ScoreDimension.SEO])
   })
 })

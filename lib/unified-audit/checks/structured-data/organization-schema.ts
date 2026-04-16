@@ -69,7 +69,7 @@ export const organizationSchema: AuditCheckDefinition = {
   isSiteWide: true,
   fixGuidance:
     'Add Organization JSON-LD structured data to your homepage with name, url, logo, description, and sameAs links to social profiles.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

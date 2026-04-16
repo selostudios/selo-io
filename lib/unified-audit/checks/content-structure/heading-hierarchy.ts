@@ -12,7 +12,7 @@ export const headingHierarchy: AuditCheckDefinition = {
   displayNamePassed: 'Heading Hierarchy',
   learnMoreUrl:
     'https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements#usage_notes',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

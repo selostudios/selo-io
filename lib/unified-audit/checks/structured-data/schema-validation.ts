@@ -150,7 +150,7 @@ export const schemaValidation: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Review your JSON-LD structured data and add any missing required or recommended properties for each schema type.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

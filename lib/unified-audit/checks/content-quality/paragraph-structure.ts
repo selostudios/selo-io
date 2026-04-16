@@ -13,7 +13,7 @@ export const paragraphStructure: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Break long paragraphs into 3-5 sentence chunks (40-80 words) for better scannability.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

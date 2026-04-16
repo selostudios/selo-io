@@ -19,7 +19,7 @@ export const faqSection: AuditCheckDefinition = {
   displayName: 'No FAQ Section',
   displayNamePassed: 'FAQ Section Present',
   learnMoreUrl: 'https://developers.google.com/search/docs/appearance/structured-data/faqpage',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

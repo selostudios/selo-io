@@ -81,8 +81,7 @@ describe('images-missing-alt', () => {
 
   it('has correct category and score dimensions', () => {
     expect(imagesMissingAlt.category).toBe(CheckCategory.Media)
-    expect(imagesMissingAlt.feedsScores).toContain(ScoreDimension.SEO)
-    expect(imagesMissingAlt.feedsScores).toContain(ScoreDimension.AIReadiness)
+    expect(imagesMissingAlt.feedsScores).toEqual([ScoreDimension.SEO])
   })
 })
 

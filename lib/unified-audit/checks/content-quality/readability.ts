@@ -13,7 +13,7 @@ export const readability: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Break up long sentences (keep under 20 words) and use simpler vocabulary where possible.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

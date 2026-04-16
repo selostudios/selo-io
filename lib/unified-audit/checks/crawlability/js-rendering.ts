@@ -15,7 +15,7 @@ export const jsRendering: AuditCheckDefinition = {
   isSiteWide: false,
   fixGuidance:
     'Implement server-side rendering (SSR) or static site generation (SSG) to ensure content is available in initial HTML without JavaScript execution.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.AIReadiness],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)

@@ -13,7 +13,7 @@ export const internalLinking: AuditCheckDefinition = {
   displayNamePassed: 'Good Internal Linking',
   learnMoreUrl: 'https://developers.google.com/search/docs/crawling-indexing/links-crawlable',
   fixGuidance: 'Add 2-5 contextual links to related pages within your content.',
-  feedsScores: [ScoreDimension.SEO, ScoreDimension.AIReadiness],
+  feedsScores: [ScoreDimension.SEO],
 
   async run(context: CheckContext): Promise<CheckResult> {
     const $ = cheerio.load(context.html)
