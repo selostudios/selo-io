@@ -69,7 +69,7 @@ test.describe('Full Site Audit', () => {
     await expect(page.locator('[data-testid="audit-report-title"]')).toBeVisible()
 
     // Verify tabs are present
-    await expect(page.locator('[data-testid="tab-overview"]')).toBeVisible()
+    await expect(page.locator('[data-testid="tab-top-issues"]')).toBeVisible()
     await expect(page.locator('[data-testid="tab-seo"]')).toBeVisible()
     await expect(page.locator('[data-testid="tab-performance"]')).toBeVisible()
     await expect(page.locator('[data-testid="tab-ai-readiness"]')).toBeVisible()
@@ -86,9 +86,9 @@ test.describe('Full Site Audit', () => {
     await page.locator('[data-testid="tab-ai-readiness"]').click()
     await expect(page).toHaveURL(/tab=ai-readiness/)
 
-    // Switch back to Overview tab
-    await page.locator('[data-testid="tab-overview"]').click()
-    // Overview removes the tab param
+    // Switch back to Top Issues tab
+    await page.locator('[data-testid="tab-top-issues"]').click()
+    // Top Issues is the default tab, so it removes the tab param
     await expect(page).not.toHaveURL(/tab=/)
   })
 

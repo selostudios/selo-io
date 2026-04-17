@@ -223,12 +223,24 @@ export async function getSharedUnifiedAuditData(
     return null
   }
 
-  const { data: checkSummary } = await supabase
-    .from('audit_checks')
-    .select('status, feeds_scores')
-    .eq('audit_id', auditId)
+  const CHECK_SUMMARY_SELECT = 'status, priority, check_name, feeds_scores' as '*'
+  const checkSummary = await paginateQuery<{
+    status: string
+    priority: string
+    check_name: string
+    feeds_scores: string[]
+  }>(
+    (sb, range) =>
+      sb
+        .from('audit_checks')
+        .select(CHECK_SUMMARY_SELECT)
+        .eq('audit_id', auditId)
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to),
+    supabase
+  )
 
-  const tabCounts = computeSharedTabCounts(checkSummary ?? [])
+  const tabCounts = computeSharedTabCounts(checkSummary)
 
   return {
     audit: audit as UnifiedAudit,
@@ -242,7 +254,7 @@ export async function getSharedUnifiedAuditData(
  */
 export async function getSharedChecksByTab(
   auditId: string,
-  tab: 'overview' | 'seo' | 'performance' | 'ai_readiness'
+  tab: 'top_issues' | 'seo' | 'performance' | 'ai_readiness'
 ): Promise<AuditCheck[]> {
   const supabase = await createServiceClient()
 
@@ -252,7 +264,20 @@ export async function getSharedChecksByTab(
     ai_readiness: ScoreDimension.AIReadiness,
   }
 
-  const dimension = tab !== 'overview' ? dimensionMap[tab] : null
+  if (tab === 'top_issues') {
+    return paginateQuery<AuditCheck>((sb, range) => {
+      return sb
+        .from('audit_checks')
+        .select(AUDIT_CHECK_SELECT)
+        .eq('audit_id', auditId)
+        .in('status', ['failed', 'warning'])
+        .in('priority', ['critical', 'recommended'])
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to)
+    }, supabase)
+  }
+
+  const dimension = dimensionMap[tab]
 
   return paginateQuery<AuditCheck>((sb, range) => {
     let query = sb.from('audit_checks').select(AUDIT_CHECK_SELECT).eq('audit_id', auditId)
@@ -265,20 +290,28 @@ export async function getSharedChecksByTab(
   }, supabase)
 }
 
-function computeSharedTabCounts(checks: { status: string; feeds_scores: string[] }[]): TabCounts {
+function computeSharedTabCounts(
+  checks: { status: string; priority: string; check_name: string; feeds_scores: string[] }[]
+): TabCounts {
   const empty = () => ({ total: 0, failed: 0, warning: 0, passed: 0 })
   const counts: TabCounts = {
-    overview: empty(),
+    topIssues: empty(),
     seo: empty(),
     performance: empty(),
     aiReadiness: empty(),
   }
 
+  const topIssueNames = new Set<string>()
+
   for (const c of checks) {
-    counts.overview.total++
-    if (c.status === 'failed') counts.overview.failed++
-    else if (c.status === 'warning') counts.overview.warning++
-    else if (c.status === 'passed') counts.overview.passed++
+    const isActionable = c.status === 'failed' || c.status === 'warning'
+    const isHighPriority = c.priority === 'critical' || c.priority === 'recommended'
+    if (isActionable && isHighPriority && !topIssueNames.has(c.check_name)) {
+      topIssueNames.add(c.check_name)
+      counts.topIssues.total++
+      if (c.status === 'failed') counts.topIssues.failed++
+      else counts.topIssues.warning++
+    }
 
     if (c.feeds_scores.includes(ScoreDimension.SEO)) {
       counts.seo.total++

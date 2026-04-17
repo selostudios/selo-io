@@ -19,7 +19,7 @@ import { formatDate, formatDuration, calculateDuration } from '@/lib/utils'
 import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 import type { TabCounts } from './actions'
 
-type TabActionKey = 'overview' | 'seo' | 'performance' | 'ai_readiness'
+type TabActionKey = 'top_issues' | 'seo' | 'performance' | 'ai_readiness'
 type FetchChecksFn = (auditId: string, tab: TabActionKey) => Promise<AuditCheck[]>
 
 interface UnifiedAuditDetailClientProps {
@@ -31,11 +31,11 @@ interface UnifiedAuditDetailClientProps {
 }
 
 type StatusFilter = 'all' | 'failed' | 'warning' | 'passed'
-type TabValue = 'overview' | 'seo' | 'performance' | 'ai-readiness'
+type TabValue = 'top-issues' | 'seo' | 'performance' | 'ai-readiness'
 
 // Map tab values to the action parameter format
-const TAB_TO_ACTION_KEY: Record<TabValue, 'overview' | 'seo' | 'performance' | 'ai_readiness'> = {
-  overview: 'overview',
+const TAB_TO_ACTION_KEY: Record<TabValue, TabActionKey> = {
+  'top-issues': 'top_issues',
   seo: 'seo',
   performance: 'performance',
   'ai-readiness': 'ai_readiness',
@@ -43,7 +43,7 @@ const TAB_TO_ACTION_KEY: Record<TabValue, 'overview' | 'seo' | 'performance' | '
 
 // Map tab values to tabCounts keys
 const TAB_TO_COUNTS_KEY: Record<TabValue, keyof TabCounts> = {
-  overview: 'overview',
+  'top-issues': 'topIssues',
   seo: 'seo',
   performance: 'performance',
   'ai-readiness': 'aiReadiness',
@@ -51,7 +51,7 @@ const TAB_TO_COUNTS_KEY: Record<TabValue, keyof TabCounts> = {
 
 // Map tab values to score dimensions for module status lookups
 const TAB_TO_DIMENSION: Record<TabValue, ScoreDimension | null> = {
-  overview: null,
+  'top-issues': null,
   seo: ScoreDimension.SEO,
   performance: ScoreDimension.Performance,
   'ai-readiness': ScoreDimension.AIReadiness,
@@ -80,7 +80,7 @@ export function UnifiedAuditDetailClient({
   const [isRetrying, startRetry] = useTransition()
 
   // Tab state synced with URL
-  const currentTab = (searchParams.get('tab') as TabValue) || 'overview'
+  const currentTab = (searchParams.get('tab') as TabValue) || 'top-issues'
 
   // Cached checks per tab
   const [checksByTab, setChecksByTab] = useState<Partial<Record<TabValue, AuditCheck[]>>>({})
@@ -124,7 +124,7 @@ export function UnifiedAuditDetailClient({
   const handleTabChange = useCallback(
     (tab: string) => {
       const params = new URLSearchParams(searchParams.toString())
-      if (tab === 'overview') {
+      if (tab === 'top-issues') {
         params.delete('tab')
       } else {
         params.set('tab', tab)
@@ -260,8 +260,8 @@ export function UnifiedAuditDetailClient({
         {/* Tabbed Content */}
         <Tabs value={currentTab} onValueChange={handleTabChange} data-testid="audit-tabs">
           <TabsList>
-            <TabsTrigger value="overview" data-testid="tab-overview">
-              Overview
+            <TabsTrigger value="top-issues" data-testid="tab-top-issues">
+              Top Issues ({tabCounts.topIssues.total})
             </TabsTrigger>
             <TabsTrigger value="seo" data-testid="tab-seo">
               SEO ({tabCounts.seo.total})
@@ -382,7 +382,7 @@ export function UnifiedAuditDetailClient({
                   ) : (
                     <UnifiedCheckList
                       checks={statusFilteredChecks}
-                      groupBy="category"
+                      groupBy={currentTab === 'top-issues' ? 'priority' : 'category'}
                       totalPages={audit.pages_crawled}
                       onRerunCheck={handleRerunCheck}
                     />

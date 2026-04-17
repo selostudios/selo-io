@@ -39,7 +39,7 @@ export interface StatusCounts {
 }
 
 export interface TabCounts {
-  overview: StatusCounts
+  topIssues: StatusCounts
   seo: StatusCounts
   performance: StatusCounts
   aiReadiness: StatusCounts
@@ -158,13 +158,25 @@ export async function getAuditOverview(id: string): Promise<UnifiedAuditOverview
 
   if (!hasAccess) notFound()
 
-  // Fetch only status + feeds_scores for counting (~50 bytes/row vs ~2KB for full checks)
-  const { data: checkSummary } = await supabase
-    .from('audit_checks')
-    .select('status, feeds_scores')
-    .eq('audit_id', id)
+  // Fetch lightweight summary for tab counts (paginated to handle large audits)
+  const CHECK_SUMMARY_SELECT = 'status, priority, check_name, feeds_scores' as '*'
+  const checkSummary = await paginateQuery<{
+    status: string
+    priority: string
+    check_name: string
+    feeds_scores: string[]
+  }>(
+    (sb, range) =>
+      sb
+        .from('audit_checks')
+        .select(CHECK_SUMMARY_SELECT)
+        .eq('audit_id', id)
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to),
+    supabase
+  )
 
-  const tabCounts = computeTabCounts(checkSummary ?? [])
+  const tabCounts = computeTabCounts(checkSummary)
 
   return {
     audit: audit as UnifiedAudit,
@@ -172,21 +184,30 @@ export async function getAuditOverview(id: string): Promise<UnifiedAuditOverview
   }
 }
 
-function computeTabCounts(checks: { status: string; feeds_scores: string[] }[]): TabCounts {
+function computeTabCounts(
+  checks: { status: string; priority: string; check_name: string; feeds_scores: string[] }[]
+): TabCounts {
   const empty = (): StatusCounts => ({ total: 0, failed: 0, warning: 0, passed: 0 })
   const counts: TabCounts = {
-    overview: empty(),
+    topIssues: empty(),
     seo: empty(),
     performance: empty(),
     aiReadiness: empty(),
   }
 
+  // Track unique check_names for top issues deduplication
+  const topIssueNames = new Set<string>()
+
   for (const c of checks) {
-    // Overview counts all checks
-    counts.overview.total++
-    if (c.status === 'failed') counts.overview.failed++
-    else if (c.status === 'warning') counts.overview.warning++
-    else if (c.status === 'passed') counts.overview.passed++
+    // Top Issues: unique critical/recommended failures and warnings
+    const isActionable = c.status === 'failed' || c.status === 'warning'
+    const isHighPriority = c.priority === 'critical' || c.priority === 'recommended'
+    if (isActionable && isHighPriority && !topIssueNames.has(c.check_name)) {
+      topIssueNames.add(c.check_name)
+      counts.topIssues.total++
+      if (c.status === 'failed') counts.topIssues.failed++
+      else counts.topIssues.warning++
+    }
 
     // Dimension-specific counts
     if (c.feeds_scores.includes(ScoreDimension.SEO)) {
@@ -239,7 +260,7 @@ export async function getUnifiedAuditDetail(id: string): Promise<UnifiedAuditDet
  */
 export async function getUnifiedAuditChecksByTab(
   auditId: string,
-  tab: 'overview' | 'seo' | 'performance' | 'ai_readiness'
+  tab: 'top_issues' | 'seo' | 'performance' | 'ai_readiness'
 ): Promise<AuditCheck[]> {
   const supabase = await createClient()
   const user = await getAuthUser()
@@ -268,7 +289,21 @@ export async function getUnifiedAuditChecksByTab(
     ai_readiness: ScoreDimension.AIReadiness,
   }
 
-  const dimension = tab !== 'overview' ? dimensionMap[tab] : null
+  if (tab === 'top_issues') {
+    // Fetch only failed/warning checks with critical/recommended priority
+    return paginateQuery<AuditCheck>((sb, range) => {
+      return sb
+        .from('audit_checks')
+        .select(CHECK_SELECT)
+        .eq('audit_id', auditId)
+        .in('status', ['failed', 'warning'])
+        .in('priority', ['critical', 'recommended'])
+        .order('created_at', { ascending: true })
+        .range(range.from, range.to)
+    }, supabase)
+  }
+
+  const dimension = dimensionMap[tab]
 
   return paginateQuery<AuditCheck>((sb, range) => {
     let query = sb.from('audit_checks').select(CHECK_SELECT).eq('audit_id', auditId)

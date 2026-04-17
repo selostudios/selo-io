@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { CheckStatus, CheckCategory } from '@/lib/enums'
+import { CheckStatus, CheckCategory, CheckPriority } from '@/lib/enums'
 import type { AuditCheck } from '@/lib/unified-audit/types'
 
 // =============================================================================
@@ -565,7 +565,7 @@ function GroupedCheckItem({ group, totalPages, onDismiss, onRerun }: GroupedChec
 
 interface UnifiedCheckListProps {
   checks: AuditCheck[]
-  groupBy?: 'category' | 'page'
+  groupBy?: 'category' | 'page' | 'priority'
   totalPages?: number
   onDismissCheck?: (checkName: string, url: string) => Promise<void>
   onRerunCheck?: (
@@ -587,6 +587,17 @@ export function UnifiedCheckList({
 
   if (groupBy === 'page') {
     return <PageGroupedCheckList checks={checks} onDismissCheck={onDismissCheck} />
+  }
+
+  if (groupBy === 'priority') {
+    return (
+      <PriorityGroupedCheckList
+        checks={checks}
+        totalPages={totalPages}
+        onDismissCheck={onDismissCheck}
+        onRerunCheck={onRerunCheck}
+      />
+    )
   }
 
   return (
@@ -721,6 +732,153 @@ function CategoryGroupedCheckList({
                       {isExpanded
                         ? 'Show less'
                         : `Show ${hiddenCheckCount} more check${hiddenCheckCount !== 1 ? 's' : ''}`}
+                    </button>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        )
+      })}
+    </div>
+  )
+}
+
+// =============================================================================
+// Priority-Grouped Check List (Top Issues view)
+// =============================================================================
+
+const priorityTierLabels: Record<string, string> = {
+  [CheckPriority.Critical]: 'Critical Issues',
+  [CheckPriority.Recommended]: 'Recommended Fixes',
+}
+
+const priorityTierDescriptions: Record<string, string> = {
+  [CheckPriority.Critical]:
+    'These issues have the highest impact on your scores and should be addressed first.',
+  [CheckPriority.Recommended]: 'Fixing these will improve your scores and overall site quality.',
+}
+
+function PriorityGroupedCheckList({
+  checks,
+  totalPages,
+  onDismissCheck,
+  onRerunCheck,
+}: {
+  checks: AuditCheck[]
+  totalPages?: number
+  onDismissCheck?: (checkName: string, url: string) => Promise<void>
+  onRerunCheck?: (
+    checkName: string,
+    pageUrls: string[]
+  ) => Promise<{ passed: number; failed: number; warnings: number }>
+}) {
+  const [expandedTiers, setExpandedTiers] = useState<Set<string>>(new Set())
+
+  const toggleTier = useCallback((tier: string) => {
+    setExpandedTiers((prev) => {
+      const next = new Set(prev)
+      if (next.has(tier)) {
+        next.delete(tier)
+      } else {
+        next.add(tier)
+      }
+      return next
+    })
+  }, [])
+
+  // Group by priority tier, then deduplicate by check_name within each tier
+  const tiers = useMemo(() => {
+    const tierOrder = [CheckPriority.Critical, CheckPriority.Recommended]
+    const tierMap = new Map<string, AuditCheck[]>()
+
+    for (const check of checks) {
+      const priority = check.priority
+      if (!tierMap.has(priority)) tierMap.set(priority, [])
+      tierMap.get(priority)!.push(check)
+    }
+
+    const result: [string, GroupedCheck[]][] = []
+    for (const tier of tierOrder) {
+      const tierChecks = tierMap.get(tier)
+      if (!tierChecks || tierChecks.length === 0) continue
+      const grouped = groupChecksByName(tierChecks)
+      // Sort by status (failed first), then by affected page count descending
+      const sorted = grouped.sort((a, b) => {
+        const statusDiff =
+          (a.worstStatus === CheckStatus.Failed ? 0 : 1) -
+          (b.worstStatus === CheckStatus.Failed ? 0 : 1)
+        if (statusDiff !== 0) return statusDiff
+        return b.affectedPageCount - a.affectedPageCount
+      })
+      result.push([tier, sorted])
+    }
+
+    return result
+  }, [checks])
+
+  if (tiers.length === 0) {
+    return <EmptyState icon={CheckCircle} title="No critical or recommended issues found" />
+  }
+
+  return (
+    <div className="space-y-6">
+      {tiers.map(([tier, groupedChecks]) => {
+        const failed = groupedChecks.filter((g) => g.worstStatus === CheckStatus.Failed).length
+        const warnings = groupedChecks.filter((g) => g.worstStatus === CheckStatus.Warning).length
+
+        const isExpanded = expandedTiers.has(tier)
+        const visibleChecks =
+          isExpanded || groupedChecks.length <= INITIAL_VISIBLE_CHECKS
+            ? groupedChecks
+            : groupedChecks.slice(0, INITIAL_VISIBLE_CHECKS)
+        const hiddenCheckCount = groupedChecks.length - INITIAL_VISIBLE_CHECKS
+
+        return (
+          <Collapsible key={tier} defaultOpen>
+            <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+              <CollapsibleTrigger className="flex w-full items-center justify-between bg-gray-50 px-6 py-3 hover:bg-gray-100/50">
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="text-base font-semibold">
+                    {priorityTierLabels[tier] || tier}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {priorityTierDescriptions[tier]}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {failed > 0 && (
+                    <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 tabular-nums">
+                      {failed} failed
+                    </span>
+                  )}
+                  {warnings > 0 && (
+                    <span className="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700 tabular-nums">
+                      {warnings} warning{warnings !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  <ChevronDown className="text-muted-foreground ml-1 size-4" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t">
+                  {visibleChecks.map((group) => (
+                    <GroupedCheckItem
+                      key={group.representative.check_name}
+                      group={group}
+                      totalPages={totalPages}
+                      onDismiss={onDismissCheck}
+                      onRerun={onRerunCheck}
+                    />
+                  ))}
+                  {hiddenCheckCount > 0 && (
+                    <button
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full border-t px-6 py-2.5 text-center text-xs transition-colors"
+                      onClick={() => toggleTier(tier)}
+                    >
+                      {isExpanded
+                        ? 'Show less'
+                        : `Show ${hiddenCheckCount} more issue${hiddenCheckCount !== 1 ? 's' : ''}`}
                     </button>
                   )}
                 </div>
