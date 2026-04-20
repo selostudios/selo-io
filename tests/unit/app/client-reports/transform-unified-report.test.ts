@@ -9,13 +9,21 @@ describe('transformToPresentation — unified audit reports', () => {
   function buildReport(
     overrides: Partial<GeneratedReportWithAudits> = {}
   ): GeneratedReportWithAudits {
-    return {
+    const report: GeneratedReportWithAudits = {
       id: 'r1',
+      organization_id: null,
+      created_by: null,
       audit_id: 'a1',
+      site_audit_id: null,
+      performance_audit_id: null,
+      aio_audit_id: null,
       domain: 'example.com',
       combined_score: 74,
       created_at: '2026-04-01T00:00:00Z',
+      updated_at: '2026-04-01T00:00:00Z',
+      view_count: 0,
       executive_summary: null,
+      original_executive_summary: null,
       custom_logo_url: null,
       custom_company_name: null,
       org_name: null,
@@ -27,7 +35,8 @@ describe('transformToPresentation — unified audit reports', () => {
       performance_audit: null,
       aio_audit: null,
       ...overrides,
-    } as unknown as GeneratedReportWithAudits
+    }
+    return report
   }
 
   const emptyAuditData: ReportAuditData = {

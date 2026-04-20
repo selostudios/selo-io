@@ -12,6 +12,7 @@ import type {
   ReportCheck,
   ReportAuditData,
 } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+import { fetchUnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
 
 // =============================================================================
 // Explicit column selects (cast as '*' to satisfy Supabase's deep type inference)
@@ -178,19 +179,8 @@ export async function getSharedReportData(
         .order('created_at', { ascending: true }),
     ])
 
-  // For unified-audit reports, fetch scores from the audits table.
-  let unifiedAudit: Pick<
-    UnifiedAudit,
-    'seo_score' | 'performance_score' | 'ai_readiness_score' | 'pages_crawled'
-  > | null = null
-  if (report.audit_id) {
-    const { data: auditRow } = await supabase
-      .from('audits')
-      .select('seo_score, performance_score, ai_readiness_score, pages_crawled')
-      .eq('id', report.audit_id)
-      .single()
-    unifiedAudit = auditRow as typeof unifiedAudit
-  }
+  // For unified-audit reports, fetch scores from the audits table via the shared helper.
+  const unifiedAudit = await fetchUnifiedAuditScores(supabase, report.audit_id)
 
   const reportWithAudits = {
     ...report,

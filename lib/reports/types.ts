@@ -80,9 +80,12 @@ export interface ReportShare {
 // ============================================================
 
 export interface GeneratedReportWithAudits extends GeneratedReport {
-  site_audit: SiteAudit
-  performance_audit: PerformanceAudit
-  aio_audit: AIOAudit
+  // Legacy audit joins — null for unified-audit reports.
+  // These joins only populate for legacy reports that still reference the old
+  // site_audits / performance_audits / aio_audits tables.
+  site_audit: SiteAudit | null
+  performance_audit: PerformanceAudit | null
+  aio_audit: AIOAudit | null
   // Performance audit results for detailed metrics
   performance_results?: PerformanceAuditResult[]
   // Organization branding (fetched via join)

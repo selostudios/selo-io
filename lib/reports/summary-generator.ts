@@ -12,10 +12,14 @@ interface SummaryInput {
   seoScore: number
   pageSpeedScore: number
   aioScore: number
-  siteAudit: SiteAudit
+  /** Number of pages analyzed — sourced from the unified audit or legacy site_audit. */
+  pagesAnalyzed: number
+  /** Legacy site audit — null for unified-audit reports. */
+  siteAudit: SiteAudit | null
   siteChecks: SiteAuditCheck[]
   performanceResults: PerformanceAuditResult[]
-  aioAudit: AIOAudit
+  /** Legacy AIO audit — null for unified-audit reports. */
+  aioAudit: AIOAudit | null
   aioChecks: AIOCheck[]
   organizationId?: string | null
   reportId?: string
@@ -124,7 +128,7 @@ export async function generateReportSummary(input: SummaryInput): Promise<string
     seoScore,
     pageSpeedScore,
     aioScore,
-    siteAudit,
+    pagesAnalyzed,
     siteChecks,
     performanceResults,
     aioChecks,
@@ -148,7 +152,7 @@ Score Breakdown:
 - PageSpeed Score: ${pageSpeedScore}/100 (${pageSpeedStatus}) - ${performanceSummary}
 - AI Optimization Score: ${aioScore}/100 (${aioStatus})
 
-Pages Analyzed: ${siteAudit.pages_crawled} (SEO)
+Pages Analyzed: ${pagesAnalyzed} (SEO)
 Critical Issues Found: ${criticalCount}
 
 Top Opportunities for Improvement:
@@ -199,8 +203,15 @@ Maximum 150 words. Warm, confident, consultative tone — like a trusted advisor
  * Generate a fallback summary when AI is unavailable
  */
 export function generateFallbackReportSummary(input: SummaryInput): string {
-  const { combinedScore, seoScore, pageSpeedScore, aioScore, siteAudit, aioChecks, siteChecks } =
-    input
+  const {
+    combinedScore,
+    seoScore,
+    pageSpeedScore,
+    aioScore,
+    pagesAnalyzed,
+    aioChecks,
+    siteChecks,
+  } = input
 
   const criticalCount = countCriticalIssues(siteChecks, aioChecks)
 
@@ -222,7 +233,7 @@ export function generateFallbackReportSummary(input: SummaryInput): string {
     summary += `Your site has a solid foundation to build on, scoring ${combinedScore}/100 overall. `
     summary += `Your ${strongestArea.label} is a real strength at ${strongestArea.score}/100, and there are clear opportunities to bring other areas up to match.\n\n`
   } else {
-    summary += `We've completed a thorough analysis of your site across ${siteAudit.pages_crawled} pages, and your overall score is ${combinedScore}/100. `
+    summary += `We've completed a thorough analysis of your site across ${pagesAnalyzed} pages, and your overall score is ${combinedScore}/100. `
     summary += `While there's meaningful work to do, the good news is that the biggest improvements are often the most straightforward to implement.\n\n`
   }
 
