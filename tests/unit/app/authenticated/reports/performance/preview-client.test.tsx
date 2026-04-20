@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { PreviewClient } from '@/app/(authenticated)/[orgId]/reports/performance/[id]/preview/preview-client'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 // Captured refs so individual tests can inspect/override behaviour.
 const routerPush = vi.fn()
@@ -48,6 +48,7 @@ const defaultProps = {
     takeaways: 'Brand search doubled.',
     planning: 'Double down.',
   } satisfies NarrativeBlocks,
+  data: {} satisfies SnapshotData,
 }
 
 describe('PreviewClient', () => {

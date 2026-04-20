@@ -6,7 +6,7 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import { parseQuarter, periodsForQuarter } from '@/lib/reviews/period'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { PreviewClient } from './preview-client'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +47,11 @@ export default async function PerformanceReportPreviewPage({
   if (!review) notFound()
 
   const [{ data: draft }, { data: org }] = await Promise.all([
-    supabase.from('marketing_review_drafts').select('narrative').eq('review_id', id).maybeSingle(),
+    supabase
+      .from('marketing_review_drafts')
+      .select('narrative, data')
+      .eq('review_id', id)
+      .maybeSingle(),
     supabase
       .from('organizations')
       .select('name, logo_url, primary_color')
@@ -73,6 +77,7 @@ export default async function PerformanceReportPreviewPage({
   }
 
   const narrative = (draft.narrative as NarrativeBlocks | null) ?? {}
+  const data = (draft.data as SnapshotData | null) ?? {}
   const quarterLabel = formatQuarterLabel(review.quarter as string)
   const periods = periodsForQuarter(review.quarter as string)
 
@@ -89,6 +94,7 @@ export default async function PerformanceReportPreviewPage({
       periodStart={periods.main.start}
       periodEnd={periods.main.end}
       narrative={narrative}
+      data={data}
     />
   )
 }

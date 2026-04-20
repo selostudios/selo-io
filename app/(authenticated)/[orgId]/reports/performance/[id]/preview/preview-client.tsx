@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import { publishReview } from '@/lib/reviews/actions'
 import { showError, showSuccess } from '@/components/ui/sonner'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 export interface PreviewClientProps {
   reviewId: string
@@ -21,6 +21,7 @@ export interface PreviewClientProps {
   periodStart: string
   periodEnd: string
   narrative: NarrativeBlocks
+  data: SnapshotData
 }
 
 /**
@@ -40,6 +41,7 @@ export function PreviewClient({
   periodStart,
   periodEnd,
   narrative,
+  data,
 }: PreviewClientProps) {
   const router = useRouter()
   const [bannerDismissed, setBannerDismissed] = useState(false)
@@ -114,7 +116,7 @@ export function PreviewClient({
             periodStart={periodStart}
             periodEnd={periodEnd}
             narrative={narrative}
-            data={{}}
+            data={data}
           />
         </div>
       </div>
