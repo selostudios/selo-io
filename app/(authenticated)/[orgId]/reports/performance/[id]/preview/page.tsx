@@ -30,7 +30,8 @@ export default async function PerformanceReportPreviewPage({
   const { orgId, id } = await params
 
   const user = await getAuthUser()
-  const userRecord = user ? await getUserRecord(user.id) : null
+  if (!user) redirect('/login') // defensive — layout should have caught this
+  const userRecord = await getUserRecord(user.id)
 
   const canEdit = !!userRecord && (isInternalUser(userRecord) || userRecord.role === UserRole.Admin)
 

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { getAuthUser } from '@/lib/auth/cached'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
@@ -29,40 +29,38 @@ export default async function PerformanceReportSnapshotDetailPage({
   const { orgId, id: reviewId, snapId } = await params
 
   const user = await getAuthUser()
-  if (!user) {
-    redirect(`/${orgId}/reports/performance/${reviewId}`)
-  }
-  const userRecord = await getUserRecord(user.id)
-  if (!userRecord) {
-    redirect(`/${orgId}/reports/performance/${reviewId}`)
-  }
+  if (!user) redirect('/login') // defensive — layout should have caught this
 
   const supabase = await createClient()
 
-  const { data: review } = await supabase
-    .from('marketing_reviews')
-    .select('id, title, quarter, organization_id')
-    .eq('id', reviewId)
-    .eq('organization_id', orgId)
-    .maybeSingle()
+  const [reviewRes, snapshotRes, orgRes] = await Promise.all([
+    supabase
+      .from('marketing_reviews')
+      .select('id, title, quarter, organization_id')
+      .eq('id', reviewId)
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+    supabase
+      .from('marketing_review_snapshots')
+      .select(
+        'id, review_id, version, period_start, period_end, published_at, published_by, narrative, data'
+      )
+      .eq('id', snapId)
+      .eq('review_id', reviewId)
+      .maybeSingle(),
+    supabase
+      .from('organizations')
+      .select('name, logo_url, primary_color')
+      .eq('id', orgId)
+      .maybeSingle(),
+  ])
+
+  const review = reviewRes.data
+  const snapshot = snapshotRes.data
+  const org = orgRes.data
 
   if (!review) notFound()
-
-  const { data: snapshot } = await supabase
-    .from('marketing_review_snapshots')
-    .select(
-      'id, review_id, version, period_start, period_end, published_at, published_by, narrative, data'
-    )
-    .eq('id', snapId)
-    .maybeSingle()
-
-  if (!snapshot || snapshot.review_id !== reviewId) notFound()
-
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('name, logo_url, primary_color')
-    .eq('id', orgId)
-    .maybeSingle()
+  if (!snapshot) notFound()
 
   // Fetch publisher name — best-effort. RLS may hide cross-org users; the
   // fallback just omits the "by {name}" suffix rather than erroring.
