@@ -93,6 +93,10 @@ export function SharedResourceClient({
             setResourceData({ type: 'unified_audit', data: unifiedData })
             break
           }
+          case SharedResourceType.MarketingReview:
+            setError('Performance Reports sharing is not yet available.')
+            setIsLoading(false)
+            return
           default:
             setError('Unsupported resource type')
             setIsLoading(false)
