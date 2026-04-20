@@ -1,11 +1,10 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
-import { Button } from '@/components/ui/button'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
+import { EditorHeader } from './editor-header'
 import { NarrativeEditor } from './narrative-editor'
 
 export const dynamic = 'force-dynamic'
@@ -42,15 +41,13 @@ export default async function PerformanceReportEditorPage({
 
   return (
     <div className="mx-auto max-w-3xl p-8" data-testid="performance-reports-editor">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{review.title as string}</h1>
-          <p className="text-muted-foreground text-sm">{review.quarter as string}</p>
-        </div>
-        <Button variant="ghost" asChild>
-          <Link href={`/${orgId}/reports/performance`}>Back</Link>
-        </Button>
-      </div>
+      <EditorHeader
+        orgId={orgId}
+        reviewId={id}
+        title={review.title as string}
+        quarter={review.quarter as string}
+        canEdit={canEdit}
+      />
 
       {draft ? (
         <NarrativeEditor
