@@ -9,17 +9,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ReportPresentation } from '@/components/reports/report-presentation'
 import { AuditReport } from '@/components/audit/audit-report'
 import { UnifiedAuditDetailClient } from '@/app/(authenticated)/[orgId]/seo/audit/[id]/client'
+import { ReviewDeck } from '@/components/reviews/review-deck'
 import { accessSharedLink } from '@/lib/share/actions'
 import {
   getSharedReportData,
   getSharedSiteAuditData,
   getSharedUnifiedAuditData,
   getSharedChecksByTab,
+  getSharedMarketingReviewData,
 } from './actions'
 import { getShareErrorMessage, getResourceTypeLabel } from '@/lib/share/utils'
 import { SharedResourceType } from '@/lib/enums'
 import type { ReportPresentationData } from '@/lib/reports/types'
-import type { SharedSiteAuditData, SharedUnifiedAuditData } from './actions'
+import type {
+  SharedSiteAuditData,
+  SharedUnifiedAuditData,
+  SharedMarketingReviewData,
+} from './actions'
 
 interface SharedResourceClientProps {
   token: string
@@ -31,6 +37,7 @@ type ResourceData =
   | { type: 'report'; data: ReportPresentationData }
   | { type: 'site_audit'; data: SharedSiteAuditData }
   | { type: 'unified_audit'; data: SharedUnifiedAuditData }
+  | { type: 'marketing_review'; data: SharedMarketingReviewData }
 
 export function SharedResourceClient({
   token,
@@ -93,10 +100,16 @@ export function SharedResourceClient({
             setResourceData({ type: 'unified_audit', data: unifiedData })
             break
           }
-          case SharedResourceType.MarketingReview:
-            setError('Performance Reports sharing is not yet available.')
-            setIsLoading(false)
-            return
+          case SharedResourceType.MarketingReview: {
+            const reviewData = await getSharedMarketingReviewData(result.resource_id!)
+            if (!reviewData) {
+              setError('Failed to load performance report')
+              setIsLoading(false)
+              return
+            }
+            setResourceData({ type: 'marketing_review', data: reviewData })
+            break
+          }
           default:
             setError('Unsupported resource type')
             setIsLoading(false)
@@ -219,6 +232,24 @@ export function SharedResourceClient({
               tabCounts={resourceData.data.tabCounts}
               fetchChecks={getSharedChecksByTab}
             />
+          </div>
+        )
+      case 'marketing_review':
+        return (
+          <div
+            data-testid="shared-marketing-review"
+            className="bg-background fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 md:p-8"
+          >
+            <div className="flex h-full w-full max-w-[1600px] items-center justify-center">
+              <ReviewDeck
+                organization={resourceData.data.organization}
+                quarter={resourceData.data.quarter}
+                periodStart={resourceData.data.periodStart}
+                periodEnd={resourceData.data.periodEnd}
+                narrative={resourceData.data.narrative}
+                data={resourceData.data.data}
+              />
+            </div>
           </div>
         )
     }
