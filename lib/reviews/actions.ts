@@ -8,6 +8,7 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { periodsForQuarter } from '@/lib/reviews/period'
 import { fetchAllData } from '@/lib/reviews/fetchers'
+import { generateNarrativeBlocks } from '@/lib/reviews/narrative/generator'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -62,11 +63,27 @@ export async function createReview(input: {
   const periods = periodsForQuarter(input.quarter)
   const data = await fetchAllData(input.organizationId, periods)
 
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', input.organizationId)
+    .single()
+
+  const narrative = await generateNarrativeBlocks({
+    organizationId: input.organizationId,
+    organizationName: (org?.name as string | undefined) ?? 'the organization',
+    quarter: input.quarter,
+    periodStart: periods.main.start,
+    periodEnd: periods.main.end,
+    data,
+    reviewId: review.id,
+  })
+
   const { error: draftError } = await supabase.from('marketing_review_drafts').insert({
     review_id: review.id,
     data,
-    narrative: {},
-    ai_originals: {},
+    narrative,
+    ai_originals: narrative,
   })
 
   if (draftError) {
@@ -100,6 +117,7 @@ export async function refreshDraftData(reviewId: string): Promise<ActionOk | Act
   const periods = periodsForQuarter(review.quarter)
   const data = await fetchAllData(review.organization_id, periods)
 
+  // narrative + ai_originals intentionally untouched — edits are preserved
   const { error } = await supabase
     .from('marketing_review_drafts')
     .update({ data, updated_at: new Date().toISOString() })
