@@ -19,6 +19,7 @@
 ### Task 0.1: Add root `error.tsx` boundary
 
 **Files:**
+
 - Create: `app/error.tsx`
 
 **Step 1: Write the component**
@@ -47,12 +48,12 @@ export default function GlobalError({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <p className="max-w-md text-sm text-muted-foreground">
+      <p className="text-muted-foreground max-w-md text-sm">
         An unexpected error occurred. The team has been notified.
       </p>
       <button
         onClick={reset}
-        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        className="bg-primary text-primary-foreground rounded px-4 py-2 text-sm font-medium"
       >
         Try again
       </button>
@@ -78,6 +79,7 @@ git commit -m "feat: add app-level error boundary to surface failures"
 ### Task 0.2: Add root `not-found.tsx`
 
 **Files:**
+
 - Create: `app/not-found.tsx`
 
 **Step 1: Write the component**
@@ -89,7 +91,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-2xl font-semibold">Not found</h1>
-      <p className="max-w-md text-sm text-muted-foreground">
+      <p className="text-muted-foreground max-w-md text-sm">
         The page you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
       <Link href="/" className="text-sm underline">
@@ -112,6 +114,7 @@ git commit -m "feat: add app-level not-found page"
 ### Task 0.3: Add failing test that reproduces the empty-screen bug
 
 **Files:**
+
 - Create: `tests/unit/app/client-reports/transform-unified-report.test.ts`
 
 **Step 1: Write the test**
@@ -175,6 +178,7 @@ git commit -m "test: reproduce audit report blank-screen on null legacy joins"
 The fix removes dependence on the synthesized legacy shim. Pull scores, pages, and checks from wherever they actually are: if `site_audit` / `performance_audit` / `aio_audit` are absent, fall back to `report.audit_id` being present and the `audit_checks` that `getReportAuditData` already returns.
 
 **Files:**
+
 - Modify: `app/(authenticated)/[orgId]/seo/client-reports/[id]/transform.ts`
 - Modify: `app/(authenticated)/[orgId]/seo/client-reports/actions.ts` (remove the synthesis shim)
 
@@ -305,6 +309,7 @@ Expected: both pass.
 Keep the URL as `/seo/client-reports` for now (renaming routes is a separate, riskier change due to share tokens). Only update the user-facing labels in navigation and page titles.
 
 **Files:**
+
 - Modify: `components/navigation/` (search for "Client Reports")
 - Modify: any page titles / breadcrumbs referencing "Client Reports"
 
@@ -345,6 +350,7 @@ Expected: all green.
 ### Task 1.1: Migration for `marketing_reviews` table
 
 **Files:**
+
 - Create: `supabase/migrations/<timestamp>_marketing_reviews.sql`
 
 Use `npx supabase migration new marketing_reviews` to get the timestamped filename.
@@ -452,6 +458,7 @@ git commit -m "feat: add marketing_reviews table + RLS"
 ### Task 1.2: Migration for `marketing_review_snapshots` table
 
 **Files:**
+
 - Create: `supabase/migrations/<timestamp>_marketing_review_snapshots.sql`
 
 **Step 1: Write the migration**
@@ -541,6 +548,7 @@ git commit -m "feat: add marketing_review_snapshots + immutable RLS"
 ### Task 1.3: Migration for `marketing_review_drafts` table
 
 **Files:**
+
 - Create: `supabase/migrations/<timestamp>_marketing_review_drafts.sql`
 
 **Step 1: Write the migration**
@@ -609,6 +617,7 @@ git commit -m "feat: add marketing_review_drafts + RLS"
 ### Task 1.4: Add `SharedResourceType.MarketingReview` enum value
 
 **Files:**
+
 - Modify: `lib/enums.ts`
 - Modify: `app/s/[token]/page.tsx` (dispatch table — leave handler stubbed for Phase 6)
 
@@ -620,7 +629,7 @@ export enum SharedResourceType {
   SiteAudit = 'site_audit',
   PerformanceAudit = 'performance_audit',
   AIOAudit = 'aio_audit',
-  MarketingReview = 'marketing_review',  // NEW
+  MarketingReview = 'marketing_review', // NEW
 }
 ```
 
@@ -645,6 +654,7 @@ git commit -m "feat: reserve SharedResourceType.MarketingReview (stub handler)"
 ### Task 1.5: Add TypeScript types
 
 **Files:**
+
 - Create: `lib/reviews/types.ts`
 
 **Step 1: Write types**
@@ -654,7 +664,7 @@ export interface MarketingReview {
   id: string
   organization_id: string
   title: string
-  quarter: string  // '2026-Q1'
+  quarter: string // '2026-Q1'
   latest_snapshot_id: string | null
   created_by: string
   created_at: string
@@ -768,6 +778,7 @@ git commit -m "feat: add marketing review type definitions"
 Create empty-but-rendering pages at every route. Data wiring happens in Phase 2.
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/page.tsx` — list
 - Create: `app/(authenticated)/[orgId]/reports/performance/new/page.tsx` — create form
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/page.tsx` — editor
@@ -794,7 +805,7 @@ export default async function PerformanceReportsListPage({
   return (
     <div className="p-8" data-testid="performance-reports-list">
       <h1 className="text-2xl font-semibold">Performance Reports</h1>
-      <p className="text-sm text-muted-foreground">Coming soon — org {orgId}</p>
+      <p className="text-muted-foreground text-sm">Coming soon — org {orgId}</p>
     </div>
   )
 }
@@ -819,6 +830,7 @@ git commit -m "feat: scaffold performance reports routes"
 ### Task 1.7: Add navigation entries
 
 **Files:**
+
 - Modify: `components/navigation/` (the config that powers Home → Reports)
 
 **Step 1: Find the Reports section**
@@ -830,6 +842,7 @@ Locate the config file.
 **Step 2: Update**
 
 Replace "Client Reports" with two entries:
+
 - **Audit Reports** → existing `/seo/client-reports` path (for now)
 - **Performance Reports** → `/reports/performance`
 
@@ -858,6 +871,7 @@ git commit -m "feat: add Performance Reports to Home navigation"
 ### Task 2.1: Period/date-math utilities (TDD)
 
 **Files:**
+
 - Create: `lib/reviews/period.ts`
 - Create: `tests/unit/lib/reviews/period.test.ts`
 
@@ -865,11 +879,7 @@ git commit -m "feat: add Performance Reports to Home navigation"
 
 ```ts
 import { describe, test, expect } from 'vitest'
-import {
-  parseQuarter,
-  periodsForQuarter,
-  currentQuarter,
-} from '@/lib/reviews/period'
+import { parseQuarter, periodsForQuarter, currentQuarter } from '@/lib/reviews/period'
 
 describe('parseQuarter', () => {
   test('parses 2026-Q1 to year/quarter', () => {
@@ -928,7 +938,7 @@ Expected: FAIL (module not found).
 ```ts
 // lib/reviews/period.ts
 export interface DateRange {
-  start: string  // ISO date yyyy-mm-dd
+  start: string // ISO date yyyy-mm-dd
   end: string
 }
 
@@ -945,9 +955,9 @@ export function parseQuarter(input: string): { year: number; quarter: number } {
 }
 
 function quarterRange(year: number, quarter: number): DateRange {
-  const startMonth = (quarter - 1) * 3  // 0, 3, 6, 9
+  const startMonth = (quarter - 1) * 3 // 0, 3, 6, 9
   const start = new Date(Date.UTC(year, startMonth, 1))
-  const end = new Date(Date.UTC(year, startMonth + 3, 0))  // last day of prior month
+  const end = new Date(Date.UTC(year, startMonth + 3, 0)) // last day of prior month
   return {
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
@@ -990,6 +1000,7 @@ git commit -m "feat: add quarterly period + QoQ/YoY date math"
 Build a utility that, given raw time-series data for three periods, produces a `MetricTriple` (current, qoq, yoy, deltas).
 
 **Files:**
+
 - Create: `lib/reviews/metric-triple.ts`
 - Create: `tests/unit/lib/reviews/metric-triple.test.ts`
 
@@ -1003,14 +1014,14 @@ describe('buildMetricTriple', () => {
   test('sums series and computes deltas', () => {
     const t = buildMetricTriple({
       current: [100, 200, 300],
-      qoq: [100, 200, 100],     // 400 total
-      yoy: [50, 50, 100],        // 200 total
+      qoq: [100, 200, 100], // 400 total
+      yoy: [50, 50, 100], // 200 total
     })
     expect(t.current).toBe(600)
     expect(t.qoq).toBe(400)
     expect(t.yoy).toBe(200)
-    expect(t.qoq_delta_pct).toBe(50)   // (600-400)/400 = 0.5
-    expect(t.yoy_delta_pct).toBe(200)  // (600-200)/200 = 2.0
+    expect(t.qoq_delta_pct).toBe(50) // (600-400)/400 = 0.5
+    expect(t.yoy_delta_pct).toBe(200) // (600-200)/200 = 2.0
   })
 
   test('null comparison series yields null deltas', () => {
@@ -1082,6 +1093,7 @@ git commit -m "feat: add metric-triple builder for quarterly reports"
 Build one fetcher per platform. Each takes `organization_id`, `QuarterPeriods`, returns a platform-specific subset of `SnapshotData`.
 
 **Files:**
+
 - Create: `lib/reviews/fetchers/ga.ts`
 - Create: `lib/reviews/fetchers/linkedin.ts`
 - Create: `lib/reviews/fetchers/hubspot.ts`
@@ -1165,9 +1177,7 @@ import type { AuditInputData } from '@/lib/reviews/types'
 import { createServiceClient } from '@/lib/supabase/server'
 import { UnifiedAuditStatus, CheckStatus, CheckPriority } from '@/lib/enums'
 
-export async function fetchAuditData(
-  organizationId: string
-): Promise<AuditInputData | null> {
+export async function fetchAuditData(organizationId: string): Promise<AuditInputData | null> {
   const supabase = createServiceClient()
   const { data: audit } = await supabase
     .from('audits')
@@ -1247,6 +1257,7 @@ git commit -m "feat: platform data fetchers for quarterly reviews"
 ### Task 2.4: Review + draft creation server actions
 
 **Files:**
+
 - Create: `lib/reviews/actions.ts`
 
 **Step 1: Implement `createReview`**
@@ -1265,7 +1276,7 @@ import { redirect } from 'next/navigation'
 
 export async function createReview(input: {
   organizationId: string
-  quarter: string  // '2026-Q3'
+  quarter: string // '2026-Q3'
   title?: string
 }): Promise<{ success: boolean; reviewId?: string; error?: string }> {
   const supabase = await createClient()
@@ -1301,14 +1312,12 @@ export async function createReview(input: {
   const periods = periodsForQuarter(input.quarter)
   const data = await fetchAllData(input.organizationId, periods)
 
-  const { error: draftError } = await supabase
-    .from('marketing_review_drafts')
-    .insert({
-      review_id: review.id,
-      data,
-      narrative: {},
-      ai_originals: {},
-    })
+  const { error: draftError } = await supabase.from('marketing_review_drafts').insert({
+    review_id: review.id,
+    data,
+    narrative: {},
+    ai_originals: {},
+  })
 
   if (draftError) {
     return { success: false, error: draftError.message }
@@ -1353,6 +1362,7 @@ git commit -m "feat: review CRUD + draft/publish server actions"
 ### Task 2.5: Integration tests for publish → snapshot immutability
 
 **Files:**
+
 - Create: `tests/integration/reviews/publish-snapshot.test.ts`
 
 **Test cases:**
@@ -1376,6 +1386,7 @@ git commit -m "test: publish → immutable snapshot integration tests"
 ### Task 2.6: Minimal list + create UI
 
 **Files:**
+
 - Modify: `app/(authenticated)/[orgId]/reports/performance/page.tsx` (list)
 - Modify: `app/(authenticated)/[orgId]/reports/performance/new/page.tsx` (create form)
 

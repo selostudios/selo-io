@@ -21,12 +21,12 @@ export default function GlobalError({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <p className="max-w-md text-sm text-muted-foreground">
+      <p className="text-muted-foreground max-w-md text-sm">
         An unexpected error occurred. The team has been notified.
       </p>
       <button
         onClick={reset}
-        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        className="bg-primary text-primary-foreground rounded px-4 py-2 text-sm font-medium"
       >
         Try again
       </button>

@@ -246,44 +246,7 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     notFound()
   }
 
-  // For unified audit reports, synthesize the old audit structure
-  if (report.audit_id && !report.site_audit) {
-    const { data: unifiedAudit } = await supabase
-      .from('audits')
-      .select('*')
-      .eq('id', report.audit_id)
-      .single()
-
-    if (unifiedAudit) {
-      // Map unified audit to the legacy structure expected by transform
-      report.site_audit = {
-        id: unifiedAudit.id,
-        url: unifiedAudit.url,
-        status: 'completed',
-        overall_score: unifiedAudit.seo_score,
-        pages_crawled: unifiedAudit.pages_crawled,
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-      }
-      report.performance_audit = {
-        id: unifiedAudit.id,
-        status: 'completed',
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-        avg_performance_score: unifiedAudit.performance_score ?? null,
-      }
-      report.aio_audit = {
-        id: unifiedAudit.id,
-        url: unifiedAudit.url,
-        status: 'completed',
-        overall_aio_score: unifiedAudit.ai_readiness_score,
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-      }
-    }
-  }
-
-  // Fetch performance results (for legacy reports)
+  // Fetch performance results (for legacy reports only)
   let performanceResults: unknown[] = []
   if (report.performance_audit_id) {
     const { data } = await supabase
@@ -303,6 +266,40 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     secondary_color: org?.secondary_color ?? null,
     accent_color: org?.accent_color ?? null,
   } as GeneratedReportWithAudits
+}
+
+/**
+ * Fetch the unified audit scores for a report.
+ * Returns null for legacy reports (no `audit_id`) or if the audit can't be loaded.
+ */
+export async function getUnifiedAuditForReport(
+  auditId: string | null
+): Promise<Pick<
+  UnifiedAudit,
+  'seo_score' | 'performance_score' | 'ai_readiness_score' | 'pages_crawled'
+> | null> {
+  if (!auditId) return null
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('audits')
+    .select('seo_score, performance_score, ai_readiness_score, pages_crawled')
+    .eq('id', auditId)
+    .single()
+
+  if (error || !data) {
+    console.error('[Get Unified Audit For Report Error]', {
+      type: 'audit_fetch_failed',
+      auditId,
+      error: error?.message,
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
+
+  return data as Pick<
+    UnifiedAudit,
+    'seo_score' | 'performance_score' | 'ai_readiness_score' | 'pages_crawled'
+  >
 }
 
 /** Common check shape for report transformation — works with both unified and legacy checks */

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { ReportDetailClient } from './client'
-import { getReportWithAudits, getReportAuditData } from '../actions'
+import { getReportWithAudits, getReportAuditData, getUnifiedAuditForReport } from '../actions'
 import { transformToPresentation } from './transform'
 
 export const dynamic = 'force-dynamic'
@@ -24,10 +24,15 @@ export default async function ReportDetailPage({ params, searchParams }: PagePro
     notFound()
   }
 
+  const audit = await getUnifiedAuditForReport(report.audit_id).catch((error) => {
+    console.error('[Report Page Error]', error)
+    return null
+  })
+
   const auditData = await getReportAuditData(report)
 
   // Transform to presentation data
-  const presentationData = transformToPresentation(report, auditData)
+  const presentationData = transformToPresentation({ report, audit, auditData })
 
   return (
     <ReportDetailClient

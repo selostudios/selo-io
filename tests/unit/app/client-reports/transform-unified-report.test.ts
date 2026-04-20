@@ -2,12 +2,14 @@ import { describe, test, expect } from 'vitest'
 import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
 import type { GeneratedReportWithAudits } from '@/lib/reports/types'
 import type { ReportAuditData } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+import type { UnifiedAudit } from '@/lib/unified-audit/types'
 
 describe('transformToPresentation — unified audit reports', () => {
-  test('produces presentation data when legacy audit joins are missing', () => {
-    // Simulates the shape we get for a unified-audit report when
-    // site_audit / performance_audit / aio_audit joins return null
-    const report = {
+  /** Build a minimal report shaped like what `getReportWithAudits` returns for a unified-audit report. */
+  function buildReport(
+    overrides: Partial<GeneratedReportWithAudits> = {}
+  ): GeneratedReportWithAudits {
+    return {
       id: 'r1',
       audit_id: 'a1',
       domain: 'example.com',
@@ -24,14 +26,67 @@ describe('transformToPresentation — unified audit reports', () => {
       site_audit: null,
       performance_audit: null,
       aio_audit: null,
+      ...overrides,
     } as unknown as GeneratedReportWithAudits
+  }
 
-    const auditData: ReportAuditData = {
-      siteChecks: [],
-      performanceResults: [],
-      aioChecks: [],
+  const emptyAuditData: ReportAuditData = {
+    siteChecks: [],
+    performanceResults: [],
+    aioChecks: [],
+  }
+
+  test('returns fully-shaped presentation data when audit is null (legacy joins missing)', () => {
+    const result = transformToPresentation({
+      report: buildReport(),
+      audit: null,
+      auditData: emptyAuditData,
+    })
+
+    // Top-level shape — this is what the UI renders, so it must exist.
+    expect(result).toBeDefined()
+    expect(result.id).toBe('r1')
+    expect(result.domain).toBe('example.com')
+
+    // Scores default to 0 and stay numeric when audit is null.
+    expect(typeof result.scores.seo.score).toBe('number')
+    expect(result.scores.seo.score).toBe(0)
+    expect(typeof result.scores.page_speed.score).toBe('number')
+    expect(result.scores.page_speed.score).toBe(0)
+    expect(typeof result.scores.aio.score).toBe('number')
+    expect(result.scores.aio.score).toBe(0)
+
+    // Stats must include a numeric pages_analyzed (was the null-deref crash site).
+    expect(typeof result.stats.pages_analyzed).toBe('number')
+    expect(result.stats.pages_analyzed).toBe(0)
+
+    // Array fields are always arrays (never undefined) so the UI can .map() safely.
+    expect(Array.isArray(result.opportunities)).toBe(true)
+    expect(Array.isArray(result.projections)).toBe(true)
+    expect(Array.isArray(result.recommendations)).toBe(true)
+  })
+
+  test('uses scores from the unified audit row, not the legacy joins', () => {
+    const audit: Pick<
+      UnifiedAudit,
+      'seo_score' | 'performance_score' | 'ai_readiness_score' | 'pages_crawled'
+    > = {
+      seo_score: 72,
+      performance_score: 65,
+      ai_readiness_score: 81,
+      pages_crawled: 23,
     }
 
-    expect(() => transformToPresentation(report, auditData)).not.toThrow()
+    const result = transformToPresentation({
+      // Legacy joins are null (the bug scenario) — scores must come from `audit`.
+      report: buildReport(),
+      audit,
+      auditData: emptyAuditData,
+    })
+
+    expect(result.scores.seo.score).toBe(72)
+    expect(result.scores.page_speed.score).toBe(65)
+    expect(result.scores.aio.score).toBe(81)
+    expect(result.stats.pages_analyzed).toBe(23)
   })
 })
