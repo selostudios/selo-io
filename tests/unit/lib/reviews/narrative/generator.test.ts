@@ -16,6 +16,10 @@ vi.mock('@/lib/app-settings/usage', () => ({
   logUsage: vi.fn(async () => {}),
 }))
 
+vi.mock('@/lib/reviews/narrative/overrides', () => ({
+  loadPromptOverrides: vi.fn(async () => ({})),
+}))
+
 const baseInput = {
   organizationId: 'org-1',
   organizationName: 'Acme',
