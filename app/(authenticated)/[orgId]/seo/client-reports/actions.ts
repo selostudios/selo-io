@@ -16,6 +16,7 @@ import type {
 } from '@/lib/reports/types'
 import { calculateCombinedScore } from '@/lib/reports'
 import { generateReportSummary } from '@/lib/reports/summary-generator'
+import { fetchUnifiedAuditScores, type UnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
 import type { SiteAuditCheck } from '@/lib/audit/types'
 import type { PerformanceAuditResult } from '@/lib/performance/types'
 import type { AIOCheck } from '@/lib/aio/types'
@@ -246,44 +247,7 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     notFound()
   }
 
-  // For unified audit reports, synthesize the old audit structure
-  if (report.audit_id && !report.site_audit) {
-    const { data: unifiedAudit } = await supabase
-      .from('audits')
-      .select('*')
-      .eq('id', report.audit_id)
-      .single()
-
-    if (unifiedAudit) {
-      // Map unified audit to the legacy structure expected by transform
-      report.site_audit = {
-        id: unifiedAudit.id,
-        url: unifiedAudit.url,
-        status: 'completed',
-        overall_score: unifiedAudit.seo_score,
-        pages_crawled: unifiedAudit.pages_crawled,
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-      }
-      report.performance_audit = {
-        id: unifiedAudit.id,
-        status: 'completed',
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-        avg_performance_score: unifiedAudit.performance_score ?? null,
-      }
-      report.aio_audit = {
-        id: unifiedAudit.id,
-        url: unifiedAudit.url,
-        status: 'completed',
-        overall_aio_score: unifiedAudit.ai_readiness_score,
-        created_at: unifiedAudit.created_at,
-        organization_id: unifiedAudit.organization_id,
-      }
-    }
-  }
-
-  // Fetch performance results (for legacy reports)
+  // Fetch performance results (for legacy reports only)
   let performanceResults: unknown[] = []
   if (report.performance_audit_id) {
     const { data } = await supabase
@@ -303,6 +267,17 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     secondary_color: org?.secondary_color ?? null,
     accent_color: org?.accent_color ?? null,
   } as GeneratedReportWithAudits
+}
+
+/**
+ * Fetch the unified audit scores for a report.
+ * Returns null for legacy reports (no `audit_id`) or if the audit can't be loaded.
+ */
+export async function getUnifiedAuditForReport(
+  auditId: string | null
+): Promise<UnifiedAuditScores | null> {
+  const supabase = await createClient()
+  return fetchUnifiedAuditScores(supabase, auditId)
 }
 
 /** Common check shape for report transformation — works with both unified and legacy checks */
@@ -335,12 +310,11 @@ export async function getReportAuditData(
   const supabase = await createClient()
 
   // For unified audit reports, read from audit_checks
-  const reportRecord = report as GeneratedReportWithAudits & { audit_id?: string }
-  if (reportRecord.audit_id) {
+  if (report.audit_id) {
     const { data: allChecks } = await supabase
       .from('audit_checks')
       .select('*')
-      .eq('audit_id', reportRecord.audit_id)
+      .eq('audit_id', report.audit_id)
       .order('created_at', { ascending: true })
 
     const checks = (allChecks ?? []) as AuditCheck[]
@@ -555,22 +529,15 @@ export async function generateSummaryForReport(
   const report = await getReportWithAudits(reportId)
   const auditData = await getReportAuditData(report)
 
-  const seoScore = report.site_audit?.overall_score ?? 0
-  const aioScore = report.aio_audit?.overall_aio_score ?? 0
+  // For unified-audit reports, scores + pages_crawled come from the unified audit.
+  // For legacy reports, fall back to the legacy join rows.
+  const unifiedAudit = await fetchUnifiedAuditScores(await createClient(), report.audit_id)
 
-  // For unified audit reports, use the stored performance score
-  const reportRecord = report as GeneratedReportWithAudits & { audit_id?: string }
-  let pageSpeedScore = 0
-  if (reportRecord.audit_id) {
-    // Get from the unified audit directly
-    const supabase = await createClient()
-    const { data: audit } = await supabase
-      .from('audits')
-      .select('performance_score')
-      .eq('id', reportRecord.audit_id)
-      .single()
-    pageSpeedScore = audit?.performance_score ?? 0
-  } else {
+  const seoScore = unifiedAudit?.seo_score ?? report.site_audit?.overall_score ?? 0
+  const aioScore = unifiedAudit?.ai_readiness_score ?? report.aio_audit?.overall_aio_score ?? 0
+
+  let pageSpeedScore = unifiedAudit?.performance_score ?? 0
+  if (!unifiedAudit) {
     const perfResults = auditData.performanceResults as { performance_score?: number | null }[]
     const perfScores = perfResults
       .map((r) => r.performance_score)
@@ -581,6 +548,7 @@ export async function generateSummaryForReport(
         : 0
   }
 
+  const pagesAnalyzed = unifiedAudit?.pages_crawled ?? report.site_audit?.pages_crawled ?? 0
   const combinedScore = report.combined_score ?? 0
 
   try {
@@ -590,6 +558,7 @@ export async function generateSummaryForReport(
       seoScore,
       pageSpeedScore,
       aioScore,
+      pagesAnalyzed,
       siteAudit: report.site_audit,
       siteChecks: auditData.siteChecks as unknown as SiteAuditCheck[],
       performanceResults: auditData.performanceResults as unknown as PerformanceAuditResult[],

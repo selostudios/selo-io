@@ -193,11 +193,9 @@ export function ClientReportsClient({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold" data-testid="reports-page-title">
-          Client Reports
+          Audit Reports
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Create client-facing reports from completed audits
-        </p>
+        <p className="text-muted-foreground mt-1">Create audit reports from completed audits</p>
       </div>
 
       {/* Search (for one-time audits without org) */}
@@ -218,7 +216,7 @@ export function ClientReportsClient({
         <Card>
           <CardHeader>
             <CardTitle>Completed Audits</CardTitle>
-            <CardDescription>Create a client report from any completed audit</CardDescription>
+            <CardDescription>Create an audit report from any completed audit</CardDescription>
           </CardHeader>
           <CardContent>
             <EmptyState
@@ -227,7 +225,7 @@ export function ClientReportsClient({
               description={
                 searchQuery
                   ? 'Try a different search term'
-                  : 'Run a Full Site Audit first, then create a client report from the results.'
+                  : 'Run a Full Site Audit first, then create an audit report from the results.'
               }
             />
           </CardContent>

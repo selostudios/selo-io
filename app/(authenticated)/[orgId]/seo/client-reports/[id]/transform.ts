@@ -6,6 +6,7 @@ import type {
   ReportProjection,
   ReportRecommendation,
 } from '@/lib/reports/types'
+import type { UnifiedAudit } from '@/lib/unified-audit/types'
 import {
   ReportPriority,
   ReportEffort,
@@ -16,19 +17,33 @@ import {
 } from '@/lib/enums'
 import { getScoreStatus, hasImprovementPotential } from '@/lib/reports'
 
-/**
- * Transform raw audit data into presentation-ready format
- */
-export function transformToPresentation(
-  report: GeneratedReportWithAudits,
+export interface TransformInput {
+  report: GeneratedReportWithAudits
+  audit: Pick<
+    UnifiedAudit,
+    'seo_score' | 'performance_score' | 'ai_readiness_score' | 'pages_crawled'
+  > | null
   auditData: ReportAuditData
-): ReportPresentationData {
-  const seoScore = report.site_audit.overall_score ?? 0
-  const aioScore = report.aio_audit.overall_aio_score ?? 0
+}
 
-  // Use audit-level performance score (from unified audit scoring), falling back
-  // to average of per-page Lighthouse scores from individual checks
-  const auditLevelScore = report.performance_audit.avg_performance_score
+/**
+ * Transform raw audit data into presentation-ready format.
+ *
+ * Reads scores and crawl metadata directly from the unified `audit` record.
+ * The legacy `report.site_audit` / `performance_audit` / `aio_audit` joins
+ * are no longer used — they are null for unified-audit reports.
+ */
+export function transformToPresentation({
+  report,
+  audit,
+  auditData,
+}: TransformInput): ReportPresentationData {
+  const seoScore = audit?.seo_score ?? 0
+  const aioScore = audit?.ai_readiness_score ?? 0
+
+  // Prefer the audit-level performance score (from unified audit scoring).
+  // Fall back to average of per-page Lighthouse scores from individual checks.
+  const auditLevelScore = audit?.performance_score ?? null
   const perfScores = auditData.performanceResults
     .map((r) => r.performance_score)
     .filter((s): s is number => s !== null)
@@ -37,6 +52,8 @@ export function transformToPresentation(
       ? Math.round(perfScores.reduce((a, b) => a + b, 0) / perfScores.length)
       : null
   const pageSpeedScore = auditLevelScore ?? checkLevelScore ?? 0
+
+  const pagesAnalyzed = audit?.pages_crawled ?? 0
 
   // Transform opportunities from failed checks
   const opportunities = transformOpportunities(auditData)
@@ -68,7 +85,7 @@ export function transformToPresentation(
       aio: { score: aioScore, status: getScoreStatus(aioScore) },
     },
     stats: {
-      pages_analyzed: report.site_audit.pages_crawled,
+      pages_analyzed: pagesAnalyzed,
       opportunities_found: opportunities.length,
       recommendations_count: recommendations.length,
     },

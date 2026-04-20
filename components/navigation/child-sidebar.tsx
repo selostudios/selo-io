@@ -49,7 +49,7 @@ const homeNavigation: NavigationGroup[] = [
     header: 'SEO',
     items: [
       { name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck },
-      { name: 'Client Reports', href: '/seo/client-reports', icon: FileText },
+      { name: 'Audit Reports', href: '/seo/client-reports', icon: FileText },
     ],
   },
   {
