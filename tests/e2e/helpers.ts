@@ -43,3 +43,19 @@ export async function gotoSettings(page: Page, tab: 'organization' | 'team' | 'i
   await page.click(`text=Settings`)
   await page.waitForURL(new RegExp(`/settings/${tab}`))
 }
+
+/**
+ * Resolves the seeded org's UUID from the post-login dashboard URL.
+ *
+ * The app resolves the org via the `selo-org` cookie set by the proxy
+ * middleware once the user lands on `/`. Reading the ID off the URL avoids
+ * hard-coding it in tests and stays in step with however the seed builds
+ * the organization row.
+ */
+export async function getOrgIdFromDashboard(page: Page): Promise<string> {
+  await page.goto('/')
+  await page.waitForURL(/\/[0-9a-f-]{36}\/dashboard/)
+  const match = page.url().match(/\/([0-9a-f-]{36})\/dashboard/)
+  if (!match) throw new Error(`Could not parse org id from ${page.url()}`)
+  return match[1]
+}

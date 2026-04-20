@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
-import type { Page } from '@playwright/test'
-import { loginAsAdmin, loginAsDeveloper } from './helpers'
+import { getOrgIdFromDashboard, loginAsAdmin, loginAsDeveloper } from './helpers'
 import { testMarketingReview } from '../fixtures'
 
 /**
@@ -85,7 +84,7 @@ test.describe('Visual Regression', () => {
     })
 
     test('performance report preview', async ({ page }) => {
-      const orgId = await resolveOrgId(page)
+      const orgId = await getOrgIdFromDashboard(page)
       await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
       await page.waitForSelector('[data-testid="performance-reports-preview"]')
       await page.waitForSelector('[data-testid="review-deck"]')
@@ -93,7 +92,7 @@ test.describe('Visual Regression', () => {
     })
 
     test('performance report snapshot detail', async ({ page }) => {
-      const orgId = await resolveOrgId(page)
+      const orgId = await getOrgIdFromDashboard(page)
       await page.goto(
         `/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots/${testMarketingReview.snapshotId}`
       )
@@ -124,16 +123,3 @@ test.describe('Visual Regression', () => {
     })
   })
 })
-
-/**
- * Reads the seeded org UUID from the dashboard URL after login.
- * Mirrors the helper in `performance-reports.spec.ts` — kept local here to
- * avoid dragging a file-level helper across two specs.
- */
-async function resolveOrgId(page: Page): Promise<string> {
-  await page.goto('/')
-  await page.waitForURL(/\/[0-9a-f-]{36}\/dashboard/)
-  const match = page.url().match(/\/([0-9a-f-]{36})\/dashboard/)
-  if (!match) throw new Error(`Could not parse org id from ${page.url()}`)
-  return match[1]
-}

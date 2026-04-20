@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
-import type { Page } from '@playwright/test'
-import { loginAsAdmin } from './helpers'
+import { getOrgIdFromDashboard, loginAsAdmin } from './helpers'
 import { testMarketingReview } from '../fixtures'
 
 /**
@@ -18,29 +17,13 @@ const previewPathRegex = /\/reports\/performance\/[0-9a-f-]{36}\/preview(\?|$|#)
 const snapshotDetailPathRegex =
   /\/reports\/performance\/[0-9a-f-]{36}\/snapshots\/[0-9a-f-]{36}(\?|$|#)/
 
-/**
- * Resolves the seeded org's UUID from the post-login dashboard URL.
- *
- * The app resolves the org via the `selo-org` cookie set by the proxy
- * middleware once the user lands on `/`. Reading the ID off the URL avoids
- * hard-coding it in tests and stays in step with however the seed builds
- * the organization row.
- */
-async function getSeededOrgId(page: Page): Promise<string> {
-  await page.goto('/')
-  await page.waitForURL(/\/[0-9a-f-]{36}\/dashboard/)
-  const match = page.url().match(/\/([0-9a-f-]{36})\/dashboard/)
-  if (!match) throw new Error(`Could not parse org id from ${page.url()}`)
-  return match[1]
-}
-
 test.describe('Performance Reports — narrative editing + preview', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)
   })
 
   test('admin edits the cover subtitle and sees it in the preview deck', async ({ page }) => {
-    const orgId = await getSeededOrgId(page)
+    const orgId = await getOrgIdFromDashboard(page)
 
     await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}`)
     await expect(page).toHaveURL(editorPathRegex)
@@ -52,9 +35,13 @@ test.describe('Performance Reports — narrative editing + preview', () => {
     await subtitle.fill(distinctiveSubtitle)
 
     // Wait for the autosave debounce (1500ms) to settle so the preview query
-    // sees the new draft. The "Saved" status label is the component's
-    // persistent success signal.
-    await expect(page.locator('text=Saved').first()).toBeVisible({ timeout: 5000 })
+    // sees the new draft. Target the cover_subtitle block's specific status
+    // span — one "Saved" label renders per block, so a bare text selector
+    // would race sibling blocks.
+    await expect(page.locator('[data-testid="narrative-save-status-cover_subtitle"]')).toHaveText(
+      'Saved',
+      { timeout: 5000 }
+    )
 
     // Click Preview and verify we land on the preview route with the deck.
     await page.locator('[data-testid="performance-reports-editor-preview-button"]').click()
@@ -75,7 +62,7 @@ test.describe('Performance Reports — publish from preview', () => {
   })
 
   test('publish button navigates to the new snapshot detail page', async ({ page }) => {
-    const orgId = await getSeededOrgId(page)
+    const orgId = await getOrgIdFromDashboard(page)
 
     await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
     await page.waitForSelector('[data-testid="performance-reports-preview"]')
@@ -107,7 +94,7 @@ test.describe('Performance Reports — public share access', () => {
     // We deliberately do NOT rely on a pre-seeded shared_links row — the URL
     // under test is the one the UI just produced.
     await loginAsAdmin(page)
-    const orgId = await getSeededOrgId(page)
+    const orgId = await getOrgIdFromDashboard(page)
 
     await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots`)
     await page.waitForSelector('[data-testid="performance-reports-snapshots-list-title"]')
