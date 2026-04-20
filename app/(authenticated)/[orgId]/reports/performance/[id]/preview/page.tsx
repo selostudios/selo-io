@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { parseQuarter, periodsForQuarter } from '@/lib/reviews/period'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { PreviewClient } from './preview-client'
@@ -62,16 +64,19 @@ export default async function PerformanceReportPreviewPage({
   if (!draft) {
     return (
       <div
-        className="bg-background fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-8"
+        className="bg-background fixed inset-0 z-50 flex items-center justify-center p-8"
         data-testid="performance-reports-preview-no-draft"
       >
-        <h1 className="text-2xl font-semibold">No draft yet</h1>
-        <p className="text-muted-foreground max-w-md text-center text-sm">
-          Generate a narrative on the editor page before previewing the deck.
-        </p>
-        <Button asChild>
-          <Link href={`/${orgId}/reports/performance/${id}`}>Back to editor</Link>
-        </Button>
+        <EmptyState
+          icon={FileText}
+          title="No draft yet"
+          description="Generate a narrative on the editor page before previewing the deck."
+          className="w-full max-w-md p-8"
+        >
+          <Button asChild className="mt-4">
+            <Link href={`/${orgId}/reports/performance/${id}`}>Back to editor</Link>
+          </Button>
+        </EmptyState>
       </div>
     )
   }

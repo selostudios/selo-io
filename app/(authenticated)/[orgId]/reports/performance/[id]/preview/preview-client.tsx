@@ -72,7 +72,8 @@ export function PreviewClient({
     >
       {!bannerDismissed && (
         <div
-          role="status"
+          role="region"
+          aria-label="Draft preview status"
           data-testid="performance-reports-preview-banner"
           className="flex items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-900"
         >

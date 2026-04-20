@@ -123,4 +123,36 @@ describe('PreviewClient', () => {
 
     expect(screen.queryByTestId('performance-reports-preview-banner')).toBeNull()
   })
+
+  test('shows the loading label and disables the publish button while publishing', async () => {
+    let resolvePublish: (value: {
+      success: true
+      snapshotId: string
+      version: number
+    }) => void = () => {}
+    const pendingPublish = new Promise<{ success: true; snapshotId: string; version: number }>(
+      (resolve) => {
+        resolvePublish = resolve
+      }
+    )
+    publishReview.mockReturnValueOnce(pendingPublish)
+
+    render(<PreviewClient {...defaultProps} />)
+
+    const publishButton = screen.getByTestId('performance-reports-preview-publish-button')
+    fireEvent.click(publishButton)
+
+    await waitFor(() => {
+      expect(publishButton).toHaveTextContent('Publishing…')
+    })
+    expect(publishButton).toBeDisabled()
+
+    // Resolve the pending publish so the transition can finish cleanly.
+    resolvePublish({ success: true, snapshotId: 'snap-abc', version: 1 })
+    await waitFor(() => {
+      expect(routerPush).toHaveBeenCalledWith(
+        `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots/snap-abc`
+      )
+    })
+  })
 })
