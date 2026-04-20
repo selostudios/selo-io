@@ -10,6 +10,7 @@ import {
   Building2,
   MessageSquare,
   FileText,
+  BarChart3,
   ClipboardCheck,
   PanelLeftClose,
   Zap,
@@ -47,9 +48,13 @@ const homeNavigation: NavigationGroup[] = [
   },
   {
     header: 'SEO',
+    items: [{ name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck }],
+  },
+  {
+    header: 'Reports',
     items: [
-      { name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck },
       { name: 'Audit Reports', href: '/seo/client-reports', icon: FileText },
+      { name: 'Performance Reports', href: '/reports/performance', icon: BarChart3 },
     ],
   },
   {
@@ -176,7 +181,8 @@ export function ChildSidebar({
                     (item.href.startsWith('/seo') ||
                       item.href.startsWith('/ai-visibility') ||
                       item.href.startsWith('/settings') ||
-                      item.href.startsWith('/dashboard'))
+                      item.href.startsWith('/dashboard') ||
+                      item.href.startsWith('/reports'))
                   ) {
                     href = `/${orgId}${item.href}`
                   }
