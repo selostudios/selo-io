@@ -1,0 +1,42 @@
+export interface DateRange {
+  start: string
+  end: string
+}
+
+export interface QuarterPeriods {
+  main: DateRange
+  qoq: DateRange
+  yoy: DateRange
+}
+
+export function parseQuarter(input: string): { year: number; quarter: number } {
+  const m = input.match(/^(\d{4})-Q([1-4])$/)
+  if (!m) throw new Error(`Invalid quarter: ${input}`)
+  return { year: Number(m[1]), quarter: Number(m[2]) }
+}
+
+function quarterRange(year: number, quarter: number): DateRange {
+  const startMonth = (quarter - 1) * 3
+  const start = new Date(Date.UTC(year, startMonth, 1))
+  const end = new Date(Date.UTC(year, startMonth + 3, 0))
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  }
+}
+
+export function periodsForQuarter(quarter: string): QuarterPeriods {
+  const { year, quarter: q } = parseQuarter(quarter)
+  const main = quarterRange(year, q)
+  const priorQ = q === 1 ? 4 : q - 1
+  const priorY = q === 1 ? year - 1 : year
+  const qoq = quarterRange(priorY, priorQ)
+  const yoy = quarterRange(year - 1, q)
+  return { main, qoq, yoy }
+}
+
+export function currentQuarter(date: Date): string {
+  const year = date.getUTCFullYear()
+  const q = Math.floor(date.getUTCMonth() / 3) + 1
+  return `${year}-Q${q}`
+}
