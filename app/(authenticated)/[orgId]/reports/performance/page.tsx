@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText } from 'lucide-react'
+import { FileText, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
@@ -58,9 +58,22 @@ export default async function PerformanceReportsListPage({
           <p className="text-muted-foreground text-sm">Quarterly marketing performance reviews.</p>
         </div>
         {canCreate && (
-          <Button asChild data-testid="performance-reports-new-button">
-            <Link href={`/${orgId}/reports/performance/new`}>New Review</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              asChild
+              data-testid="performance-reports-settings-button"
+              aria-label="Prompt settings"
+            >
+              <Link href={`/${orgId}/reports/performance/settings`}>
+                <Settings className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild data-testid="performance-reports-new-button">
+              <Link href={`/${orgId}/reports/performance/new`}>New Review</Link>
+            </Button>
+          </div>
         )}
       </div>
 
