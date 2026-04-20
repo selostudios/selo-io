@@ -7,7 +7,7 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { parseQuarter, periodsForQuarter } from '@/lib/reviews/period'
+import { formatQuarterLabel, periodsForQuarter } from '@/lib/reviews/period'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { PreviewClient } from './preview-client'
 
@@ -102,13 +102,4 @@ export default async function PerformanceReportPreviewPage({
       data={data}
     />
   )
-}
-
-/**
- * Formats a stored quarter identifier (`'2026-Q1'`) as a display label
- * (`'Q1 2026'`). The deck's cover slide shows this value verbatim.
- */
-function formatQuarterLabel(quarter: string): string {
-  const { year, quarter: q } = parseQuarter(quarter)
-  return `Q${q} ${year}`
 }

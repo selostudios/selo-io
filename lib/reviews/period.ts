@@ -40,3 +40,13 @@ export function currentQuarter(date: Date): string {
   const q = Math.floor(date.getUTCMonth() / 3) + 1
   return `${year}-Q${q}`
 }
+
+/**
+ * Formats a stored quarter identifier (`'2026-Q1'`) as a display label
+ * (`'Q1 2026'`). Used across the editor, preview, snapshot detail, and
+ * snapshots list views so deck headings stay consistent.
+ */
+export function formatQuarterLabel(quarter: string): string {
+  const { year, quarter: q } = parseQuarter(quarter)
+  return `Q${q} ${year}`
+}
