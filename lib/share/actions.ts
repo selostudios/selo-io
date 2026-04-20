@@ -70,6 +70,8 @@ function getRevalidatePath(resourceType: SharedResourceType, resourceId: string)
       return `/seo/aio/${resourceId}`
     case SharedResourceType.UnifiedAudit:
       return `/seo/audit/${resourceId}`
+    case SharedResourceType.MarketingReview:
+      return `/reports/performance/${resourceId}`
   }
 }
 

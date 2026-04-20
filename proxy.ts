@@ -23,7 +23,7 @@ const NON_ORG_PREFIXES = [
 ]
 
 /** Routes that require an org prefix */
-const ORG_SCOPED_PREFIXES = ['/dashboard', '/seo', '/settings', '/ai-visibility']
+const ORG_SCOPED_PREFIXES = ['/dashboard', '/seo', '/settings', '/ai-visibility', '/reports']
 
 async function refreshSupabaseSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
