@@ -195,9 +195,7 @@ export function ClientReportsClient({
         <h1 className="text-3xl font-bold" data-testid="reports-page-title">
           Audit Reports
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Create client-facing reports from completed audits
-        </p>
+        <p className="text-muted-foreground mt-1">Create audit reports from completed audits</p>
       </div>
 
       {/* Search (for one-time audits without org) */}
