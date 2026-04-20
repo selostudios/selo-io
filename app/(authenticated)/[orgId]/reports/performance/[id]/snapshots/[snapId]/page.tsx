@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth/cached'
 import { ReviewDeck } from '@/components/reviews/review-deck'
+import { ReviewBreadcrumb } from '@/components/reviews/review-breadcrumb'
 import { formatQuarterLabel } from '@/lib/reviews/period'
+import { resolvePublisherNames } from '@/lib/reviews/publishers'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { SnapshotShareButton } from './snapshot-client'
 
@@ -62,23 +62,13 @@ export default async function PerformanceReportSnapshotDetailPage({
   if (!review) notFound()
   if (!snapshot) notFound()
 
-  // Fetch publisher name — best-effort. RLS may hide cross-org users; the
-  // fallback just omits the "by {name}" suffix rather than erroring.
+  // Resolve publisher name via the shared helper. RLS may hide cross-org
+  // users; the fallback is simply omitting the "by {name}" suffix.
   const publishedBy = snapshot.published_by as string | null
-  let publisherName: string | null = null
-  if (publishedBy) {
-    const { data: publisher } = await supabase
-      .from('users')
-      .select('first_name, last_name')
-      .eq('id', publishedBy)
-      .maybeSingle()
-    if (publisher) {
-      const first = (publisher.first_name as string | null) ?? ''
-      const last = (publisher.last_name as string | null) ?? ''
-      const full = `${first} ${last}`.trim()
-      publisherName = full.length > 0 ? full : null
-    }
-  }
+  const publisherNames = publishedBy
+    ? await resolvePublisherNames(supabase, [publishedBy])
+    : new Map<string, string>()
+  const publisherName = publishedBy ? (publisherNames.get(publishedBy) ?? null) : null
 
   const quarter = review.quarter as string
   const quarterLabel = formatQuarterLabel(quarter)
@@ -97,40 +87,14 @@ export default async function PerformanceReportSnapshotDetailPage({
       className="mx-auto max-w-6xl space-y-4 p-4 md:p-8"
       data-testid="performance-reports-snapshot-detail"
     >
-      <nav aria-label="Breadcrumb" data-testid="performance-reports-snapshot-breadcrumb">
-        <ol className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
-          <li>
-            <Link
-              href={`/${orgId}/reports/performance`}
-              className="hover:text-foreground hover:underline"
-            >
-              Performance reports
-            </Link>
-          </li>
-          <li aria-hidden="true">
-            <ChevronRight className="size-3.5" />
-          </li>
-          <li>
-            <Link href={editorHref} className="hover:text-foreground hover:underline">
-              {quarterLabel}
-            </Link>
-          </li>
-          <li aria-hidden="true">
-            <ChevronRight className="size-3.5" />
-          </li>
-          <li>
-            <Link href={snapshotsHref} className="hover:text-foreground hover:underline">
-              Snapshots
-            </Link>
-          </li>
-          <li aria-hidden="true">
-            <ChevronRight className="size-3.5" />
-          </li>
-          <li className="text-foreground font-medium" aria-current="page">
-            v{version}
-          </li>
-        </ol>
-      </nav>
+      <ReviewBreadcrumb
+        items={[
+          { label: 'Performance reports', href: `/${orgId}/reports/performance` },
+          { label: quarterLabel, href: editorHref },
+          { label: 'Snapshots', href: snapshotsHref },
+          { label: `v${version}` },
+        ]}
+      />
 
       <div className="flex items-start justify-between gap-4">
         <div>
