@@ -2,16 +2,16 @@ import { test, expect } from '@playwright/test'
 import { loginAsAdmin, loginAsTeamMember } from './helpers'
 import { testUsers } from '../fixtures'
 
-test.describe('Client Reports Page', () => {
+test.describe('Audit Reports Page', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)
   })
 
-  test('navigates to client reports page', async ({ page }) => {
+  test('navigates to audit reports page', async ({ page }) => {
     await page.goto('/seo/client-reports')
 
     await expect(page).toHaveURL(/\/seo\/client-reports/)
-    await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Client Reports')
+    await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Audit Reports')
   })
 
   test('shows completed audits table', async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('Client Reports Page', () => {
   })
 })
 
-test.describe('Client Report Search', () => {
+test.describe('Audit Report Search', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)
   })
@@ -59,8 +59,8 @@ test.describe('Public Report Access', () => {
   })
 })
 
-test.describe('Client Report Permissions', () => {
-  test('viewer can access client reports page', async ({ page }) => {
+test.describe('Audit Report Permissions', () => {
+  test('viewer can access audit reports page', async ({ page }) => {
     // Login as viewer — use inline login since no helper for viewer
     await page.goto('/login')
     await page.fill('input[name="email"]', testUsers.viewer.email)
@@ -70,16 +70,16 @@ test.describe('Client Report Permissions', () => {
     await page.goto('/')
     await page.waitForURL(/\/dashboard/)
 
-    // Navigate directly to client reports
+    // Navigate directly to audit reports
     await page.goto('/seo/client-reports')
     await expect(page).toHaveURL(/\/seo\/client-reports/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 
-  test('team member can access client reports page', async ({ page }) => {
+  test('team member can access audit reports page', async ({ page }) => {
     await loginAsTeamMember(page)
 
-    // Navigate directly to client reports
+    // Navigate directly to audit reports
     await page.goto('/seo/client-reports')
     await expect(page).toHaveURL(/\/seo\/client-reports/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
