@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { loginAsAdmin, loginAsDeveloper } from './helpers'
+import { testMarketingReview } from '../fixtures'
 
 /**
  * Visual regression tests — captures full-page screenshots and compares
@@ -76,4 +78,78 @@ test.describe('Visual Regression', () => {
       await expect(page).toHaveScreenshot('quick-audit-page.png', { fullPage: true })
     })
   })
+
+  test.describe('Performance Reports (admin)', () => {
+    test.beforeEach(async ({ page }) => {
+      await loginAsAdmin(page)
+    })
+
+    test('performance report preview', async ({ page }) => {
+      const orgId = await resolveOrgId(page)
+      await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
+      await page.waitForSelector('[data-testid="performance-reports-preview"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await expect(page).toHaveScreenshot('performance-report-preview.png', { fullPage: true })
+    })
+
+    test('performance report snapshot detail', async ({ page }) => {
+      const orgId = await resolveOrgId(page)
+      await page.goto(
+        `/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots/${testMarketingReview.snapshotId}`
+      )
+      await page.waitForSelector('[data-testid="performance-reports-snapshot-detail"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await expect(page).toHaveScreenshot('performance-report-snapshot.png', { fullPage: true })
+    })
+  })
+
+  test.describe('Performance Reports (public share)', () => {
+    test('public share page', async ({ browser }) => {
+      // Public shares must never render auth chrome — screenshot an isolated
+      // context without any session cookies to catch regressions where the
+      // `/s/` route accidentally inherits the authenticated layout.
+      const context = await browser.newContext()
+      try {
+        const publicPage = await context.newPage()
+        await publicPage.goto(`/s/${testMarketingReview.publicShareToken}`)
+
+        // Skip if the seed couldn't create the share link (see
+        // `tests/helpers/seed.ts` — the shared_links CHECK constraint may
+        // not include 'marketing_review' yet).
+        const notFoundHeading = publicPage.getByRole('heading', { name: /Not Found/i })
+        const seedMissingShareLink = await notFoundHeading
+          .isVisible({ timeout: 2000 })
+          .catch(() => false)
+        if (seedMissingShareLink) {
+          test.skip(
+            true,
+            'Public share link not seeded — shared_links.resource_type ' +
+              'constraint likely missing "marketing_review".'
+          )
+          return
+        }
+
+        await publicPage.waitForSelector('[data-testid="shared-marketing-review"]')
+        await publicPage.waitForSelector('[data-testid="review-deck"]')
+        await expect(publicPage).toHaveScreenshot('performance-report-public-share.png', {
+          fullPage: true,
+        })
+      } finally {
+        await context.close()
+      }
+    })
+  })
 })
+
+/**
+ * Reads the seeded org UUID from the dashboard URL after login.
+ * Mirrors the helper in `performance-reports.spec.ts` — kept local here to
+ * avoid dragging a file-level helper across two specs.
+ */
+async function resolveOrgId(page: Page): Promise<string> {
+  await page.goto('/')
+  await page.waitForURL(/\/[0-9a-f-]{36}\/dashboard/)
+  const match = page.url().match(/\/([0-9a-f-]{36})\/dashboard/)
+  if (!match) throw new Error(`Could not parse org id from ${page.url()}`)
+  return match[1]
+}

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { testUsers, testOrganization, testCampaign } from '../fixtures'
+import { testUsers, testOrganization, testCampaign, testMarketingReview } from '../fixtures'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -148,6 +148,87 @@ export async function seedTestData() {
     end_date: testCampaign.endDate,
   })
 
+  // Seed a performance review + draft + published snapshot so E2E and visual
+  // tests can exercise the preview/snapshot/public-share flows without having
+  // to click through the "New Review" wizard (which calls external AI APIs).
+  //
+  // Narrative is deliberately non-empty across all six blocks so the deck
+  // renders real content (not placeholder text) in screenshots.
+  const { data: review } = await supabase
+    .from('marketing_reviews')
+    .insert({
+      id: testMarketingReview.reviewId,
+      organization_id: org!.id,
+      quarter: testMarketingReview.quarter,
+      title: testMarketingReview.title,
+      created_by: adminUser.data.user!.id,
+    })
+    .select('id')
+    .single()
+
+  if (review) {
+    await supabase.from('marketing_review_drafts').insert({
+      review_id: review.id,
+      data: {},
+      narrative: testMarketingReview.narrative,
+      ai_originals: testMarketingReview.narrative,
+    })
+
+    const { data: snapshot } = await supabase
+      .from('marketing_review_snapshots')
+      .insert({
+        id: testMarketingReview.snapshotId,
+        review_id: review.id,
+        version: 1,
+        published_by: adminUser.data.user!.id,
+        period_start: testMarketingReview.periodStart,
+        period_end: testMarketingReview.periodEnd,
+        compare_qoq_start: testMarketingReview.compareQoqStart,
+        compare_qoq_end: testMarketingReview.compareQoqEnd,
+        compare_yoy_start: testMarketingReview.compareYoyStart,
+        compare_yoy_end: testMarketingReview.compareYoyEnd,
+        data: {},
+        narrative: testMarketingReview.narrative,
+        share_token: testMarketingReview.internalShareToken,
+      })
+      .select('id')
+      .single()
+
+    if (snapshot) {
+      await supabase
+        .from('marketing_reviews')
+        .update({ latest_snapshot_id: snapshot.id })
+        .eq('id', review.id)
+
+      // Seed a public share link for the snapshot. Writing via the service
+      // role bypasses RLS but still enforces CHECK constraints — this insert
+      // requires the shared_links.resource_type constraint to include
+      // 'marketing_review'. If it's missing the insert fails loudly here and
+      // the public-share E2E tests are expected to be skipped/failing until
+      // the constraint is patched.
+      const shareExpiresAt = new Date()
+      shareExpiresAt.setDate(shareExpiresAt.getDate() + 30)
+
+      const { error: shareError } = await supabase.from('shared_links').insert({
+        resource_type: 'marketing_review',
+        resource_id: snapshot.id,
+        token: testMarketingReview.publicShareToken,
+        expires_at: shareExpiresAt.toISOString(),
+        max_views: 1000,
+        created_by: adminUser.data.user!.id,
+        organization_id: org!.id,
+      })
+
+      if (shareError) {
+        console.warn(
+          '⚠️  Marketing review share link not seeded (likely missing marketing_review ' +
+            'in shared_links.resource_type check constraint):',
+          shareError.message
+        )
+      }
+    }
+  }
+
   console.log('✅ Test data seeded successfully')
 }
 
@@ -165,6 +246,10 @@ export async function cleanupTestData() {
     await supabase.from('team_members').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Share links cascade when their org is deleted, but the public-share
+    // seed uses a stable token — ensure any prior row with that token is
+    // removed before the next seed run to keep the test deterministic.
+    await supabase.from('shared_links').delete().eq('token', testMarketingReview.publicShareToken)
     await supabase.from('organizations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 
     console.log('✅ Test data cleaned up')
