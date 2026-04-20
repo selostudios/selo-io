@@ -200,12 +200,17 @@ export async function seedTestData() {
         .update({ latest_snapshot_id: snapshot.id })
         .eq('id', review.id)
 
-      // Seed a public share link for the snapshot. Writing via the service
-      // role bypasses RLS but still enforces CHECK constraints — this insert
-      // requires the shared_links.resource_type constraint to include
-      // 'marketing_review'. If it's missing the insert fails loudly here and
-      // the public-share E2E tests are expected to be skipped/failing until
-      // the constraint is patched.
+      // Seed a public share link for the snapshot so the visual spec's
+      // `/s/{token}` screenshot can run without clicking through the UI.
+      // (The E2E scenario that exercises the ShareModal creates its own
+      // share row via the server action — it does not depend on this.)
+      //
+      // Writing via the service role bypasses RLS but still enforces CHECK
+      // constraints. `shared_links.resource_type` must include
+      // 'marketing_review' (see migration
+      // 20260420220000_add_marketing_review_to_shared_links.sql). If that
+      // migration isn't present the insert fails and we fail loudly — the
+      // seed is expected to work end-to-end.
       const shareExpiresAt = new Date()
       shareExpiresAt.setDate(shareExpiresAt.getDate() + 30)
 
@@ -220,10 +225,9 @@ export async function seedTestData() {
       })
 
       if (shareError) {
-        console.warn(
-          '⚠️  Marketing review share link not seeded (likely missing marketing_review ' +
-            'in shared_links.resource_type check constraint):',
-          shareError.message
+        throw new Error(
+          `Failed to seed marketing review share link: ${shareError.message}. ` +
+            "Ensure migration 20260420220000_add_marketing_review_to_shared_links.sql is applied so shared_links.resource_type permits 'marketing_review'."
         )
       }
     }

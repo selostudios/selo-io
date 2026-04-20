@@ -22,6 +22,7 @@
 - Organizations have `logo_url` and `primary_color` columns (confirmed via `lib/auth/cached.ts:46`).
 
 Run:
+
 ```bash
 git log --oneline -5
 npm run test:unit -- tests/unit/lib/reviews
@@ -36,6 +37,7 @@ Expected: tests pass (Phase 3 suite), confirming a clean baseline.
 `publishReview` currently publishes a snapshot even when the narrative is `{}` (all blocks empty). That lets users publish blank decks. Add a guard and cover the behavior with unit tests.
 
 **Files:**
+
 - Modify: `lib/reviews/actions.ts:186-190` (add empty-narrative check after draft load)
 - Create: `tests/unit/lib/reviews/actions.test.ts`
 
@@ -104,7 +106,10 @@ describe('publishReview', () => {
     const supabase = {
       from: vi.fn(() =>
         makeChain({
-          maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+          maybeSingle: async () => ({
+            data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+            error: null,
+          }),
         })
       ),
     }
@@ -123,7 +128,10 @@ describe('publishReview', () => {
     const supabase = {
       from: vi.fn(() =>
         makeChain({
-          maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+          maybeSingle: async () => ({
+            data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+            error: null,
+          }),
         })
       ),
     }
@@ -145,7 +153,10 @@ describe('publishReview', () => {
 
   test('returns error when no draft exists', async () => {
     const reviewChain = makeChain({
-      maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+        error: null,
+      }),
     })
     const draftChain = makeChain({
       single: async () => ({ data: null, error: { message: 'not found' } }),
@@ -163,7 +174,10 @@ describe('publishReview', () => {
 
   test('returns error when narrative is empty across all blocks', async () => {
     const reviewChain = makeChain({
-      maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+        error: null,
+      }),
     })
     const draftChain = makeChain({
       single: async () => ({
@@ -184,7 +198,10 @@ describe('publishReview', () => {
 
   test('computes next version as 1 when no prior snapshots', async () => {
     const reviewChain = makeChain({
-      maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+        error: null,
+      }),
     })
     const draftChain = makeChain({
       single: async () => ({
@@ -222,7 +239,10 @@ describe('publishReview', () => {
 
   test('computes next version as max + 1 when prior snapshots exist', async () => {
     const reviewChain = makeChain({
-      maybeSingle: async () => ({ data: { organization_id: 'org-1', quarter: 'Q1 2026' }, error: null }),
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: 'Q1 2026' },
+        error: null,
+      }),
     })
     const draftChain = makeChain({
       single: async () => ({
@@ -273,13 +293,13 @@ Expected: The "empty narrative" test FAILS because the guard does not yet exist.
 In `lib/reviews/actions.ts`, after the draft-load block (around line 189), add:
 
 ```typescript
-  const narrativeBlocks = (draft.narrative ?? {}) as NarrativeBlocks
-  const hasContent = Object.values(narrativeBlocks).some(
-    (v) => typeof v === 'string' && v.trim().length > 0
-  )
-  if (!hasContent) {
-    return { success: false, error: 'Nothing to publish — narrative is empty' }
-  }
+const narrativeBlocks = (draft.narrative ?? {}) as NarrativeBlocks
+const hasContent = Object.values(narrativeBlocks).some(
+  (v) => typeof v === 'string' && v.trim().length > 0
+)
+if (!hasContent) {
+  return { success: false, error: 'Nothing to publish — narrative is empty' }
+}
 ```
 
 **Step 4: Run tests to verify they pass**
@@ -302,6 +322,7 @@ git commit -m "feat(reviews): guard publishReview against empty narrative, add t
 A simple hook that owns the current slide index, clamps bounds, and wires keyboard handlers.
 
 **Files:**
+
 - Create: `components/reviews/review-deck/use-deck-navigation.ts`
 - Create: `tests/unit/components/reviews/review-deck/use-deck-navigation.test.ts`
 
@@ -406,17 +427,11 @@ interface UseDeckNavigationOptions {
   keyboardTarget?: Window | HTMLElement | null
 }
 
-export function useDeckNavigation(
-  slideCount: number,
-  options: UseDeckNavigationOptions = {}
-) {
+export function useDeckNavigation(slideCount: number, options: UseDeckNavigationOptions = {}) {
   const { keyboardTarget = typeof window !== 'undefined' ? window : null } = options
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const clamp = useCallback(
-    (i: number) => Math.max(0, Math.min(slideCount - 1, i)),
-    [slideCount]
-  )
+  const clamp = useCallback((i: number) => Math.max(0, Math.min(slideCount - 1, i)), [slideCount])
 
   const next = useCallback(() => setCurrentIndex((i) => clamp(i + 1)), [clamp])
   const prev = useCallback(() => setCurrentIndex((i) => clamp(i - 1)), [clamp])
@@ -474,6 +489,7 @@ git commit -m "feat(review-deck): add useDeckNavigation hook with keyboard contr
 Build the deck, cover slide, body slide, and controls. One commit at the end — these files are tightly coupled.
 
 **Files:**
+
 - Create: `components/reviews/review-deck/index.tsx`
 - Create: `components/reviews/review-deck/cover-slide.tsx`
 - Create: `components/reviews/review-deck/body-slide.tsx`
@@ -858,6 +874,7 @@ git commit -m "feat(review-deck): add ReviewDeck, CoverSlide, BodySlide, DeckCon
 A route that renders the deck from the draft (not a snapshot), restricted to admin/internal.
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/preview/page.tsx`
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/preview/preview-client.tsx`
 
@@ -1060,6 +1077,7 @@ git commit -m "feat(reviews): add preview route for draft slide deck"
 Authenticated view of a published snapshot.
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/snapshots/[snapId]/page.tsx` (replaces existing stub)
 
 **Step 1: Replace the stub**
@@ -1167,6 +1185,7 @@ git commit -m "feat(reviews): render authenticated snapshot detail via ReviewDec
 Table view of all snapshots for a review with share and view actions.
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/snapshots/page.tsx` (replaces existing stub)
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/snapshots/snapshot-share-button.tsx`
 
@@ -1340,6 +1359,7 @@ git commit -m "feat(reviews): add snapshots list page with share and view action
 Wire the three new destinations into the existing editor header.
 
 **Files:**
+
 - Modify: `app/(authenticated)/[orgId]/reports/performance/[id]/page.tsx` (header section around lines 44-54)
 
 **Step 1: Update the header**
@@ -1390,6 +1410,7 @@ git commit -m "feat(reviews): add Preview and Snapshots buttons to editor header
 Add a service-client data fetcher for a marketing review snapshot + wire the `/s/[token]/client.tsx` MarketingReview case to render `<ReviewDeck>`.
 
 **Files:**
+
 - Modify: `app/s/[token]/actions.ts` (add `getSharedMarketingReviewData`)
 - Modify: `app/s/[token]/client.tsx` (wire MarketingReview case + add render branch)
 
@@ -1536,6 +1557,7 @@ git commit -m "feat(reviews): wire public share to render MarketingReview via Re
 Extend existing specs with Phase 4 flows.
 
 **Files:**
+
 - Modify: `tests/e2e/performance-reports.spec.ts` (or create if missing — check first)
 - Modify: `tests/e2e/visual.spec.ts`
 
@@ -1682,6 +1704,7 @@ git diff origin/main..HEAD --stat
 ```
 
 Verify:
+
 - No `console.log` artifacts
 - No commented-out debug code
 - No unrelated changes

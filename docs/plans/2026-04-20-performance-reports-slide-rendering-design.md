@@ -12,13 +12,13 @@ Render the six AI-generated narrative blocks produced in Phase 3 as a presentati
 
 ### Routes
 
-| Route | Purpose | Data source |
-|---|---|---|
-| `/{orgId}/reports/performance/[id]` | Draft editor (existing) + Publish/Preview/Snapshots buttons | `marketing_review_drafts` |
-| `/{orgId}/reports/performance/[id]/preview` | Full-viewport deck of current draft (admin/internal only) | `marketing_review_drafts` |
-| `/{orgId}/reports/performance/[id]/snapshots` | List of published snapshots (version, date, share status) | `marketing_review_snapshots` |
-| `/{orgId}/reports/performance/[id]/snapshots/[snapId]` | Authenticated view of a frozen snapshot | `marketing_review_snapshots` row |
-| `/s/[token]` | Public share — renders the snapshot bound to the token | `shared_links.resource_id → marketing_review_snapshots` |
+| Route                                                  | Purpose                                                     | Data source                                             |
+| ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------- |
+| `/{orgId}/reports/performance/[id]`                    | Draft editor (existing) + Publish/Preview/Snapshots buttons | `marketing_review_drafts`                               |
+| `/{orgId}/reports/performance/[id]/preview`            | Full-viewport deck of current draft (admin/internal only)   | `marketing_review_drafts`                               |
+| `/{orgId}/reports/performance/[id]/snapshots`          | List of published snapshots (version, date, share status)   | `marketing_review_snapshots`                            |
+| `/{orgId}/reports/performance/[id]/snapshots/[snapId]` | Authenticated view of a frozen snapshot                     | `marketing_review_snapshots` row                        |
+| `/s/[token]`                                           | Public share — renders the snapshot bound to the token      | `shared_links.resource_id → marketing_review_snapshots` |
 
 ### Shared renderer
 

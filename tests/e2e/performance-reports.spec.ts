@@ -95,33 +95,54 @@ test.describe('Performance Reports — publish from preview', () => {
 })
 
 test.describe('Performance Reports — public share access', () => {
-  test('unauthenticated visitor can view a seeded public share URL', async ({ browser }) => {
-    // Use a fresh context with no auth cookies — the seeded share token is
-    // the canonical "public visitor" entry point.
+  test('admin creates share link from snapshots list and an unauthenticated visitor can view it', async ({
+    page,
+    browser,
+  }) => {
+    // This test exercises the full in-app share flow described in the Phase 4
+    // spec: admin opens the snapshots list, clicks Share, submits the
+    // ShareModal, captures the generated `/s/{token}` URL, then verifies an
+    // unauthenticated visitor can load the deck from that URL.
+    //
+    // We deliberately do NOT rely on a pre-seeded shared_links row — the URL
+    // under test is the one the UI just produced.
+    await loginAsAdmin(page)
+    const orgId = await getSeededOrgId(page)
+
+    await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots`)
+    await page.waitForSelector('[data-testid="performance-reports-snapshots-list-title"]')
+
+    // Click the row-level Share button. Each snapshot row owns its own
+    // ShareModal instance keyed on snapshot id — target that specific one so
+    // we don't race a future sibling modal.
+    await page
+      .locator(
+        `[data-testid="performance-reports-snapshots-share-button-${testMarketingReview.snapshotId}"]`
+      )
+      .click()
+
+    // ShareModal uses the shadcn Dialog — it mounts into a portal with
+    // role=dialog. The "Create Share Link" button is the primary action.
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: /create share link/i }).click()
+
+    // After creation the modal swaps to the success view, which renders a
+    // readonly Input pre-filled with the public share URL.
+    await expect(dialog.getByText('Link created!')).toBeVisible({ timeout: 10_000 })
+    const shareUrl = await dialog.locator('input[readonly]').inputValue()
+    expect(shareUrl).toMatch(/\/s\/[^/]+$/)
+
+    // Fresh browser context = no auth cookies. This is the canonical
+    // unauthenticated visitor path.
     const context = await browser.newContext()
     try {
       const publicPage = await context.newPage()
-      await publicPage.goto(`/s/${testMarketingReview.publicShareToken}`)
+      await publicPage.goto(shareUrl)
 
-      // If the shared_links CHECK constraint still excludes 'marketing_review'
-      // the seed will have skipped the share row — detect that and skip
-      // gracefully rather than failing the whole suite.
-      const notFoundHeading = publicPage.getByRole('heading', { name: /Not Found/i })
-      const seedMissingShareLink = await notFoundHeading
-        .isVisible({ timeout: 2000 })
-        .catch(() => false)
-      if (seedMissingShareLink) {
-        test.skip(
-          true,
-          'Public share link not seeded — shared_links.resource_type ' +
-            'constraint likely missing "marketing_review".'
-        )
-        return
-      }
-
-      // The shared page renders the deck inside the public wrapper — the
-      // presence of `shared-marketing-review` implies the auth layout was
-      // NOT used (the `/s/` route never mounts the `(authenticated)` group).
+      // `shared-marketing-review` is only rendered by the public `/s/`
+      // route wrapper — its presence proves we bypassed the authenticated
+      // layout and are seeing the deck via the public share handler.
       await expect(publicPage.locator('[data-testid="shared-marketing-review"]')).toBeVisible({
         timeout: 10_000,
       })

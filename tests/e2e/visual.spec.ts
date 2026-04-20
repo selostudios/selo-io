@@ -113,22 +113,6 @@ test.describe('Visual Regression', () => {
         const publicPage = await context.newPage()
         await publicPage.goto(`/s/${testMarketingReview.publicShareToken}`)
 
-        // Skip if the seed couldn't create the share link (see
-        // `tests/helpers/seed.ts` — the shared_links CHECK constraint may
-        // not include 'marketing_review' yet).
-        const notFoundHeading = publicPage.getByRole('heading', { name: /Not Found/i })
-        const seedMissingShareLink = await notFoundHeading
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-        if (seedMissingShareLink) {
-          test.skip(
-            true,
-            'Public share link not seeded — shared_links.resource_type ' +
-              'constraint likely missing "marketing_review".'
-          )
-          return
-        }
-
         await publicPage.waitForSelector('[data-testid="shared-marketing-review"]')
         await publicPage.waitForSelector('[data-testid="review-deck"]')
         await expect(publicPage).toHaveScreenshot('performance-report-public-share.png', {
