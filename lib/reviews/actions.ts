@@ -189,6 +189,14 @@ export async function publishReview(
     return { success: false, error: draftError?.message ?? 'Draft not found' }
   }
 
+  const narrativeBlocks = (draft.narrative ?? {}) as NarrativeBlocks
+  const hasContent = Object.values(narrativeBlocks).some(
+    (v) => typeof v === 'string' && v.trim().length > 0
+  )
+  if (!hasContent) {
+    return { success: false, error: 'Nothing to publish — narrative is empty' }
+  }
+
   const { data: lastSnapshot } = await supabase
     .from('marketing_review_snapshots')
     .select('version')
