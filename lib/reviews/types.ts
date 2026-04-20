@@ -54,7 +54,8 @@ export interface NarrativeBlocks {
 
 export type GAData = Record<string, MetricTriple>
 
-export type LinkedInData = Record<string, MetricTriple> & {
+export interface LinkedInData {
+  metrics: Record<string, MetricTriple>
   top_posts?: LinkedInTopPost[]
 }
 
