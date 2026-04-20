@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { useDeckNavigation } from './use-deck-navigation'
@@ -38,7 +38,25 @@ const BODY_SECTIONS: BodySection[] = [
   { key: 'planning', heading: 'Planning Ahead' },
 ]
 
+const COVER_HEADING = 'Quarterly Performance Review'
+
 const SLIDE_COUNT = 1 + BODY_SECTIONS.length // cover + 5 body slides = 6
+
+/** Full list of slide headings used for aria announcements, in deck order. */
+const SLIDE_HEADINGS: string[] = [COVER_HEADING, ...BODY_SECTIONS.map((s) => s.heading)]
+
+/**
+ * Returns the current fullscreen element, preferring the standard API and
+ * falling back to Safari's webkit-prefixed API (still required on iPad as of
+ * iPadOS 17).
+ */
+function getFullscreenElement(): Element | null {
+  if (typeof document === 'undefined') return null
+  if (document.fullscreenElement) return document.fullscreenElement
+  // @ts-expect-error - webkitFullscreenElement is not in lib.dom types.
+  const webkitEl: Element | null | undefined = document.webkitFullscreenElement
+  return webkitEl ?? null
+}
 
 /**
  * `<ReviewDeck>` is the shared renderer used by the editor preview, the
@@ -62,22 +80,65 @@ export function ReviewDeck({
 
   useEffect(() => {
     function handleChange() {
-      setIsFullscreen(document.fullscreenElement === deckRef.current)
+      setIsFullscreen(getFullscreenElement() === deckRef.current)
     }
     document.addEventListener('fullscreenchange', handleChange)
+    document.addEventListener('webkitfullscreenchange', handleChange)
     return () => {
       document.removeEventListener('fullscreenchange', handleChange)
+      document.removeEventListener('webkitfullscreenchange', handleChange)
     }
   }, [])
 
   const toggleFullscreen = useCallback(() => {
     const el = deckRef.current
     if (!el) return
-    if (document.fullscreenElement === el) {
-      document.exitFullscreen?.()
-    } else {
-      el.requestFullscreen?.()
+
+    const currentFullscreenEl = getFullscreenElement()
+
+    if (currentFullscreenEl === el) {
+      // Exit fullscreen — try standard then webkit.
+      if (typeof document.exitFullscreen === 'function') {
+        document.exitFullscreen().catch(() => {
+          /* User gesture missing, blocked, etc. — swallow. */
+        })
+        return
+      }
+      // @ts-expect-error - webkitExitFullscreen is not in lib.dom types.
+      const webkitExit: (() => Promise<void> | void) | undefined = document.webkitExitFullscreen
+      if (typeof webkitExit === 'function') {
+        try {
+          const result = webkitExit.call(document)
+          if (result && typeof (result as Promise<void>).catch === 'function') {
+            ;(result as Promise<void>).catch(() => {})
+          }
+        } catch {
+          /* no-op */
+        }
+      }
+      return
     }
+
+    // Enter fullscreen — try standard then webkit.
+    if (typeof el.requestFullscreen === 'function') {
+      el.requestFullscreen().catch(() => {
+        /* Permission denied, iframe blocked, etc. — swallow. */
+      })
+      return
+    }
+    // @ts-expect-error - webkitRequestFullscreen is not in lib.dom types.
+    const webkitRequest: (() => Promise<void> | void) | undefined = el.webkitRequestFullscreen
+    if (typeof webkitRequest === 'function') {
+      try {
+        const result = webkitRequest.call(el)
+        if (result && typeof (result as Promise<void>).catch === 'function') {
+          ;(result as Promise<void>).catch(() => {})
+        }
+      } catch {
+        /* no-op */
+      }
+    }
+    // If neither API is available, no-op silently (keep button visible).
   }, [])
 
   const rootStyle = {
@@ -86,6 +147,11 @@ export function ReviewDeck({
 
   const slideWidthPercent = 100 / SLIDE_COUNT
   const trackTransform = `translateX(-${currentIndex * slideWidthPercent}%)`
+
+  const announcement = useMemo(() => {
+    const heading = SLIDE_HEADINGS[currentIndex] ?? ''
+    return `Slide ${currentIndex + 1} of ${SLIDE_COUNT}: ${heading}`
+  }, [currentIndex])
 
   return (
     <div
@@ -132,6 +198,15 @@ export function ReviewDeck({
             <BodySlide heading={section.heading} text={narrative[section.key] ?? ''} />
           </Slide>
         ))}
+      </div>
+
+      <div
+        data-testid="review-deck-live-region"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announcement}
       </div>
 
       <DeckControls

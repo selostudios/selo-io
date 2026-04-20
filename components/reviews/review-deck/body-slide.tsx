@@ -1,5 +1,3 @@
-import { Fragment } from 'react'
-
 export const EMPTY_NARRATIVE_PLACEHOLDER = 'No narrative available for this section'
 
 export interface BodySlideProps {
@@ -92,5 +90,5 @@ function renderNarrativeNodes(text: string): React.ReactNode[] {
   // End-of-input flush.
   flushList()
 
-  return nodes.map((node, idx) => <Fragment key={idx}>{node}</Fragment>)
+  return nodes
 }

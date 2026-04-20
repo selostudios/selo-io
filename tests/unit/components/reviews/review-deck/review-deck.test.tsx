@@ -132,4 +132,34 @@ describe('ReviewDeck', () => {
     // Heading should also be present in the DOM for the GA slide.
     expect(within(slides[1]).getByRole('heading', { name: 'Google Analytics' })).toBeInTheDocument()
   })
+
+  test('space key advances exactly one slide when the Next button is focused', () => {
+    renderDeck()
+
+    const track = screen.getByTestId('review-deck-track')
+    expect(track.getAttribute('data-current-index')).toBe('0')
+
+    const nextButton = screen.getByRole('button', { name: /next slide/i }) as HTMLButtonElement
+    nextButton.focus()
+    expect(document.activeElement).toBe(nextButton)
+
+    // The global keydown listener lives on window; dispatch there to mirror
+    // real browser bubbling. If the hook doesn't preventDefault, the button's
+    // native Space→click synthesis would advance a second time.
+    fireEvent.keyDown(window, { key: ' ' })
+
+    expect(track.getAttribute('data-current-index')).toBe('1')
+  })
+
+  test('announces the current slide heading through the live region', () => {
+    renderDeck()
+
+    const liveRegion = screen.getByTestId('review-deck-live-region')
+    expect(liveRegion.getAttribute('aria-live')).toBe('polite')
+    expect(liveRegion.textContent).toBe('Slide 1 of 6: Quarterly Performance Review')
+
+    fireEvent.click(screen.getByRole('button', { name: /next slide/i }))
+
+    expect(liveRegion.textContent).toBe('Slide 2 of 6: Google Analytics')
+  })
 })

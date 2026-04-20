@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 

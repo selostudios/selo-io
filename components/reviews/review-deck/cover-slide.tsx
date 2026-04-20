@@ -57,7 +57,7 @@ export function CoverSlide({
         {formatPeriodRange(periodStart, periodEnd)}
       </p>
 
-      {trimmedSubtitle && trimmedSubtitle.length > 0 && (
+      {trimmedSubtitle && (
         <p className="text-foreground mt-6 max-w-2xl text-base leading-relaxed md:text-lg lg:text-xl">
           {trimmedSubtitle}
         </p>
