@@ -1,3 +1,5 @@
+import { parseBodyNarrative, type NarrativeNode } from './parse-body-narrative'
+
 export const EMPTY_NARRATIVE_PLACEHOLDER = 'No narrative available for this section'
 
 export interface BodySlideProps {
@@ -42,53 +44,23 @@ export function BodySlide({ heading, text }: BodySlideProps) {
 }
 
 /**
- * Single-pass conversion of plain-text narrative into a list of React nodes.
+ * Turns parsed narrative nodes into React elements with the BodySlide styling.
  *
- * - Lines matching `^- ` (after trimming leading spaces) are treated as list
- *   items. Consecutive bullet lines collapse into a single `<ul>`.
- * - Blank lines are separators and produce no node.
- * - Any other non-blank line becomes its own `<p>` paragraph.
+ * Rendering lives here (not in the parser) because styling is owned by the
+ * slide. The parser returns a shared AST; each slide maps that AST to its own
+ * markup.
  */
 function renderNarrativeNodes(text: string): React.ReactNode[] {
-  const lines = text.split('\n')
-  const nodes: React.ReactNode[] = []
-
-  let listBuffer: string[] = []
-
-  const flushList = () => {
-    if (listBuffer.length === 0) return
-    const items = listBuffer.slice()
-    nodes.push(
-      <ul key={`ul-${nodes.length}`} className="list-disc space-y-2 pl-6">
-        {items.map((item, idx) => (
-          <li key={idx}>{item}</li>
-        ))}
-      </ul>
-    )
-    listBuffer = []
-  }
-
-  for (const rawLine of lines) {
-    const trimmed = rawLine.trim()
-
-    if (trimmed.startsWith('- ')) {
-      listBuffer.push(trimmed.slice(2).trim())
-      continue
+  return parseBodyNarrative(text).map((node: NarrativeNode, idx) => {
+    if (node.kind === 'list') {
+      return (
+        <ul key={`ul-${idx}`} className="list-disc space-y-2 pl-6">
+          {node.content.map((item, itemIdx) => (
+            <li key={itemIdx}>{item}</li>
+          ))}
+        </ul>
+      )
     }
-
-    // Non-bullet: close any list we were building.
-    flushList()
-
-    if (trimmed.length === 0) {
-      // Blank line → separator, no output.
-      continue
-    }
-
-    nodes.push(<p key={`p-${nodes.length}`}>{trimmed}</p>)
-  }
-
-  // End-of-input flush.
-  flushList()
-
-  return nodes
+    return <p key={`p-${idx}`}>{node.content}</p>
+  })
 }
