@@ -4,7 +4,7 @@ import { buildMetricTriple } from '@/lib/reviews/metric-triple'
 import { createServiceClient } from '@/lib/supabase/server'
 import { PlatformType } from '@/lib/enums'
 
-const GA_METRICS = [
+export const GA_METRICS = [
   'ga_active_users',
   'ga_new_users',
   'ga_sessions',
@@ -14,6 +14,8 @@ const GA_METRICS = [
   'ga_traffic_referral',
   'ga_traffic_email',
 ] as const
+
+export type GaMetricKey = (typeof GA_METRICS)[number]
 
 export async function fetchGAData(
   organizationId: string,
