@@ -375,7 +375,7 @@ export function ClientReportsClient({
       {filteredLegacyReports.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Previous Reports</CardTitle>
+            <CardTitle>Legacy Reports</CardTitle>
             <CardDescription>Reports created from older separate audits</CardDescription>
           </CardHeader>
           <CardContent>

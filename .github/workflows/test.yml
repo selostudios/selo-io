@@ -12,6 +12,9 @@ env:
   SUPABASE_URL: http://127.0.0.1:54321
   SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
   SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+  # Supabase services that aren't needed for integration/E2E tests.
+  # Excluding these cuts `supabase start` time from ~2min to ~45s.
+  SUPABASE_EXCLUDE: realtime,storage-api,imgproxy,edge-runtime,mailpit,vector,logflare,postgres-meta,studio,supavisor
 
 jobs:
   lint:
@@ -34,7 +37,24 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-  unit-integration:
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  integration:
     runs-on: ubuntu-latest
 
     steps:
@@ -51,14 +71,8 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v2
 
-      - name: Start Supabase local
-        run: supabase start
-
-      - name: Run migrations
-        run: supabase db reset
-
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Start Supabase (minimal services)
+        run: supabase start -x "$SUPABASE_EXCLUDE"
 
       - name: Run integration tests
         run: npm run test:integration
@@ -92,8 +106,8 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v2
 
-      - name: Start Supabase
-        run: supabase start
+      - name: Start Supabase (minimal services)
+        run: supabase start -x "$SUPABASE_EXCLUDE"
 
       - name: Seed test data
         run: npm run test:seed
