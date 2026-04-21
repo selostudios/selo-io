@@ -40,4 +40,47 @@ describe('MetricCard', () => {
     expect(container.querySelector('.lucide-trending-up')).not.toBeInTheDocument()
     expect(container.querySelector('.lucide-trending-down')).not.toBeInTheDocument()
   })
+
+  describe('chart color variant', () => {
+    const timeSeries = [
+      { date: '2026-01-01', value: 100 },
+      { date: '2026-01-02', value: 120 },
+      { date: '2026-01-03', value: 140 },
+    ]
+
+    function getChartStyleCss(container: HTMLElement): string {
+      // ChartContainer renders a <style> child inside [data-slot="chart"] that
+      // defines `--color-value: <color>;` — that's what drives the sparkline
+      // stroke and gradient base color.
+      const chartEl = container.querySelector('[data-slot="chart"]')
+      const styleEl = chartEl?.querySelector('style')
+      return styleEl?.innerHTML ?? ''
+    }
+
+    it('uses the brand indigo token for the sparkline when variant is accent', () => {
+      const { container } = render(
+        <MetricCard
+          label="Sessions"
+          value={1234}
+          change={5.2}
+          timeSeries={timeSeries}
+          variant="accent"
+        />
+      )
+
+      const css = getChartStyleCss(container)
+      expect(css).toContain('--color-value: var(--color-indigo-500)')
+      expect(css).not.toContain('hsl(var(--primary))')
+    })
+
+    it('keeps the default primary color for the sparkline when no variant is passed', () => {
+      const { container } = render(
+        <MetricCard label="Sessions" value={1234} change={5.2} timeSeries={timeSeries} />
+      )
+
+      const css = getChartStyleCss(container)
+      expect(css).toContain('--color-value: hsl(var(--primary))')
+      expect(css).not.toContain('var(--color-indigo-500)')
+    })
+  })
 })

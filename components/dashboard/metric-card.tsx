@@ -24,7 +24,15 @@ interface MetricCardProps {
   period?: Period
   /** Time series data for the inline chart */
   timeSeries?: TimeSeriesDataPoint[]
-  /** Chart line/fill color */
+  /**
+   * Chart color variant. `default` uses the app primary color (dashboard look);
+   * `accent` uses the brand indigo/purple palette for deck slides.
+   */
+  variant?: 'default' | 'accent'
+  /**
+   * Escape-hatch override for the sparkline line/fill color. Ignored when
+   * `variant` is set to anything other than `default`.
+   */
   color?: string
 }
 
@@ -47,6 +55,7 @@ export function MetricCard({
   tooltip,
   period,
   timeSeries,
+  variant = 'default',
   color = 'hsl(var(--primary))',
 }: MetricCardProps) {
   const formattedValue =
@@ -55,10 +64,15 @@ export function MetricCard({
   const isPositive = change !== null && change >= 0
   const hasChart = timeSeries && timeSeries.length >= 2
 
+  // `accent` is the on-brand indigo used by deck slides. The default path keeps
+  // the existing `color` prop as an escape hatch for any legacy call sites.
+  const isAccent = variant === 'accent'
+  const effectiveColor = isAccent ? 'var(--color-indigo-500)' : color
+
   const chartConfig = {
     value: {
       label: label,
-      color: color,
+      color: effectiveColor,
     },
   } satisfies ChartConfig
 
@@ -130,8 +144,17 @@ export function MetricCard({
             <AreaChart data={formattedData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0} />
+                  {isAccent ? (
+                    <>
+                      <stop offset="5%" stopColor="var(--color-indigo-500)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--color-purple-600)" stopOpacity={0.05} />
+                    </>
+                  ) : (
+                    <>
+                      <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0} />
+                    </>
+                  )}
                 </linearGradient>
               </defs>
               <XAxis
