@@ -124,7 +124,7 @@ describe('GaBodySlide', () => {
       <GaBodySlide narrative={narrative} data={undefined} mode="screen" />
     )
 
-    const content = container.querySelector('[data-testid="body-slide-content"]')
+    const content = container.querySelector('[data-testid="ga-body-slide-content"]')
     expect(content).not.toBeNull()
 
     const list = content!.querySelector('ul')
