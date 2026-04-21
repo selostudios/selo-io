@@ -115,7 +115,7 @@ describe('fetchGAData', () => {
     const data = await fetchGAData('org-1', periods)
 
     // Every non-featured metric should have no timeseries
-    const featured = new Set<string>(GA_FEATURED_METRIC_KEYS as readonly string[])
+    const featured = new Set<string>(GA_FEATURED_METRIC_KEYS)
     for (const metric of GA_METRICS) {
       if (featured.has(metric)) continue
       expect(

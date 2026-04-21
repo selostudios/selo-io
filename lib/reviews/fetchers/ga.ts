@@ -1,7 +1,7 @@
 import type { QuarterPeriods } from '@/lib/reviews/period'
 import type { GAData } from '@/lib/reviews/types'
 import { buildMetricTriple } from '@/lib/reviews/metric-triple'
-import { GA_FEATURED_METRIC_KEYS } from '@/lib/reviews/featured-metrics'
+import { isFeaturedGaMetric } from '@/lib/reviews/featured-metrics'
 import { createServiceClient } from '@/lib/supabase/server'
 import { PlatformType } from '@/lib/enums'
 
@@ -52,7 +52,7 @@ export async function fetchGAData(
       yoy: seriesFor(yoy),
     })
 
-    if ((GA_FEATURED_METRIC_KEYS as readonly string[]).includes(metric)) {
+    if (isFeaturedGaMetric(metric)) {
       const toSeries = (rows: typeof main) =>
         rows
           .filter((r) => r.metric_type === metric)

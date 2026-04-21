@@ -15,4 +15,10 @@ export const GA_FEATURED_METRICS = [
   { key: 'ga_new_users', label: 'New users', format: MetricFormat.Number },
 ] as const satisfies readonly FeaturedMetric[]
 
-export const GA_FEATURED_METRIC_KEYS = GA_FEATURED_METRICS.map((m) => m.key)
+export const GA_FEATURED_METRIC_KEYS: readonly GaMetricKey[] = GA_FEATURED_METRICS.map((m) => m.key)
+
+const FEATURED_SET = new Set<string>(GA_FEATURED_METRIC_KEYS)
+
+export function isFeaturedGaMetric(key: string): boolean {
+  return FEATURED_SET.has(key)
+}
