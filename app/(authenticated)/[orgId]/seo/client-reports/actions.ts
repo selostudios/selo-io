@@ -346,9 +346,6 @@ export async function getReportAuditData(
     .eq('audit_id', report.site_audit_id)
     .order('created_at', { ascending: true })
 
-  // @ts-expect-error performance_results was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-  const performanceResults = report.performance_results ?? []
-
   const { data: aioChecks } = await supabase
     .from('aio_checks')
     .select('*')
@@ -357,7 +354,7 @@ export async function getReportAuditData(
 
   return {
     siteChecks: (siteChecks ?? []) as ReportCheck[],
-    performanceResults: performanceResults as unknown as ReportAuditData['performanceResults'],
+    performanceResults: [],
     aioChecks: (aioChecks ?? []) as ReportCheck[],
   }
 }
@@ -514,56 +511,26 @@ export async function generateSummaryForReport(
   reportId: string
 ): Promise<{ success: boolean; summary?: string; error?: string }> {
   const report = await getReportWithAudits(reportId)
-  const auditData = await getReportAuditData(report)
-
-  // For unified-audit reports, scores + pages_crawled come from the unified audit.
-  // For legacy reports, fall back to the legacy join rows.
   const unifiedAudit = await fetchUnifiedAuditScores(await createClient(), report.audit_id)
 
-  const seoScore =
-    unifiedAudit?.seo_score ??
-    // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-    report.site_audit?.overall_score ??
-    0
-  const aioScore =
-    unifiedAudit?.ai_readiness_score ??
-    // @ts-expect-error aio_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-    report.aio_audit?.overall_aio_score ??
-    0
-
-  let pageSpeedScore = unifiedAudit?.performance_score ?? 0
   if (!unifiedAudit) {
-    const perfResults = auditData.performanceResults as { performance_score?: number | null }[]
-    const perfScores = perfResults
-      .map((r) => r.performance_score)
-      .filter((s): s is number => s !== null)
-    pageSpeedScore =
-      perfScores.length > 0
-        ? Math.round(perfScores.reduce((a, b) => a + b, 0) / perfScores.length)
-        : 0
+    return { success: false, error: 'Unified audit not found for this report' }
   }
 
-  const pagesAnalyzed =
-    unifiedAudit?.pages_crawled ??
-    // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-    report.site_audit?.pages_crawled ??
-    0
-  const combinedScore = report.combined_score ?? 0
+  const auditData = await getReportAuditData(report)
 
   try {
     const summary = await generateReportSummary({
       domain: report.domain,
-      combinedScore,
-      seoScore,
-      pageSpeedScore,
-      aioScore,
-      pagesAnalyzed,
-      // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-      siteAudit: report.site_audit ?? null,
+      combinedScore: report.combined_score ?? 0,
+      seoScore: unifiedAudit.seo_score ?? 0,
+      pageSpeedScore: unifiedAudit.performance_score ?? 0,
+      aioScore: unifiedAudit.ai_readiness_score ?? 0,
+      pagesAnalyzed: unifiedAudit.pages_crawled ?? 0,
+      siteAudit: null,
       siteChecks: auditData.siteChecks as unknown as SiteAuditCheck[],
       performanceResults: auditData.performanceResults as unknown as PerformanceAuditResult[],
-      // @ts-expect-error aio_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
-      aioAudit: report.aio_audit ?? null,
+      aioAudit: null,
       aioChecks: auditData.aioChecks as unknown as AIOCheck[],
     })
 
