@@ -1,4 +1,5 @@
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
 import { buildPromptContextPayload } from './context'
 
 export type NarrativeBlockKey = keyof NarrativeBlocks
@@ -79,7 +80,10 @@ export function defaultTemplateCoverSubtitle(): string {
 }
 
 export function defaultTemplateGaSummary(): string {
+  const featured = GA_FEATURED_METRICS.map((m) => m.label).join(', ')
   return [
+    `The slide displays metric cards for: ${featured}. Anchor the "Going well" and "To improve" bullets in these metrics first, so the bullets visibly match the numbers on the cards above. Secondary metrics can be referenced only when they add context the featured three cannot.`,
+    '',
     'Google Analytics highlights for this quarter, split into what is going well and what to improve.',
     '',
     'Format exactly like this (plain text, no markdown):',
