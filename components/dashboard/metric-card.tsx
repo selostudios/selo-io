@@ -14,7 +14,24 @@ import {
 import { Period } from '@/lib/enums'
 import type { TimeSeriesDataPoint } from '@/lib/metrics/types'
 
-interface MetricCardProps {
+interface GradientStop {
+  offset: string
+  stopColor: string
+  stopOpacity: number
+}
+
+export const GRADIENT_STOPS: Record<'default' | 'accent', readonly [GradientStop, GradientStop]> = {
+  default: [
+    { offset: '5%', stopColor: 'var(--color-value)', stopOpacity: 0.3 },
+    { offset: '95%', stopColor: 'var(--color-value)', stopOpacity: 0 },
+  ],
+  accent: [
+    { offset: '5%', stopColor: 'var(--color-indigo-500)', stopOpacity: 0.3 },
+    { offset: '95%', stopColor: 'var(--color-purple-600)', stopOpacity: 0.05 },
+  ],
+}
+
+interface BaseMetricCardProps {
   label: string
   value: number | string
   change: number | null
@@ -24,17 +41,15 @@ interface MetricCardProps {
   period?: Period
   /** Time series data for the inline chart */
   timeSeries?: TimeSeriesDataPoint[]
-  /**
-   * Chart color variant. `default` uses the app primary color (dashboard look);
-   * `accent` uses the brand indigo/purple palette for deck slides.
-   */
-  variant?: 'default' | 'accent'
-  /**
-   * Escape-hatch override for the sparkline line/fill color. Ignored when
-   * `variant` is set to anything other than `default`.
-   */
-  color?: string
 }
+
+/**
+ * Chart color variant. `default` uses the app primary color (dashboard look)
+ * and accepts an optional `color` override; `accent` uses the brand
+ * indigo/purple palette for deck slides and forbids `color` at the type level.
+ */
+type MetricCardProps = BaseMetricCardProps &
+  ({ variant?: 'default'; color?: string } | { variant: 'accent'; color?: never })
 
 function getTrendAvailabilityMessage(period?: Period): string {
   if (!period) {
@@ -47,27 +62,19 @@ function getTrendAvailabilityMessage(period?: Period): string {
   return `Not enough historical data for ${periodLabel} trends. Trends will appear after ~${daysNeeded} days of data collection.`
 }
 
-export function MetricCard({
-  label,
-  value,
-  change,
-  prefix,
-  tooltip,
-  period,
-  timeSeries,
-  variant = 'default',
-  color = 'hsl(var(--primary))',
-}: MetricCardProps) {
+export function MetricCard(props: MetricCardProps) {
+  const { label, value, change, prefix, tooltip, period, timeSeries } = props
+  const variant = props.variant ?? 'default'
+  const color = variant === 'default' ? (props.color ?? 'hsl(var(--primary))') : undefined
+
   const formattedValue =
     typeof value === 'number' ? `${prefix || ''}${value.toLocaleString()}` : value
 
   const isPositive = change !== null && change >= 0
   const hasChart = timeSeries && timeSeries.length >= 2
 
-  // `accent` is the on-brand indigo used by deck slides. The default path keeps
-  // the existing `color` prop as an escape hatch for any legacy call sites.
-  const isAccent = variant === 'accent'
-  const effectiveColor = isAccent ? 'var(--color-indigo-500)' : color
+  const effectiveColor = variant === 'accent' ? 'var(--color-indigo-500)' : color
+  const gradientStops = GRADIENT_STOPS[variant]
 
   const chartConfig = {
     value: {
@@ -144,17 +151,14 @@ export function MetricCard({
             <AreaChart data={formattedData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  {isAccent ? (
-                    <>
-                      <stop offset="5%" stopColor="var(--color-indigo-500)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--color-purple-600)" stopOpacity={0.05} />
-                    </>
-                  ) : (
-                    <>
-                      <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0} />
-                    </>
-                  )}
+                  {gradientStops.map((stop) => (
+                    <stop
+                      key={stop.offset}
+                      offset={stop.offset}
+                      stopColor={stop.stopColor}
+                      stopOpacity={stop.stopOpacity}
+                    />
+                  ))}
                 </linearGradient>
               </defs>
               <XAxis

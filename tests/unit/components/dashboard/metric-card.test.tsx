@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MetricCard } from '@/components/dashboard/metric-card'
+import { MetricCard, GRADIENT_STOPS } from '@/components/dashboard/metric-card'
 
 describe('MetricCard', () => {
   it('should render value and label', () => {
@@ -81,6 +81,26 @@ describe('MetricCard', () => {
       const css = getChartStyleCss(container)
       expect(css).toContain('--color-value: hsl(var(--primary))')
       expect(css).not.toContain('var(--color-indigo-500)')
+    })
+
+    it('pins the accent gradient to brand indigo-500 (top) and purple-600 (bottom)', () => {
+      const [top, bottom] = GRADIENT_STOPS.accent
+      expect(top).toEqual({
+        offset: '5%',
+        stopColor: 'var(--color-indigo-500)',
+        stopOpacity: 0.3,
+      })
+      expect(bottom).toEqual({
+        offset: '95%',
+        stopColor: 'var(--color-purple-600)',
+        stopOpacity: 0.05,
+      })
+    })
+
+    it('keeps the default gradient on the chart-config --color-value token', () => {
+      const [top, bottom] = GRADIENT_STOPS.default
+      expect(top.stopColor).toBe('var(--color-value)')
+      expect(bottom.stopColor).toBe('var(--color-value)')
     })
   })
 })
