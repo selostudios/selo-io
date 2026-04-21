@@ -162,7 +162,7 @@ export function ClientReportsClient({
     try {
       const result = await createReportFromAudit(auditId)
       if (result.success && result.reportId) {
-        router.push(buildOrgHref(`/seo/client-reports/${result.reportId}`))
+        router.push(buildOrgHref(`/reports/audit/${result.reportId}`))
       } else {
         showError(result.error || 'Failed to create report')
       }
@@ -296,7 +296,7 @@ export function ClientReportsClient({
                         {reportId ? (
                           <>
                             <Button asChild variant="outline" size="sm">
-                              <Link href={buildOrgHref(`/seo/client-reports/${reportId}`)}>
+                              <Link href={buildOrgHref(`/reports/audit/${reportId}`)}>
                                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                                 View Report
                               </Link>
@@ -310,9 +310,7 @@ export function ClientReportsClient({
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={buildOrgHref(
-                                      `/seo/client-reports/${reportId}?share=true`
-                                    )}
+                                    href={buildOrgHref(`/reports/audit/${reportId}?share=true`)}
                                   >
                                     <Share2 className="mr-2 h-4 w-4" />
                                     Share Report
@@ -320,9 +318,7 @@ export function ClientReportsClient({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={buildOrgHref(
-                                      `/seo/client-reports/${reportId}?settings=true`
-                                    )}
+                                    href={buildOrgHref(`/reports/audit/${reportId}?settings=true`)}
                                   >
                                     <Settings className="mr-2 h-4 w-4" />
                                     Report Settings
@@ -406,7 +402,7 @@ export function ClientReportsClient({
                   </div>
                   <div className="flex items-center gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={buildOrgHref(`/seo/client-reports/${report.id}`)}>
+                      <Link href={buildOrgHref(`/reports/audit/${report.id}`)}>
                         <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                         View Report
                       </Link>

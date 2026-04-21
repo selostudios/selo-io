@@ -30,7 +30,7 @@ vi.mock('next/cache', () => ({
 
 // Import the action under test AFTER the vi.mock calls above so the mocks are
 // registered before the module graph is evaluated. Do not reorder.
-import { getReportWithAudits } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+import { getReportWithAudits } from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 
 describe('getReportWithAudits — unified-audit report', () => {
   const testId = `report-detail-${Date.now()}`

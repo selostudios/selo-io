@@ -211,7 +211,7 @@ export async function createReportFromAudit(auditId: string): Promise<CreateRepo
     return { success: false, error: 'Failed to create report' }
   }
 
-  revalidatePath('/seo/client-reports')
+  revalidatePath('/reports/audit')
   return { success: true, reportId: report.id }
 }
 
@@ -381,8 +381,8 @@ export async function updateReport(
     return { success: false, error: 'Failed to update report' }
   }
 
-  revalidatePath('/seo/client-reports')
-  revalidatePath(`/seo/client-reports/${reportId}`)
+  revalidatePath('/reports/audit')
+  revalidatePath(`/reports/audit/${reportId}`)
   return { success: true }
 }
 
@@ -409,7 +409,7 @@ export async function updateExecutiveSummary(
   }
 
   try {
-    revalidatePath(`/seo/client-reports/${reportId}`)
+    revalidatePath(`/reports/audit/${reportId}`)
   } catch {
     // revalidatePath throws when called outside a server action (e.g. during RSC render)
   }
@@ -443,7 +443,7 @@ export async function restoreOriginalSummary(
     return { success: false, error: 'Failed to restore summary' }
   }
 
-  revalidatePath(`/seo/client-reports/${reportId}`)
+  revalidatePath(`/reports/audit/${reportId}`)
   return { success: true }
 }
 
@@ -499,7 +499,7 @@ export async function deleteReport(
     return { success: false, error: 'Failed to delete report' }
   }
 
-  revalidatePath('/seo/client-reports')
+  revalidatePath('/reports/audit')
   return { success: true }
 }
 
