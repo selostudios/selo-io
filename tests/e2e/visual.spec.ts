@@ -37,8 +37,8 @@ test.describe('Visual Regression', () => {
     })
 
     test('reports page', async ({ page }) => {
-      await page.goto('/seo/client-reports')
-      await page.waitForURL(/\/seo\/client-reports/)
+      await page.goto('/reports/audit')
+      await page.waitForURL(/\/reports\/audit/)
       await page.waitForSelector('[data-testid="reports-page-title"]')
       await expect(page).toHaveScreenshot('reports-page.png', { fullPage: true })
     })
