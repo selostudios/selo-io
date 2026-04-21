@@ -214,12 +214,14 @@ export function ReviewDeck({
         />
       </div>
 
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 print:hidden">
-        <Button variant="outline" size="sm" onClick={() => window.print()}>
-          <Printer className="mr-2 h-4 w-4" />
-          Print
-        </Button>
-      </div>
+      {!isFullscreen && (
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2 print:hidden">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" />
+            Print
+          </Button>
+        </div>
+      )}
 
       <DeckPrintStyles />
     </div>
