@@ -6,15 +6,13 @@ import {
   linkUserToOrganization,
 } from '../../../helpers/db'
 
-// The server action under test calls `createClient()` from `lib/supabase/server.ts`,
-// which awaits `cookies()` from `next/headers`. In vitest there is no request, so we
-// stub it with an empty cookie store. We also stub `next/navigation.notFound()` to
-// throw an error we can detect, and `next/cache.revalidatePath()` to a no-op.
-vi.mock('next/headers', () => ({
-  cookies: async () => ({
-    get: () => undefined,
-    set: () => undefined,
-  }),
+// The server action under test calls `createClient()` from `lib/supabase/server.ts`.
+// In vitest there is no request context and no authenticated session, so the anon
+// client would be blocked by RLS on `generated_reports`. Mock `createClient` to
+// return the service-role `testDb` client — this lets the action exercise its query
+// logic (the focus of this test) without depending on an RLS-authenticated session.
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => testDb,
 }))
 
 vi.mock('next/navigation', () => ({
