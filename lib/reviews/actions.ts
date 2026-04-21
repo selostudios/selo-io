@@ -69,12 +69,15 @@ export async function createReview(input: {
   quarter: string
   title?: string
   overwrite?: boolean
+  authorNotes?: string | null
 }): Promise<(ActionOk & { reviewId: string }) | ActionErr> {
   const auth = await authorizeAdminOrInternal(input.organizationId)
   if (!auth.ok) return { success: false, error: auth.error }
 
   const supabase = await createClient()
   const title = input.title ?? `${input.quarter} Marketing Review`
+  const normalizedNotes = input.authorNotes?.trim() ?? ''
+  const authorNotes = normalizedNotes.length > 0 ? normalizedNotes : null
 
   if (input.overwrite) {
     const { error: deleteError } = await supabase
@@ -121,6 +124,7 @@ export async function createReview(input: {
       periodEnd: periods.main.end,
       data,
       reviewId: review.id,
+      authorNotes,
     })
   } catch (error) {
     await supabase.from('marketing_reviews').delete().eq('id', review.id)
@@ -138,6 +142,7 @@ export async function createReview(input: {
     data,
     narrative,
     ai_originals: narrative,
+    author_notes: authorNotes,
   })
 
   if (draftError) {
@@ -222,6 +227,31 @@ export async function updateNarrative(
   return { success: true }
 }
 
+export async function updateAuthorNotes(
+  reviewId: string,
+  notes: string
+): Promise<ActionOk | ActionErr> {
+  const review = await loadReviewForAuth(reviewId)
+  if (!review) return { success: false, error: 'Review not found' }
+
+  const auth = await authorizeAdminOrInternal(review.organization_id)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const trimmed = notes.trim()
+  const value = trimmed.length > 0 ? trimmed : null
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('marketing_review_drafts')
+    .update({ author_notes: value, updated_at: new Date().toISOString() })
+    .eq('review_id', reviewId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}`)
+  return { success: true }
+}
+
 export async function deleteReview(reviewId: string): Promise<ActionOk | ActionErr> {
   const review = await loadReviewForAuth(reviewId)
   if (!review) return { success: false, error: 'Review not found' }
@@ -251,7 +281,7 @@ export async function publishReview(
 
   const { data: draft, error: draftError } = await supabase
     .from('marketing_review_drafts')
-    .select('data, narrative')
+    .select('data, narrative, author_notes')
     .eq('review_id', reviewId)
     .single()
 
@@ -293,6 +323,7 @@ export async function publishReview(
       data: draft.data as SnapshotData,
       narrative: draft.narrative as NarrativeBlocks,
       share_token: nanoid(21),
+      author_notes: (draft.author_notes as string | null) ?? null,
     })
     .select('id')
     .single()

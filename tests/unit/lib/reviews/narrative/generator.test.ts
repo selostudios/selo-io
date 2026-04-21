@@ -93,6 +93,48 @@ describe('generateNarrativeBlocks', () => {
     await expect(generateNarrativeBlocks(baseInput)).rejects.toThrow('anthropic unavailable')
   })
 
+  test('weaves author notes into the master prompt when provided', async () => {
+    ;(generateObject as unknown as Mock).mockResolvedValue({
+      object: {
+        cover_subtitle: 'x',
+        ga_summary: 'x',
+        linkedin_insights: 'x',
+        initiatives: 'x',
+        takeaways: 'x',
+        planning: 'x',
+      },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    })
+
+    await generateNarrativeBlocks({
+      ...baseInput,
+      authorNotes: 'Massive paid campaign ran last quarter — expect softer comparables.',
+    })
+
+    const call = (generateObject as unknown as Mock).mock.calls[0][0]
+    expect(call.prompt).toContain('Author notes')
+    expect(call.prompt).toContain('Massive paid campaign ran last quarter')
+  })
+
+  test('omits author notes section when notes are absent', async () => {
+    ;(generateObject as unknown as Mock).mockResolvedValue({
+      object: {
+        cover_subtitle: 'x',
+        ga_summary: 'x',
+        linkedin_insights: 'x',
+        initiatives: 'x',
+        takeaways: 'x',
+        planning: 'x',
+      },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    })
+
+    await generateNarrativeBlocks(baseInput)
+
+    const call = (generateObject as unknown as Mock).mock.calls[0][0]
+    expect(call.prompt).not.toContain('Author notes')
+  })
+
   test('logs failure to usage_logs with error metadata when the model call fails', async () => {
     ;(generateObject as unknown as Mock).mockRejectedValue(new Error('boom'))
 

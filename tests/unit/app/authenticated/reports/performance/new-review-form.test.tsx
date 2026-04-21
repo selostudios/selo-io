@@ -55,11 +55,13 @@ describe('NewReviewForm', () => {
       expect(checkReviewExists).toHaveBeenCalledWith(ORG_ID, DEFAULT_QUARTER)
     })
     await waitFor(() => {
-      expect(createReview).toHaveBeenCalledWith({
-        organizationId: ORG_ID,
-        quarter: DEFAULT_QUARTER,
-        overwrite: false,
-      })
+      expect(createReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: ORG_ID,
+          quarter: DEFAULT_QUARTER,
+          overwrite: false,
+        })
+      )
     })
     expect(screen.queryByTestId('new-review-confirm-dialog')).toBeNull()
     await waitFor(() => {
@@ -134,11 +136,13 @@ describe('NewReviewForm', () => {
     fireEvent.click(screen.getByTestId('new-review-confirm-proceed'))
 
     await waitFor(() => {
-      expect(createReview).toHaveBeenCalledWith({
-        organizationId: ORG_ID,
-        quarter: DEFAULT_QUARTER,
-        overwrite: true,
-      })
+      expect(createReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: ORG_ID,
+          quarter: DEFAULT_QUARTER,
+          overwrite: true,
+        })
+      )
     })
     await waitFor(() => {
       expect(routerPush).toHaveBeenCalledWith(`/${ORG_ID}/reports/performance/review-99`)
@@ -155,6 +159,25 @@ describe('NewReviewForm', () => {
     const errorNode = await screen.findByTestId('new-review-error')
     expect(errorNode).toHaveTextContent('lookup failed')
     expect(createReview).not.toHaveBeenCalled()
+  })
+
+  test('passes author notes from the textarea through to createReview', async () => {
+    checkReviewExists.mockResolvedValueOnce({ exists: false })
+    createReview.mockResolvedValueOnce({ success: true, reviewId: 'review-1' })
+
+    renderForm()
+    fireEvent.change(screen.getByTestId('new-review-author-notes'), {
+      target: { value: 'Paid burst in Q1 — expect softer comparables.' },
+    })
+    fireEvent.click(screen.getByTestId('new-review-submit'))
+
+    await waitFor(() => {
+      expect(createReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorNotes: 'Paid burst in Q1 — expect softer comparables.',
+        })
+      )
+    })
   })
 
   test('surfaces the error message when createReview fails after confirmation', async () => {

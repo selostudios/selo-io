@@ -4,6 +4,7 @@ import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
+import { AuthorNotesEditor } from './author-notes-editor'
 import { EditorHeader } from './editor-header'
 import { NarrativeEditor } from './narrative-editor'
 
@@ -32,12 +33,13 @@ export default async function PerformanceReportEditorPage({
 
   const { data: draft } = await supabase
     .from('marketing_review_drafts')
-    .select('narrative, ai_originals')
+    .select('narrative, ai_originals, author_notes')
     .eq('review_id', id)
     .maybeSingle()
 
   const narrative = (draft?.narrative as NarrativeBlocks | null) ?? {}
   const aiOriginals = (draft?.ai_originals as NarrativeBlocks | null) ?? {}
+  const authorNotes = (draft?.author_notes as string | null) ?? ''
 
   return (
     <div className="mx-auto max-w-3xl p-8" data-testid="performance-reports-editor">
@@ -50,12 +52,15 @@ export default async function PerformanceReportEditorPage({
       />
 
       {draft ? (
-        <NarrativeEditor
-          reviewId={id}
-          narrative={narrative}
-          aiOriginals={aiOriginals}
-          canEdit={canEdit}
-        />
+        <div className="space-y-8">
+          <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+          <NarrativeEditor
+            reviewId={id}
+            narrative={narrative}
+            aiOriginals={aiOriginals}
+            canEdit={canEdit}
+          />
+        </div>
       ) : (
         <p className="text-muted-foreground text-sm" data-testid="performance-reports-no-draft">
           No draft yet. Create one from the reports list.

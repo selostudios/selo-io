@@ -21,7 +21,12 @@ vi.mock('@/lib/reviews/period', () => ({
   }),
 }))
 
-import { checkReviewExists, deleteReview, publishReview } from '@/lib/reviews/actions'
+import {
+  checkReviewExists,
+  deleteReview,
+  publishReview,
+  updateAuthorNotes,
+} from '@/lib/reviews/actions'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 
@@ -437,6 +442,137 @@ describe('deleteReview', () => {
     vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
 
     const result = await deleteReview('review-1')
+    expect(result).toEqual({ success: true })
+  })
+})
+
+describe('updateAuthorNotes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+  })
+
+  test('returns not-found when the review does not exist', async () => {
+    const chain = makeChain({ maybeSingle: async () => ({ data: null, error: null }) })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await updateAuthorNotes('review-404', 'some notes')
+    expect(result).toEqual({ success: false, error: 'Review not found' })
+  })
+
+  test('rejects non-admin non-internal users', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'team_member',
+      is_internal: false,
+    } as never)
+    const chain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await updateAuthorNotes('review-1', 'some notes')
+    expect(result).toEqual({ success: false, error: 'Insufficient permissions' })
+  })
+
+  test('writes trimmed notes when content is non-empty', async () => {
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(updateChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateAuthorNotes('review-1', '   big campaign last quarter   ')
+    expect(result).toEqual({ success: true })
+    expect(updateChain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ author_notes: 'big campaign last quarter' })
+    )
+  })
+
+  test('stores null when notes are whitespace-only', async () => {
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(updateChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateAuthorNotes('review-1', '    ')
+    expect(result).toEqual({ success: true })
+    expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ author_notes: null }))
+  })
+
+  test('surfaces database errors during update', async () => {
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: { message: 'disk full' } })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(updateChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateAuthorNotes('review-1', 'hello')
+    expect(result).toEqual({ success: false, error: 'disk full' })
+  })
+
+  test('allows internal users to update notes in any organization', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'different-org',
+      role: 'developer',
+      is_internal: true,
+    } as never)
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(updateChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateAuthorNotes('review-1', 'hello')
     expect(result).toEqual({ success: true })
   })
 })

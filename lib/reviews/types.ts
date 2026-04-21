@@ -24,6 +24,7 @@ export interface MarketingReviewSnapshot {
   data: SnapshotData
   narrative: NarrativeBlocks
   share_token: string
+  author_notes: string | null
 }
 
 export interface MarketingReviewDraft {
@@ -33,6 +34,7 @@ export interface MarketingReviewDraft {
   data: SnapshotData
   narrative: NarrativeBlocks
   ai_originals: NarrativeBlocks
+  author_notes: string | null
 }
 
 export interface SnapshotData {

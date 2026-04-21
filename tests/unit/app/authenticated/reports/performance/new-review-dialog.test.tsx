@@ -52,11 +52,13 @@ describe('NewReviewDialog', () => {
       expect(checkReviewExists).toHaveBeenCalledWith(ORG_ID, '2026-Q2')
     })
     await waitFor(() => {
-      expect(createReview).toHaveBeenCalledWith({
-        organizationId: ORG_ID,
-        quarter: '2026-Q2',
-        overwrite: false,
-      })
+      expect(createReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: ORG_ID,
+          quarter: '2026-Q2',
+          overwrite: false,
+        })
+      )
     })
   })
 })

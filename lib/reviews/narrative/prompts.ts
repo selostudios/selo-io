@@ -18,6 +18,13 @@ export interface PromptContext {
   periodStart: string
   periodEnd: string
   data: SnapshotData
+  /**
+   * Free-form context supplied by the report author. When present, the AI
+   * is instructed to weave these explanations into the relevant bullets
+   * (e.g. "last quarter's campaign explains the session drop"). When absent
+   * or blank, the AI ignores the section entirely.
+   */
+  authorNotes?: string
 }
 
 const FOOTER = [
@@ -30,15 +37,28 @@ const FOOTER = [
   '- Never use: sharply, dramatically, catastrophically, severely, drastically, significantly.',
   '- Use instead: declined, fell, decreased, softened, down N%, held steady, held flat.',
   'State the number; let the number speak. No characterisations on top of the delta.',
+  '',
+  'If author notes are present, use them to contextualise specific movements (e.g. a prior-quarter campaign explaining a drop). Never contradict the notes. If the notes are empty or absent, ignore this rule.',
 ].join('\n')
 
 function header(ctx: PromptContext): string {
-  return [
+  const lines = [
     `Organization: ${ctx.organizationName}`,
     `Quarter: ${ctx.quarter} (${ctx.periodStart} → ${ctx.periodEnd})`,
     'Data (current / qoq / yoy / qoq_delta_pct / yoy_delta_pct; nulls mean missing):',
     JSON.stringify(buildPromptContextPayload(ctx.data)),
-  ].join('\n')
+  ]
+
+  const notes = ctx.authorNotes?.trim()
+  if (notes && notes.length > 0) {
+    lines.push(
+      '',
+      'Author notes (context from the report author — weave into bullets where relevant, never contradict):',
+      notes
+    )
+  }
+
+  return lines.join('\n')
 }
 
 function wrap(ctx: PromptContext, body: string): string {

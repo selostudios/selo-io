@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ interface Props {
 export function NewReviewForm({ orgId, quarters, defaultQuarter }: Props) {
   const router = useRouter()
   const [quarter, setQuarter] = useState(defaultQuarter)
+  const [authorNotes, setAuthorNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [confirmState, setConfirmState] = useState<{
@@ -40,7 +42,12 @@ export function NewReviewForm({ orgId, quarters, defaultQuarter }: Props) {
 
   const runCreate = (overwrite: boolean) => {
     startTransition(async () => {
-      const result = await createReview({ organizationId: orgId, quarter, overwrite })
+      const result = await createReview({
+        organizationId: orgId,
+        quarter,
+        overwrite,
+        authorNotes,
+      })
       if (!result.success) {
         setError(result.error)
         return
@@ -90,6 +97,23 @@ export function NewReviewForm({ orgId, quarters, defaultQuarter }: Props) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="author-notes" className="text-sm font-medium">
+            Context for the AI <span className="text-muted-foreground">(optional)</span>
+          </label>
+          <Textarea
+            id="author-notes"
+            value={authorNotes}
+            onChange={(e) => setAuthorNotes(e.target.value)}
+            placeholder="Notes about this quarter the AI should consider — campaigns run, team changes, product launches, reasons for big movements, etc."
+            rows={4}
+            data-testid="new-review-author-notes"
+          />
+          <p className="text-muted-foreground text-xs">
+            Not shown in the deck. Used only to give the AI context when writing the narrative.
+          </p>
         </div>
 
         {error && (

@@ -34,6 +34,7 @@ export interface GenerateNarrativeInput {
   periodEnd: string
   data: SnapshotData
   reviewId?: string
+  authorNotes?: string | null
 }
 
 export class NarrativeGenerationError extends Error {
@@ -77,6 +78,7 @@ export async function generateNarrativeBlocks(
     periodStart: input.periodStart,
     periodEnd: input.periodEnd,
     data: input.data,
+    authorNotes: input.authorNotes ?? undefined,
   }
 
   try {
