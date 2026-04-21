@@ -1,7 +1,7 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { ReviewDeck } from '@/components/reviews/review-deck'
-import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SnapshotData, GAData, MetricTriple } from '@/lib/reviews/types'
 
 const baseOrg = {
   name: 'Acme Corp',
@@ -167,5 +167,154 @@ describe('ReviewDeck', () => {
     fireEvent.click(screen.getByRole('button', { name: /next slide/i }))
 
     expect(liveRegion.textContent).toBe('Slide 2 of 6: Google Analytics')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// GA-specific routing tests
+//
+// The real BodySlide and GaBodySlide are stubbed here so we can assert which
+// component ReviewDeck mounted for each section and which props it threaded.
+// These tests live in a dedicated describe block with module-scoped doMocks
+// and a dynamic import of ReviewDeck so the stubs don't leak into the top
+// suite (which exercises the real slide components).
+// ---------------------------------------------------------------------------
+describe('ReviewDeck GA slide routing', () => {
+  afterEach(() => {
+    vi.resetModules()
+    vi.doUnmock('@/components/reviews/review-deck/body-slide')
+    vi.doUnmock('@/components/reviews/review-deck/ga-body-slide')
+  })
+
+  async function renderWithStubs(props: { narrative: NarrativeBlocks; data: SnapshotData }) {
+    // Dynamic import of ReviewDeck resolves against the fresh module graph;
+    // reset ensures the deck picks up the new stubs rather than reusing the
+    // real BodySlide/GaBodySlide already cached from the top describe block.
+    vi.resetModules()
+    vi.doMock('@/components/reviews/review-deck/body-slide', () => ({
+      BodySlide: ({ heading, text }: { heading: string; text: string }) => (
+        <div data-testid="mock-body-slide" data-heading={heading} data-text={text}>
+          mock-body-slide
+        </div>
+      ),
+    }))
+    vi.doMock('@/components/reviews/review-deck/ga-body-slide', () => ({
+      GaBodySlide: ({
+        narrative,
+        data,
+        mode,
+      }: {
+        narrative: string
+        data: GAData | undefined
+        mode: 'screen' | 'print'
+      }) => (
+        <div
+          data-testid="mock-ga-body-slide"
+          data-narrative={narrative}
+          data-has-data={data === undefined ? 'false' : 'true'}
+          data-mode={mode}
+        >
+          mock-ga-body-slide
+        </div>
+      ),
+    }))
+
+    const mod = await import('@/components/reviews/review-deck')
+    return render(
+      <mod.ReviewDeck
+        organization={baseOrg}
+        quarter="Q1 2026"
+        periodStart="2026-01-01"
+        periodEnd="2026-03-31"
+        narrative={props.narrative}
+        data={props.data}
+      />
+    )
+  }
+
+  const gaTriple: MetricTriple = {
+    current: 1000,
+    qoq: 800,
+    yoy: 600,
+    qoq_delta_pct: 0.25,
+    yoy_delta_pct: 0.667,
+  }
+  const gaData: GAData = { ga_sessions: gaTriple }
+
+  test('renders GaBodySlide for the GA section and BodySlide for the other four body sections', async () => {
+    await renderWithStubs({
+      narrative: fullNarrative,
+      data: { ga: gaData, linkedin: undefined, hubspot: undefined },
+    })
+
+    // Two trees (screen-only and print-only) each render one GA body slide.
+    expect(screen.getAllByTestId('mock-ga-body-slide')).toHaveLength(2)
+    // And four BodySlide stubs each (linkedin + initiatives + takeaways + planning).
+    expect(screen.getAllByTestId('mock-body-slide')).toHaveLength(8)
+
+    // The BodySlide stubs never carry the GA heading — GA must route to GaBodySlide.
+    for (const node of screen.getAllByTestId('mock-body-slide')) {
+      expect(node.getAttribute('data-heading')).not.toBe('Google Analytics')
+    }
+  })
+
+  test('threads the ga sub-object into GaBodySlide as the data prop', async () => {
+    await renderWithStubs({
+      narrative: fullNarrative,
+      data: { ga: gaData },
+    })
+
+    for (const node of screen.getAllByTestId('mock-ga-body-slide')) {
+      // We don't serialize the full object through data-*; the stub records
+      // presence. The important guarantee is that data was threaded (not
+      // undefined) when the caller supplied it.
+      expect(node.getAttribute('data-has-data')).toBe('true')
+      expect(node.getAttribute('data-narrative')).toBe(fullNarrative.ga_summary)
+    }
+  })
+
+  test('screen branch renders GaBodySlide with mode=screen; print branch with mode=print', async () => {
+    const { container } = await renderWithStubs({
+      narrative: fullNarrative,
+      data: { ga: gaData },
+    })
+
+    const screenBranch = container.querySelector('.screen-only') as HTMLElement
+    const printBranch = container.querySelector('.print-only') as HTMLElement
+    expect(screenBranch).not.toBeNull()
+    expect(printBranch).not.toBeNull()
+
+    const screenGa = within(screenBranch).getByTestId('mock-ga-body-slide')
+    expect(screenGa.getAttribute('data-mode')).toBe('screen')
+
+    const printGa = within(printBranch).getByTestId('mock-ga-body-slide')
+    expect(printGa.getAttribute('data-mode')).toBe('print')
+  })
+
+  test('still mounts GaBodySlide with data=undefined when the ga sub-object is missing', async () => {
+    await renderWithStubs({
+      narrative: fullNarrative,
+      data: {}, // no ga key — slide must still render so the deck count stays at 6
+    })
+
+    const stubs = screen.getAllByTestId('mock-ga-body-slide')
+    expect(stubs).toHaveLength(2)
+    for (const node of stubs) {
+      expect(node.getAttribute('data-has-data')).toBe('false')
+      // Narrative is still threaded from the NarrativeBlocks argument.
+      expect(node.getAttribute('data-narrative')).toBe(fullNarrative.ga_summary)
+    }
+  })
+
+  test('BodySlide receives an empty string (not undefined) when a narrative block is missing', async () => {
+    await renderWithStubs({
+      narrative: { ...fullNarrative, linkedin_insights: undefined },
+      data: { ga: gaData },
+    })
+
+    const bodyStubs = screen.getAllByTestId('mock-body-slide')
+    const linkedinStub = bodyStubs.find((n) => n.getAttribute('data-heading') === 'LinkedIn')
+    expect(linkedinStub).toBeDefined()
+    expect(linkedinStub?.getAttribute('data-text')).toBe('')
   })
 })
