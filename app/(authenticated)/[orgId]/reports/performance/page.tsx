@@ -16,6 +16,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatDate } from '@/lib/utils'
+import { buildQuarterOptions } from '@/lib/reviews/period'
+import { NewReviewDialog } from './new-review-dialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +51,7 @@ export default async function PerformanceReportsListPage({
     .order('quarter', { ascending: false })
 
   const reviews = (data ?? []) as unknown as ReviewRow[]
+  const quarterOptions = buildQuarterOptions(new Date())
 
   return (
     <div className="p-8" data-testid="performance-reports-list">
@@ -70,9 +73,11 @@ export default async function PerformanceReportsListPage({
                 <Settings className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild data-testid="performance-reports-new-button">
-              <Link href={`/${orgId}/reports/performance/new`}>New Review</Link>
-            </Button>
+            <NewReviewDialog
+              orgId={orgId}
+              quarters={quarterOptions}
+              defaultQuarter={quarterOptions[0]}
+            />
           </div>
         )}
       </div>

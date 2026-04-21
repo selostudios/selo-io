@@ -50,3 +50,21 @@ export function formatQuarterLabel(quarter: string): string {
   const { year, quarter: q } = parseQuarter(quarter)
   return `Q${q} ${year}`
 }
+
+/**
+ * Builds the list of quarter identifiers offered when starting a new review.
+ * Returns the current quarter first, then walks backwards through prior
+ * quarters up to `lookbackYears` earlier.
+ */
+export function buildQuarterOptions(now: Date, lookbackYears = 2): string[] {
+  const { year, quarter } = parseQuarter(currentQuarter(now))
+  const options: string[] = []
+  for (let yOffset = 0; yOffset <= lookbackYears; yOffset++) {
+    for (let q = 4; q >= 1; q--) {
+      const y = year - yOffset
+      if (yOffset === 0 && q > quarter) continue
+      options.push(`${y}-Q${q}`)
+    }
+  }
+  return options
+}

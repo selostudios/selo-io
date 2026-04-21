@@ -4,6 +4,7 @@ import {
   periodsForQuarter,
   currentQuarter,
   formatQuarterLabel,
+  buildQuarterOptions,
 } from '@/lib/reviews/period'
 
 describe('parseQuarter', () => {
@@ -74,6 +75,34 @@ describe('currentQuarter', () => {
     expect(currentQuarter(new Date('2026-07-01'))).toBe('2026-Q3')
     expect(currentQuarter(new Date('2026-09-30'))).toBe('2026-Q3')
     expect(currentQuarter(new Date('2026-10-01'))).toBe('2026-Q4')
+  })
+})
+
+describe('buildQuarterOptions', () => {
+  test('starts with the current quarter and walks back through prior quarters', () => {
+    const options = buildQuarterOptions(new Date('2026-04-21'))
+    expect(options[0]).toBe('2026-Q2')
+    expect(options.slice(0, 4)).toEqual(['2026-Q2', '2026-Q1', '2025-Q4', '2025-Q3'])
+  })
+
+  test('does not include future quarters of the current year', () => {
+    const options = buildQuarterOptions(new Date('2026-04-21'))
+    expect(options).not.toContain('2026-Q3')
+    expect(options).not.toContain('2026-Q4')
+  })
+
+  test('covers the configured lookback window (2 prior years by default)', () => {
+    const options = buildQuarterOptions(new Date('2026-04-21'))
+    // current (2) + full 2025 (4) + full 2024 (4) = 10 quarters
+    expect(options).toHaveLength(10)
+    expect(options[options.length - 1]).toBe('2024-Q1')
+  })
+
+  test('respects a custom lookback window', () => {
+    const options = buildQuarterOptions(new Date('2026-04-21'), 1)
+    // current (2) + full 2025 (4) = 6 quarters
+    expect(options).toHaveLength(6)
+    expect(options).not.toContain('2024-Q4')
   })
 })
 
