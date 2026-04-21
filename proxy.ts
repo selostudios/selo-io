@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { notifyInfraFailure } from '@/lib/alerts/notify-infra-failure'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -66,6 +67,34 @@ function copySupabaseCookies(from: NextResponse, to: NextResponse) {
 }
 
 export async function proxy(request: NextRequest) {
+  try {
+    return await handle(request)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    const isSupabaseClientError = message.includes('URL and Key are required')
+    console.error('[Proxy]', {
+      type: isSupabaseClientError ? 'supabase_client_init_failed' : 'middleware_threw',
+      pathname: request.nextUrl.pathname,
+      error: message,
+      timestamp: new Date().toISOString(),
+    })
+    // Fire-and-forget — must not block the response or re-throw.
+    void notifyInfraFailure({
+      type: isSupabaseClientError ? 'supabase_client_init_failed' : 'middleware_threw',
+      message,
+      context: {
+        pathname: request.nextUrl.pathname,
+        hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+        hasSupabaseAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      },
+    })
+    // Fail open: let the request through so the client sees a normal Next.js
+    // 500 page from the route handler rather than a middleware crash.
+    return NextResponse.next()
+  }
+}
+
+async function handle(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 1. Skip static files (paths with extensions)
