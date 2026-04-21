@@ -37,16 +37,55 @@ async function authorizeAdminOrInternal(
   return { ok: true, userId: user.id }
 }
 
+export async function checkReviewExists(
+  organizationId: string,
+  quarter: string
+): Promise<
+  { exists: false } | { exists: true; reviewId: string; hasPublishedSnapshots: boolean } | ActionErr
+> {
+  const auth = await authorizeAdminOrInternal(organizationId)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('marketing_reviews')
+    .select('id, latest_snapshot_id')
+    .eq('organization_id', organizationId)
+    .eq('quarter', quarter)
+    .maybeSingle()
+
+  if (error) return { success: false, error: error.message }
+  if (!data) return { exists: false }
+
+  return {
+    exists: true,
+    reviewId: data.id as string,
+    hasPublishedSnapshots: data.latest_snapshot_id !== null,
+  }
+}
+
 export async function createReview(input: {
   organizationId: string
   quarter: string
   title?: string
+  overwrite?: boolean
 }): Promise<(ActionOk & { reviewId: string }) | ActionErr> {
   const auth = await authorizeAdminOrInternal(input.organizationId)
   if (!auth.ok) return { success: false, error: auth.error }
 
   const supabase = await createClient()
   const title = input.title ?? `${input.quarter} Marketing Review`
+
+  if (input.overwrite) {
+    const { error: deleteError } = await supabase
+      .from('marketing_reviews')
+      .delete()
+      .eq('organization_id', input.organizationId)
+      .eq('quarter', input.quarter)
+    if (deleteError) {
+      return { success: false, error: `Failed to replace existing review: ${deleteError.message}` }
+    }
+  }
 
   const { data: review, error: reviewError } = await supabase
     .from('marketing_reviews')
