@@ -12,9 +12,10 @@ export interface CoverSlideProps {
 }
 
 /**
- * Title slide for a performance review deck. Shows the org logo (if set),
- * org name, the static "Quarterly Performance Review" label, the quarter
- * string, a formatted period range, and optional AI-generated subtitle.
+ * Title slide for a performance review deck. Shows either the org logo or
+ * the org name (logo wins if set), the static "Quarterly Performance Review"
+ * label, the quarter string, a formatted period range, and optional
+ * AI-generated subtitle.
  */
 export function CoverSlide({
   organization,
@@ -27,7 +28,7 @@ export function CoverSlide({
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-8 py-12 text-center md:px-16 lg:px-24">
-      {organization.logo_url && (
+      {organization.logo_url ? (
         // Using a plain <img> so the deck works in any consumer (including
         // the public share route and fullscreen mode) without Next.js image
         // optimization assumptions. Logos are small and already hosted on a
@@ -36,13 +37,13 @@ export function CoverSlide({
         <img
           src={organization.logo_url}
           alt={organization.name}
-          className="mb-4 h-16 w-auto object-contain md:h-20 lg:h-24"
+          className="mb-4 h-24 w-auto object-contain md:h-32 lg:h-40"
         />
+      ) : (
+        <h1 className="text-3xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
+          {organization.name}
+        </h1>
       )}
-
-      <h1 className="text-3xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
-        {organization.name}
-      </h1>
 
       <p
         className="text-base font-medium tracking-widest uppercase md:text-lg lg:text-xl"
