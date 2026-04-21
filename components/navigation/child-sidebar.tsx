@@ -51,18 +51,18 @@ const homeNavigation: NavigationGroup[] = [
     items: [{ name: 'Full Site Audit', href: '/seo/audit', icon: ClipboardCheck }],
   },
   {
-    header: 'Reports',
-    items: [
-      { name: 'Audit Reports', href: '/reports/audit', icon: FileText },
-      { name: 'Performance Reports', href: '/reports/performance', icon: BarChart3 },
-    ],
-  },
-  {
     header: 'AI Visibility',
     items: [
       { name: 'Overview', href: '/ai-visibility', icon: Eye },
       { name: 'Prompts', href: '/ai-visibility/prompts', icon: MessageSquareText },
       { name: 'Brand Mentions', href: '/ai-visibility/mentions', icon: AtSign },
+    ],
+  },
+  {
+    header: 'Reports',
+    items: [
+      { name: 'Audit Reports', href: '/reports/audit', icon: FileText },
+      { name: 'Performance Reports', href: '/reports/performance', icon: BarChart3 },
     ],
   },
   {
