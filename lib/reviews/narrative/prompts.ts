@@ -24,7 +24,13 @@ const FOOTER = [
   'Plain text only. No markdown, asterisks, or hashes.',
   'Warm, confident, consultative tone — but ruthlessly concise.',
   'Write for a client skim-reading a slide in a meeting, not a reader studying a report.',
-].join(' ')
+  '',
+  'Tone rules — do not editorialise negative movement:',
+  '- Never use: plummet, plunge, crash, crater, tank, collapse, nosedive, dive.',
+  '- Never use: sharply, dramatically, catastrophically, severely, drastically, significantly.',
+  '- Use instead: declined, fell, decreased, softened, down N%, held steady, held flat.',
+  'State the number; let the number speak. No characterisations on top of the delta.',
+].join('\n')
 
 function header(ctx: PromptContext): string {
   return [
@@ -54,24 +60,48 @@ export function defaultTemplateCoverSubtitle(): string {
 
 export function defaultTemplateGaSummary(): string {
   return [
-    'Google Analytics highlights for this quarter.',
-    'Output 3 to 4 bullet lines, each prefixed with "- ".',
-    'Each bullet: 12 words or fewer. Lead with the number or delta, then the implication.',
-    'Prioritise the largest qoq or yoy deltas in sessions, users, or engagement.',
-    'No intro paragraph, no closing sentence — bullets only.',
-    'If GA data is missing, output one bullet: "- Analytics data unavailable this quarter".',
-  ].join(' ')
+    'Google Analytics highlights for this quarter, split into what is going well and what to improve.',
+    '',
+    'Format exactly like this (plain text, no markdown):',
+    'Going well',
+    '- <bullet>',
+    '- <bullet>',
+    '',
+    'To improve',
+    '- <bullet>',
+    '- <bullet>',
+    '',
+    'Rules:',
+    '- Each bullet 12 words or fewer. Lead with the number or delta, then the implication.',
+    '- Aim for 2 bullets per section. 3 is acceptable if the quarter warrants it.',
+    '- Prioritise the largest qoq or yoy deltas in sessions, users, and engagement.',
+    '- A metric that held steady (≤5% movement) counts as "going well" — audience stability is a win.',
+    '- If the quarter truly only has wins or only has concerns, show just one section with 2–3 bullets. Do not fabricate the other side.',
+    '- If GA data is missing, output just: "Going well\n- Analytics data unavailable this quarter".',
+  ].join('\n')
 }
 
 export function defaultTemplateLinkedinInsights(): string {
   return [
-    'LinkedIn highlights for this quarter.',
-    'Output 3 to 4 bullet lines, each prefixed with "- ".',
-    'Each bullet: 12 words or fewer. Lead with a number or delta, then the implication.',
-    'Cover follower growth, impression/engagement deltas, and top post themes where present.',
-    'No intro paragraph, no closing sentence — bullets only.',
-    'If LinkedIn data is missing, output one bullet: "- LinkedIn not connected or no activity".',
-  ].join(' ')
+    'LinkedIn highlights for this quarter, split into what is going well and what to improve.',
+    '',
+    'Format exactly like this (plain text, no markdown):',
+    'Going well',
+    '- <bullet>',
+    '- <bullet>',
+    '',
+    'To improve',
+    '- <bullet>',
+    '- <bullet>',
+    '',
+    'Rules:',
+    '- Each bullet 12 words or fewer. Lead with the number or delta, then the implication.',
+    '- Aim for 2 bullets per section. 3 is acceptable if the quarter warrants it.',
+    '- Cover follower growth, impression/engagement deltas, and top post themes where present.',
+    '- A metric that held steady (≤5% movement) counts as "going well".',
+    '- If the quarter truly only has wins or only has concerns, show just one section with 2–3 bullets. Do not fabricate the other side.',
+    '- If LinkedIn data is missing, output just: "To improve\n- LinkedIn not connected or no activity".',
+  ].join('\n')
 }
 
 export function defaultTemplateInitiatives(): string {
