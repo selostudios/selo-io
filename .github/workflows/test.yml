@@ -107,12 +107,14 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_KEY }}
 
       - name: Run E2E tests
         run: npm run test:e2e
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_KEY }}
 
       - uses: actions/upload-artifact@v5
         if: always()

@@ -1,5 +1,10 @@
 import { describe, test, expect } from 'vitest'
-import { parseQuarter, periodsForQuarter, currentQuarter } from '@/lib/reviews/period'
+import {
+  parseQuarter,
+  periodsForQuarter,
+  currentQuarter,
+  formatQuarterLabel,
+} from '@/lib/reviews/period'
 
 describe('parseQuarter', () => {
   test('parses 2026-Q1 to year/quarter', () => {
@@ -69,5 +74,17 @@ describe('currentQuarter', () => {
     expect(currentQuarter(new Date('2026-07-01'))).toBe('2026-Q3')
     expect(currentQuarter(new Date('2026-09-30'))).toBe('2026-Q3')
     expect(currentQuarter(new Date('2026-10-01'))).toBe('2026-Q4')
+  })
+})
+
+describe('formatQuarterLabel', () => {
+  test('formats a stored quarter id as a human-readable label', () => {
+    expect(formatQuarterLabel('2026-Q1')).toBe('Q1 2026')
+  })
+  test('handles all four quarters', () => {
+    expect(formatQuarterLabel('2025-Q4')).toBe('Q4 2025')
+  })
+  test('throws on invalid quarter input', () => {
+    expect(() => formatQuarterLabel('not-a-quarter')).toThrow()
   })
 })

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin, loginAsDeveloper } from './helpers'
+import { getOrgIdFromDashboard, loginAsAdmin, loginAsDeveloper } from './helpers'
+import { testMarketingReview } from '../fixtures'
 
 /**
  * Visual regression tests — captures full-page screenshots and compares
@@ -74,6 +75,51 @@ test.describe('Visual Regression', () => {
       await page.waitForURL(/\/quick-audit/)
       await page.waitForSelector('[data-testid="quick-audit-url-input"]')
       await expect(page).toHaveScreenshot('quick-audit-page.png', { fullPage: true })
+    })
+  })
+
+  test.describe('Performance Reports (admin)', () => {
+    test.beforeEach(async ({ page }) => {
+      await loginAsAdmin(page)
+    })
+
+    test('performance report preview', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
+      await page.waitForSelector('[data-testid="performance-reports-preview"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await expect(page).toHaveScreenshot('performance-report-preview.png', { fullPage: true })
+    })
+
+    test('performance report snapshot detail', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(
+        `/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots/${testMarketingReview.snapshotId}`
+      )
+      await page.waitForSelector('[data-testid="performance-reports-snapshot-detail"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await expect(page).toHaveScreenshot('performance-report-snapshot.png', { fullPage: true })
+    })
+  })
+
+  test.describe('Performance Reports (public share)', () => {
+    test('public share page', async ({ browser }) => {
+      // Public shares must never render auth chrome — screenshot an isolated
+      // context without any session cookies to catch regressions where the
+      // `/s/` route accidentally inherits the authenticated layout.
+      const context = await browser.newContext()
+      try {
+        const publicPage = await context.newPage()
+        await publicPage.goto(`/s/${testMarketingReview.publicShareToken}`)
+
+        await publicPage.waitForSelector('[data-testid="shared-marketing-review"]')
+        await publicPage.waitForSelector('[data-testid="review-deck"]')
+        await expect(publicPage).toHaveScreenshot('performance-report-public-share.png', {
+          fullPage: true,
+        })
+      } finally {
+        await context.close()
+      }
     })
   })
 })

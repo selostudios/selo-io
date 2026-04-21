@@ -13,6 +13,8 @@ import type {
   ReportAuditData,
 } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
 import { fetchUnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
+import { formatQuarterLabel } from '@/lib/reviews/period'
+import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 // =============================================================================
 // Explicit column selects (cast as '*' to satisfy Supabase's deep type inference)
@@ -60,6 +62,21 @@ export interface SharedSiteAuditData {
 export interface SharedUnifiedAuditData {
   audit: UnifiedAudit
   tabCounts: TabCounts
+}
+
+export interface SharedMarketingReviewData {
+  organization: {
+    name: string
+    logo_url: string | null
+    primary_color: string | null
+  }
+  quarter: string
+  periodStart: string
+  periodEnd: string
+  narrative: NarrativeBlocks
+  data: SnapshotData
+  version: number
+  publishedAt: string | null
 }
 
 /**
@@ -296,6 +313,91 @@ export async function getSharedChecksByTab(
 
     return query.order('created_at', { ascending: true }).range(range.from, range.to)
   }, supabase)
+}
+
+/**
+ * Fetch a published performance review snapshot for a shared link.
+ *
+ * Token validation + access logging already happened in `accessSharedLink`
+ * (called by the `/s/[token]` client before this loader runs), so this
+ * function receives the resolved `snapshotId` and loads the snapshot, its
+ * parent review, and the organization that owns it.
+ *
+ * Uses the service client to bypass RLS for public access.
+ */
+export async function getSharedMarketingReviewData(
+  snapshotId: string
+): Promise<SharedMarketingReviewData | null> {
+  const supabase = await createServiceClient()
+
+  const { data: snapshot, error: snapshotError } = await supabase
+    .from('marketing_review_snapshots')
+    .select('id, review_id, version, period_start, period_end, data, narrative, published_at')
+    .eq('id', snapshotId)
+    .maybeSingle()
+
+  if (snapshotError || !snapshot) {
+    console.error('[Shared Marketing Review Error]', {
+      type: 'snapshot_fetch_failed',
+      snapshotId,
+      error: snapshotError?.message,
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
+
+  const { data: review, error: reviewError } = await supabase
+    .from('marketing_reviews')
+    .select('id, quarter, organization_id, title')
+    .eq('id', snapshot.review_id as string)
+    .maybeSingle()
+
+  if (reviewError || !review) {
+    console.error('[Shared Marketing Review Error]', {
+      type: 'review_fetch_failed',
+      snapshotId,
+      reviewId: snapshot.review_id,
+      error: reviewError?.message,
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
+
+  const { data: org, error: orgError } = await supabase
+    .from('organizations')
+    .select('id, name, logo_url, primary_color')
+    .eq('id', review.organization_id as string)
+    .maybeSingle()
+
+  if (orgError || !org) {
+    console.error('[Shared Marketing Review Error]', {
+      type: 'organization_fetch_failed',
+      snapshotId,
+      organizationId: review.organization_id,
+      error: orgError?.message,
+      timestamp: new Date().toISOString(),
+    })
+    return null
+  }
+
+  const quarter = review.quarter as string
+  const narrative = (snapshot.narrative as NarrativeBlocks | null) ?? {}
+  const data = (snapshot.data as SnapshotData | null) ?? {}
+
+  return {
+    organization: {
+      name: (org.name as string | null) ?? 'Organization',
+      logo_url: (org.logo_url as string | null) ?? null,
+      primary_color: (org.primary_color as string | null) ?? null,
+    },
+    quarter: formatQuarterLabel(quarter),
+    periodStart: snapshot.period_start as string,
+    periodEnd: snapshot.period_end as string,
+    narrative,
+    data,
+    version: snapshot.version as number,
+    publishedAt: (snapshot.published_at as string | null) ?? null,
+  }
 }
 
 function computeSharedTabCounts(

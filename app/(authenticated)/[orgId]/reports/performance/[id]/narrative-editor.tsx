@@ -136,10 +136,29 @@ export function NarrativeEditor({ reviewId, narrative, aiOriginals, canEdit }: P
                     Edited
                   </Badge>
                 )}
-                {s.status === 'saving' && <span className="text-muted-foreground">Saving…</span>}
-                {s.status === 'saved' && <span className="text-muted-foreground">Saved</span>}
+                {s.status === 'saving' && (
+                  <span
+                    className="text-muted-foreground"
+                    data-testid={`narrative-save-status-${block.key}`}
+                  >
+                    Saving…
+                  </span>
+                )}
+                {s.status === 'saved' && (
+                  <span
+                    className="text-muted-foreground"
+                    data-testid={`narrative-save-status-${block.key}`}
+                  >
+                    Saved
+                  </span>
+                )}
                 {s.status === 'error' && (
-                  <span className="text-destructive">{s.errorMessage ?? 'Save failed'}</span>
+                  <span
+                    className="text-destructive"
+                    data-testid={`narrative-save-status-${block.key}`}
+                  >
+                    {s.errorMessage ?? 'Save failed'}
+                  </span>
                 )}
               </div>
             </div>
