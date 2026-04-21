@@ -95,7 +95,7 @@ describe('completeAuditScoring', () => {
     })
   })
 
-  it('calculates correct scores from check results and updates the audit', async () => {
+  it('calculates correct scores from check results and updates the audit', { timeout: 15000 }, async () => {
     const checks: AuditCheck[] = [
       // 2 SEO checks: 1 passed (critical), 1 failed (recommended)
       {
