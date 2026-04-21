@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText, Settings } from 'lucide-react'
+import { ExternalLink, FileText, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
@@ -18,6 +18,7 @@ import {
 import { formatDate } from '@/lib/utils'
 import { buildQuarterOptions } from '@/lib/reviews/period'
 import { NewReviewDialog } from './new-review-dialog'
+import { PerformanceReportRowActions } from './report-row-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,10 +122,21 @@ export default async function PerformanceReportsListPage({
                       <Badge variant="secondary">Draft</Badge>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/${orgId}/reports/performance/${r.id}`}>Open</Link>
-                    </Button>
+                  <TableCell className="text-right">
+                    {canCreate ? (
+                      <PerformanceReportRowActions
+                        orgId={orgId}
+                        reviewId={r.id}
+                        quarter={r.quarter}
+                      />
+                    ) : (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/${orgId}/reports/performance/${r.id}`}>
+                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                          View Report
+                        </Link>
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

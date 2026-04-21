@@ -222,6 +222,22 @@ export async function updateNarrative(
   return { success: true }
 }
 
+export async function deleteReview(reviewId: string): Promise<ActionOk | ActionErr> {
+  const review = await loadReviewForAuth(reviewId)
+  if (!review) return { success: false, error: 'Review not found' }
+
+  const auth = await authorizeAdminOrInternal(review.organization_id)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('marketing_reviews').delete().eq('id', reviewId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/${review.organization_id}/reports/performance`)
+  return { success: true }
+}
+
 export async function publishReview(
   reviewId: string
 ): Promise<(ActionOk & { snapshotId: string; version: number }) | ActionErr> {

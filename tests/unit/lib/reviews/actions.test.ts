@@ -21,7 +21,7 @@ vi.mock('@/lib/reviews/period', () => ({
   }),
 }))
 
-import { checkReviewExists, publishReview } from '@/lib/reviews/actions'
+import { checkReviewExists, deleteReview, publishReview } from '@/lib/reviews/actions'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 
@@ -330,5 +330,113 @@ describe('checkReviewExists', () => {
 
     const result = await checkReviewExists('org-1', '2026-Q2')
     expect(result).toEqual({ exists: false })
+  })
+})
+
+describe('deleteReview', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+  })
+
+  test('returns not-found when the review does not exist', async () => {
+    const chain = makeChain({ maybeSingle: async () => ({ data: null, error: null }) })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await deleteReview('review-404')
+    expect(result).toEqual({ success: false, error: 'Review not found' })
+  })
+
+  test('rejects non-admin non-internal users', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'team_member',
+      is_internal: false,
+    } as never)
+    const chain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await deleteReview('review-1')
+    expect(result).toEqual({ success: false, error: 'Insufficient permissions' })
+  })
+
+  test('deletes the review and returns success when authorized', async () => {
+    const deleteChain = {
+      delete: vi.fn(() => deleteChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(deleteChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await deleteReview('review-1')
+    expect(result).toEqual({ success: true })
+    expect(deleteChain.delete).toHaveBeenCalledOnce()
+    expect(deleteChain.eq).toHaveBeenCalledWith('id', 'review-1')
+  })
+
+  test('surfaces database errors during delete', async () => {
+    const deleteChain = {
+      delete: vi.fn(() => deleteChain),
+      eq: vi.fn(async () => ({ error: { message: 'fk violation' } })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(deleteChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await deleteReview('review-1')
+    expect(result).toEqual({ success: false, error: 'fk violation' })
+  })
+
+  test('allows internal users to delete reviews in any organization', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'different-org',
+      role: 'developer',
+      is_internal: true,
+    } as never)
+    const deleteChain = {
+      delete: vi.fn(() => deleteChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const fromMock = vi
+      .fn()
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(deleteChain as never)
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await deleteReview('review-1')
+    expect(result).toEqual({ success: true })
   })
 })
