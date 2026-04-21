@@ -21,7 +21,7 @@ vi.mock('@/lib/reviews/period', () => ({
   }),
 }))
 
-import { publishReview } from '@/lib/reviews/actions'
+import { checkReviewExists, publishReview } from '@/lib/reviews/actions'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 
@@ -230,5 +230,105 @@ describe('publishReview', () => {
 
     const result = await publishReview('review-1')
     expect(result).toMatchObject({ success: true, version: 5 })
+  })
+})
+
+describe('checkReviewExists', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+  })
+
+  test('rejects when no authenticated user', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue(null as never)
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn() } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({ success: false, error: 'Not authenticated' })
+  })
+
+  test('rejects users who are neither org admins nor internal', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'team_member',
+      is_internal: false,
+    } as never)
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn() } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({ success: false, error: 'Insufficient permissions' })
+  })
+
+  test('returns exists: false when no review exists for that org and quarter', async () => {
+    const chain = makeChain({ maybeSingle: async () => ({ data: null, error: null }) })
+    const supabase = { from: vi.fn(() => chain) }
+    vi.mocked(createClient).mockResolvedValue(supabase as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({ exists: false })
+    expect(chain.eq).toHaveBeenCalledWith('organization_id', 'org-1')
+    expect(chain.eq).toHaveBeenCalledWith('quarter', '2026-Q2')
+  })
+
+  test('reports hasPublishedSnapshots as false when latest_snapshot_id is null', async () => {
+    const chain = makeChain({
+      maybeSingle: async () => ({
+        data: { id: 'review-42', latest_snapshot_id: null },
+        error: null,
+      }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({
+      exists: true,
+      reviewId: 'review-42',
+      hasPublishedSnapshots: false,
+    })
+  })
+
+  test('reports hasPublishedSnapshots as true when latest_snapshot_id is set', async () => {
+    const chain = makeChain({
+      maybeSingle: async () => ({
+        data: { id: 'review-42', latest_snapshot_id: 'snap-7' },
+        error: null,
+      }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({
+      exists: true,
+      reviewId: 'review-42',
+      hasPublishedSnapshots: true,
+    })
+  })
+
+  test('propagates the database error when the lookup fails', async () => {
+    const chain = makeChain({
+      maybeSingle: async () => ({ data: null, error: { message: 'boom' } }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({ success: false, error: 'boom' })
+  })
+
+  test('allows internal users to check any organization', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'different-org',
+      role: 'developer',
+      is_internal: true,
+    } as never)
+    const chain = makeChain({ maybeSingle: async () => ({ data: null, error: null }) })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await checkReviewExists('org-1', '2026-Q2')
+    expect(result).toEqual({ exists: false })
   })
 })
