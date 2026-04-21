@@ -346,6 +346,7 @@ export async function getReportAuditData(
     .eq('audit_id', report.site_audit_id)
     .order('created_at', { ascending: true })
 
+  // @ts-expect-error performance_results was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
   const performanceResults = report.performance_results ?? []
 
   const { data: aioChecks } = await supabase
@@ -519,8 +520,16 @@ export async function generateSummaryForReport(
   // For legacy reports, fall back to the legacy join rows.
   const unifiedAudit = await fetchUnifiedAuditScores(await createClient(), report.audit_id)
 
-  const seoScore = unifiedAudit?.seo_score ?? report.site_audit?.overall_score ?? 0
-  const aioScore = unifiedAudit?.ai_readiness_score ?? report.aio_audit?.overall_aio_score ?? 0
+  const seoScore =
+    unifiedAudit?.seo_score ??
+    // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
+    report.site_audit?.overall_score ??
+    0
+  const aioScore =
+    unifiedAudit?.ai_readiness_score ??
+    // @ts-expect-error aio_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
+    report.aio_audit?.overall_aio_score ??
+    0
 
   let pageSpeedScore = unifiedAudit?.performance_score ?? 0
   if (!unifiedAudit) {
@@ -534,7 +543,11 @@ export async function generateSummaryForReport(
         : 0
   }
 
-  const pagesAnalyzed = unifiedAudit?.pages_crawled ?? report.site_audit?.pages_crawled ?? 0
+  const pagesAnalyzed =
+    unifiedAudit?.pages_crawled ??
+    // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
+    report.site_audit?.pages_crawled ??
+    0
   const combinedScore = report.combined_score ?? 0
 
   try {
@@ -545,10 +558,12 @@ export async function generateSummaryForReport(
       pageSpeedScore,
       aioScore,
       pagesAnalyzed,
-      siteAudit: report.site_audit,
+      // @ts-expect-error site_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
+      siteAudit: report.site_audit ?? null,
       siteChecks: auditData.siteChecks as unknown as SiteAuditCheck[],
       performanceResults: auditData.performanceResults as unknown as PerformanceAuditResult[],
-      aioAudit: report.aio_audit,
+      // @ts-expect-error aio_audit was dropped from GeneratedReportWithAudits in T3 — legacy fallback will be removed in T4
+      aioAudit: report.aio_audit ?? null,
       aioChecks: auditData.aioChecks as unknown as AIOCheck[],
     })
 
@@ -565,19 +580,4 @@ export async function generateSummaryForReport(
     })
     return { success: false, error: 'Failed to generate summary' }
   }
-}
-
-export async function countReportsUsingAudit(
-  auditType: 'site_audit' | 'performance_audit' | 'aio_audit',
-  auditId: string
-): Promise<number> {
-  const supabase = await createClient()
-
-  const { count, error } = await supabase
-    .from('generated_reports')
-    .select('*', { count: 'exact', head: true })
-    .eq(`${auditType}_id`, auditId)
-
-  if (error) return 0
-  return count ?? 0
 }
