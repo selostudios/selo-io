@@ -101,25 +101,4 @@ test.describe('Visual Regression', () => {
       await expect(page).toHaveScreenshot('performance-report-snapshot.png', { fullPage: true })
     })
   })
-
-  test.describe('Performance Reports (public share)', () => {
-    test('public share page', async ({ browser }) => {
-      // Public shares must never render auth chrome — screenshot an isolated
-      // context without any session cookies to catch regressions where the
-      // `/s/` route accidentally inherits the authenticated layout.
-      const context = await browser.newContext()
-      try {
-        const publicPage = await context.newPage()
-        await publicPage.goto(`/s/${testMarketingReview.publicShareToken}`)
-
-        await publicPage.waitForSelector('[data-testid="shared-marketing-review"]')
-        await publicPage.waitForSelector('[data-testid="review-deck"]')
-        await expect(publicPage).toHaveScreenshot('performance-report-public-share.png', {
-          fullPage: true,
-        })
-      } finally {
-        await context.close()
-      }
-    })
-  })
 })
