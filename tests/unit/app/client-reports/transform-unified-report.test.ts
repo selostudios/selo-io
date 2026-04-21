@@ -31,9 +31,6 @@ describe('transformToPresentation — unified audit reports', () => {
       primary_color: null,
       secondary_color: null,
       accent_color: null,
-      site_audit: null,
-      performance_audit: null,
-      aio_audit: null,
       ...overrides,
     }
     return report
