@@ -63,3 +63,6 @@ AIO_AUDIT_ARCHITECTURE_COMPARISON.md
 PLAN-*.md
 SEO_AUDIT_GAP_ANALYSIS.md
 .env*.local
+
+# Claude Code session state
+.claude/scheduled_tasks.lock
