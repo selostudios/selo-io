@@ -12,21 +12,21 @@ test.describe('Settings', () => {
     // Wait for hydration
     await page.waitForLoadState('networkidle')
 
-    // Get current name and change it to something different
     const nameInput = page.locator('input[name="name"]')
-    const currentValue = await nameInput.inputValue()
-    const newName = currentValue === 'Test Organization' ? 'Updated Org Name' : 'Test Organization'
-
-    // Clear and type new name to ensure React state updates
-    await nameInput.clear()
-    await nameInput.type(newName)
-
-    // Save changes - wait for button to be enabled
     const saveButton = page.locator('button:has-text("Save Changes")')
+
+    // Rename away from the canonical seed value
+    await nameInput.clear()
+    await nameInput.type('Updated Org Name')
     await expect(saveButton).toBeEnabled({ timeout: 5000 })
     await saveButton.click()
+    await expect(page.locator('text=/successfully/i')).toBeVisible()
 
-    // Should show success message
+    // Restore canonical name — downstream visual tests read org name live from DB and snapshot it.
+    await nameInput.clear()
+    await nameInput.type('Test Organization')
+    await expect(saveButton).toBeEnabled({ timeout: 5000 })
+    await saveButton.click()
     await expect(page.locator('text=/successfully/i')).toBeVisible()
   })
 
