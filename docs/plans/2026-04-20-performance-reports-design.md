@@ -15,7 +15,7 @@ Rather than patch the shim, the client-reports area is being overhauled. The tri
 ## Decisions
 
 1. **Two report types, separate routes.** Rename the existing "Client Reports" → **Audit Reports** (move from `/seo/client-reports` to `/reports/audit` with a redirect). Introduce **Performance Reports** at `/reports/performance`. Both live under Home → Reports.
-2. **Performance Report is a quarterly marketing review.** The audit becomes an *input* to the Takeaways/Insights section, not the report's centerpiece.
+2. **Performance Report is a quarterly marketing review.** The audit becomes an _input_ to the Takeaways/Insights section, not the report's centerpiece.
 3. **Period model: quarterly, with dual comparison.** Admin picks a quarter; the system auto-compares both to the prior quarter (QoQ) and to the same quarter of the previous year (YoY). Metrics show both deltas. Charts render three series: current / prior quarter / same quarter last year.
 4. **Authoring model: AI-drafted narrative, admin-editable.** Data sections auto-populate from platform data. Narrative sections (GA summary, LinkedIn content insights, Takeaways, Planning, subtitle) get AI drafts using **Claude Opus 4.7** (`claude-opus-4-7`), editable by the admin. Prompt caching enabled for re-draft cost.
 5. **Global rule: every AI-generated block is editable.** Stored as `{ current, ai_original }` with a "Restore AI default" affordance.
@@ -132,13 +132,13 @@ Nav: ParentSidebar → Home → Reports. Two entries in the ChildSidebar: **Audi
 
 One module: `lib/reviews/ai/` with a generator per narrative block.
 
-| Generator | Inputs |
-|---|---|
-| `generateCoverSubtitle` | quarter, top 1–2 highlight metrics |
-| `generateGASummary` | current + QoQ + YoY metrics, channel breakdown, referrals |
-| `generateLinkedInInsights` | current metrics + top 4 posts (title, engagement, date) |
-| `generateTakeaways` | all platform data + top audit findings (critical failed checks, AI readiness issues) |
-| `generatePlanning` | all platform data + takeaways + audit recommendations |
+| Generator                  | Inputs                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `generateCoverSubtitle`    | quarter, top 1–2 highlight metrics                                                   |
+| `generateGASummary`        | current + QoQ + YoY metrics, channel breakdown, referrals                            |
+| `generateLinkedInInsights` | current metrics + top 4 posts (title, engagement, date)                              |
+| `generateTakeaways`        | all platform data + top audit findings (critical failed checks, AI readiness issues) |
+| `generatePlanning`         | all platform data + takeaways + audit recommendations                                |
 
 - All run in parallel on creation and on explicit "Re-draft narrative."
 - Model: Claude Opus 4.7 (`claude-opus-4-7`).
@@ -206,6 +206,7 @@ Phases 1–7 land on a `performance-reports` parent branch with per-phase featur
 ## Testing strategy
 
 **Unit**
+
 - Snapshot immutability (old snapshots never mutate after insert).
 - QoQ / YoY date math (quarter boundaries, leap years, DST-free UTC).
 - `ai_original` restore logic.
@@ -213,6 +214,7 @@ Phases 1–7 land on a `performance-reports` parent branch with per-phase featur
 - Data-freshness checks (stale threshold, "data missing" warnings).
 
 **Integration**
+
 - Fetch → draft creation produces well-formed `data` blob.
 - Draft → publish produces immutable snapshot with frozen token.
 - Refresh preserves narrative edits unless admin opts into AI re-draft.
@@ -220,14 +222,17 @@ Phases 1–7 land on a `performance-reports` parent branch with per-phase featur
 - RLS: non-members blocked; internal users pass.
 
 **E2E (Playwright)**
+
 - Create review → edit narrative → publish → open public share → verify frozen numbers.
 - Refresh data → verify draft updates but the previous published snapshot is unchanged.
 - Permission flows: client_viewer cannot create; admin can.
 
 **Visual**
+
 - One Playwright snapshot per slide in `tests/e2e/visual.spec.ts`. Palette test renders three brand colors and verifies no out-of-palette classes.
 
 **Before Pushing**
+
 - Full `npm run lint && npm run test:unit && npm run build` must pass.
 - Full `npm run test:e2e` for any UI changes.
 - All new slide components must carry `data-testid`.
