@@ -66,7 +66,10 @@ describe('ReviewDeck', () => {
       organization: { ...baseOrg, logo_url: 'https://cdn.example.com/acme.png' },
     })
 
-    const img = screen.getByAltText(baseOrg.name) as HTMLImageElement
+    // The deck renders both a screen-only track and a print-only stacked copy, so
+    // scope the query to the visible track to avoid matching the print duplicate.
+    const track = screen.getByTestId('review-deck-track')
+    const img = within(track).getByAltText(baseOrg.name) as HTMLImageElement
     expect(img).toBeInTheDocument()
     expect(img.src).toBe('https://cdn.example.com/acme.png')
   })
@@ -74,7 +77,8 @@ describe('ReviewDeck', () => {
   test('omits the logo <img> when logo_url is null', () => {
     renderDeck({ organization: { ...baseOrg, logo_url: null } })
 
-    expect(screen.queryByAltText(baseOrg.name)).toBeNull()
+    const track = screen.getByTestId('review-deck-track')
+    expect(within(track).queryByAltText(baseOrg.name)).toBeNull()
   })
 
   test('renders the placeholder text on a body slide whose block is empty', () => {
@@ -82,7 +86,8 @@ describe('ReviewDeck', () => {
       narrative: { ...fullNarrative, ga_summary: '' },
     })
 
-    expect(screen.getByText('No narrative available for this section')).toBeInTheDocument()
+    const track = screen.getByTestId('review-deck-track')
+    expect(within(track).getByText('No narrative available for this section')).toBeInTheDocument()
   })
 
   test('does not render the placeholder on the cover slide when cover_subtitle is empty', () => {
@@ -98,7 +103,8 @@ describe('ReviewDeck', () => {
       },
     })
 
-    expect(screen.queryByText('No narrative available for this section')).toBeNull()
+    const track = screen.getByTestId('review-deck-track')
+    expect(within(track).queryByText('No narrative available for this section')).toBeNull()
   })
 
   test('advances to slide index 1 when the Next button is clicked', () => {

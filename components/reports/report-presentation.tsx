@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useCallback, useEffect, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { ChevronLeft, ChevronRight, Share2, Printer, X, Maximize2, Minimize2 } from 'lucide-react'
+import { Printer, Share2, X } from 'lucide-react'
 import { useBuildOrgHref } from '@/hooks/use-org-context'
 import { Button } from '@/components/ui/button'
-import { ProgressDots } from './progress-dots'
+import { Slide } from '@/components/deck/slide'
+import { DeckControls } from '@/components/deck/deck-controls'
+import { useDeckNavigation } from '@/components/deck/use-deck-navigation'
+import { getFullscreenElement, toggleElementFullscreen } from '@/components/deck/fullscreen'
+import { DeckPrintStyles } from '@/components/deck/print-styles'
 import type { ReportPresentationData } from '@/lib/reports/types'
 
-// Lazy-load slides — only the visible slide is rendered at a time
 const CoverSlide = dynamic(() => import('./slides/cover-slide').then((m) => m.CoverSlide))
 const TocSlide = dynamic(() => import('./slides/toc-slide').then((m) => m.TocSlide))
 const AtAGlanceSlide = dynamic(() =>
@@ -37,100 +40,21 @@ interface ReportPresentationProps {
   onShare?: () => void
 }
 
-export function ReportPresentation({ data, isPublic = false, onShare }: ReportPresentationProps) {
-  const router = useRouter()
-  const buildOrgHref = useBuildOrgHref()
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+interface BuiltSlide {
+  key: string
+  heading: string
+  render: (goTo: (i: number) => void) => React.ReactNode
+}
 
-  // Calculate total slides based on content
+function buildSlides(data: ReportPresentationData): BuiltSlide[] {
   const opportunityPages = Math.ceil(data.opportunities.length / 6) || 1
   const recommendationPages = Math.ceil(data.recommendations.length / 5) || 1
-  const totalSlides = 4 + opportunityPages + 1 + recommendationPages + 1 // Cover, ToC, AtAGlance, Summary, Opportunities, Impact, Recommendations, NextSteps
 
-  const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1))
-  }, [totalSlides])
-
-  const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => Math.max(prev - 1, 0))
-  }, [])
-
-  const goToSlide = useCallback(
-    (index: number) => {
-      setCurrentSlide(Math.max(0, Math.min(index, totalSlides - 1)))
-    },
-    [totalSlides]
-  )
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowRight':
-        case ' ':
-          e.preventDefault()
-          nextSlide()
-          break
-        case 'ArrowLeft':
-          e.preventDefault()
-          prevSlide()
-          break
-        case 'Escape':
-          if (!isPublic) {
-            router.push(buildOrgHref('/reports/audit'))
-          }
-          break
-        case 'Home':
-          e.preventDefault()
-          goToSlide(0)
-          break
-        case 'End':
-          e.preventDefault()
-          goToSlide(totalSlides - 1)
-          break
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextSlide, prevSlide, goToSlide, totalSlides, router, isPublic, buildOrgHref])
-
-  // Touch/swipe navigation
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX)
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return
-
-    const touchEnd = e.changedTouches[0].clientX
-    const diff = touchStart - touchEnd
-
-    // Minimum swipe distance
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        nextSlide()
-      } else {
-        prevSlide()
-      }
-    }
-
-    setTouchStart(null)
-  }
-
-  const handlePrint = () => {
-    window.print()
-  }
-
-  // Render a specific slide by index
-  const renderSlideByIndex = (index: number): ReactNode => {
-    let slideIndex = 0
-
-    // Slide 0: Cover
-    if (index === slideIndex++) {
-      return (
+  const slides: BuiltSlide[] = [
+    {
+      key: 'cover',
+      heading: 'Cover',
+      render: () => (
         <CoverSlide
           domain={data.domain}
           date={data.created_at}
@@ -140,175 +64,204 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
           secondaryColor={data.secondary_color}
           accentColor={data.accent_color}
         />
-      )
-    }
-
-    // Slide 1: Table of Contents
-    if (index === slideIndex++) {
-      return <TocSlide onNavigate={goToSlide} accentColor={data.accent_color} />
-    }
-
-    // Slide 2: At a Glance
-    if (index === slideIndex++) {
-      return (
+      ),
+    },
+    {
+      key: 'toc',
+      heading: 'Table of contents',
+      render: (goTo) => <TocSlide onNavigate={goTo} accentColor={data.accent_color} />,
+    },
+    {
+      key: 'at-a-glance',
+      heading: 'At a glance',
+      render: () => (
         <AtAGlanceSlide
           combinedScore={data.combined_score}
           seoScore={data.scores.seo.score}
           pageSpeedScore={data.scores.page_speed.score}
           aioScore={data.scores.aio.score}
         />
-      )
-    }
-
-    // Slide 3: Executive Summary
-    if (index === slideIndex++) {
-      return (
+      ),
+    },
+    {
+      key: 'executive-summary',
+      heading: 'Executive summary',
+      render: () => (
         <ExecutiveSummarySlide
           summary={data.executive_summary}
           stats={data.stats}
           accentColor={data.accent_color}
         />
-      )
-    }
+      ),
+    },
+  ]
 
-    // Slides 4-N: Opportunities (paginated)
-    for (let page = 0; page < opportunityPages; page++) {
-      if (index === slideIndex++) {
-        return <OpportunitiesSlide opportunities={data.opportunities} page={page} />
-      }
-    }
+  for (let page = 0; page < opportunityPages; page++) {
+    slides.push({
+      key: `opportunities-${page}`,
+      heading: `Opportunities${opportunityPages > 1 ? ` (${page + 1})` : ''}`,
+      render: () => <OpportunitiesSlide opportunities={data.opportunities} page={page} />,
+    })
+  }
 
-    // Slide: Business Impact
-    if (index === slideIndex++) {
-      return (
-        <BusinessImpactSlide
-          projections={data.projections}
-          combinedScore={data.combined_score}
+  slides.push({
+    key: 'business-impact',
+    heading: 'Business impact',
+    render: () => (
+      <BusinessImpactSlide
+        projections={data.projections}
+        combinedScore={data.combined_score}
+        accentColor={data.accent_color}
+      />
+    ),
+  })
+
+  for (let page = 0; page < recommendationPages; page++) {
+    slides.push({
+      key: `recommendations-${page}`,
+      heading: `Recommendations${recommendationPages > 1 ? ` (${page + 1})` : ''}`,
+      render: () => (
+        <RecommendationsSlide
+          recommendations={data.recommendations}
+          page={page}
           accentColor={data.accent_color}
         />
-      )
-    }
+      ),
+    })
+  }
 
-    // Slides: Recommendations (paginated)
-    for (let page = 0; page < recommendationPages; page++) {
-      if (index === slideIndex++) {
-        return (
-          <RecommendationsSlide
-            recommendations={data.recommendations}
-            page={page}
-            accentColor={data.accent_color}
-          />
-        )
-      }
-    }
-
-    // Final Slide: Next Steps
-    return (
+  slides.push({
+    key: 'next-steps',
+    heading: 'Next steps',
+    render: () => (
       <NextStepsSlide
         companyName={data.company_name}
         logoUrl={data.logo_url}
         primaryColor={data.primary_color}
         accentColor={data.accent_color}
       />
-    )
-  }
+    ),
+  })
 
-  // Render all slides for printing
-  const renderAllSlides = (): ReactNode[] => {
-    return Array.from({ length: totalSlides }, (_, i) => (
-      <div key={i} className="print-slide">
-        {renderSlideByIndex(i)}
-      </div>
-    ))
-  }
+  return slides
+}
 
-  // Use full viewport height for public/fullscreen, or calc for authenticated layout
-  const containerHeight = isFullscreen || isPublic ? 'h-screen' : 'h-[calc(100vh-4rem)]'
+export function ReportPresentation({ data, isPublic = false, onShare }: ReportPresentationProps) {
+  const router = useRouter()
+  const buildOrgHref = useBuildOrgHref()
+  const deckRef = useRef<HTMLDivElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const slides = useMemo(() => buildSlides(data), [data])
+  const { currentIndex, next, prev, goTo, isFirst, isLast } = useDeckNavigation(slides.length)
+
+  useEffect(() => {
+    function handleChange() {
+      setIsFullscreen(getFullscreenElement() === deckRef.current)
+    }
+    document.addEventListener('fullscreenchange', handleChange)
+    document.addEventListener('webkitfullscreenchange', handleChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleChange)
+      document.removeEventListener('webkitfullscreenchange', handleChange)
+    }
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    toggleElementFullscreen(deckRef.current)
+  }, [])
+
+  const rootStyle = {
+    '--deck-accent': data.accent_color ?? 'var(--foreground)',
+  } as CSSProperties
+
+  const slideWidthPercent = 100 / Math.max(slides.length, 1)
+  const trackTransform = `translateX(-${currentIndex * slideWidthPercent}%)`
+
+  const announcement = useMemo(() => {
+    const heading = slides[currentIndex]?.heading ?? ''
+    return `Slide ${currentIndex + 1} of ${slides.length}: ${heading}`
+  }, [currentIndex, slides])
 
   return (
     <div
-      className={
-        isFullscreen
-          ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-white dark:bg-slate-950'
-          : `relative ${containerHeight} w-full overflow-hidden`
-      }
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      ref={deckRef}
+      role="region"
+      aria-roledescription="slide deck"
+      aria-label="Marketing performance report"
+      data-testid="report-deck"
+      className="bg-background relative h-[calc(100vh-4rem)] w-full overflow-hidden rounded-lg border lg:aspect-video lg:h-auto"
+      style={rootStyle}
     >
-      {/* Current Slide - visible on screen, hidden when printing */}
-      <div className="screen-only h-full w-full overflow-y-auto">
-        {renderSlideByIndex(currentSlide)}
+      <div className="screen-only h-full w-full">
+        <div
+          data-testid="report-deck-track"
+          data-current-index={currentIndex}
+          className="flex h-full transition-transform duration-[400ms] ease-out"
+          style={{
+            width: `${slides.length * 100}%`,
+            transform: trackTransform,
+          }}
+        >
+          {slides.map((slide, i) => (
+            <Slide
+              key={slide.key}
+              index={i + 1}
+              total={slides.length}
+              ariaHeading={slide.heading}
+              widthPercent={slideWidthPercent}
+            >
+              {slide.render(goTo)}
+            </Slide>
+          ))}
+        </div>
       </div>
 
-      {/* All Slides - hidden on screen, visible when printing */}
-      <div className="print-only">{renderAllSlides()}</div>
+      <div className="print-only">
+        {slides.map((slide) => (
+          <div key={slide.key} className="print-slide">
+            {slide.render(goTo)}
+          </div>
+        ))}
+      </div>
 
-      {/* Navigation Arrows */}
+      <div
+        data-testid="report-deck-live-region"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announcement}
+      </div>
+
       <div className="print:hidden">
-        {currentSlide > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={prevSlide}
-            className="absolute top-1/2 left-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-        )}
-
-        {currentSlide < totalSlides - 1 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={nextSlide}
-            className="absolute top-1/2 right-4 z-50 h-12 w-12 -translate-y-1/2 rounded-full bg-white/80 shadow-lg backdrop-blur hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-        )}
+        <DeckControls
+          onPrev={prev}
+          onNext={next}
+          onToggleFullscreen={toggleFullscreen}
+          isFirst={isFirst}
+          isLast={isLast}
+          isFullscreen={isFullscreen}
+        />
       </div>
 
-      {/* Progress Dots */}
-      <ProgressDots
-        current={currentSlide}
-        total={totalSlides}
-        onNavigate={goToSlide}
-        accentColor={data.accent_color}
-      />
-
-      {/* Top Controls */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 print:hidden">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 print:hidden">
         {!isPublic && onShare && (
           <Button variant="outline" size="sm" onClick={onShare}>
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
         )}
-
-        <Button variant="outline" size="sm" onClick={handlePrint}>
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
           <Printer className="mr-2 h-4 w-4" />
           Print
         </Button>
-
-        {!isPublic && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="h-9 w-9"
-            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </Button>
-        )}
-
         {!isPublic && (
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.push(buildOrgHref('/reports/audit'))}
+            aria-label="Close report"
             className="h-9 w-9"
           >
             <X className="h-4 w-4" />
@@ -316,59 +269,7 @@ export function ReportPresentation({ data, isPublic = false, onShare }: ReportPr
         )}
       </div>
 
-      {/* Print Styles - render all slides for printing */}
-      <style jsx global>{`
-        /* Screen-only elements hidden during print */
-        .print-only {
-          display: none;
-        }
-
-        @media print {
-          @page {
-            size: A4 landscape;
-            margin: 0;
-          }
-
-          /* Hide screen-only content */
-          .screen-only,
-          .print\\:hidden {
-            display: none !important;
-          }
-
-          /* Show print-only content */
-          .print-only {
-            display: block !important;
-          }
-
-          html,
-          body {
-            width: 100%;
-            height: 100%;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: visible !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          .print-slide {
-            width: 100%;
-            height: 100vh;
-            min-height: 100vh;
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            overflow: hidden;
-            box-sizing: border-box;
-          }
-
-          .print-slide:last-child {
-            page-break-after: avoid;
-            break-after: avoid;
-          }
-        }
-      `}</style>
+      <DeckPrintStyles />
     </div>
   )
 }

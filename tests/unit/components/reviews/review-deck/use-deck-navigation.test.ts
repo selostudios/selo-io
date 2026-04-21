@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { renderHook, act, render, fireEvent } from '@testing-library/react'
 import React from 'react'
-import { useDeckNavigation } from '@/components/reviews/review-deck/use-deck-navigation'
+import { useDeckNavigation } from '@/components/deck/use-deck-navigation'
 
 describe('useDeckNavigation', () => {
   test('starts on the first slide', () => {

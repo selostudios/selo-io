@@ -1,13 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CSSProperties } from 'react'
+import { Printer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
-import { useDeckNavigation } from './use-deck-navigation'
-import { Slide } from './slide'
+import { useDeckNavigation } from '@/components/deck/use-deck-navigation'
+import { Slide } from '@/components/deck/slide'
+import { DeckControls } from '@/components/deck/deck-controls'
+import { getFullscreenElement, toggleElementFullscreen } from '@/components/deck/fullscreen'
+import { DeckPrintStyles } from '@/components/deck/print-styles'
 import { CoverSlide } from './cover-slide'
 import { BodySlide } from './body-slide'
-import { DeckControls } from './deck-controls'
 
 export interface ReviewDeckProps {
   organization: {
@@ -38,24 +42,10 @@ const BODY_SECTIONS: BodySection[] = [
   { key: 'planning', heading: 'Planning Ahead' },
 ]
 
-const COVER_HEADING = 'Quarterly Performance Review'
-
-const SLIDE_COUNT = 1 + BODY_SECTIONS.length // cover + 5 body slides = 6
-
-/** Full list of slide headings used for aria announcements, in deck order. */
-const SLIDE_HEADINGS: string[] = [COVER_HEADING, ...BODY_SECTIONS.map((s) => s.heading)]
-
-/**
- * Returns the current fullscreen element, preferring the standard API and
- * falling back to Safari's webkit-prefixed API (still required on iPad as of
- * iPadOS 17).
- */
-function getFullscreenElement(): Element | null {
-  if (typeof document === 'undefined') return null
-  if (document.fullscreenElement) return document.fullscreenElement
-  // @ts-expect-error - webkitFullscreenElement is not in lib.dom types.
-  const webkitEl: Element | null | undefined = document.webkitFullscreenElement
-  return webkitEl ?? null
+interface BuiltSlide {
+  key: string
+  ariaHeading: string
+  content: ReactNode
 }
 
 /**
@@ -75,8 +65,33 @@ export function ReviewDeck({
   data: _data,
 }: ReviewDeckProps) {
   const deckRef = useRef<HTMLDivElement | null>(null)
-  const { currentIndex, next, prev, isFirst, isLast } = useDeckNavigation(SLIDE_COUNT)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const slides: BuiltSlide[] = useMemo(
+    () => [
+      {
+        key: 'cover',
+        ariaHeading: 'Quarterly Performance Review',
+        content: (
+          <CoverSlide
+            organization={{ name: organization.name, logo_url: organization.logo_url }}
+            quarter={quarter}
+            periodStart={periodStart}
+            periodEnd={periodEnd}
+            subtitle={narrative.cover_subtitle}
+          />
+        ),
+      },
+      ...BODY_SECTIONS.map((section) => ({
+        key: section.key,
+        ariaHeading: section.heading,
+        content: <BodySlide heading={section.heading} text={narrative[section.key] ?? ''} />,
+      })),
+    ],
+    [organization, quarter, periodStart, periodEnd, narrative]
+  )
+
+  const { currentIndex, next, prev, isFirst, isLast } = useDeckNavigation(slides.length)
 
   useEffect(() => {
     function handleChange() {
@@ -91,67 +106,20 @@ export function ReviewDeck({
   }, [])
 
   const toggleFullscreen = useCallback(() => {
-    const el = deckRef.current
-    if (!el) return
-
-    const currentFullscreenEl = getFullscreenElement()
-
-    if (currentFullscreenEl === el) {
-      // Exit fullscreen — try standard then webkit.
-      if (typeof document.exitFullscreen === 'function') {
-        document.exitFullscreen().catch(() => {
-          /* User gesture missing, blocked, etc. — swallow. */
-        })
-        return
-      }
-      // @ts-expect-error - webkitExitFullscreen is not in lib.dom types.
-      const webkitExit: (() => Promise<void> | void) | undefined = document.webkitExitFullscreen
-      if (typeof webkitExit === 'function') {
-        try {
-          const result = webkitExit.call(document)
-          if (result && typeof (result as Promise<void>).catch === 'function') {
-            ;(result as Promise<void>).catch(() => {})
-          }
-        } catch {
-          /* no-op */
-        }
-      }
-      return
-    }
-
-    // Enter fullscreen — try standard then webkit.
-    if (typeof el.requestFullscreen === 'function') {
-      el.requestFullscreen().catch(() => {
-        /* Permission denied, iframe blocked, etc. — swallow. */
-      })
-      return
-    }
-    // @ts-expect-error - webkitRequestFullscreen is not in lib.dom types.
-    const webkitRequest: (() => Promise<void> | void) | undefined = el.webkitRequestFullscreen
-    if (typeof webkitRequest === 'function') {
-      try {
-        const result = webkitRequest.call(el)
-        if (result && typeof (result as Promise<void>).catch === 'function') {
-          ;(result as Promise<void>).catch(() => {})
-        }
-      } catch {
-        /* no-op */
-      }
-    }
-    // If neither API is available, no-op silently (keep button visible).
+    toggleElementFullscreen(deckRef.current)
   }, [])
 
   const rootStyle = {
     '--deck-accent': organization.primary_color ?? 'var(--foreground)',
   } as CSSProperties
 
-  const slideWidthPercent = 100 / SLIDE_COUNT
+  const slideWidthPercent = 100 / slides.length
   const trackTransform = `translateX(-${currentIndex * slideWidthPercent}%)`
 
   const announcement = useMemo(() => {
-    const heading = SLIDE_HEADINGS[currentIndex] ?? ''
-    return `Slide ${currentIndex + 1} of ${SLIDE_COUNT}: ${heading}`
-  }, [currentIndex])
+    const heading = slides[currentIndex]?.ariaHeading ?? ''
+    return `Slide ${currentIndex + 1} of ${slides.length}: ${heading}`
+  }, [currentIndex, slides])
 
   return (
     <div
@@ -163,40 +131,35 @@ export function ReviewDeck({
       className="bg-background relative h-full max-h-screen w-full overflow-hidden rounded-lg border lg:aspect-video lg:h-auto"
       style={rootStyle}
     >
-      <div
-        data-testid="review-deck-track"
-        data-current-index={currentIndex}
-        className="flex h-full transition-transform duration-[400ms] ease-out"
-        style={{
-          width: `${SLIDE_COUNT * 100}%`,
-          transform: trackTransform,
-        }}
-      >
-        <Slide
-          index={1}
-          total={SLIDE_COUNT}
-          ariaHeading={`${organization.name} — ${quarter}`}
-          widthPercent={slideWidthPercent}
+      <div className="screen-only h-full w-full">
+        <div
+          data-testid="review-deck-track"
+          data-current-index={currentIndex}
+          className="flex h-full transition-transform duration-[400ms] ease-out"
+          style={{
+            width: `${slides.length * 100}%`,
+            transform: trackTransform,
+          }}
         >
-          <CoverSlide
-            organization={{ name: organization.name, logo_url: organization.logo_url }}
-            quarter={quarter}
-            periodStart={periodStart}
-            periodEnd={periodEnd}
-            subtitle={narrative.cover_subtitle}
-          />
-        </Slide>
+          {slides.map((slide, i) => (
+            <Slide
+              key={slide.key}
+              index={i + 1}
+              total={slides.length}
+              ariaHeading={slide.ariaHeading}
+              widthPercent={slideWidthPercent}
+            >
+              {slide.content}
+            </Slide>
+          ))}
+        </div>
+      </div>
 
-        {BODY_SECTIONS.map((section, i) => (
-          <Slide
-            key={section.key}
-            index={i + 2}
-            total={SLIDE_COUNT}
-            ariaHeading={section.heading}
-            widthPercent={slideWidthPercent}
-          >
-            <BodySlide heading={section.heading} text={narrative[section.key] ?? ''} />
-          </Slide>
+      <div className="print-only">
+        {slides.map((slide) => (
+          <div key={slide.key} className="print-slide">
+            {slide.content}
+          </div>
         ))}
       </div>
 
@@ -209,14 +172,25 @@ export function ReviewDeck({
         {announcement}
       </div>
 
-      <DeckControls
-        onPrev={prev}
-        onNext={next}
-        onToggleFullscreen={toggleFullscreen}
-        isFirst={isFirst}
-        isLast={isLast}
-        isFullscreen={isFullscreen}
-      />
+      <div className="print:hidden">
+        <DeckControls
+          onPrev={prev}
+          onNext={next}
+          onToggleFullscreen={toggleFullscreen}
+          isFirst={isFirst}
+          isLast={isLast}
+          isFullscreen={isFullscreen}
+        />
+      </div>
+
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 print:hidden">
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <Printer className="mr-2 h-4 w-4" />
+          Print
+        </Button>
+      </div>
+
+      <DeckPrintStyles />
     </div>
   )
 }

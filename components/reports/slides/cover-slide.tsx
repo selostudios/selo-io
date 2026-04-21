@@ -12,15 +12,7 @@ interface CoverSlideProps {
   accentColor?: string | null
 }
 
-export function CoverSlide({
-  domain,
-  date,
-  logoUrl,
-  companyName,
-  primaryColor,
-  secondaryColor,
-  accentColor,
-}: CoverSlideProps) {
+export function CoverSlide({ domain, date, logoUrl, companyName, accentColor }: CoverSlideProps) {
   const displayName = companyName || 'Selo Studios'
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
     month: 'long',
@@ -28,68 +20,32 @@ export function CoverSlide({
     year: 'numeric',
   })
 
-  // Use brand colors for styling, with sensible fallbacks
-  const bgColor = primaryColor || '#1e293b' // slate-800 fallback
-  const textColor = secondaryColor || '#ffffff'
-  const highlightColor = accentColor || primaryColor || '#6366f1' // indigo fallback
-
   return (
-    <SlideContainer className="relative overflow-hidden" style={{ backgroundColor: bgColor }}>
-      {/* Abstract geometric background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large rotated shape */}
-        <div
-          className="absolute -top-32 -left-32 h-[500px] w-[500px] rotate-45 rounded-3xl"
-          style={{ backgroundColor: `${textColor}08` }}
-        />
-        {/* Accent shapes - use brand accent color */}
-        <div
-          className="absolute top-1/4 right-1/4 h-64 w-64 rounded-full blur-3xl"
-          style={{ backgroundColor: `${highlightColor}20` }}
-        />
-        <div
-          className="absolute bottom-1/4 left-1/3 h-48 w-48 rounded-full blur-3xl"
-          style={{ backgroundColor: `${highlightColor}20` }}
-        />
-      </div>
+    <SlideContainer variant="light">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+        {logoUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
+          <img
+            src={logoUrl}
+            alt={displayName}
+            className="mb-4 h-24 w-auto object-contain md:h-32 lg:h-40"
+          />
+        ) : (
+          <h1 className="text-3xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
+            {displayName}
+          </h1>
+        )}
 
-      {/* Content - Logo at top, title centered, domain below */}
-      <div
-        className="relative z-10 flex flex-1 flex-col items-center justify-center text-center"
-        style={{ color: textColor }}
-      >
-        {/* Logo/Company at top */}
-        <div className="mb-12">
-          {logoUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- User-provided external URL, can't configure all domains */
-            <img
-              src={logoUrl}
-              alt={displayName}
-              className="mx-auto h-16 w-auto object-contain md:h-20"
-            />
-          ) : (
-            <div className="text-2xl font-bold tracking-tight md:text-3xl" style={{ opacity: 0.9 }}>
-              {displayName}
-            </div>
-          )}
-        </div>
+        <p
+          className="text-base font-medium tracking-widest uppercase md:text-lg lg:text-xl"
+          style={{ color: accentColor || 'var(--foreground)' }}
+        >
+          Marketing Performance Report
+        </p>
 
-        {/* Title */}
-        <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-          Marketing Performance
-          <br />
-          Report
-        </h1>
+        <p className="text-foreground text-xl font-semibold md:text-3xl lg:text-4xl">{domain}</p>
 
-        {/* Domain */}
-        <div className="mt-8 text-xl md:text-2xl" style={{ opacity: 0.7 }}>
-          {domain}
-        </div>
-
-        {/* Date at bottom */}
-        <div className="mt-12 text-sm" style={{ opacity: 0.5 }}>
-          {formattedDate}
-        </div>
+        <p className="text-muted-foreground text-base md:text-lg lg:text-xl">{formattedDate}</p>
       </div>
     </SlideContainer>
   )
