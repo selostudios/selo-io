@@ -47,6 +47,10 @@ npm run backfill:metrics -- 2026-01-24        # Backfill from specific date (loc
 npm run backfill:metrics -- 2026-01-24 --prod # Backfill from specific date (prod)
 
 # Vercel CLI (project is linked — no --scope needed)
+# IMPORTANT: The Vercel project for this repo is `selo_io` (underscore) under the
+# `selostudios` team. Always use that exact name — never `selo-io` (hyphen) or any
+# other variant. A duplicate hyphenated project once leaked into production with no
+# env vars and broke the site; do not recreate it.
 vercel ls selo_io                             # List recent deployments (URL, env, status)
 vercel inspect <deployment-url>               # Detailed info for a deployment
 vercel logs <deployment-url>                  # Stream runtime logs (from NOW, 5 min max)
