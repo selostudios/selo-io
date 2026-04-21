@@ -1,23 +1,9 @@
 import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
-import { MetricFormat } from '@/lib/enums'
+import { formatMetricDelta, formatMetricValue } from '@/lib/reviews/format'
 import type { GAData } from '@/lib/reviews/types'
 
 interface GaMetricTableProps {
   data: GAData | undefined
-}
-
-const EM_DASH = '\u2014'
-
-function formatValue(value: number | null, format: MetricFormat): string {
-  if (value === null) return EM_DASH
-  if (format === MetricFormat.Percent) return `${Math.round(value)}%`
-  return value.toLocaleString()
-}
-
-function formatDelta(delta: number | null): string {
-  if (delta === null) return EM_DASH
-  const sign = delta > 0 ? '+' : ''
-  return `${sign}${delta.toFixed(1)}%`
 }
 
 /**
@@ -59,12 +45,14 @@ export function GaMetricTable({ data }: GaMetricTableProps) {
           <tr key={meta.key} className="border-b last:border-b-0">
             <td className="py-1 pr-3">{meta.label}</td>
             <td className="py-1 pr-3 text-right tabular-nums">
-              {formatValue(triple.current, meta.format)}
+              {formatMetricValue(triple.current, meta.format)}
             </td>
             <td className="py-1 pr-3 text-right tabular-nums">
-              {formatDelta(triple.qoq_delta_pct)}
+              {formatMetricDelta(triple.qoq_delta_pct)}
             </td>
-            <td className="py-1 text-right tabular-nums">{formatDelta(triple.yoy_delta_pct)}</td>
+            <td className="py-1 text-right tabular-nums">
+              {formatMetricDelta(triple.yoy_delta_pct)}
+            </td>
           </tr>
         ))}
       </tbody>

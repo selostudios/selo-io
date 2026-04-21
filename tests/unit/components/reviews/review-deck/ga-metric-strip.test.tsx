@@ -134,7 +134,7 @@ describe('GaMetricStrip', () => {
     expect(card.getAttribute('data-change')).toBe('17.2')
   })
 
-  test('passes numeric current value for number-format metrics (MetricCard handles formatting)', () => {
+  test('formats current value with thousands separators for number metrics', () => {
     const data: GAData = {
       ga_sessions: makeTriple({ current: 12345 }),
     }
@@ -142,7 +142,6 @@ describe('GaMetricStrip', () => {
     render(<GaMetricStrip data={data} />)
 
     const card = screen.getByTestId('mock-metric-card')
-    // value passed through as the raw number (stringified by data attr)
-    expect(card.getAttribute('data-value')).toBe('12345')
+    expect(card.getAttribute('data-value')).toBe('12,345')
   })
 })

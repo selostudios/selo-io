@@ -3,19 +3,11 @@
 import type { ReactElement } from 'react'
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
-import { MetricFormat } from '@/lib/enums'
+import { formatMetricValue } from '@/lib/reviews/format'
 import type { GAData } from '@/lib/reviews/types'
 
 interface GaMetricStripProps {
   data: GAData | undefined
-}
-
-// Widens the narrow `as const` enum member into the full `MetricFormat` union
-// so that downstream comparisons remain valid if the config adds Percent
-// entries later (see the engagement-rate TODO in featured-metrics.ts).
-function formatCardValue(current: number, format: MetricFormat): number | string {
-  if (format === MetricFormat.Percent) return `${Math.round(current)}%`
-  return current
 }
 
 /**
@@ -31,13 +23,11 @@ export function GaMetricStrip({ data }: GaMetricStripProps) {
     const triple = data[meta.key]
     if (!triple) return null
 
-    const value = formatCardValue(triple.current, meta.format)
-
     return (
       <MetricCard
         key={meta.key}
         label={meta.label}
-        value={value}
+        value={formatMetricValue(triple.current, meta.format)}
         change={triple.qoq_delta_pct}
         timeSeries={triple.timeseries?.current}
         variant="accent"
