@@ -1,6 +1,6 @@
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
-import { getAppSettings, getProviderLogos } from './actions'
+import { getAppSettings } from './actions'
 import { IntegrationsClient } from './client'
 
 export default async function AppSettingsIntegrationsPage() {
@@ -8,7 +8,7 @@ export default async function AppSettingsIntegrationsPage() {
   const userRecord = await getUserRecord(user!.id)
   const isAdmin = userRecord?.role === 'admin' || (userRecord != null && isInternalUser(userRecord))
 
-  const [settings, logos] = await Promise.all([getAppSettings(), getProviderLogos()])
+  const settings = await getAppSettings()
 
   if ('error' in settings) {
     return (
@@ -26,7 +26,7 @@ export default async function AppSettingsIntegrationsPage() {
           Manage API keys and credentials for platform services.
         </p>
       </div>
-      <IntegrationsClient settings={settings} isAdmin={isAdmin} logos={logos} />
+      <IntegrationsClient settings={settings} isAdmin={isAdmin} />
     </div>
   )
 }

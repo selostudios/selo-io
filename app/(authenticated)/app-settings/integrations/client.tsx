@@ -3,17 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import {
-  Bot,
-  Mail,
-  Gauge,
-  KeyRound,
-  Loader2,
-  ExternalLink,
-  MessageSquare,
-  Search,
-  Info,
-} from 'lucide-react'
+import { Loader2, ExternalLink, Info } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,7 +45,6 @@ const PROVIDERS = [
     key: 'anthropic',
     name: 'Anthropic',
     description: 'Claude AI API for audits and reports',
-    icon: Bot,
     placeholder: 'sk-ant-...',
     testable: true,
     setupHint: 'Required for AI-powered audit analysis, report summaries, and AI visibility.',
@@ -66,7 +55,6 @@ const PROVIDERS = [
     key: 'openai',
     name: 'OpenAI',
     description: 'ChatGPT API for AI Visibility monitoring',
-    icon: MessageSquare,
     placeholder: 'sk-...',
     testable: true,
     setupHint: 'Required for tracking how your brand appears in ChatGPT responses.',
@@ -77,7 +65,6 @@ const PROVIDERS = [
     key: 'perplexity',
     name: 'Perplexity',
     description: 'Perplexity API for AI Visibility monitoring',
-    icon: Search,
     placeholder: 'pplx-...',
     testable: true,
     setupHint: 'Required for tracking how your brand appears in Perplexity search responses.',
@@ -88,7 +75,6 @@ const PROVIDERS = [
     key: 'resend',
     name: 'Resend',
     description: 'Transactional email delivery',
-    icon: Mail,
     placeholder: 're_...',
     testable: true,
     setupHint: 'Required for sending invites, weekly summaries, and budget alerts.',
@@ -99,7 +85,6 @@ const PROVIDERS = [
     key: 'pagespeed',
     name: 'PageSpeed Insights',
     description: 'Google PageSpeed API for performance audits',
-    icon: Gauge,
     placeholder: 'AIza...',
     testable: true,
     setupHint: 'Required for Lighthouse performance scores in unified audits.',
@@ -110,7 +95,6 @@ const PROVIDERS = [
     key: 'cron_secret',
     name: 'Cron Secret',
     description: 'Bearer token for cron job authentication',
-    icon: KeyRound,
     testable: false,
     placeholder: '',
     setupHint:
@@ -147,10 +131,9 @@ function formatRelativeTime(dateString: string): string {
 interface IntegrationsClientProps {
   settings: AppSettingDisplay[]
   isAdmin: boolean
-  logos?: Record<string, string>
 }
 
-export function IntegrationsClient({ settings, isAdmin, logos = {} }: IntegrationsClientProps) {
+export function IntegrationsClient({ settings, isAdmin }: IntegrationsClientProps) {
   const router = useRouter()
   const settingsMap = new Map(settings.map((s) => [s.key, s]))
   const emailConfig = settingsMap.get('email_config')
@@ -174,7 +157,6 @@ export function IntegrationsClient({ settings, isAdmin, logos = {} }: Integratio
               provider={provider}
               setting={setting ?? null}
               isAdmin={isAdmin}
-              logoUrl={logos[provider.key] ?? null}
               onMutationSuccess={() => router.refresh()}
             />
           )
@@ -194,17 +176,10 @@ interface ProviderCardProps {
   provider: (typeof PROVIDERS)[number]
   setting: AppSettingDisplay | null
   isAdmin: boolean
-  logoUrl: string | null
   onMutationSuccess: () => void
 }
 
-function ProviderCard({
-  provider,
-  setting,
-  isAdmin,
-  logoUrl,
-  onMutationSuccess,
-}: ProviderCardProps) {
+function ProviderCard({ provider, setting, isAdmin, onMutationSuccess }: ProviderCardProps) {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const [newValue, setNewValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -212,7 +187,6 @@ function ProviderCard({
   const [testing, setTesting] = useState(false)
 
   const configured = setting?.configured ?? false
-  const Icon = provider.icon
 
   async function handleUpdateKey() {
     if (!newValue.trim()) return
@@ -317,22 +291,14 @@ function ProviderCard({
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-neutral-800">
-            {logoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={logoUrl} alt={`${provider.name} logo`} className="h-5 w-5 object-contain" />
-            ) : (
-              <Icon className="text-muted-foreground h-4 w-4" />
-            )}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="text-sm font-medium">{provider.name}</CardTitle>
+            <CardDescription className="text-xs">{provider.description}</CardDescription>
           </div>
           <Badge variant={configured ? 'default' : 'secondary'}>
             {configured ? ConnectionStatus.Connected : ConnectionStatus.NotConnected}
           </Badge>
-        </div>
-        <div className="pt-2">
-          <CardTitle className="text-sm font-medium">{provider.name}</CardTitle>
-          <CardDescription className="text-xs">{provider.description}</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-end">
