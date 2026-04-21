@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test, vi, type Mock } from 'vitest'
 import { generateObject } from 'ai'
-import { generateNarrativeBlocks } from '@/lib/reviews/narrative/generator'
+import {
+  generateNarrativeBlocks,
+  NarrativeGenerationError,
+} from '@/lib/reviews/narrative/generator'
 import { logUsage } from '@/lib/app-settings/usage'
 import { UsageFeature } from '@/lib/enums'
 
@@ -81,24 +84,33 @@ describe('generateNarrativeBlocks', () => {
     )
   })
 
-  test('falls back to empty strings for all six blocks when the model call throws', async () => {
+  test('throws NarrativeGenerationError when the model call throws', async () => {
     ;(generateObject as unknown as Mock).mockRejectedValue(new Error('anthropic unavailable'))
 
-    const result = await generateNarrativeBlocks(baseInput)
-    expect(result).toEqual({
-      cover_subtitle: '',
-      ga_summary: '',
-      linkedin_insights: '',
-      initiatives: '',
-      takeaways: '',
-      planning: '',
-    })
+    await expect(generateNarrativeBlocks(baseInput)).rejects.toBeInstanceOf(
+      NarrativeGenerationError
+    )
+    await expect(generateNarrativeBlocks(baseInput)).rejects.toThrow('anthropic unavailable')
   })
 
-  test('does not log usage when the model call fails', async () => {
+  test('logs failure to usage_logs with error metadata when the model call fails', async () => {
     ;(generateObject as unknown as Mock).mockRejectedValue(new Error('boom'))
 
-    await generateNarrativeBlocks(baseInput)
-    expect(logUsage).not.toHaveBeenCalled()
+    await expect(generateNarrativeBlocks(baseInput)).rejects.toThrow()
+
+    expect(logUsage).toHaveBeenCalledWith(
+      'anthropic',
+      'review_narrative_generation',
+      expect.objectContaining({
+        organizationId: 'org-1',
+        feature: UsageFeature.MarketingReviews,
+        metadata: expect.objectContaining({
+          reviewId: 'review-1',
+          quarter: '2026-Q1',
+          error: 'boom',
+          status: 'failed',
+        }),
+      })
+    )
   })
 })

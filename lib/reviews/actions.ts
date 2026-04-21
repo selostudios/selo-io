@@ -8,7 +8,10 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { periodsForQuarter } from '@/lib/reviews/period'
 import { fetchAllData } from '@/lib/reviews/fetchers'
-import { generateNarrativeBlocks } from '@/lib/reviews/narrative/generator'
+import {
+  generateNarrativeBlocks,
+  NarrativeGenerationError,
+} from '@/lib/reviews/narrative/generator'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -69,15 +72,27 @@ export async function createReview(input: {
     .eq('id', input.organizationId)
     .single()
 
-  const narrative = await generateNarrativeBlocks({
-    organizationId: input.organizationId,
-    organizationName: (org?.name as string | undefined) ?? 'the organization',
-    quarter: input.quarter,
-    periodStart: periods.main.start,
-    periodEnd: periods.main.end,
-    data,
-    reviewId: review.id,
-  })
+  let narrative
+  try {
+    narrative = await generateNarrativeBlocks({
+      organizationId: input.organizationId,
+      organizationName: (org?.name as string | undefined) ?? 'the organization',
+      quarter: input.quarter,
+      periodStart: periods.main.start,
+      periodEnd: periods.main.end,
+      data,
+      reviewId: review.id,
+    })
+  } catch (error) {
+    await supabase.from('marketing_reviews').delete().eq('id', review.id)
+    const message =
+      error instanceof NarrativeGenerationError
+        ? `AI narrative generation failed: ${error.message}`
+        : error instanceof Error
+          ? error.message
+          : 'AI narrative generation failed'
+    return { success: false, error: message }
+  }
 
   const { error: draftError } = await supabase.from('marketing_review_drafts').insert({
     review_id: review.id,

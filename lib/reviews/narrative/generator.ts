@@ -15,7 +15,7 @@ import {
   type PromptContext,
 } from './prompts'
 
-const MODEL_ID = 'claude-opus-4-7'
+const MODEL_ID = 'claude-opus-4-5'
 
 const NarrativeSchema = z.object({
   cover_subtitle: z.string().max(200),
@@ -36,13 +36,11 @@ export interface GenerateNarrativeInput {
   reviewId?: string
 }
 
-const EMPTY_NARRATIVE: Required<NarrativeBlocks> = {
-  cover_subtitle: '',
-  ga_summary: '',
-  linkedin_insights: '',
-  initiatives: '',
-  takeaways: '',
-  planning: '',
+export class NarrativeGenerationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'NarrativeGenerationError'
+  }
 }
 
 function buildMasterPrompt(ctx: PromptContext, overrides: PromptOverrides): string {
@@ -100,14 +98,25 @@ export async function generateNarrativeBlocks(
 
     return object
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     console.error('[Review Narrative Generation Error]', {
       type: 'ai_generation_failed',
       organizationId: input.organizationId,
       quarter: input.quarter,
       reviewId: input.reviewId,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
       timestamp: new Date().toISOString(),
     })
-    return { ...EMPTY_NARRATIVE }
+    await logUsage('anthropic', 'review_narrative_generation', {
+      organizationId: input.organizationId,
+      feature: UsageFeature.MarketingReviews,
+      metadata: {
+        reviewId: input.reviewId,
+        quarter: input.quarter,
+        error: errorMessage,
+        status: 'failed',
+      },
+    }).catch(() => {})
+    throw new NarrativeGenerationError(errorMessage)
   }
 }
