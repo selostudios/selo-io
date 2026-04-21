@@ -4,7 +4,7 @@ import {
   createTestUser,
   createTestOrganization,
   linkUserToOrganization,
-} from '../../../helpers/db'
+} from '../../../../helpers/db'
 
 // The server action under test calls `createClient()` from `lib/supabase/server.ts`.
 // In vitest there is no request context and no authenticated session, so the anon
