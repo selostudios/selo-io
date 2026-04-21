@@ -510,10 +510,17 @@ export async function deleteReport(
 export async function generateSummaryForReport(
   reportId: string
 ): Promise<{ success: boolean; summary?: string; error?: string }> {
+  const supabase = await createClient()
   const report = await getReportWithAudits(reportId)
-  const unifiedAudit = await fetchUnifiedAuditScores(await createClient(), report.audit_id)
+  const unifiedAudit = await fetchUnifiedAuditScores(supabase, report.audit_id)
 
   if (!unifiedAudit) {
+    console.error('[Generate Summary Error]', {
+      type: 'unified_audit_missing',
+      reportId,
+      auditId: report.audit_id,
+      timestamp: new Date().toISOString(),
+    })
     return { success: false, error: 'Unified audit not found for this report' }
   }
 
