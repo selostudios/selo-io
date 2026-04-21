@@ -8,16 +8,23 @@ test.describe('Audit Reports Page', () => {
   })
 
   test('navigates to audit reports page', async ({ page }) => {
-    await page.goto('/seo/client-reports')
+    await page.goto('/reports/audit')
 
-    await expect(page).toHaveURL(/\/seo\/client-reports/)
+    await expect(page).toHaveURL(/\/reports\/audit/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toHaveText('Audit Reports')
   })
 
   test('shows completed audits table', async ({ page }) => {
-    await page.goto('/seo/client-reports')
+    await page.goto('/reports/audit')
 
     // Should show the page title
+    await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
+  })
+
+  test('redirects legacy /seo/client-reports path to /reports/audit', async ({ page }) => {
+    await page.goto('/seo/client-reports')
+
+    await expect(page).toHaveURL(/\/reports\/audit/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 })
@@ -28,14 +35,14 @@ test.describe('Audit Report Search', () => {
   })
 
   test('has search functionality', async ({ page }) => {
-    await page.goto('/seo/client-reports')
+    await page.goto('/reports/audit')
 
     // The page should load without errors - check for main heading
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 
   test('can type in search input', async ({ page }) => {
-    await page.goto('/seo/client-reports')
+    await page.goto('/reports/audit')
 
     // Page should load correctly - check for main heading
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
@@ -71,8 +78,8 @@ test.describe('Audit Report Permissions', () => {
     await page.waitForURL(/\/dashboard/)
 
     // Navigate directly to audit reports
-    await page.goto('/seo/client-reports')
-    await expect(page).toHaveURL(/\/seo\/client-reports/)
+    await page.goto('/reports/audit')
+    await expect(page).toHaveURL(/\/reports\/audit/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 
@@ -80,8 +87,8 @@ test.describe('Audit Report Permissions', () => {
     await loginAsTeamMember(page)
 
     // Navigate directly to audit reports
-    await page.goto('/seo/client-reports')
-    await expect(page).toHaveURL(/\/seo\/client-reports/)
+    await page.goto('/reports/audit')
+    await expect(page).toHaveURL(/\/reports\/audit/)
     await expect(page.locator('[data-testid="reports-page-title"]')).toBeVisible()
   })
 })

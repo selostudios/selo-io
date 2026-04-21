@@ -33,9 +33,17 @@ export function ReportDetailClient({
     if (needsSummary && !summaryTriggered.current) {
       summaryTriggered.current = true
       generateSummaryForReport(report.id).then((result) => {
-        if (result?.success) {
-          router.refresh()
+        if (!result?.success) {
+          console.error('[Generate Summary Failed]', {
+            type: 'client_summary_generation_failed',
+            reportId: report.id,
+            error: result?.error,
+            timestamp: new Date().toISOString(),
+          })
         }
+        // Refresh in both branches so the server can render the
+        // "no summary yet" state based on report.executive_summary being null.
+        router.refresh()
       })
     }
   }, [needsSummary, report.id, router])

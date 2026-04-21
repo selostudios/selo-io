@@ -1,14 +1,12 @@
-import { getClientReportsPageData } from './actions'
-import { ClientReportsClient } from './client'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-interface PageProps {
+export default async function LegacyClientReportsRedirectPage({
+  params,
+}: {
   params: Promise<{ orgId: string }>
-}
-
-export default async function ClientReportsPage({ params }: PageProps) {
+}) {
   const { orgId } = await params
-  const data = await getClientReportsPageData(orgId)
-  return <ClientReportsClient {...data} />
+  redirect(`/${orgId}/reports/audit`)
 }

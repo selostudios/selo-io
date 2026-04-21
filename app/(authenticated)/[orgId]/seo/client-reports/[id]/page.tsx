@@ -1,46 +1,20 @@
-import { notFound } from 'next/navigation'
-import { ReportDetailClient } from './client'
-import { getReportWithAudits, getReportAuditData, getUnifiedAuditForReport } from '../actions'
-import { transformToPresentation } from './transform'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-interface PageProps {
+export default async function LegacyClientReportDetailRedirectPage({
+  params,
+  searchParams,
+}: {
   params: Promise<{ orgId: string; id: string }>
-  searchParams: Promise<{ share?: string; settings?: string }>
-}
-
-export default async function ReportDetailPage({ params, searchParams }: PageProps) {
-  const { id } = await params
-  const { share, settings } = await searchParams
-
-  // Get report with all audit data
-  const report = await getReportWithAudits(id).catch((error) => {
-    console.error('[Report Page Error]', error)
-    return null
-  })
-
-  if (!report) {
-    notFound()
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { orgId, id } = await params
+  const sp = new URLSearchParams()
+  for (const [k, v] of Object.entries(await searchParams)) {
+    if (typeof v === 'string') sp.set(k, v)
+    else if (Array.isArray(v)) for (const vi of v) sp.append(k, vi)
   }
-
-  const audit = await getUnifiedAuditForReport(report.audit_id).catch((error) => {
-    console.error('[Report Page Error]', error)
-    return null
-  })
-
-  const auditData = await getReportAuditData(report)
-
-  // Transform to presentation data
-  const presentationData = transformToPresentation({ report, audit, auditData })
-
-  return (
-    <ReportDetailClient
-      report={report}
-      presentationData={presentationData}
-      showShareModal={share === 'true'}
-      showSettings={settings === 'true'}
-      needsSummary={!report.executive_summary}
-    />
-  )
+  const qs = sp.toString()
+  redirect(`/${orgId}/reports/audit/${id}${qs ? `?${qs}` : ''}`)
 }

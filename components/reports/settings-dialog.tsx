@@ -19,7 +19,7 @@ import {
   updateReport,
   updateExecutiveSummary,
   restoreOriginalSummary,
-} from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+} from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 import type { GeneratedReport } from '@/lib/reports/types'
 
 interface SettingsDialogProps {

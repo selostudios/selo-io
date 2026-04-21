@@ -7,11 +7,11 @@ import type { SiteAuditCheck, SiteAuditPage, SiteAudit } from '@/lib/audit/types
 import type { UnifiedAudit, AuditCheck } from '@/lib/unified-audit/types'
 import type { TabCounts } from '@/app/(authenticated)/[orgId]/seo/audit/[id]/actions'
 import type { ReportPresentationData } from '@/lib/reports/types'
-import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
+import { transformToPresentation } from '@/app/(authenticated)/[orgId]/reports/audit/[id]/transform'
 import type {
   ReportCheck,
   ReportAuditData,
-} from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+} from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 import { fetchUnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'

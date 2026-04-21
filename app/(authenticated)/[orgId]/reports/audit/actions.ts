@@ -211,7 +211,7 @@ export async function createReportFromAudit(auditId: string): Promise<CreateRepo
     return { success: false, error: 'Failed to create report' }
   }
 
-  revalidatePath('/seo/client-reports')
+  revalidatePath('/reports/audit')
   return { success: true, reportId: report.id }
 }
 
@@ -228,9 +228,6 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     .select(
       `
       *,
-      site_audit:site_audits(*),
-      performance_audit:performance_audits(*),
-      aio_audit:aio_audits(*),
       organization:organizations(name, logo_url, primary_color, secondary_color, accent_color)
     `
     )
@@ -247,20 +244,9 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     notFound()
   }
 
-  // Fetch performance results (for legacy reports only)
-  let performanceResults: unknown[] = []
-  if (report.performance_audit_id) {
-    const { data } = await supabase
-      .from('performance_audit_results')
-      .select('*')
-      .eq('audit_id', report.performance_audit_id)
-    performanceResults = data ?? []
-  }
-
   const org = report.organization
   return {
     ...report,
-    performance_results: performanceResults,
     org_name: org?.name ?? null,
     org_logo_url: org?.logo_url ?? null,
     primary_color: org?.primary_color ?? null,
@@ -360,8 +346,6 @@ export async function getReportAuditData(
     .eq('audit_id', report.site_audit_id)
     .order('created_at', { ascending: true })
 
-  const performanceResults = report.performance_results ?? []
-
   const { data: aioChecks } = await supabase
     .from('aio_checks')
     .select('*')
@@ -370,7 +354,7 @@ export async function getReportAuditData(
 
   return {
     siteChecks: (siteChecks ?? []) as ReportCheck[],
-    performanceResults: performanceResults as unknown as ReportAuditData['performanceResults'],
+    performanceResults: [],
     aioChecks: (aioChecks ?? []) as ReportCheck[],
   }
 }
@@ -397,8 +381,8 @@ export async function updateReport(
     return { success: false, error: 'Failed to update report' }
   }
 
-  revalidatePath('/seo/client-reports')
-  revalidatePath(`/seo/client-reports/${reportId}`)
+  revalidatePath('/reports/audit')
+  revalidatePath(`/reports/audit/${reportId}`)
   return { success: true }
 }
 
@@ -425,7 +409,7 @@ export async function updateExecutiveSummary(
   }
 
   try {
-    revalidatePath(`/seo/client-reports/${reportId}`)
+    revalidatePath(`/reports/audit/${reportId}`)
   } catch {
     // revalidatePath throws when called outside a server action (e.g. during RSC render)
   }
@@ -459,7 +443,7 @@ export async function restoreOriginalSummary(
     return { success: false, error: 'Failed to restore summary' }
   }
 
-  revalidatePath(`/seo/client-reports/${reportId}`)
+  revalidatePath(`/reports/audit/${reportId}`)
   return { success: true }
 }
 
@@ -515,7 +499,7 @@ export async function deleteReport(
     return { success: false, error: 'Failed to delete report' }
   }
 
-  revalidatePath('/seo/client-reports')
+  revalidatePath('/reports/audit')
   return { success: true }
 }
 
@@ -526,43 +510,34 @@ export async function deleteReport(
 export async function generateSummaryForReport(
   reportId: string
 ): Promise<{ success: boolean; summary?: string; error?: string }> {
+  const supabase = await createClient()
   const report = await getReportWithAudits(reportId)
-  const auditData = await getReportAuditData(report)
+  const unifiedAudit = await fetchUnifiedAuditScores(supabase, report.audit_id)
 
-  // For unified-audit reports, scores + pages_crawled come from the unified audit.
-  // For legacy reports, fall back to the legacy join rows.
-  const unifiedAudit = await fetchUnifiedAuditScores(await createClient(), report.audit_id)
-
-  const seoScore = unifiedAudit?.seo_score ?? report.site_audit?.overall_score ?? 0
-  const aioScore = unifiedAudit?.ai_readiness_score ?? report.aio_audit?.overall_aio_score ?? 0
-
-  let pageSpeedScore = unifiedAudit?.performance_score ?? 0
   if (!unifiedAudit) {
-    const perfResults = auditData.performanceResults as { performance_score?: number | null }[]
-    const perfScores = perfResults
-      .map((r) => r.performance_score)
-      .filter((s): s is number => s !== null)
-    pageSpeedScore =
-      perfScores.length > 0
-        ? Math.round(perfScores.reduce((a, b) => a + b, 0) / perfScores.length)
-        : 0
+    console.error('[Generate Summary Error]', {
+      type: 'unified_audit_missing',
+      reportId,
+      auditId: report.audit_id,
+      timestamp: new Date().toISOString(),
+    })
+    return { success: false, error: 'Unified audit not found for this report' }
   }
 
-  const pagesAnalyzed = unifiedAudit?.pages_crawled ?? report.site_audit?.pages_crawled ?? 0
-  const combinedScore = report.combined_score ?? 0
+  const auditData = await getReportAuditData(report)
 
   try {
     const summary = await generateReportSummary({
       domain: report.domain,
-      combinedScore,
-      seoScore,
-      pageSpeedScore,
-      aioScore,
-      pagesAnalyzed,
-      siteAudit: report.site_audit,
+      combinedScore: report.combined_score ?? 0,
+      seoScore: unifiedAudit.seo_score ?? 0,
+      pageSpeedScore: unifiedAudit.performance_score ?? 0,
+      aioScore: unifiedAudit.ai_readiness_score ?? 0,
+      pagesAnalyzed: unifiedAudit.pages_crawled ?? 0,
+      siteAudit: null,
       siteChecks: auditData.siteChecks as unknown as SiteAuditCheck[],
       performanceResults: auditData.performanceResults as unknown as PerformanceAuditResult[],
-      aioAudit: report.aio_audit,
+      aioAudit: null,
       aioChecks: auditData.aioChecks as unknown as AIOCheck[],
     })
 
@@ -579,19 +554,4 @@ export async function generateSummaryForReport(
     })
     return { success: false, error: 'Failed to generate summary' }
   }
-}
-
-export async function countReportsUsingAudit(
-  auditType: 'site_audit' | 'performance_audit' | 'aio_audit',
-  auditId: string
-): Promise<number> {
-  const supabase = await createClient()
-
-  const { count, error } = await supabase
-    .from('generated_reports')
-    .select('*', { count: 'exact', head: true })
-    .eq(`${auditType}_id`, auditId)
-
-  if (error) return 0
-  return count ?? 0
 }

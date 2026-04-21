@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
-import { transformToPresentation } from '@/app/(authenticated)/[orgId]/seo/client-reports/[id]/transform'
+import { transformToPresentation } from '@/app/(authenticated)/[orgId]/reports/audit/[id]/transform'
 import type { GeneratedReportWithAudits } from '@/lib/reports/types'
-import type { ReportAuditData } from '@/app/(authenticated)/[orgId]/seo/client-reports/actions'
+import type { ReportAuditData } from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 import type { UnifiedAudit } from '@/lib/unified-audit/types'
 
 describe('transformToPresentation — unified audit reports', () => {
@@ -31,9 +31,6 @@ describe('transformToPresentation — unified audit reports', () => {
       primary_color: null,
       secondary_color: null,
       accent_color: null,
-      site_audit: null,
-      performance_audit: null,
-      aio_audit: null,
       ...overrides,
     }
     return report

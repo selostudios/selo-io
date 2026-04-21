@@ -64,12 +64,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/seo/reports',
-        destination: '/seo/client-reports',
+        destination: '/reports/audit',
         permanent: true,
       },
       {
         source: '/seo/reports/:path*',
-        destination: '/seo/client-reports/:path*',
+        destination: '/reports/audit/:path*',
         permanent: true,
       },
     ]

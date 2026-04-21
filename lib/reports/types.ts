@@ -1,6 +1,3 @@
-import type { SiteAudit } from '@/lib/audit/types'
-import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
-import type { AIOAudit } from '@/lib/aio/types'
 import {
   ShareExpiration,
   ShareErrorCode,
@@ -80,14 +77,6 @@ export interface ReportShare {
 // ============================================================
 
 export interface GeneratedReportWithAudits extends GeneratedReport {
-  // Legacy audit joins — null for unified-audit reports.
-  // These joins only populate for legacy reports that still reference the old
-  // site_audits / performance_audits / aio_audits tables.
-  site_audit: SiteAudit | null
-  performance_audit: PerformanceAudit | null
-  aio_audit: AIOAudit | null
-  // Performance audit results for detailed metrics
-  performance_results?: PerformanceAuditResult[]
   // Organization branding (fetched via join)
   org_name?: string | null
   org_logo_url?: string | null
