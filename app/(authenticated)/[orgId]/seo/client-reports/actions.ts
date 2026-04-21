@@ -228,9 +228,6 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     .select(
       `
       *,
-      site_audit:site_audits(*),
-      performance_audit:performance_audits(*),
-      aio_audit:aio_audits(*),
       organization:organizations(name, logo_url, primary_color, secondary_color, accent_color)
     `
     )
@@ -247,20 +244,9 @@ export async function getReportWithAudits(reportId: string): Promise<GeneratedRe
     notFound()
   }
 
-  // Fetch performance results (for legacy reports only)
-  let performanceResults: unknown[] = []
-  if (report.performance_audit_id) {
-    const { data } = await supabase
-      .from('performance_audit_results')
-      .select('*')
-      .eq('audit_id', report.performance_audit_id)
-    performanceResults = data ?? []
-  }
-
   const org = report.organization
   return {
     ...report,
-    performance_results: performanceResults,
     org_name: org?.name ?? null,
     org_logo_url: org?.logo_url ?? null,
     primary_color: org?.primary_color ?? null,
