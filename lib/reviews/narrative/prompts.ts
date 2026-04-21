@@ -20,8 +20,11 @@ export interface PromptContext {
   data: SnapshotData
 }
 
-const FOOTER =
-  'Plain text only. No markdown, asterisks, or hashes. Warm, confident, consultative tone.'
+const FOOTER = [
+  'Plain text only. No markdown, asterisks, or hashes.',
+  'Warm, confident, consultative tone — but ruthlessly concise.',
+  'Write for a client skim-reading a slide in a meeting, not a reader studying a report.',
+].join(' ')
 
 function header(ctx: PromptContext): string {
   return [
@@ -51,44 +54,52 @@ export function defaultTemplateCoverSubtitle(): string {
 
 export function defaultTemplateGaSummary(): string {
   return [
-    'Write a Google Analytics summary for this quarter.',
-    '120 words or fewer. Narrate sessions, users, and engagement metrics.',
-    'Call out the two or three largest deltas against the prior quarter (qoq_delta_pct) and prior year (yoy_delta_pct).',
-    'Explain what the numbers suggest about user behaviour — not just that they changed.',
-    'If GA data is missing, write one sentence acknowledging that analytics data was unavailable for this quarter.',
+    'Google Analytics highlights for this quarter.',
+    'Output 3 to 4 bullet lines, each prefixed with "- ".',
+    'Each bullet: 12 words or fewer. Lead with the number or delta, then the implication.',
+    'Prioritise the largest qoq or yoy deltas in sessions, users, or engagement.',
+    'No intro paragraph, no closing sentence — bullets only.',
+    'If GA data is missing, output one bullet: "- Analytics data unavailable this quarter".',
   ].join(' ')
 }
 
 export function defaultTemplateLinkedinInsights(): string {
   return [
-    'Write a LinkedIn performance insight for this quarter.',
-    '120 words or fewer. Cover follower growth, impression and engagement trends, and any standout themes from top_posts if present.',
-    'Reference specific deltas (qoq or yoy) where they help the story.',
-    'If LinkedIn data is missing, write one sentence acknowledging the platform was not connected or had no activity.',
+    'LinkedIn highlights for this quarter.',
+    'Output 3 to 4 bullet lines, each prefixed with "- ".',
+    'Each bullet: 12 words or fewer. Lead with a number or delta, then the implication.',
+    'Cover follower growth, impression/engagement deltas, and top post themes where present.',
+    'No intro paragraph, no closing sentence — bullets only.',
+    'If LinkedIn data is missing, output one bullet: "- LinkedIn not connected or no activity".',
   ].join(' ')
 }
 
 export function defaultTemplateInitiatives(): string {
   return [
-    'Write the "Initiatives" block: what the marketing team shipped or focused on this quarter.',
-    '150 words or fewer. Infer the focus areas from the metric deltas — e.g. large organic traffic growth implies SEO/content investment, LinkedIn growth implies social investment, audit score gains imply technical work.',
-    'Frame positively as concrete work completed. Two or three initiatives is ideal.',
+    'What the marketing team shipped this quarter.',
+    'Output 2 to 3 bullet lines, each prefixed with "- ".',
+    'Each bullet: 12 words or fewer. Name the initiative, then the result in numbers.',
+    'Infer initiatives from metric deltas (SEO work implied by organic traffic growth, social investment by LinkedIn growth, etc.).',
+    'Frame positively as concrete work completed. No intro, no closing — bullets only.',
   ].join(' ')
 }
 
 export function defaultTemplateTakeaways(): string {
   return [
-    'Write the "Takeaways" block: two or three key lessons from this quarter’s data.',
-    '150 words or fewer. Plain-text bullet lines are acceptable (use "- " prefixes).',
-    'Each takeaway should tie a specific metric movement to an insight the team can act on.',
+    'Key takeaways from this quarter.',
+    'Output 2 to 3 bullet lines, each prefixed with "- ".',
+    'Each bullet: 15 words or fewer. Tie a specific metric movement to an actionable insight.',
+    'No intro paragraph, no closing sentence — bullets only.',
   ].join(' ')
 }
 
 export function defaultTemplatePlanning(): string {
   return [
-    'Write the "Planning ahead" block: what the team should double down on next quarter.',
-    '150 words or fewer. Forward-looking and opportunity-framed, not problem-framed.',
-    'Ground each recommendation in a specific signal from this quarter’s data (a delta, a top post, an audit finding).',
+    'What to double down on next quarter.',
+    'Output 2 to 3 bullet lines, each prefixed with "- ".',
+    'Each bullet: 15 words or fewer. Name the opportunity and the signal that supports it.',
+    'Forward-looking and opportunity-framed, not problem-framed.',
+    'No intro paragraph, no closing sentence — bullets only.',
   ].join(' ')
 }
 
