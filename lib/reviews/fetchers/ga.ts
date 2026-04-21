@@ -1,6 +1,7 @@
 import type { QuarterPeriods } from '@/lib/reviews/period'
 import type { GAData } from '@/lib/reviews/types'
 import { buildMetricTriple } from '@/lib/reviews/metric-triple'
+import { GA_FEATURED_METRIC_KEYS } from '@/lib/reviews/featured-metrics'
 import { createServiceClient } from '@/lib/supabase/server'
 import { PlatformType } from '@/lib/enums'
 
@@ -45,11 +46,25 @@ export async function fetchGAData(
   for (const metric of GA_METRICS) {
     const seriesFor = (rows: typeof main) =>
       rows.filter((r) => r.metric_type === metric).map((r) => Number(r.value))
-    result[metric] = buildMetricTriple({
+    const triple = buildMetricTriple({
       current: seriesFor(main),
       qoq: seriesFor(qoq),
       yoy: seriesFor(yoy),
     })
+
+    if ((GA_FEATURED_METRIC_KEYS as readonly string[]).includes(metric)) {
+      const toSeries = (rows: typeof main) =>
+        rows
+          .filter((r) => r.metric_type === metric)
+          .map((r) => ({ date: r.date as string, value: Number(r.value) }))
+      triple.timeseries = {
+        current: toSeries(main),
+        qoq: toSeries(qoq),
+        yoy: toSeries(yoy),
+      }
+    }
+
+    result[metric] = triple
   }
   return result
 }
