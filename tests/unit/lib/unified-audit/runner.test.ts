@@ -95,125 +95,129 @@ describe('completeAuditScoring', () => {
     })
   })
 
-  it('calculates correct scores from check results and updates the audit', async () => {
-    const checks: AuditCheck[] = [
-      // 2 SEO checks: 1 passed (critical), 1 failed (recommended)
-      {
-        id: '1',
-        audit_id: 'a1',
-        page_url: 'https://example.com',
-        category: CheckCategory.MetaContent,
-        check_name: 'missing-title',
-        priority: CheckPriority.Critical,
-        status: CheckStatus.Passed,
-        display_name: 'Missing Title',
-        display_name_passed: 'Title Present',
-        description: 'Check for title tag',
-        fix_guidance: null,
-        learn_more_url: null,
-        details: null,
-        feeds_scores: [ScoreDimension.SEO],
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        audit_id: 'a1',
-        page_url: 'https://example.com',
-        category: CheckCategory.MetaContent,
-        check_name: 'title-length',
-        priority: CheckPriority.Recommended,
-        status: CheckStatus.Failed,
-        display_name: 'Title Length',
-        display_name_passed: 'Title Length OK',
-        description: 'Check title length',
-        fix_guidance: null,
-        learn_more_url: null,
-        details: null,
-        feeds_scores: [ScoreDimension.SEO],
-        created_at: new Date().toISOString(),
-      },
-      // 1 AI check: warning (critical)
-      {
-        id: '3',
-        audit_id: 'a1',
-        page_url: null,
-        category: CheckCategory.AIVisibility,
-        check_name: 'missing-llms-txt',
-        priority: CheckPriority.Critical,
-        status: CheckStatus.Warning,
-        display_name: 'Missing llms.txt',
-        display_name_passed: 'llms.txt Present',
-        description: 'Check for llms.txt',
-        fix_guidance: null,
-        learn_more_url: null,
-        details: null,
-        feeds_scores: [ScoreDimension.AIReadiness],
-        created_at: new Date().toISOString(),
-      },
-      // 1 Performance check: passed (critical)
-      {
-        id: '4',
-        audit_id: 'a1',
-        page_url: 'https://example.com',
-        category: CheckCategory.Security,
-        check_name: 'missing-ssl',
-        priority: CheckPriority.Critical,
-        status: CheckStatus.Passed,
-        display_name: 'Missing SSL',
-        display_name_passed: 'SSL Present',
-        description: 'Check for SSL',
-        fix_guidance: null,
-        learn_more_url: null,
-        details: null,
-        feeds_scores: [ScoreDimension.Performance],
-        created_at: new Date().toISOString(),
-      },
-    ]
+  it(
+    'calculates correct scores from check results and updates the audit',
+    { timeout: 15000 },
+    async () => {
+      const checks: AuditCheck[] = [
+        // 2 SEO checks: 1 passed (critical), 1 failed (recommended)
+        {
+          id: '1',
+          audit_id: 'a1',
+          page_url: 'https://example.com',
+          category: CheckCategory.MetaContent,
+          check_name: 'missing-title',
+          priority: CheckPriority.Critical,
+          status: CheckStatus.Passed,
+          display_name: 'Missing Title',
+          display_name_passed: 'Title Present',
+          description: 'Check for title tag',
+          fix_guidance: null,
+          learn_more_url: null,
+          details: null,
+          feeds_scores: [ScoreDimension.SEO],
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          audit_id: 'a1',
+          page_url: 'https://example.com',
+          category: CheckCategory.MetaContent,
+          check_name: 'title-length',
+          priority: CheckPriority.Recommended,
+          status: CheckStatus.Failed,
+          display_name: 'Title Length',
+          display_name_passed: 'Title Length OK',
+          description: 'Check title length',
+          fix_guidance: null,
+          learn_more_url: null,
+          details: null,
+          feeds_scores: [ScoreDimension.SEO],
+          created_at: new Date().toISOString(),
+        },
+        // 1 AI check: warning (critical)
+        {
+          id: '3',
+          audit_id: 'a1',
+          page_url: null,
+          category: CheckCategory.AIVisibility,
+          check_name: 'missing-llms-txt',
+          priority: CheckPriority.Critical,
+          status: CheckStatus.Warning,
+          display_name: 'Missing llms.txt',
+          display_name_passed: 'llms.txt Present',
+          description: 'Check for llms.txt',
+          fix_guidance: null,
+          learn_more_url: null,
+          details: null,
+          feeds_scores: [ScoreDimension.AIReadiness],
+          created_at: new Date().toISOString(),
+        },
+        // 1 Performance check: passed (critical)
+        {
+          id: '4',
+          audit_id: 'a1',
+          page_url: 'https://example.com',
+          category: CheckCategory.Security,
+          check_name: 'missing-ssl',
+          priority: CheckPriority.Critical,
+          status: CheckStatus.Passed,
+          display_name: 'Missing SSL',
+          display_name_passed: 'SSL Present',
+          description: 'Check for SSL',
+          fix_guidance: null,
+          learn_more_url: null,
+          details: null,
+          feeds_scores: [ScoreDimension.Performance],
+          created_at: new Date().toISOString(),
+        },
+      ]
 
-    const pages: AuditPage[] = [
-      {
-        id: 'p1',
-        audit_id: 'a1',
-        url: 'https://example.com',
-        title: 'Example',
-        meta_description: null,
-        status_code: 200,
-        last_modified: null,
-        is_resource: false,
-        resource_type: null,
-        depth: 0,
-        created_at: new Date().toISOString(),
-      },
-    ]
+      const pages: AuditPage[] = [
+        {
+          id: 'p1',
+          audit_id: 'a1',
+          url: 'https://example.com',
+          title: 'Example',
+          meta_description: null,
+          status_code: 200,
+          last_modified: null,
+          is_resource: false,
+          resource_type: null,
+          depth: 0,
+          created_at: new Date().toISOString(),
+        },
+      ]
 
-    await completeAuditScoring('a1', 'https://example.com', pages, checks, 5, true, null)
+      await completeAuditScoring('a1', 'https://example.com', pages, checks, 5, true, null)
 
-    // Verify update was called
-    expect(mockFrom).toHaveBeenCalledWith('audits')
-    expect(mockUpdate).toHaveBeenCalled()
+      // Verify update was called
+      expect(mockFrom).toHaveBeenCalledWith('audits')
+      expect(mockUpdate).toHaveBeenCalled()
 
-    // The first update sets status to 'analyzing', the second is the final scoring update
-    const finalUpdateCall = mockUpdate.mock.calls[mockUpdate.mock.calls.length - 1][0]
+      // The first update sets status to 'analyzing', the second is the final scoring update
+      const finalUpdateCall = mockUpdate.mock.calls[mockUpdate.mock.calls.length - 1][0]
 
-    // SEO: critical(3) passed + recommended(2) failed = 300/(500) = 60%
-    expect(finalUpdateCall.seo_score).toBe(60)
+      // SEO: critical(3) passed + recommended(2) failed = 300/(500) = 60%
+      expect(finalUpdateCall.seo_score).toBe(60)
 
-    // AI Readiness: critical(3) warning = 150/300 = 50% (no strategic, 100% programmatic)
-    expect(finalUpdateCall.ai_readiness_score).toBe(50)
+      // AI Readiness: critical(3) warning = 150/300 = 50% (no strategic, 100% programmatic)
+      expect(finalUpdateCall.ai_readiness_score).toBe(50)
 
-    // Performance: critical(3) passed = 300/300 = 100%
-    expect(finalUpdateCall.performance_score).toBe(100)
+      // Performance: critical(3) passed = 300/300 = 100%
+      expect(finalUpdateCall.performance_score).toBe(100)
 
-    // Overall: 60*0.4 + 100*0.3 + 50*0.3 = 24 + 30 + 15 = 69
-    expect(finalUpdateCall.overall_score).toBe(69)
+      // Overall: 60*0.4 + 100*0.3 + 50*0.3 = 24 + 30 + 15 = 69
+      expect(finalUpdateCall.overall_score).toBe(69)
 
-    // Counts
-    expect(finalUpdateCall.failed_count).toBe(1)
-    expect(finalUpdateCall.warning_count).toBe(1)
-    expect(finalUpdateCall.passed_count).toBe(2)
+      // Counts
+      expect(finalUpdateCall.failed_count).toBe(1)
+      expect(finalUpdateCall.warning_count).toBe(1)
+      expect(finalUpdateCall.passed_count).toBe(2)
 
-    expect(finalUpdateCall.status).toBe('completed')
-  })
+      expect(finalUpdateCall.status).toBe('completed')
+    }
+  )
 
   it('returns 0 for dimensions with no matching checks', async () => {
     // Only SEO check — performance and AI will have 0 checks → score 0

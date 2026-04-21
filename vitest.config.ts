@@ -13,9 +13,6 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: 'happy-dom',
       setupFiles: ['./tests/setup.ts'],
-      // Vercel's shared builder is ~3x slower than local; 15s prevents
-      // flaky timeouts without masking genuine hangs.
-      testTimeout: 15000,
       include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}'],
       env: {
         NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
