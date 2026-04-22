@@ -281,7 +281,7 @@ export async function publishReview(
 
   const { data: draft, error: draftError } = await supabase
     .from('marketing_review_drafts')
-    .select('data, narrative, author_notes')
+    .select('data, narrative, author_notes, ai_originals')
     .eq('review_id', reviewId)
     .single()
 
@@ -324,6 +324,7 @@ export async function publishReview(
       narrative: draft.narrative as NarrativeBlocks,
       share_token: nanoid(21),
       author_notes: (draft.author_notes as string | null) ?? null,
+      ai_originals: (draft.ai_originals as NarrativeBlocks | null) ?? null,
     })
     .select('id')
     .single()
