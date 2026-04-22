@@ -17,6 +17,7 @@
 ## Task 1: Database migration
 
 **Files:**
+
 - Create: `supabase/migrations/20260421230000_marketing_review_style_memos.sql`
 
 **Step 1: Write the migration**
@@ -100,6 +101,7 @@ git commit -m "feat(reviews): add style memo table and snapshot ai_originals col
 ## Task 2: Style memo loader + types
 
 **Files:**
+
 - Create: `lib/reviews/narrative/style-memo.ts`
 - Create: `tests/unit/lib/reviews/narrative/style-memo.test.ts`
 
@@ -240,6 +242,7 @@ git commit -m "feat(reviews): add style memo loader and truncation helper"
 ## Task 3: Diff builder (pure function)
 
 **Files:**
+
 - Modify: `lib/reviews/narrative/style-memo.ts` — add `buildLearnerDiff()`
 - Modify: `tests/unit/lib/reviews/narrative/style-memo.test.ts` — new `describe` block
 
@@ -304,7 +307,10 @@ describe('buildLearnerDiff', () => {
       finalNarrative: partialFinal,
       authorNotes: null,
     })
-    expect(diff!.changedBlocks[0]).toMatchObject({ aiText: '', finalText: 'Author wrote from scratch.' })
+    expect(diff!.changedBlocks[0]).toMatchObject({
+      aiText: '',
+      finalText: 'Author wrote from scratch.',
+    })
   })
 })
 ```
@@ -381,6 +387,7 @@ git commit -m "feat(reviews): build learner diff input from draft vs final narra
 ## Task 4: Learner prompt builder
 
 **Files:**
+
 - Create: `lib/reviews/narrative/learner-prompts.ts`
 - Create: `tests/unit/lib/reviews/narrative/learner-prompts.test.ts`
 
@@ -472,9 +479,10 @@ export function buildLearnerPrompt({
   currentMemo,
   diff,
 }: BuildLearnerPromptInput): string {
-  const memoBlock = currentMemo.trim().length > 0
-    ? `EXISTING MEMO\n${currentMemo.trim()}`
-    : 'EXISTING MEMO\n(no existing memo — you are bootstrapping this organization\'s style)'
+  const memoBlock =
+    currentMemo.trim().length > 0
+      ? `EXISTING MEMO\n${currentMemo.trim()}`
+      : "EXISTING MEMO\n(no existing memo — you are bootstrapping this organization's style)"
 
   const editBlock =
     diff.changedBlocks.length === 0
@@ -510,7 +518,7 @@ export function buildLearnerPrompt({
     'TASK',
     'Produce an updated memo that:',
     '- preserves entries from the existing memo unless new evidence clearly contradicts them;',
-    '- captures what the author consistently prefers about tone, structure, bullet count, and emphasis — not this quarter\'s specific facts;',
+    "- captures what the author consistently prefers about tone, structure, bullet count, and emphasis — not this quarter's specific facts;",
     '- promotes recurring context from author notes (e.g. "Q1 is seasonally low") into durable preferences, but only when the pattern has likely shown up before;',
     '- expresses preferences softly ("This organization tends to…"), never prescriptively;',
     '- stays under 500 words and uses short paragraphs;',
@@ -538,6 +546,7 @@ git commit -m "feat(reviews): build learner prompt for style memo updates"
 ## Task 5: Learner orchestrator
 
 **Files:**
+
 - Create: `lib/reviews/narrative/learn.ts`
 - Create: `tests/unit/lib/reviews/narrative/learn.test.ts`
 
@@ -814,6 +823,7 @@ git commit -m "feat(reviews): style memo learner orchestrator"
 ## Task 6: Snapshot `ai_originals` in publishReview
 
 **Files:**
+
 - Modify: `lib/reviews/actions.ts` — extend the draft SELECT and snapshot INSERT to include `ai_originals`
 - Modify: `tests/integration/reviews/publish-review.test.ts` (create if absent) or add a unit test asserting the insert payload
 
@@ -824,15 +834,19 @@ Re-read `lib/reviews/actions.ts` at `publishReview()` (~lines 271-344). Current 
 **Step 2: Modify SELECT and INSERT**
 
 Change line 283 from:
+
 ```typescript
 .select('data, narrative, author_notes')
 ```
+
 to:
+
 ```typescript
 .select('data, narrative, author_notes, ai_originals')
 ```
 
 And in the INSERT block (around line 313) add a new field:
+
 ```typescript
 author_notes: (draft.author_notes as string | null) ?? null,
 ai_originals: (draft.ai_originals as NarrativeBlocks | null) ?? null,
@@ -864,6 +878,7 @@ git commit -m "feat(reviews): freeze ai_originals onto published snapshot"
 ## Task 7: Fire learner from publishReview via `after()`
 
 **Files:**
+
 - Modify: `lib/reviews/actions.ts`
 
 **Step 1: Add the import**
@@ -883,7 +898,7 @@ After the successful `marketing_reviews` UPDATE and before the final `return { s
 after(async () => {
   await runStyleMemoLearner({
     organizationId: review.organization_id,
-    organizationName: review.organization_name,  // ensure loadReviewForAuth selects this
+    organizationName: review.organization_name, // ensure loadReviewForAuth selects this
     ai: (draft.ai_originals as NarrativeBlocks | null) ?? ({} as NarrativeBlocks),
     finalNarrative: draft.narrative as NarrativeBlocks,
     authorNotes: (draft.author_notes as string | null) ?? null,
@@ -926,6 +941,7 @@ git commit -m "feat(reviews): run style memo learner after publish via after()"
 ## Task 8: Prompt integration — "Learned style" section in header
 
 **Files:**
+
 - Modify: `lib/reviews/narrative/prompts.ts` — extend `header()` to accept and render `styleMemo`
 - Modify: `lib/reviews/narrative/context.ts` — thread `styleMemo` through `PromptContext`
 - Modify: `lib/reviews/narrative/generator.ts` — load memo and pass to context
@@ -972,7 +988,9 @@ In `header()` in `prompts.ts`, after the existing author-notes section:
 const memo = ctx.styleMemo?.trim() ?? ''
 if (memo.length > 0) {
   lines.push('')
-  lines.push('LEARNED STYLE (durable preferences from previous reports; author notes for this quarter override)')
+  lines.push(
+    'LEARNED STYLE (durable preferences from previous reports; author notes for this quarter override)'
+  )
   lines.push(memo)
 }
 ```
@@ -1011,6 +1029,7 @@ git commit -m "feat(reviews): thread style memo into narrative prompt header"
 ## Task 9: Settings server actions (save / regenerate / clear)
 
 **Files:**
+
 - Create: `lib/reviews/narrative/style-memo-actions.ts`
 - Create: `tests/unit/lib/reviews/narrative/style-memo-actions.test.ts`
 
@@ -1079,9 +1098,7 @@ export async function saveStyleMemo(
   return { success: true }
 }
 
-export async function clearStyleMemo(
-  organizationId: string
-): Promise<ActionOk | ActionErr> {
+export async function clearStyleMemo(organizationId: string): Promise<ActionOk | ActionErr> {
   return saveStyleMemo(organizationId, '')
 }
 
@@ -1094,7 +1111,9 @@ export async function regenerateStyleMemoFromLatestSnapshot(
   const supabase = await createClient()
   const { data: snapshot, error } = await supabase
     .from('marketing_review_snapshots')
-    .select('ai_originals, narrative, author_notes, review_id, organizations:marketing_reviews!inner(organization_id, organizations!inner(name))')
+    .select(
+      'ai_originals, narrative, author_notes, review_id, organizations:marketing_reviews!inner(organization_id, organizations!inner(name))'
+    )
     .eq('marketing_reviews.organization_id', organizationId)
     .order('published_at', { ascending: false })
     .limit(1)
@@ -1105,8 +1124,8 @@ export async function regenerateStyleMemoFromLatestSnapshot(
   }
 
   const organizationName =
-    ((snapshot as { organizations?: { organizations?: { name?: string } } })
-      ?.organizations?.organizations?.name) ?? 'Organization'
+    (snapshot as { organizations?: { organizations?: { name?: string } } })?.organizations
+      ?.organizations?.name ?? 'Organization'
 
   const ai = (snapshot.ai_originals as NarrativeBlocks | null) ?? ({} as NarrativeBlocks)
   const final = snapshot.narrative as NarrativeBlocks
@@ -1148,6 +1167,7 @@ git commit -m "feat(reviews): style memo save/clear/regenerate actions"
 ## Task 10: Settings UI card
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/settings/style-memo-card.tsx`
 - Modify: `app/(authenticated)/[orgId]/reports/performance/settings/page.tsx` — render the card above the existing `PromptsForm`
 - Create: `tests/unit/app/authenticated/reports/performance/style-memo-card.test.tsx`
@@ -1157,8 +1177,8 @@ git commit -m "feat(reviews): style memo save/clear/regenerate actions"
 - Use the same indigo/purple accent styling as `components/reviews/author-notes-editor.tsx` — check that file for the exact class string.
 - Header: Sparkles icon + **Learned style memo**; subtitle: "Claude updates this after each publish."
 - Metadata line:
-  - if `source='auto'`: *"Auto-updated {date}"*
-  - if `source='manual'`: *"Edited by {name} on {date}"*
+  - if `source='auto'`: _"Auto-updated {date}"_
+  - if `source='manual'`: _"Edited by {name} on {date}"_
 - Textarea bound to local state, `Save` button calls `saveStyleMemo`.
 - `Regenerate from last snapshot` button with a loading spinner — calls `regenerateStyleMemoFromLatestSnapshot`, shows toast on success/failure.
 - `Clear memo` button opens an `AlertDialog` confirm, calls `clearStyleMemo`.
@@ -1204,6 +1224,7 @@ git commit -m "feat(reviews): style memo settings card"
 ## Task 11: Editor read-only preview
 
 **Files:**
+
 - Create: `app/(authenticated)/[orgId]/reports/performance/[id]/style-memo-preview.tsx`
 - Modify: `app/(authenticated)/[orgId]/reports/performance/[id]/page.tsx` — fetch memo and render preview next to the existing `<AuthorNotesEditor>`
 - Create: `tests/unit/app/authenticated/reports/performance/style-memo-preview.test.tsx`
@@ -1211,9 +1232,9 @@ git commit -m "feat(reviews): style memo settings card"
 **Design notes:**
 
 - Wrapped in the same indigo/purple gradient container as author notes so the two cards read as one "AI context" cluster. Group them visually (sit side-by-side on wider screens or stacked with a shared left accent bar on narrow).
-- Collapsible (default collapsed). Collapsed label: *"Style the AI is using — {wordCount} words, updated {relativeDate}"*.
-- Expanded: memo text rendered as `whitespace-pre-wrap` inside a read-only `<pre>`-like div. Small link: *"Edit in settings"* → `/${orgId}/reports/performance/settings`.
-- Empty-state: show the collapsed row with copy *"Style memo empty — publish your first report to start the AI learning."*
+- Collapsible (default collapsed). Collapsed label: _"Style the AI is using — {wordCount} words, updated {relativeDate}"_.
+- Expanded: memo text rendered as `whitespace-pre-wrap` inside a read-only `<pre>`-like div. Small link: _"Edit in settings"_ → `/${orgId}/reports/performance/settings`.
+- Empty-state: show the collapsed row with copy _"Style memo empty — publish your first report to start the AI learning."_
 - `data-testid`: `style-memo-preview`, `style-memo-preview-toggle`, `style-memo-preview-content`.
 - No Save / Edit affordances — settings is the edit surface.
 
@@ -1253,6 +1274,7 @@ git commit -m "feat(reviews): editor-side style memo preview"
 ## Task 12: E2E + visual snapshots
 
 **Files:**
+
 - Modify: `tests/e2e/performance-reports.spec.ts` — add one publish → memo-visible case
 - Modify: `tests/e2e/visual.spec.ts` — add snapshot of settings page with memo card; update snapshots of the editor page to include the grouped AI-context cluster
 
@@ -1282,7 +1304,9 @@ test('performance-reports settings with style memo card', async ({ page }) => {
   await loginAsAdmin(page)
   await page.goto(`/${orgId}/reports/performance/settings`)
   await page.waitForSelector('[data-testid="style-memo-card"]')
-  await expect(page).toHaveScreenshot('performance-reports-settings-style-memo.png', { fullPage: true })
+  await expect(page).toHaveScreenshot('performance-reports-settings-style-memo.png', {
+    fullPage: true,
+  })
 })
 ```
 
