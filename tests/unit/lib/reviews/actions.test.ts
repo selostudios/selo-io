@@ -2,6 +2,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
+vi.mock('next/server', () => ({
+  after: (callback: () => Promise<void> | void) => {
+    // Fire-and-forget; swallow errors like the real after() does.
+    Promise.resolve(callback()).catch(() => {})
+  },
+}))
+
+vi.mock('@/lib/reviews/narrative/learn', () => ({
+  runStyleMemoLearner: vi.fn(async () => ({ status: 'skipped' })),
+}))
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }))

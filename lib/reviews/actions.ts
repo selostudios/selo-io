@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { nanoid } from 'nanoid'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
@@ -12,6 +13,7 @@ import {
   generateNarrativeBlocks,
   NarrativeGenerationError,
 } from '@/lib/reviews/narrative/generator'
+import { runStyleMemoLearner } from '@/lib/reviews/narrative/learn'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -155,14 +157,32 @@ export async function createReview(input: {
 
 async function loadReviewForAuth(
   reviewId: string
-): Promise<{ organization_id: string; quarter: string } | null> {
+): Promise<{ organization_id: string; quarter: string; organization_name: string } | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('marketing_reviews')
-    .select('organization_id, quarter')
+    .select('organization_id, quarter, organizations!inner(name)')
     .eq('id', reviewId)
     .maybeSingle()
-  return (data as { organization_id: string; quarter: string } | null) ?? null
+
+  if (!data) return null
+
+  const row = data as {
+    organization_id: string
+    quarter: string
+    organizations: { name: string } | { name: string }[] | null
+  }
+
+  const orgField = row.organizations
+  const organizationName = Array.isArray(orgField)
+    ? (orgField[0]?.name ?? 'Organization')
+    : (orgField?.name ?? 'Organization')
+
+  return {
+    organization_id: row.organization_id,
+    quarter: row.quarter,
+    organization_name: organizationName,
+  }
 }
 
 export async function refreshDraftData(reviewId: string): Promise<ActionOk | ActionErr> {
@@ -341,5 +361,18 @@ export async function publishReview(
   if (updateError) return { success: false, error: updateError.message }
 
   revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}`)
+
+  after(async () => {
+    await runStyleMemoLearner({
+      organizationId: review.organization_id,
+      organizationName: review.organization_name,
+      ai: (draft.ai_originals as NarrativeBlocks | null) ?? ({} as NarrativeBlocks),
+      finalNarrative: draft.narrative as NarrativeBlocks,
+      authorNotes: (draft.author_notes as string | null) ?? null,
+      snapshotId: snapshot.id as string,
+      reviewId,
+    })
+  })
+
   return { success: true, snapshotId: snapshot.id as string, version: nextVersion }
 }
