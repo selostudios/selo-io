@@ -49,4 +49,22 @@ describe('buildLearnerPrompt', () => {
     const prompt = buildLearnerPrompt({ organizationName: 'ACME', currentMemo: '', diff })
     expect(prompt).toMatch(/500\s+word/i)
   })
+
+  test('acknowledges when the author accepted the AI draft unchanged', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'ACME',
+      currentMemo: '',
+      diff: { changedBlocks: [], authorNotes: 'Q1 always dips.' },
+    })
+    expect(prompt.toLowerCase()).toContain('no edits this quarter')
+  })
+
+  test('labels absent author notes so the LLM does not infer missing data', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'ACME',
+      currentMemo: '',
+      diff: { changedBlocks: diff.changedBlocks, authorNotes: null },
+    })
+    expect(prompt).toContain('AUTHOR NOTES FOR THIS QUARTER\n(none)')
+  })
 })
