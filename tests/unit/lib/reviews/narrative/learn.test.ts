@@ -82,6 +82,11 @@ describe('runStyleMemoLearner', () => {
 
     expect(result).toEqual({ status: 'updated' })
     expect(generateText).toHaveBeenCalledTimes(1)
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining('AUTHOR EDITS'),
+      })
+    )
     expect(upsertMemo).toHaveBeenCalledWith(
       expect.objectContaining({
         organization_id: 'org-1',
@@ -131,14 +136,22 @@ describe('runStyleMemoLearner', () => {
     generateText.mockRejectedValueOnce(new Error('anthropic down'))
     const finalNarrative = { ...ai, ga_summary: 'edited' }
 
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
     const result = await runStyleMemoLearner({
       organizationId: 'org-1',
       organizationName: 'ACME',
       ai,
       finalNarrative,
       authorNotes: null,
+      snapshotId: 'snap-42',
     })
     expect(result).toEqual({ status: 'failed', reason: 'llm_error' })
     expect(upsertMemo).not.toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[Style Memo Error]',
+      expect.objectContaining({ type: 'llm_error', snapshotId: 'snap-42' })
+    )
+    errorSpy.mockRestore()
   })
 })

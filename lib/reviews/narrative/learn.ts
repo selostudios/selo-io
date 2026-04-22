@@ -6,6 +6,7 @@ import { buildLearnerPrompt } from './learner-prompts'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 const LEARNER_MODEL_ID = 'claude-opus-4-7'
+const LEARNER_MAX_TOKENS = 800
 
 export interface RunStyleMemoLearnerInput {
   organizationId: string
@@ -13,12 +14,14 @@ export interface RunStyleMemoLearnerInput {
   ai: NarrativeBlocks
   finalNarrative: NarrativeBlocks
   authorNotes: string | null
+  snapshotId?: string
+  reviewId?: string
 }
 
 export type RunStyleMemoLearnerResult =
   | { status: 'updated' }
   | { status: 'skipped' }
-  | { status: 'failed'; reason: 'empty_response' | 'llm_error' | 'db_error' }
+  | { status: 'failed'; reason: 'empty_response' | 'llm_error' | 'db_error' | 'unknown' }
 
 /**
  * Orchestrates a single learning pass. Loads the current memo, diffs the AI
@@ -48,17 +51,34 @@ export async function runStyleMemoLearner(
     })
 
     const anthropic = await getAnthropicProvider()
-    const { text } = await generateText({
-      model: anthropic(LEARNER_MODEL_ID),
-      prompt,
-      maxOutputTokens: 800,
-    })
+
+    let text: string
+    try {
+      const result = await generateText({
+        model: anthropic(LEARNER_MODEL_ID),
+        prompt,
+        maxOutputTokens: LEARNER_MAX_TOKENS,
+      })
+      text = result.text
+    } catch (err) {
+      console.error('[Style Memo Error]', {
+        type: 'llm_error',
+        orgId: input.organizationId,
+        ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+        ...(input.reviewId ? { reviewId: input.reviewId } : {}),
+        error: err instanceof Error ? err.message : String(err),
+        timestamp: new Date().toISOString(),
+      })
+      return { status: 'failed', reason: 'llm_error' }
+    }
 
     const cleaned = text.trim()
     if (cleaned.length === 0) {
-      console.warn('[Style Memo Learner]', {
+      console.error('[Style Memo Error]', {
         type: 'empty_response',
         orgId: input.organizationId,
+        ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+        ...(input.reviewId ? { reviewId: input.reviewId } : {}),
         timestamp: new Date().toISOString(),
       })
       return { status: 'failed', reason: 'empty_response' }
@@ -67,22 +87,36 @@ export async function runStyleMemoLearner(
     const memo = truncateMemo(cleaned)
 
     const supabase = createServiceClient()
-    const { error } = await supabase.from('marketing_review_style_memos').upsert(
-      {
-        organization_id: input.organizationId,
-        memo,
-        source: 'auto',
-        updated_by: null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'organization_id' }
-    )
+    try {
+      const { error } = await supabase.from('marketing_review_style_memos').upsert(
+        {
+          organization_id: input.organizationId,
+          memo,
+          source: 'auto',
+          updated_by: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'organization_id' }
+      )
 
-    if (error) {
-      console.error('[Style Memo Learner]', {
+      if (error) {
+        console.error('[Style Memo Error]', {
+          type: 'db_error',
+          orgId: input.organizationId,
+          ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+          ...(input.reviewId ? { reviewId: input.reviewId } : {}),
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        })
+        return { status: 'failed', reason: 'db_error' }
+      }
+    } catch (err) {
+      console.error('[Style Memo Error]', {
         type: 'db_error',
         orgId: input.organizationId,
-        error: error.message,
+        ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+        ...(input.reviewId ? { reviewId: input.reviewId } : {}),
+        error: err instanceof Error ? err.message : String(err),
         timestamp: new Date().toISOString(),
       })
       return { status: 'failed', reason: 'db_error' }
@@ -90,12 +124,14 @@ export async function runStyleMemoLearner(
 
     return { status: 'updated' }
   } catch (err) {
-    console.error('[Style Memo Learner]', {
-      type: 'llm_error',
+    console.error('[Style Memo Error]', {
+      type: 'unknown',
       orgId: input.organizationId,
+      ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+      ...(input.reviewId ? { reviewId: input.reviewId } : {}),
       error: err instanceof Error ? err.message : String(err),
       timestamp: new Date().toISOString(),
     })
-    return { status: 'failed', reason: 'llm_error' }
+    return { status: 'failed', reason: 'unknown' }
   }
 }
