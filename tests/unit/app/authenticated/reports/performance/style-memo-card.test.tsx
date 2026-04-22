@@ -119,4 +119,83 @@ describe('StyleMemoCard', () => {
       expect(routerRefresh).toHaveBeenCalled()
     })
   })
+
+  test('shows a Regenerated confirmation after a successful regenerate', async () => {
+    regenerateStyleMemoFromLatestSnapshot.mockResolvedValueOnce({ success: true })
+    render(
+      <StyleMemoCard
+        orgId={ORG_ID}
+        memo="original memo"
+        source="auto"
+        updatedAt="2026-04-21T10:00:00.000Z"
+        updatedByName={null}
+      />
+    )
+
+    fireEvent.click(screen.getByTestId('style-memo-regenerate-button'))
+
+    await waitFor(() => {
+      expect(regenerateStyleMemoFromLatestSnapshot).toHaveBeenCalledWith(ORG_ID)
+    })
+    expect(await screen.findByText('Regenerated')).toBeInTheDocument()
+  })
+
+  test('updates the textarea when the memo prop changes and no edits are pending', () => {
+    const { rerender } = render(
+      <StyleMemoCard
+        orgId={ORG_ID}
+        memo="original memo"
+        source="auto"
+        updatedAt="2026-04-21T10:00:00.000Z"
+        updatedByName={null}
+      />
+    )
+
+    const textarea = screen.getByTestId('style-memo-textarea') as HTMLTextAreaElement
+    expect(textarea.value).toBe('original memo')
+
+    rerender(
+      <StyleMemoCard
+        orgId={ORG_ID}
+        memo="fresh regenerated memo"
+        source="auto"
+        updatedAt="2026-04-22T10:00:00.000Z"
+        updatedByName={null}
+      />
+    )
+
+    expect((screen.getByTestId('style-memo-textarea') as HTMLTextAreaElement).value).toBe(
+      'fresh regenerated memo'
+    )
+  })
+
+  test('preserves unsaved user edits when the memo prop changes', () => {
+    const { rerender } = render(
+      <StyleMemoCard
+        orgId={ORG_ID}
+        memo="original memo"
+        source="auto"
+        updatedAt="2026-04-21T10:00:00.000Z"
+        updatedByName={null}
+      />
+    )
+
+    const textarea = screen.getByTestId('style-memo-textarea') as HTMLTextAreaElement
+    fireEvent.change(textarea, { target: { value: 'user is typing here' } })
+    expect(textarea.value).toBe('user is typing here')
+
+    rerender(
+      <StyleMemoCard
+        orgId={ORG_ID}
+        memo="fresh regenerated memo"
+        source="auto"
+        updatedAt="2026-04-22T10:00:00.000Z"
+        updatedByName={null}
+      />
+    )
+
+    expect((screen.getByTestId('style-memo-textarea') as HTMLTextAreaElement).value).toBe(
+      'user is typing here'
+    )
+  })
 })

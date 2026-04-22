@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -83,7 +83,7 @@ export function StyleMemoCard({ orgId, memo, source, updatedAt, updatedByName }:
     { kind: 'idle' } | { kind: 'saved' } | { kind: 'error'; message: string }
   >({ kind: 'idle' })
   const [regenStatus, setRegenStatus] = useState<
-    { kind: 'idle' } | { kind: 'error'; message: string }
+    { kind: 'idle' } | { kind: 'ok' } | { kind: 'error'; message: string }
   >({ kind: 'idle' })
   const [clearError, setClearError] = useState<string | null>(null)
   const [isSaving, startSave] = useTransition()
@@ -93,6 +93,18 @@ export function StyleMemoCard({ orgId, memo, source, updatedAt, updatedByName }:
 
   const dirty = value !== initialMemo
   const isEmpty = value.trim().length === 0
+
+  // Resync local state when the server-provided memo prop changes (e.g. after
+  // router.refresh() following a regenerate or clear). Only overwrite the
+  // textarea value if the user has no unsaved edits — otherwise we'd clobber
+  // work in progress.
+  useEffect(() => {
+    setValue((prev) => (prev === initialMemo ? memo : prev))
+    setInitialMemo(memo)
+    // initialMemo is read above to detect dirty state; tracking only `memo`
+    // is intentional so this effect fires on prop changes, not on local edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memo])
 
   const handleSave = () => {
     setSaveStatus({ kind: 'idle' })
@@ -112,6 +124,7 @@ export function StyleMemoCard({ orgId, memo, source, updatedAt, updatedByName }:
     startRegen(async () => {
       const result = await regenerateStyleMemoFromLatestSnapshot(orgId)
       if (result.success) {
+        setRegenStatus({ kind: 'ok' })
         router.refresh()
       } else {
         setRegenStatus({ kind: 'error', message: result.error })
@@ -167,6 +180,7 @@ export function StyleMemoCard({ orgId, memo, source, updatedAt, updatedByName }:
           onChange={(e) => {
             setValue(e.target.value)
             setSaveStatus({ kind: 'idle' })
+            setRegenStatus({ kind: 'idle' })
           }}
           rows={10}
           maxLength={MAX_MEMO_CHARS}
@@ -174,66 +188,79 @@ export function StyleMemoCard({ orgId, memo, source, updatedAt, updatedByName }:
           className="border-indigo-200 bg-white/80 placeholder:text-indigo-400/70 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30 dark:border-indigo-500/30 dark:bg-slate-950/60 dark:placeholder:text-indigo-300/40 dark:focus-visible:border-indigo-400"
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving || !dirty}
-              data-testid="style-memo-save-button"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving…
-                </>
-              ) : (
-                'Save'
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
-              data-testid="style-memo-regenerate-button"
-            >
-              {isRegenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Regenerating…
-                </>
-              ) : (
-                'Regenerate from last snapshot'
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setClearError(null)
-                setConfirmOpen(true)
-              }}
-              disabled={isEmpty || isClearing}
-              data-testid="style-memo-clear-button"
-            >
-              Clear memo
-            </Button>
-          </div>
-          <div className="text-xs">
-            {saveStatus.kind === 'saved' && (
-              <span className="text-indigo-700 dark:text-indigo-300">Saved</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving || !dirty}
+            data-testid="style-memo-save-button"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              'Save'
             )}
-            {saveStatus.kind === 'error' && (
-              <span className="text-destructive">{saveStatus.message}</span>
+          </Button>
+          {saveStatus.kind === 'saved' && (
+            <span
+              className="text-xs text-indigo-700 dark:text-indigo-300"
+              data-testid="style-memo-save-status"
+            >
+              Saved
+            </span>
+          )}
+          {saveStatus.kind === 'error' && (
+            <span className="text-destructive text-xs" data-testid="style-memo-save-status">
+              {saveStatus.message}
+            </span>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRegenerate}
+            disabled={isRegenerating}
+            data-testid="style-memo-regenerate-button"
+          >
+            {isRegenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Regenerating…
+              </>
+            ) : (
+              'Regenerate from last snapshot'
             )}
-            {regenStatus.kind === 'error' && saveStatus.kind !== 'error' && (
-              <span className="text-destructive">{regenStatus.message}</span>
-            )}
-          </div>
+          </Button>
+          {regenStatus.kind === 'ok' && (
+            <span
+              className="text-xs text-indigo-700 dark:text-indigo-300"
+              data-testid="style-memo-regen-status"
+            >
+              Regenerated
+            </span>
+          )}
+          {regenStatus.kind === 'error' && (
+            <span className="text-destructive text-xs" data-testid="style-memo-regen-status">
+              {regenStatus.message}
+            </span>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setClearError(null)
+              setConfirmOpen(true)
+            }}
+            disabled={isEmpty || isClearing}
+            data-testid="style-memo-clear-button"
+          >
+            Clear memo
+          </Button>
         </div>
       </div>
 
