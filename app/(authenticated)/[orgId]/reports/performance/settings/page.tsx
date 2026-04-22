@@ -6,7 +6,9 @@ import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import { loadPromptOverrides } from '@/lib/reviews/narrative/overrides'
 import { defaultTemplates, NARRATIVE_BLOCK_KEYS } from '@/lib/reviews/narrative/prompts'
+import { createClient } from '@/lib/supabase/server'
 import { PromptsForm, type PromptBlockView } from './prompts-form'
+import { StyleMemoCard } from './style-memo-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +53,37 @@ export default async function PerformanceReportSettingsPage({
   const canManage = isInternalUser(userRecord) || userRecord.role === UserRole.Admin
   if (!canManage) redirect(`/${orgId}/reports/performance`)
 
-  const overrides = await loadPromptOverrides(orgId)
+  const supabase = await createClient()
+
+  const [overrides, memoResult] = await Promise.all([
+    loadPromptOverrides(orgId),
+    supabase
+      .from('marketing_review_style_memos')
+      .select('memo, source, updated_at, updated_by')
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+  ])
+
+  const memoRow = memoResult.data as {
+    memo: string
+    source: 'auto' | 'manual'
+    updated_at: string
+    updated_by: string | null
+  } | null
+
+  let updatedByName: string | null = null
+  if (memoRow?.updated_by) {
+    const { data: updater } = await supabase
+      .from('users')
+      .select('first_name, last_name')
+      .eq('id', memoRow.updated_by)
+      .maybeSingle()
+    const u = updater as { first_name: string | null; last_name: string | null } | null
+    const first = (u?.first_name ?? '').trim()
+    const last = (u?.last_name ?? '').trim()
+    const full = `${first} ${last}`.trim()
+    updatedByName = full.length > 0 ? full : null
+  }
 
   const blocks: PromptBlockView[] = NARRATIVE_BLOCK_KEYS.map((key) => ({
     key,
@@ -75,6 +107,14 @@ export default async function PerformanceReportSettingsPage({
           <Link href={`/${orgId}/reports/performance`}>Back</Link>
         </Button>
       </div>
+
+      <StyleMemoCard
+        orgId={orgId}
+        memo={memoRow?.memo ?? ''}
+        source={memoRow?.source ?? 'auto'}
+        updatedAt={memoRow?.updated_at ?? null}
+        updatedByName={updatedByName}
+      />
 
       <PromptsForm orgId={orgId} blocks={blocks} />
     </div>
