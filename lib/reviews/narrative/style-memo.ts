@@ -1,4 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
+import type { NarrativeBlocks } from '@/lib/reviews/types'
+import { NARRATIVE_BLOCK_KEYS, type NarrativeBlockKey } from './prompts'
 
 export const MAX_MEMO_CHARS = 2000
 
@@ -45,4 +47,47 @@ export function truncateMemo(memo: string): string {
   const lastBreak = prefix.lastIndexOf('\n\n')
   if (lastBreak <= 0) return prefix
   return memo.slice(0, lastBreak)
+}
+
+export interface LearnerDiff {
+  changedBlocks: Array<{
+    key: NarrativeBlockKey
+    aiText: string
+    finalText: string
+  }>
+  authorNotes: string | null
+}
+
+export interface BuildLearnerDiffInput {
+  ai: NarrativeBlocks
+  finalNarrative: NarrativeBlocks
+  authorNotes: string | null
+}
+
+/**
+ * Builds the input for the learner by collecting blocks the author rewrote
+ * alongside this quarter's author notes. Returns `null` when there is nothing
+ * to learn from (no edits and no notes), which the caller uses to skip the
+ * LLM call entirely.
+ *
+ * Comparison is whole-string equality — fine-grained semantic diffing is left
+ * to the LLM since it has the full context anyway.
+ */
+export function buildLearnerDiff({
+  ai,
+  finalNarrative,
+  authorNotes,
+}: BuildLearnerDiffInput): LearnerDiff | null {
+  const changedBlocks: LearnerDiff['changedBlocks'] = []
+  for (const key of NARRATIVE_BLOCK_KEYS) {
+    const aiText = (ai[key] ?? '').trim()
+    const finalText = (finalNarrative[key] ?? '').trim()
+    if (aiText === finalText) continue
+    changedBlocks.push({ key, aiText: ai[key] ?? '', finalText: finalNarrative[key] ?? '' })
+  }
+
+  const trimmedNotes = authorNotes?.trim() ?? ''
+  if (changedBlocks.length === 0 && trimmedNotes.length === 0) return null
+
+  return { changedBlocks, authorNotes: trimmedNotes.length > 0 ? trimmedNotes : null }
 }
