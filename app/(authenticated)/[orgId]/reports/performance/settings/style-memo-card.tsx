@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { MAX_MEMO_CHARS } from '@/lib/reviews/narrative/style-memo'
+import { MAX_MEMO_CHARS } from '@/lib/reviews/narrative/style-memo-shared'
 import {
   clearStyleMemo,
   regenerateStyleMemoFromLatestSnapshot,

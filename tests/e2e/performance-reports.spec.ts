@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { getOrgIdFromDashboard, loginAsAdmin } from './helpers'
-import { testMarketingReview } from '../fixtures'
+import { testMarketingReview, testStyleMemo } from '../fixtures'
 
 /**
  * E2E coverage for Performance Reports Phase 4: preview, publish, and public
@@ -78,6 +78,28 @@ test.describe('Performance Reports — publish from preview', () => {
     await expect(
       page.locator('[data-testid="performance-reports-snapshot-share-button"]')
     ).toBeVisible()
+  })
+})
+
+test.describe('Performance Reports — style memo', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page)
+  })
+
+  test('admin can view the learned style memo in settings', async ({ page }) => {
+    // The memo row is pre-seeded in tests/helpers/seed.ts — this E2E verifies
+    // the settings page renders it. We deliberately do NOT exercise the live
+    // learner (`after()` → LLM call) here; that path is covered by unit tests
+    // and would be flaky + costly in E2E.
+    const orgId = await getOrgIdFromDashboard(page)
+
+    await page.goto(`/${orgId}/reports/performance/settings`)
+    await page.waitForSelector('[data-testid="style-memo-card"]')
+
+    await expect(page.locator('[data-testid="style-memo-card"]')).toBeVisible()
+    await expect(page.locator('[data-testid="style-memo-textarea"]')).toHaveValue(
+      testStyleMemo.memo
+    )
   })
 })
 

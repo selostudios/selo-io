@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
-import { testUsers, testOrganization, testCampaign, testMarketingReview } from '../fixtures'
+import {
+  testUsers,
+  testOrganization,
+  testCampaign,
+  testMarketingReview,
+  testStyleMemo,
+} from '../fixtures'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -231,6 +237,27 @@ export async function seedTestData() {
         )
       }
     }
+  }
+
+  // Seed a style memo row so the Performance Reports settings E2E + visual
+  // tests can verify the card renders a learned memo without having to
+  // trigger the live learner LLM call (which would be slow and flaky).
+  // Idempotent: organization_id is the primary key and the prior cleanup
+  // deletes the org row which cascades the memo away, but we also upsert to
+  // guard against partial cleanup.
+  const { error: memoError } = await supabase.from('marketing_review_style_memos').upsert(
+    {
+      organization_id: org!.id,
+      memo: testStyleMemo.memo,
+      source: testStyleMemo.source,
+      updated_at: testStyleMemo.updatedAt,
+      updated_by: null,
+    },
+    { onConflict: 'organization_id' }
+  )
+
+  if (memoError) {
+    throw new Error(`Failed to seed marketing review style memo: ${memoError.message}`)
   }
 
   console.log('✅ Test data seeded successfully')
