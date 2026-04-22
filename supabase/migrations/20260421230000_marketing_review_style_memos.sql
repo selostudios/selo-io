@@ -49,3 +49,5 @@ create policy "Org admins and internal users can manage style memo"
 -- snapshot, not just the latest draft (drafts get overwritten each quarter).
 alter table public.marketing_review_snapshots
   add column ai_originals jsonb;
+
+grant select, insert, update, delete on public.marketing_review_style_memos to authenticated;
