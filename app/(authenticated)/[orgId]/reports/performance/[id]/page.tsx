@@ -7,6 +7,7 @@ import type { NarrativeBlocks } from '@/lib/reviews/types'
 import { AuthorNotesEditor } from './author-notes-editor'
 import { EditorHeader } from './editor-header'
 import { NarrativeEditor } from './narrative-editor'
+import { StyleMemoPreview } from './style-memo-preview'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,9 +38,17 @@ export default async function PerformanceReportEditorPage({
     .eq('review_id', id)
     .maybeSingle()
 
+  const { data: memoRow } = await supabase
+    .from('marketing_review_style_memos')
+    .select('memo, updated_at')
+    .eq('organization_id', orgId)
+    .maybeSingle()
+
   const narrative = (draft?.narrative as NarrativeBlocks | null) ?? {}
   const aiOriginals = (draft?.ai_originals as NarrativeBlocks | null) ?? {}
   const authorNotes = (draft?.author_notes as string | null) ?? ''
+  const styleMemo = (memoRow?.memo as string | null) ?? ''
+  const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
 
   return (
     <div className="mx-auto max-w-3xl p-8" data-testid="performance-reports-editor">
@@ -53,7 +62,10 @@ export default async function PerformanceReportEditorPage({
 
       {draft ? (
         <div className="space-y-8">
-          <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <StyleMemoPreview orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
+            <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+          </div>
           <NarrativeEditor
             reviewId={id}
             narrative={narrative}
