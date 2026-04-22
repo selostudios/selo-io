@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { defaultTemplateGaSummary, gaSummaryPrompt } from '@/lib/reviews/narrative/prompts'
+import { defaultTemplateGaSummary, gaSummaryPrompt, header } from '@/lib/reviews/narrative/prompts'
 import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
 import type { PromptContext } from '@/lib/reviews/narrative/prompts'
 
@@ -70,5 +70,42 @@ describe('gaSummaryPrompt', () => {
     for (const metric of GA_FEATURED_METRICS) {
       expect(prompt).toContain(metric.label)
     }
+  })
+})
+
+describe('header() with style memo', () => {
+  test('omits the learned-style section entirely when memo is an empty string', () => {
+    const output = header({ ...baseCtx, styleMemo: '' })
+    expect(output.toLowerCase()).not.toContain('learned style')
+  })
+
+  test('omits the learned-style section entirely when memo is unset', () => {
+    const output = header(baseCtx)
+    expect(output.toLowerCase()).not.toContain('learned style')
+  })
+
+  test('omits the learned-style section when memo is whitespace only', () => {
+    const output = header({ ...baseCtx, styleMemo: '   \n\n  ' })
+    expect(output.toLowerCase()).not.toContain('learned style')
+  })
+
+  test('renders the learned-style section with the memo when present', () => {
+    const memo = 'Prefer short, punchy bullets. Lead every bullet with a number.'
+    const output = header({ ...baseCtx, styleMemo: memo })
+
+    expect(output).toContain('LEARNED STYLE')
+    expect(output).toContain(memo)
+  })
+
+  test('places learned-style after author notes when both are present', () => {
+    const output = header({
+      ...baseCtx,
+      authorNotes: 'Massive paid campaign last quarter — expect softer comparables.',
+      styleMemo: 'Prefer short, punchy bullets.',
+    })
+
+    expect(output).toContain('Author notes')
+    expect(output).toContain('LEARNED STYLE')
+    expect(output.indexOf('LEARNED STYLE')).toBeGreaterThan(output.indexOf('Author notes'))
   })
 })

@@ -26,6 +26,11 @@ export interface PromptContext {
    * or blank, the AI ignores the section entirely.
    */
   authorNotes?: string
+  /**
+   * Durable per-organization style guidance synthesized from past reports by
+   * the learner. Omitted from the prompt entirely when empty.
+   */
+  styleMemo?: string
 }
 
 const FOOTER = [
@@ -42,7 +47,7 @@ const FOOTER = [
   'If author notes are present, use them to contextualise specific movements (e.g. a prior-quarter campaign explaining a drop). Never contradict the notes. If the notes are empty or absent, ignore this rule.',
 ].join('\n')
 
-function header(ctx: PromptContext): string {
+export function header(ctx: PromptContext): string {
   const lines = [
     `Organization: ${ctx.organizationName}`,
     `Quarter: ${ctx.quarter} (${ctx.periodStart} → ${ctx.periodEnd})`,
@@ -56,6 +61,15 @@ function header(ctx: PromptContext): string {
       '',
       'Author notes (context from the report author — weave into bullets where relevant, never contradict):',
       notes
+    )
+  }
+
+  const memo = ctx.styleMemo?.trim()
+  if (memo && memo.length > 0) {
+    lines.push(
+      '',
+      'LEARNED STYLE (durable preferences from previous reports; author notes for this quarter override):',
+      memo
     )
   }
 
