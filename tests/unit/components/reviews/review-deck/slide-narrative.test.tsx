@@ -45,4 +45,29 @@ describe('SlideNarrative', () => {
     const nodes = Array.from(screen.getByTestId('content').children)
     expect(nodes.map((n) => n.tagName)).toEqual(['P', 'UL', 'P'])
   })
+
+  test('renders "Going well" and "To improve" as bold heading-style paragraphs', () => {
+    const text = [
+      'Going well',
+      '- Sessions held steady.',
+      '',
+      'To improve',
+      '- Bounce rate climbed.',
+    ].join('\n')
+
+    render(<SlideNarrative text={text} testId="content" />)
+
+    const goingWell = screen.getByText('Going well')
+    const toImprove = screen.getByText('To improve')
+    expect(goingWell.tagName).toBe('P')
+    expect(toImprove.tagName).toBe('P')
+    expect(goingWell.className).toContain('font-semibold')
+    expect(toImprove.className).toContain('font-semibold')
+  })
+
+  test('does not apply the heading treatment to ordinary paragraphs', () => {
+    render(<SlideNarrative text="Closing thought." testId="content" />)
+    const p = screen.getByText('Closing thought.')
+    expect(p.className).not.toContain('font-semibold')
+  })
 })

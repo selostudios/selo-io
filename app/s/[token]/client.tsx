@@ -10,6 +10,7 @@ import { ReportPresentation } from '@/components/reports/report-presentation'
 import { AuditReport } from '@/components/audit/audit-report'
 import { UnifiedAuditDetailClient } from '@/app/(authenticated)/[orgId]/seo/audit/[id]/client'
 import { ReviewDeck } from '@/components/reviews/review-deck'
+import { PrintButton } from '@/components/reviews/print-button'
 import { accessSharedLink } from '@/lib/share/actions'
 import {
   getSharedReportData,
@@ -240,6 +241,9 @@ export function SharedResourceClient({
             data-testid="shared-marketing-review"
             className="bg-background fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 md:p-8"
           >
+            <div className="absolute top-4 right-4 z-10 print:hidden">
+              <PrintButton />
+            </div>
             <div className="flex h-full w-full max-w-[1600px] items-center justify-center">
               <ReviewDeck
                 organization={resourceData.data.organization}

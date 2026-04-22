@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth/cached'
 import { ReviewDeck } from '@/components/reviews/review-deck'
+import { PrintButton } from '@/components/reviews/print-button'
 import { ReviewBreadcrumb } from '@/components/reviews/review-breadcrumb'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import { resolvePublisherNames } from '@/lib/reviews/publishers'
@@ -110,7 +111,10 @@ export default async function PerformanceReportSnapshotDetailPage({
               : `Published ${publishedAtLabel}`}
           </p>
         </div>
-        <SnapshotShareButton snapshotId={snapshot.id as string} />
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <SnapshotShareButton snapshotId={snapshot.id as string} />
+        </div>
       </div>
 
       <div className="aspect-video w-full">

@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CSSProperties } from 'react'
-import { Printer } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { useDeckNavigation } from '@/components/deck/use-deck-navigation'
 import { Slide } from '@/components/deck/slide'
@@ -213,15 +211,6 @@ export function ReviewDeck({
           isFullscreen={isFullscreen}
         />
       </div>
-
-      {!isFullscreen && (
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2 print:hidden">
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-        </div>
-      )}
 
       <DeckPrintStyles />
     </div>

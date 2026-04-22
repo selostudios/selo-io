@@ -2,6 +2,8 @@ import { parseBodyNarrative, type NarrativeNode } from './parse-body-narrative'
 
 export const EMPTY_NARRATIVE_PLACEHOLDER = 'No narrative available for this section'
 
+const SECTION_HEADINGS = new Set(['Going well', 'To improve'])
+
 export interface SlideNarrativeProps {
   text: string
   testId: string
@@ -38,6 +40,13 @@ export function SlideNarrative({ text, testId }: SlideNarrativeProps) {
                 <li key={itemIdx}>{item}</li>
               ))}
             </ul>
+          )
+        }
+        if (SECTION_HEADINGS.has(node.content)) {
+          return (
+            <p key={`p-${idx}`} className="text-sm font-semibold md:text-base">
+              {node.content}
+            </p>
           )
         }
         return <p key={`p-${idx}`}>{node.content}</p>
