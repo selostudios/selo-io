@@ -128,10 +128,17 @@ export default async function PerformanceReportsListPage({
                         orgId={orgId}
                         reviewId={r.id}
                         quarter={r.quarter}
+                        latestSnapshotId={r.latest_snapshot_id}
                       />
                     ) : (
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/${orgId}/reports/performance/${r.id}`}>
+                        <Link
+                          href={
+                            r.latest_snapshot_id
+                              ? `/${orgId}/reports/performance/${r.id}/snapshots/${r.latest_snapshot_id}`
+                              : `/${orgId}/reports/performance/${r.id}`
+                          }
+                        >
                           <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                           View Report
                         </Link>

@@ -1,7 +1,4 @@
-'use client'
-
 import type { ReactElement } from 'react'
-import { MetricCard } from '@/components/dashboard/metric-card'
 import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
 import { formatMetricValue } from '@/lib/reviews/format'
 import type { GAData } from '@/lib/reviews/types'
@@ -12,34 +9,32 @@ interface GaMetricStripProps {
 
 /**
  * Screen-mode metric strip for the GA body slide. Renders a responsive grid of
- * accent-variant `MetricCard`s — one per featured GA metric that has a triple.
+ * label + large value pairs — one per featured GA metric that has a triple.
  * Missing metrics are skipped (no placeholders). Returns null when data is
  * absent or no featured metrics are present.
  */
 export function GaMetricStrip({ data }: GaMetricStripProps) {
   if (!data) return null
 
-  const cards = GA_FEATURED_METRICS.map((meta) => {
+  const items = GA_FEATURED_METRICS.map((meta) => {
     const triple = data[meta.key]
     if (!triple) return null
 
     return (
-      <MetricCard
-        key={meta.key}
-        label={meta.label}
-        value={formatMetricValue(triple.current, meta.format)}
-        change={triple.qoq_delta_pct}
-        timeSeries={triple.timeseries?.current}
-        variant="accent"
-      />
+      <div key={meta.key} data-testid={`ga-metric-strip-item-${meta.key}`}>
+        <p className="text-muted-foreground text-sm md:text-base">{meta.label}</p>
+        <p className="text-foreground mt-1 text-5xl font-semibold tabular-nums md:text-6xl">
+          {formatMetricValue(triple.current, meta.format)}
+        </p>
+      </div>
     )
   }).filter((node): node is ReactElement => node !== null)
 
-  if (cards.length === 0) return null
+  if (items.length === 0) return null
 
   return (
-    <div data-testid="ga-metric-strip" className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {cards}
+    <div data-testid="ga-metric-strip" className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {items}
     </div>
   )
 }

@@ -15,6 +15,7 @@ import { PerformanceReportRowActions } from '@/app/(authenticated)/[orgId]/repor
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111'
 const REVIEW_ID = 'review-abc'
+const SNAPSHOT_ID = 'snap-xyz'
 
 describe('PerformanceReportRowActions', () => {
   beforeEach(() => {
@@ -22,14 +23,69 @@ describe('PerformanceReportRowActions', () => {
     deleteReview.mockReset()
   })
 
-  test('renders View Report linking to the review', () => {
-    render(<PerformanceReportRowActions orgId={ORG_ID} reviewId={REVIEW_ID} quarter="2026-Q2" />)
+  test('View Report links to the editor when no snapshot has been published', () => {
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={null}
+      />
+    )
     const link = screen.getByRole('link', { name: /view report/i })
     expect(link).toHaveAttribute('href', `/${ORG_ID}/reports/performance/${REVIEW_ID}`)
   })
 
+  test('View Report links to the latest snapshot when one has been published', () => {
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={SNAPSHOT_ID}
+      />
+    )
+    const link = screen.getByRole('link', { name: /view report/i })
+    expect(link).toHaveAttribute(
+      'href',
+      `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots/${SNAPSHOT_ID}`
+    )
+  })
+
+  test('shows an Edit draft button pointing to the editor when a snapshot exists', () => {
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={SNAPSHOT_ID}
+      />
+    )
+    const editLink = screen.getByRole('link', { name: /edit draft/i })
+    expect(editLink).toHaveAttribute('href', `/${ORG_ID}/reports/performance/${REVIEW_ID}`)
+  })
+
+  test('hides the Edit draft button when no snapshot exists', () => {
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={null}
+      />
+    )
+    expect(screen.queryByRole('link', { name: /edit draft/i })).toBeNull()
+  })
+
   test('does not call deleteReview until the dialog is confirmed', () => {
-    render(<PerformanceReportRowActions orgId={ORG_ID} reviewId={REVIEW_ID} quarter="2026-Q2" />)
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={null}
+      />
+    )
     fireEvent.click(screen.getByTestId(`performance-report-delete-${REVIEW_ID}`))
     expect(deleteReview).not.toHaveBeenCalled()
   })
@@ -37,7 +93,14 @@ describe('PerformanceReportRowActions', () => {
   test('calls deleteReview and refreshes the router on confirm', async () => {
     deleteReview.mockResolvedValueOnce({ success: true })
 
-    render(<PerformanceReportRowActions orgId={ORG_ID} reviewId={REVIEW_ID} quarter="2026-Q2" />)
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={null}
+      />
+    )
     fireEvent.click(screen.getByTestId(`performance-report-delete-${REVIEW_ID}`))
     fireEvent.click(await screen.findByTestId('performance-report-delete-confirm'))
 
@@ -52,7 +115,14 @@ describe('PerformanceReportRowActions', () => {
   test('surfaces server errors and keeps the dialog open', async () => {
     deleteReview.mockResolvedValueOnce({ success: false, error: 'Insufficient permissions' })
 
-    render(<PerformanceReportRowActions orgId={ORG_ID} reviewId={REVIEW_ID} quarter="2026-Q2" />)
+    render(
+      <PerformanceReportRowActions
+        orgId={ORG_ID}
+        reviewId={REVIEW_ID}
+        quarter="2026-Q2"
+        latestSnapshotId={null}
+      />
+    )
     fireEvent.click(screen.getByTestId(`performance-report-delete-${REVIEW_ID}`))
     fireEvent.click(await screen.findByTestId('performance-report-delete-confirm'))
 

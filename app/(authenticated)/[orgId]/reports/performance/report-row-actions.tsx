@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ExternalLink, Loader2, Trash2 } from 'lucide-react'
+import { ExternalLink, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -21,17 +21,24 @@ interface PerformanceReportRowActionsProps {
   orgId: string
   reviewId: string
   quarter: string
+  latestSnapshotId: string | null
 }
 
 export function PerformanceReportRowActions({
   orgId,
   reviewId,
   quarter,
+  latestSnapshotId,
 }: PerformanceReportRowActionsProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const editorHref = `/${orgId}/reports/performance/${reviewId}`
+  const viewHref = latestSnapshotId
+    ? `/${orgId}/reports/performance/${reviewId}/snapshots/${latestSnapshotId}`
+    : editorHref
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -57,11 +64,24 @@ export function PerformanceReportRowActions({
         size="sm"
         data-testid={`performance-report-view-${reviewId}`}
       >
-        <Link href={`/${orgId}/reports/performance/${reviewId}`}>
+        <Link href={viewHref}>
           <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
           View Report
         </Link>
       </Button>
+      {latestSnapshotId && (
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          data-testid={`performance-report-edit-${reviewId}`}
+        >
+          <Link href={editorHref}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit draft
+          </Link>
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"

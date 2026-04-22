@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import { publishReview } from '@/lib/reviews/actions'
@@ -26,12 +26,9 @@ export interface PreviewClientProps {
 
 /**
  * Full-viewport draft preview: renders the shared `<ReviewDeck>` and a
- * dismissible banner that lets admins either jump back to the editor or
- * publish the current draft as a new snapshot.
- *
- * The banner uses session-only state (no persistence) — dismissing it hides
- * it until the next page load, so the next visit always sees the "not yet
- * published" reminder.
+ * persistent banner that lets admins either jump back to the editor or
+ * publish the current draft as a new snapshot. The banner is always visible
+ * so navigation is never lost.
  */
 export function PreviewClient({
   reviewId,
@@ -44,7 +41,6 @@ export function PreviewClient({
   data,
 }: PreviewClientProps) {
   const router = useRouter()
-  const [bannerDismissed, setBannerDismissed] = useState(false)
   const [isPublishing, startPublishTransition] = useTransition()
 
   const editorHref = `/${orgId}/reports/performance/${reviewId}`
@@ -70,44 +66,34 @@ export function PreviewClient({
       data-testid="performance-reports-preview"
       className="bg-background fixed inset-0 z-50 flex flex-col"
     >
-      {!bannerDismissed && (
-        <div
-          role="region"
-          aria-label="Draft preview status"
-          data-testid="performance-reports-preview-banner"
-          className="flex items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-900"
+      <div
+        role="region"
+        aria-label="Draft preview status"
+        data-testid="performance-reports-preview-banner"
+        className="flex items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-900"
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToEditor}
+          data-testid="performance-reports-preview-back-button"
+          className="text-amber-900 hover:bg-amber-100 hover:text-amber-900"
         >
-          <p className="text-sm font-medium">Preview of current draft — not yet published.</p>
-          <div className="flex-1" />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleBackToEditor}
-            data-testid="performance-reports-preview-back-button"
-          >
-            Back to editor
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handlePublish}
-            disabled={isPublishing}
-            data-testid="performance-reports-preview-publish-button"
-          >
-            {isPublishing ? 'Publishing…' : 'Publish'}
-          </Button>
-          <button
-            type="button"
-            aria-label="Dismiss preview banner"
-            onClick={() => setBannerDismissed(true)}
-            data-testid="performance-reports-preview-dismiss-button"
-            className="ml-1 rounded p-1 text-amber-900 hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to editor
+        </Button>
+        <p className="flex-1 text-sm font-medium">Preview of current draft — not yet published.</p>
+        <Button
+          type="button"
+          size="sm"
+          onClick={handlePublish}
+          disabled={isPublishing}
+          data-testid="performance-reports-preview-publish-button"
+        >
+          {isPublishing ? 'Publishing…' : 'Publish'}
+        </Button>
+      </div>
 
       <div className="flex flex-1 items-center justify-center overflow-hidden p-4 md:p-8">
         <div className="flex h-full w-full max-w-[1600px] items-center justify-center">

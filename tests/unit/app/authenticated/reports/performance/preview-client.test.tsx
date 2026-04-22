@@ -114,14 +114,11 @@ describe('PreviewClient', () => {
     expect(showSuccess).not.toHaveBeenCalled()
   })
 
-  test('hides the banner after clicking the dismiss button', () => {
+  test('keeps the banner visible at all times so the back-to-editor control is always reachable', () => {
     render(<PreviewClient {...defaultProps} />)
 
     expect(screen.getByTestId('performance-reports-preview-banner')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByTestId('performance-reports-preview-dismiss-button'))
-
-    expect(screen.queryByTestId('performance-reports-preview-banner')).toBeNull()
+    expect(screen.queryByTestId('performance-reports-preview-dismiss-button')).toBeNull()
   })
 
   test('shows the loading label and disables the publish button while publishing', async () => {
