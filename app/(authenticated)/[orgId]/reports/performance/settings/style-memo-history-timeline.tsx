@@ -2,10 +2,7 @@ import { History } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatQuarterLabel } from '@/lib/reviews/period'
-import {
-  toMemoHistoryRow,
-  type MemoVersionDbRow,
-} from '@/lib/reviews/narrative/memo-history-types'
+import { toMemoHistoryRow, type MemoVersionDbRow } from '@/lib/reviews/narrative/memo-history-types'
 import type { Tables } from '@/lib/supabase/database.types'
 import { StyleMemoHistoryRow } from './style-memo-history-row'
 
