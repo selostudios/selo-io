@@ -81,39 +81,27 @@ export async function seedTestData() {
     .select()
     .single()
 
-  // Link users to organization
-  // organization_id and role are legacy columns, but ~30 RLS policies still
-  // reference them. Without these set, RLS blocks the team_members join in
-  // getUserRecord(), causing the [orgId] layout to redirect to dashboard.
   await supabase.from('users').insert([
     {
       id: adminUser.data.user!.id,
       first_name: testUsers.admin.firstName,
       last_name: testUsers.admin.lastName,
-      organization_id: org!.id,
-      role: 'admin',
     },
     {
       id: teamMemberUser.data.user!.id,
       first_name: testUsers.teamMember.firstName,
       last_name: testUsers.teamMember.lastName,
-      organization_id: org!.id,
-      role: 'team_member',
     },
     {
       id: viewerUser.data.user!.id,
       first_name: testUsers.viewer.firstName,
       last_name: testUsers.viewer.lastName,
-      organization_id: org!.id,
-      role: 'client_viewer',
     },
     {
       id: developerUser.data.user!.id,
       is_internal: true,
       first_name: testUsers.developer.firstName,
       last_name: testUsers.developer.lastName,
-      organization_id: org!.id,
-      role: 'developer',
     },
   ])
 

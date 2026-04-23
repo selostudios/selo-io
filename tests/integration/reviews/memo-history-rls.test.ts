@@ -81,20 +81,9 @@ describe('marketing_review_style_memo_versions RLS', () => {
     orgA = await createTestOrganization(`Memo RLS Org A ${testId}`)
     orgB = await createTestOrganization(`Memo RLS Org B ${testId}`)
 
-    // --- Legacy users columns + team_members (primary source of truth) ---
-    // The memo-versions policy reads membership from `team_members`. The
-    // legacy `users.organization_id` / `users.role` columns are still
-    // written because other RLS policies on related tables rely on them.
     await linkUserToOrganization(adminUser.id, orgA.id, 'admin', 'Memo', 'Admin')
     await linkUserToOrganization(teamMemberUser.id, orgA.id, 'team_member', 'Memo', 'Member')
     await linkUserToOrganization(otherOrgAdmin.id, orgB.id, 'admin', 'Other', 'Admin')
-
-    const { error: tmError } = await testDb.from('team_members').insert([
-      { user_id: adminUser.id, organization_id: orgA.id, role: 'admin' },
-      { user_id: teamMemberUser.id, organization_id: orgA.id, role: 'team_member' },
-      { user_id: otherOrgAdmin.id, organization_id: orgB.id, role: 'admin' },
-    ])
-    if (tmError) throw tmError
 
     // --- Seed memo versions via service role (one per org) ---
     const { data: versionA, error: versionAError } = await testDb

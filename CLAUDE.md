@@ -84,9 +84,7 @@ vercel whoami                                 # Verify auth + current team
 
 Organizations own all data (campaigns, platform connections, team members). RLS policies enforce data isolation at the database level.
 
-**Membership model:** The `team_members` join table is the **primary source of truth** for organization membership and roles. Each row links a user to an organization with a role. Auth queries read org/role exclusively from `team_members` via PostgREST joins (e.g., `users.select('id, is_internal, team_members(organization_id, role)')`).
-
-> **Note:** The legacy `users.organization_id` and `users.role` columns still exist and are written to in parallel because ~30 RLS policies across 15+ tables still reference them. These columns will be dropped in a future migration after RLS policies are rewritten to use `team_members`.
+**Membership model:** The `team_members` join table is the **sole source of truth** for organization membership and roles. Each row links a user to an organization with a role. Auth queries read org/role exclusively from `team_members` via PostgREST joins (e.g., `users.select('id, is_internal, team_members(organization_id, role)')`). The `users` table only carries profile info (`first_name`, `last_name`) and the cross-org `is_internal` flag.
 
 **User roles:** `admin`, `developer`, `team_member`, `client_viewer`, `external_developer` (defined as `user_role` enum in the database and `UserRole` in `lib/enums.ts`).
 

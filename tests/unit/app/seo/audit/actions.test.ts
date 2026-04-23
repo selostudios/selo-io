@@ -139,11 +139,7 @@ describe('deleteUnifiedAudit', () => {
   it('allows internal users to delete any audit', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockSingleUser.mockResolvedValue({
-      data: {
-        id: 'user-1',
-        is_internal: true,
-        team_members: [{ organization_id: 'org-internal', role: 'developer' }],
-      },
+      data: { id: 'user-1', is_internal: true, team_members: [] },
     })
     mockSingleAudit.mockResolvedValue({
       data: {

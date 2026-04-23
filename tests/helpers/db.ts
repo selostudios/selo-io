@@ -50,15 +50,20 @@ export async function linkUserToOrganization(
     .from('users')
     .insert({
       id: userId,
-      organization_id: organizationId,
-      role,
       first_name: firstName,
       last_name: lastName,
     })
     .select()
     .single()
-
   if (error) throw error
+
+  const { error: membershipError } = await testDb.from('team_members').insert({
+    user_id: userId,
+    organization_id: organizationId,
+    role,
+  })
+  if (membershipError) throw membershipError
+
   return data
 }
 
@@ -96,14 +101,19 @@ export async function linkUserAsDeveloper(userId: string, firstName?: string, la
     .from('users')
     .upsert({
       id: userId,
-      role: 'developer',
+      is_internal: true,
       first_name: firstName,
       last_name: lastName,
     })
     .select()
     .single()
-
   if (error) throw error
+
+  const { error: employeeError } = await testDb
+    .from('internal_employees')
+    .upsert({ user_id: userId }, { onConflict: 'user_id' })
+  if (employeeError) throw employeeError
+
   return data
 }
 
@@ -112,6 +122,11 @@ export async function cleanupTestData() {
   await testDb.from('feedback').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await testDb.from('team_members').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await testDb
+    .from('internal_employees')
+    .delete()
+    .neq('user_id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('organizations').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 
