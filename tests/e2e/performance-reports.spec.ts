@@ -50,9 +50,12 @@ test.describe('Performance Reports — narrative editing + preview', () => {
     await expect(page.locator('[data-testid="performance-reports-preview"]')).toBeVisible()
     await expect(page.locator('[data-testid="review-deck"]')).toBeVisible()
 
-    // Cover slide (slide index 0) is visible by default — the distinctive
-    // subtitle must appear there.
-    await expect(page.getByText(distinctiveSubtitle)).toBeVisible()
+    // Cover slide (slide index 0) is visible by default — scope to the active
+    // deck track and take the first match to avoid strict-mode collision with
+    // the hidden adjacent-slide copy that the carousel keeps in the DOM.
+    await expect(
+      page.getByTestId('review-deck-track').getByText(distinctiveSubtitle).first()
+    ).toBeVisible()
   })
 })
 
