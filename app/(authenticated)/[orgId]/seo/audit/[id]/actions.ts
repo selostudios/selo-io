@@ -4,7 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { paginateQuery } from '@/lib/supabase/paginate'
 import { notFound } from 'next/navigation'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { ScoreDimension } from '@/lib/enums'
 import { fetchPage } from '@/lib/audit/fetcher'
 import { getCheckByName } from '@/lib/unified-audit/checks'
@@ -91,7 +91,7 @@ export async function getUnifiedAuditReport(id: string): Promise<UnifiedAuditRep
 
   // Verify access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 
@@ -152,7 +152,7 @@ export async function getAuditOverview(id: string): Promise<UnifiedAuditOverview
   if (!userRecord) notFound()
 
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 
@@ -278,7 +278,7 @@ export async function getUnifiedAuditChecksByTab(
   if (!userRecord) return []
 
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
   if (!hasAccess) return []
@@ -348,13 +348,12 @@ export async function rerunCheck(
     .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
-  const rerunMembership = (
-    rawRerunUser?.team_members as { organization_id: string; role: string }[]
-  )?.[0]
+  const rerunMemberships =
+    (rawRerunUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawRerunUser
     ? {
-        organization_id: rerunMembership?.organization_id ?? null,
-        role: rerunMembership?.role ?? 'client_viewer',
+        memberships: rerunMemberships,
+        role: rerunMemberships[0]?.role ?? 'client_viewer',
         is_internal: rawRerunUser.is_internal,
       }
     : null
@@ -369,7 +368,7 @@ export async function rerunCheck(
   if (!audit) return { ...empty, error: 'Audit not found' }
 
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
   if (!hasAccess) return { ...empty, error: 'Access denied' }
@@ -458,11 +457,11 @@ export async function rerunModule(
     .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
-  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: membership?.organization_id ?? null,
-        role: membership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -478,7 +477,7 @@ export async function rerunModule(
   if (!audit) return { success: false, error: 'Audit not found' }
 
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
   if (!hasAccess) return { success: false, error: 'Access denied' }

@@ -152,6 +152,22 @@ export function isInternalUser(userRecord: { is_internal?: boolean | null }): bo
 }
 
 /**
+ * Check if a user can access the given organization.
+ * Internal users have access to every org. Everyone else must have a team_members row
+ * for the organization. Uses the memberships array (single source of truth).
+ */
+export function canAccessOrg(
+  userRecord: {
+    is_internal?: boolean | null
+    memberships?: Array<{ organization_id: string }>
+  },
+  organizationId: string
+): boolean {
+  if (isInternalUser(userRecord)) return true
+  return (userRecord.memberships ?? []).some((m) => m.organization_id === organizationId)
+}
+
+/**
  * Check if user can access all audits regardless of organization.
  * Internal users (Selo employees) and admins/developers have this privilege.
  */

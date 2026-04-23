@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isInternalUser } from '@/lib/permissions'
+import { canAccessOrg, isInternalUser } from '@/lib/permissions'
 import { getResearchResults } from '@/lib/ai-visibility/research'
 
 export async function GET(
@@ -25,8 +25,7 @@ export async function GET(
 
   const userRecord = rawUser
     ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+        memberships: (rawUser.team_members as { organization_id: string }[]) ?? [],
         is_internal: rawUser.is_internal,
       }
     : null
@@ -42,8 +41,9 @@ export async function GET(
 
     // Verify user has access — check org of results, or verify user's org
     if (!isInternalUser(userRecord)) {
-      // Check if any result belongs to a different org
-      const foreignResult = results.find((r) => r.organization_id !== userRecord.organization_id)
+      const foreignResult = results.find(
+        (r) => r.organization_id && !canAccessOrg(userRecord, r.organization_id)
+      )
       if (foreignResult) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }

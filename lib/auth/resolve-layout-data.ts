@@ -29,18 +29,16 @@ export async function resolveLayoutData(
   if (isInternal) {
     organizations = await getOrganizationsList()
   } else {
-    const userOrg = userRecord.organization
-    if (userOrg) {
-      organizations = [
-        {
-          id: userOrg.id,
-          name: userOrg.name,
-          website_url: userOrg.website_url,
-          status: userOrg.status as OrganizationForSelector['status'],
-          logo_url: userOrg.logo_url,
-        },
-      ]
-    }
+    // Non-internal users see every org they're a member of.
+    organizations = userRecord.memberships
+      .filter((m) => m.organization !== null)
+      .map((m) => ({
+        id: m.organization!.id,
+        name: m.organization!.name,
+        website_url: m.organization!.website_url,
+        status: m.organization!.status as OrganizationForSelector['status'],
+        logo_url: m.organization!.logo_url,
+      }))
   }
 
   const userEmail = user.email || ''

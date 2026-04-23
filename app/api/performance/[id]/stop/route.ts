@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { canManageOrg, canAccessAllAudits } from '@/lib/permissions'
+import { canManageOrg, canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { UserRole, PerformanceAuditStatus } from '@/lib/enums'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -22,11 +22,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .eq('id', user.id)
     .single()
 
-  const stopMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userData = rawUser
     ? {
-        organization_id: stopMembership?.organization_id ?? null,
-        role: stopMembership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -52,7 +52,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // Verify org access
   if (userData) {
     const hasAccess =
-      audit.organization_id === userData.organization_id ||
+      (audit.organization_id && canAccessOrg(userData, audit.organization_id)) ||
       (audit.organization_id === null && audit.created_by === user.id) ||
       canAccessAllAudits(userData)
 

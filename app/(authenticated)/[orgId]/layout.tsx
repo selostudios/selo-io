@@ -1,7 +1,9 @@
+import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
-import { isInternalUser } from '@/lib/permissions'
+import { SELO_ORG_COOKIE } from '@/lib/constants/org-storage'
+import { canAccessOrg } from '@/lib/permissions'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -28,8 +30,15 @@ export default async function OrgLayout({
     redirect('/onboarding')
   }
 
-  if (!isInternalUser(userRecord) && userRecord.organization_id !== orgId) {
-    redirect(`/${userRecord.organization_id}/dashboard`)
+  if (!canAccessOrg(userRecord, orgId)) {
+    // Cookie is client-controlled — only trust it if the user actually has that membership.
+    const cookieOrgId = (await cookies()).get(SELO_ORG_COOKIE)?.value
+    const fallbackOrgId =
+      (cookieOrgId && canAccessOrg(userRecord, cookieOrgId) ? cookieOrgId : null) ??
+      userRecord.memberships[0]?.organization_id ??
+      null
+
+    redirect(fallbackOrgId ? `/${fallbackOrgId}/dashboard` : '/onboarding')
   }
 
   // Cookie is set by the proxy (proxy.ts) on every request with a UUID path segment

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { canManageOrg, canAccessAllAudits } from '@/lib/permissions'
+import { canManageOrg, canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -21,11 +21,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .eq('id', user.id)
     .single()
 
-  const perfMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: perfMembership?.organization_id ?? null,
-        role: perfMembership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -47,7 +47,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   // Verify org access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 
@@ -85,11 +85,21 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
 
   // Get user's record
-  const { data: userData } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const deleteMemberships =
+    (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
+  const userData = rawUser
+    ? {
+        memberships: deleteMemberships,
+        role: deleteMemberships[0]?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
   const role = userData?.role
 
   // Check permission: canManageOrg or developer
@@ -111,7 +121,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   // Verify org access
   if (userData) {
     const hasAccess =
-      audit.organization_id === userData.organization_id ||
+      (audit.organization_id && canAccessOrg(userData, audit.organization_id)) ||
       (audit.organization_id === null && audit.created_by === user.id) ||
       canAccessAllAudits(userData)
 
