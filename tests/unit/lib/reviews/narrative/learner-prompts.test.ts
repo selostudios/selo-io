@@ -67,4 +67,24 @@ describe('buildLearnerPrompt', () => {
     })
     expect(prompt).toContain('AUTHOR NOTES FOR THIS QUARTER\n(none)')
   })
+
+  test('prompt instructs the model to emit a rationale sentence', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'Acme',
+      currentMemo: '',
+      diff: { changedBlocks: [], authorNotes: null },
+    })
+    expect(prompt).toMatch(/one-sentence rationale/i)
+    expect(prompt).toMatch(/past-tense/i)
+  })
+
+  test('prompt requests structured memo + rationale fields', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'Acme',
+      currentMemo: '',
+      diff: { changedBlocks: [], authorNotes: null },
+    })
+    expect(prompt).toMatch(/memo/)
+    expect(prompt).toMatch(/rationale/)
+  })
 })

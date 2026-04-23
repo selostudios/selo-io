@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 
-const generateText = vi.fn()
+const generateObject = vi.fn()
 vi.mock('ai', () => ({
-  generateText: (...args: unknown[]) => generateText(...args),
+  generateObject: (...args: unknown[]) => generateObject(...args),
 }))
 
 const anthropicFactory = vi.fn((modelId: string) => `mock-model:${modelId}`)
@@ -47,7 +47,7 @@ const ai: NarrativeBlocks = {
 }
 
 beforeEach(() => {
-  generateText.mockReset()
+  generateObject.mockReset()
   upsertMemo.mockReset()
   loadStyleMemo.mockReset()
 })
@@ -63,13 +63,15 @@ describe('runStyleMemoLearner', () => {
       authorNotes: null,
     })
     expect(result).toEqual({ status: 'skipped' })
-    expect(generateText).not.toHaveBeenCalled()
+    expect(generateObject).not.toHaveBeenCalled()
     expect(upsertMemo).not.toHaveBeenCalled()
   })
 
   test('calls the LLM and upserts when edits are present', async () => {
     loadStyleMemo.mockResolvedValueOnce('Existing memo.')
-    generateText.mockResolvedValueOnce({ text: 'Updated memo body.' })
+    generateObject.mockResolvedValueOnce({
+      object: { memo: 'Updated memo body.', rationale: 'Noticed a preference.' },
+    })
     const finalNarrative = { ...ai, ga_summary: 'Author rewrote.' }
 
     const result = await runStyleMemoLearner({
@@ -80,9 +82,9 @@ describe('runStyleMemoLearner', () => {
       authorNotes: null,
     })
 
-    expect(result).toEqual({ status: 'updated' })
-    expect(generateText).toHaveBeenCalledTimes(1)
-    expect(generateText).toHaveBeenCalledWith(
+    expect(result).toMatchObject({ status: 'updated', memo: 'Updated memo body.' })
+    expect(generateObject).toHaveBeenCalledTimes(1)
+    expect(generateObject).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.stringContaining('AUTHOR EDITS'),
       })
@@ -97,10 +99,39 @@ describe('runStyleMemoLearner', () => {
     )
   })
 
+  test('returns rationale alongside memo on successful update', async () => {
+    loadStyleMemo.mockResolvedValueOnce('')
+    generateObject.mockResolvedValueOnce({
+      object: {
+        memo: 'Updated memo body.',
+        rationale: 'Noticed author prefers plain numbers; reinforced that.',
+      },
+    })
+    const finalNarrative = { ...ai, ga_summary: 'Author rewrote.' }
+
+    const result = await runStyleMemoLearner({
+      organizationId: 'org-1',
+      organizationName: 'ACME',
+      ai,
+      finalNarrative,
+      authorNotes: null,
+    })
+
+    expect(result).toMatchObject({
+      status: 'updated',
+      rationale: expect.any(String),
+    })
+    if (result.status === 'updated') {
+      expect(result.rationale.length).toBeGreaterThan(0)
+    }
+  })
+
   test('truncates when the LLM returns a memo above the cap', async () => {
     loadStyleMemo.mockResolvedValueOnce('')
     const longMemo = 'x'.repeat(3000)
-    generateText.mockResolvedValueOnce({ text: longMemo })
+    generateObject.mockResolvedValueOnce({
+      object: { memo: longMemo, rationale: 'Rationale.' },
+    })
     const finalNarrative = { ...ai, ga_summary: 'edited' }
 
     await runStyleMemoLearner({
@@ -115,9 +146,11 @@ describe('runStyleMemoLearner', () => {
     expect(payload.memo.length).toBeLessThanOrEqual(2000)
   })
 
-  test('returns failure status and does not upsert when the LLM returns empty text', async () => {
+  test('returns failure status and does not upsert when the LLM returns empty memo', async () => {
     loadStyleMemo.mockResolvedValueOnce('')
-    generateText.mockResolvedValueOnce({ text: '   ' })
+    generateObject.mockResolvedValueOnce({
+      object: { memo: '   ', rationale: 'Rationale.' },
+    })
     const finalNarrative = { ...ai, ga_summary: 'edited' }
 
     const result = await runStyleMemoLearner({
@@ -133,7 +166,7 @@ describe('runStyleMemoLearner', () => {
 
   test('returns failure status when the LLM throws', async () => {
     loadStyleMemo.mockResolvedValueOnce('')
-    generateText.mockRejectedValueOnce(new Error('anthropic down'))
+    generateObject.mockRejectedValueOnce(new Error('anthropic down'))
     const finalNarrative = { ...ai, ga_summary: 'edited' }
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
