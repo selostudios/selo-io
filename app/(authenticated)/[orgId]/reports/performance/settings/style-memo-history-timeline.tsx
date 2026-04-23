@@ -1,4 +1,6 @@
+import { History } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import type { MemoHistoryRow, MemoHistorySource } from '@/lib/reviews/narrative/memo-history-types'
 import { StyleMemoHistoryRow } from './style-memo-history-row'
@@ -46,14 +48,14 @@ function extractQuarter(row: SnapshotDbRow): string | null {
   return reviews.quarter
 }
 
-function EmptyState() {
+function MemoHistoryEmptyState() {
   return (
-    <p
+    <EmptyState
       data-testid="style-memo-history-empty-state"
-      className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm"
-    >
-      No history yet — publish a report or edit the memo to see learning events here.
-    </p>
+      icon={History}
+      title="No history yet"
+      description="Publish a report or edit the memo to see learning events here."
+    />
   )
 }
 
@@ -87,7 +89,7 @@ export async function StyleMemoHistoryTimeline({ orgId }: { orgId: string }) {
         className="mt-6 space-y-3"
       >
         <h3 className="text-sm font-medium">Memo history</h3>
-        <EmptyState />
+        <MemoHistoryEmptyState />
       </section>
     )
   }
@@ -102,7 +104,7 @@ export async function StyleMemoHistoryTimeline({ orgId }: { orgId: string }) {
         className="mt-6 space-y-3"
       >
         <h3 className="text-sm font-medium">Memo history</h3>
-        <EmptyState />
+        <MemoHistoryEmptyState />
       </section>
     )
   }
