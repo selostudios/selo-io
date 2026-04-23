@@ -2126,8 +2126,6 @@ export type Database = {
           id: string
           is_internal: boolean | null
           last_name: string | null
-          organization_id: string | null
-          role: Database['public']['Enums']['user_role']
           updated_at: string | null
         }
         Insert: {
@@ -2136,8 +2134,6 @@ export type Database = {
           id: string
           is_internal?: boolean | null
           last_name?: string | null
-          organization_id?: string | null
-          role?: Database['public']['Enums']['user_role']
           updated_at?: string | null
         }
         Update: {
@@ -2146,19 +2142,9 @@ export type Database = {
           id?: string
           is_internal?: boolean | null
           last_name?: string | null
-          organization_id?: string | null
-          role?: Database['public']['Enums']['user_role']
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'users_organization_id_fkey'
-            columns: ['organization_id']
-            isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       weekly_summaries: {
         Row: {

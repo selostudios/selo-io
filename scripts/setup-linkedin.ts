@@ -74,11 +74,12 @@ async function setupLinkedIn(organizationId: string, userEmail: string) {
 
   const { data: userRecord } = await supabase
     .from('users')
-    .select('organization_id')
+    .select('id, team_members(organization_id)')
     .eq('id', authUser.id)
     .single()
 
-  if (!userRecord) {
+  const membership = (userRecord?.team_members as { organization_id: string }[])?.[0]
+  if (!membership?.organization_id) {
     console.error('User has no organization')
     process.exit(1)
   }
@@ -92,7 +93,7 @@ async function setupLinkedIn(organizationId: string, userEmail: string) {
 
   const { error } = await supabase.from('platform_connections').upsert(
     {
-      organization_id: userRecord.organization_id,
+      organization_id: membership.organization_id,
       platform_type: 'linkedin',
       credentials: { encrypted: encryptedCredentials },
     },

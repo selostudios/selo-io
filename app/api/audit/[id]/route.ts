@@ -77,13 +77,21 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Get user's record
-  const { data: userData } = await supabase
+  // Get user's record (org/role via team_members)
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
-  const role = userData?.role
+  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const userData = rawUser
+    ? {
+        is_internal: rawUser.is_internal,
+        organization_id: membership?.organization_id ?? null,
+        role: membership?.role ?? null,
+      }
+    : null
+  const role = userData?.role ?? undefined
 
   // Check permission: canManageOrg or developer
   if (!canManageOrg(role) && role !== UserRole.Developer) {

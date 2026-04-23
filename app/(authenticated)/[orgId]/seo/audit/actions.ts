@@ -74,12 +74,19 @@ export async function deleteUnifiedAudit(auditId: string): Promise<{ error?: str
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
-  if (!userRecord) return { error: 'User not found' }
+  if (!rawUser) return { error: 'User not found' }
+
+  const membership = (rawUser.team_members as { organization_id: string; role: string }[])?.[0]
+  const userRecord = {
+    is_internal: rawUser.is_internal,
+    organization_id: membership?.organization_id ?? null,
+    role: membership?.role ?? null,
+  }
 
   // Fetch audit
   const { data: audit } = await supabase.from('audits').select('*').eq('id', auditId).single()
