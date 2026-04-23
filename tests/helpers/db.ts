@@ -122,10 +122,7 @@ export async function cleanupTestData() {
   await testDb.from('feedback').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('campaigns').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb.from('invites').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-  await testDb
-    .from('team_members')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000')
+  await testDb.from('team_members').delete().neq('id', '00000000-0000-0000-0000-000000000000')
   await testDb
     .from('internal_employees')
     .delete()
