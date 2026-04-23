@@ -13,25 +13,29 @@ export default async function Home() {
     redirect('/login')
   }
 
-  // Check selo-org cookie first for fast redirect
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('is_internal, team_members(organization_id)')
+    .eq('id', user.id)
+    .single()
+
+  const memberships = ((userRow?.team_members as { organization_id: string }[]) ?? []).map(
+    (m) => m.organization_id
+  )
+  const isInternal = userRow?.is_internal === true
+
+  // Trust the cookie only if it points to an org the user can actually access.
+  // Internal users can land in any org; everyone else must have a team_members row.
   const cookieStore = await cookies()
   const cookieOrgId = cookieStore.get(SELO_ORG_COOKIE)?.value
-  if (cookieOrgId) {
+  if (cookieOrgId && (isInternal || memberships.includes(cookieOrgId))) {
     redirect(`/${cookieOrgId}/dashboard`)
   }
 
-  // Fall back to team membership
-  const { data: membership } = await supabase
-    .from('team_members')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .single()
-
-  if (membership?.organization_id) {
-    redirect(`/${membership.organization_id}/dashboard`)
+  if (memberships[0]) {
+    redirect(`/${memberships[0]}/dashboard`)
   }
 
-  // No org — send to organizations page to create/pick one
-  redirect('/organizations')
+  // No membership — internal users go to the org picker; others go to onboarding.
+  redirect(isInternal ? '/organizations' : '/onboarding')
 }

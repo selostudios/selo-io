@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isInternalUser } from '@/lib/permissions'
+import { canAccessOrg, isInternalUser } from '@/lib/permissions'
 import { runAuditBatch } from '@/lib/audit/runner'
 
 // Extend function timeout for long-running audits (max 300s on Pro plan)
@@ -35,8 +35,7 @@ export async function POST(request: Request) {
 
   const userRecord = rawUser
     ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+        memberships: (rawUser.team_members as { organization_id: string }[]) ?? [],
         is_internal: rawUser.is_internal,
       }
     : null
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
   if (url && organizationId) {
     // Scenario 1: URL provided with organizationId
     // Verify user has access to this organization
-    if (!isInternal && organizationId !== userRecord.organization_id) {
+    if (!canAccessOrg(userRecord, organizationId)) {
       return NextResponse.json(
         { error: 'Unauthorized to audit this organization' },
         { status: 403 }
@@ -82,7 +81,7 @@ export async function POST(request: Request) {
   } else if (organizationId && !url) {
     // Scenario 3: organizationId without URL - get from org's website_url
     // Verify user has access to this organization
-    if (!isInternal && organizationId !== userRecord.organization_id) {
+    if (!canAccessOrg(userRecord, organizationId)) {
       return NextResponse.json(
         { error: 'Unauthorized to audit this organization' },
         { status: 403 }

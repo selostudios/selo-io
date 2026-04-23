@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { runAuditBatch } from '@/lib/audit/runner'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { AuditStatus } from '@/lib/enums'
 
 // Audits stuck in crawling/checking for more than 15 minutes are considered stale
@@ -28,13 +28,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .eq('id', user.id)
     .single()
 
-  const statusMembership = (
-    rawUser?.team_members as { organization_id: string; role: string }[]
-  )?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: statusMembership?.organization_id ?? null,
-        role: statusMembership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -51,7 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   // Verify org access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 

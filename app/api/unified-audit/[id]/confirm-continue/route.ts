@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { runUnifiedAuditBatch } from '@/lib/unified-audit/runner'
 
 // Extend function timeout for continued crawling
@@ -24,11 +24,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .eq('id', user.id)
     .single()
 
-  const membership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: membership?.organization_id ?? null,
-        role: membership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -50,7 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Verify access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 

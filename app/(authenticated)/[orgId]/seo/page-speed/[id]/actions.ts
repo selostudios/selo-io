@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import type { PerformanceAudit, PerformanceAuditResult } from '@/lib/performance/types'
 
 export async function getPerformanceAuditData(id: string): Promise<{
@@ -26,11 +26,11 @@ export async function getPerformanceAuditData(id: string): Promise<{
     .eq('id', user.id)
     .single()
 
-  const psMembership = (rawUser?.team_members as { organization_id: string; role: string }[])?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: psMembership?.organization_id ?? null,
-        role: psMembership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -60,7 +60,7 @@ export async function getPerformanceAuditData(id: string): Promise<{
 
   // Verify organization ownership, one-time audit creator, or admin/developer access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 

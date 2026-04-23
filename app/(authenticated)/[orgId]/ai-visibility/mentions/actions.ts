@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getUserRecord } from '@/lib/auth/cached'
+import { canAccessOrg } from '@/lib/permissions'
 import { getMentions } from '@/lib/ai-visibility/queries'
 import type { MentionsPage } from '@/lib/ai-visibility/queries'
 
@@ -21,8 +22,7 @@ export async function loadMoreMentions(
   const userRecord = await getUserRecord(user.id)
   if (!userRecord) throw new Error('Not authenticated')
 
-  const hasAccess = userRecord.is_internal || userRecord.organization_id === orgId
-  if (!hasAccess) throw new Error('Access denied')
+  if (!canAccessOrg(userRecord, orgId)) throw new Error('Access denied')
 
   return getMentions(supabase, orgId, filters, cursor)
 }

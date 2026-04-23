@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isInternalUser } from '@/lib/permissions'
+import { canAccessOrg } from '@/lib/permissions'
 import { prepareResearch, executeResearch } from '@/lib/ai-visibility/research'
 
 export async function POST(request: Request) {
@@ -41,8 +41,7 @@ export async function POST(request: Request) {
 
   const userRecord = rawUser
     ? {
-        organization_id:
-          (rawUser.team_members as { organization_id: string }[])?.[0]?.organization_id ?? null,
+        memberships: (rawUser.team_members as { organization_id: string }[]) ?? [],
         is_internal: rawUser.is_internal,
       }
     : null
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  if (!isInternalUser(userRecord) && orgId !== userRecord.organization_id) {
+  if (!canAccessOrg(userRecord, orgId)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
