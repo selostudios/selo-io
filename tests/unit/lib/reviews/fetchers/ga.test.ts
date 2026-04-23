@@ -10,7 +10,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 type Row = { metric_type: string; date: string; value: number }
 
-function makeAwaitableChain(rowsByStart: Record<string, Row[]>, defaultRows: Row[] = []) {
+function makeMetricsChain(rowsByStart: Record<string, Row[]>, defaultRows: Row[] = []) {
   let capturedStart: string | null = null
   const chain: Record<string, unknown> = {
     select: vi.fn(() => chain),
@@ -28,6 +28,29 @@ function makeAwaitableChain(rowsByStart: Record<string, Row[]>, defaultRows: Row
     },
   }
   return chain
+}
+
+function makeConnectionChain(connectionRow: { id: string } | null) {
+  const chain: Record<string, unknown> = {
+    select: vi.fn(() => chain),
+    eq: vi.fn(() => chain),
+    maybeSingle: vi.fn(async () => ({ data: connectionRow, error: null })),
+  }
+  return chain
+}
+
+function mockSupabase(
+  rowsByStart: Record<string, Row[]>,
+  connectionRow: { id: string } | null = { id: 'conn-1' }
+) {
+  vi.mocked(createServiceClient).mockReturnValue({
+    from: vi.fn((table: string) => {
+      if (table === 'platform_connections') {
+        return makeConnectionChain(connectionRow)
+      }
+      return makeMetricsChain(rowsByStart)
+    }),
+  } as never)
 }
 
 const periods = {
@@ -71,16 +94,21 @@ describe('fetchGAData', () => {
       [periods.qoq.start]: qoqRows,
       [periods.yoy.start]: yoyRows,
     }
-    vi.mocked(createServiceClient).mockReturnValue({
-      from: vi.fn(() => makeAwaitableChain(rowsByStart)),
-    } as never)
+    mockSupabase(rowsByStart)
+  })
+
+  test('returns undefined when the organization has no active GA connection', async () => {
+    mockSupabase({}, null)
+    const data = await fetchGAData('org-1', periods)
+    expect(data).toBeUndefined()
   })
 
   test('attaches daily timeseries with {date, value} rows to every featured metric', async () => {
     const data = await fetchGAData('org-1', periods)
+    expect(data).toBeDefined()
 
     for (const key of GA_FEATURED_METRIC_KEYS) {
-      const triple = data[key]
+      const triple = data![key]
       expect(triple, `expected triple for featured metric ${key}`).toBeDefined()
       expect(triple.timeseries, `expected timeseries on ${key}`).toBeDefined()
       const ts = triple.timeseries!
@@ -96,7 +124,7 @@ describe('fetchGAData', () => {
     }
 
     // Spot check counts/values for ga_sessions
-    const sessions = data['ga_sessions'].timeseries!
+    const sessions = data!['ga_sessions'].timeseries!
     expect(sessions.current).toEqual([
       { date: '2026-01-01', value: 100 },
       { date: '2026-01-02', value: 150 },
@@ -113,27 +141,29 @@ describe('fetchGAData', () => {
 
   test('does not attach timeseries to non-featured metrics', async () => {
     const data = await fetchGAData('org-1', periods)
+    expect(data).toBeDefined()
 
     // Every non-featured metric should have no timeseries
     const featured = new Set<string>(GA_FEATURED_METRIC_KEYS)
     for (const metric of GA_METRICS) {
       if (featured.has(metric)) continue
       expect(
-        data[metric].timeseries,
+        data![metric].timeseries,
         `expected no timeseries on non-featured metric ${metric}`
       ).toBeUndefined()
     }
 
     // Explicit check for ga_traffic_direct (called out in the spec)
-    expect(data['ga_traffic_direct']).toBeDefined()
-    expect(data['ga_traffic_direct'].timeseries).toBeUndefined()
+    expect(data!['ga_traffic_direct']).toBeDefined()
+    expect(data!['ga_traffic_direct'].timeseries).toBeUndefined()
   })
 
   test('scalar fields on featured metrics still reflect summed values and deltas', async () => {
     const data = await fetchGAData('org-1', periods)
+    expect(data).toBeDefined()
 
     // ga_sessions: current 100+150=250, qoq 90+110=200, yoy 80+100=180
-    const sessions = data['ga_sessions']
+    const sessions = data!['ga_sessions']
     expect(sessions.current).toBe(250)
     expect(sessions.qoq).toBe(200)
     expect(sessions.yoy).toBe(180)
@@ -143,7 +173,7 @@ describe('fetchGAData', () => {
     expect(sessions.yoy_delta_pct).toBe(38.9)
 
     // Non-featured scalar still works as before
-    const direct = data['ga_traffic_direct']
+    const direct = data!['ga_traffic_direct']
     expect(direct.current).toBe(85) // 40+45
     expect(direct.qoq).toBe(30)
     expect(direct.yoy).toBe(25)

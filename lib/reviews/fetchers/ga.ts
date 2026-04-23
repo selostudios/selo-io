@@ -21,8 +21,18 @@ export type GaMetricKey = (typeof GA_METRICS)[number]
 export async function fetchGAData(
   organizationId: string,
   periods: QuarterPeriods
-): Promise<GAData> {
+): Promise<GAData | undefined> {
   const supabase = createServiceClient()
+
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('platform_type', PlatformType.GoogleAnalytics)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!connection) return undefined
 
   const fetchSeries = async (start: string, end: string) => {
     const { data } = await supabase
