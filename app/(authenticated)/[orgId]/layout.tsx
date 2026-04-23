@@ -29,7 +29,9 @@ export default async function OrgLayout({
   }
 
   if (!isInternalUser(userRecord) && userRecord.organization_id !== orgId) {
-    redirect(`/${userRecord.organization_id}/dashboard`)
+    redirect(
+      userRecord.organization_id ? `/${userRecord.organization_id}/dashboard` : '/onboarding'
+    )
   }
 
   // Cookie is set by the proxy (proxy.ts) on every request with a UUID path segment
