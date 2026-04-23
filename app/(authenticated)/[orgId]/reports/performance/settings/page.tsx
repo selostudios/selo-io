@@ -9,6 +9,7 @@ import { defaultTemplates, NARRATIVE_BLOCK_KEYS } from '@/lib/reviews/narrative/
 import { createClient } from '@/lib/supabase/server'
 import { PromptsForm, type PromptBlockView } from './prompts-form'
 import { StyleMemoCard } from './style-memo-card'
+import { StyleMemoHistoryTimeline } from './style-memo-history-timeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -115,6 +116,8 @@ export default async function PerformanceReportSettingsPage({
         updatedAt={memoRow?.updated_at ?? null}
         updatedByName={updatedByName}
       />
+
+      <StyleMemoHistoryTimeline orgId={orgId} />
 
       <PromptsForm orgId={orgId} blocks={blocks} />
     </div>
