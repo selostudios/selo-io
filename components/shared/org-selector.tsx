@@ -109,8 +109,8 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
     return null
   }
 
-  // External users see simple display (no dropdown)
-  if (!isInternal) {
+  // Single-org non-internal users see a simple label (no dropdown).
+  if (!isInternal && activeOrganizations.length <= 1) {
     const org = activeOrganizations[0]
     if (!org) {
       return (
@@ -128,7 +128,7 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
     )
   }
 
-  // Internal users get dropdown
+  // Internal users and non-internal users with multiple memberships get a dropdown.
   return (
     <>
       <DropdownMenu>
@@ -164,19 +164,25 @@ export function OrgSelector({ organizations, isInternal }: OrgSelectorProps) {
             </DropdownMenuItem>
           ))}
 
-          {activeOrganizations.length > 0 && <DropdownMenuSeparator />}
-          <DropdownMenuItem onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            New Organization
-          </DropdownMenuItem>
+          {isInternal && (
+            <>
+              {activeOrganizations.length > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                New Organization
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CreateOrganizationDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSuccess={handleOrganizationCreated}
-      />
+      {isInternal && (
+        <CreateOrganizationDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSuccess={handleOrganizationCreated}
+        />
+      )}
     </>
   )
 }

@@ -14,9 +14,26 @@ export const getAuthUser = cache(async () => {
   return user
 })
 
+export interface Membership {
+  organization_id: string
+  role: string
+  organization: {
+    id: string
+    name: string
+    logo_url: string | null
+    website_url: string | null
+    status: string
+  } | null
+}
+
 /**
  * User record shape returned by getUserRecord().
  * Contains all fields needed by layout, header, and page components.
+ *
+ * `memberships` is the canonical list for multi-org access checks.
+ * `organization_id`/`role`/`organization` expose the first membership for
+ * legacy callers (root redirect, non-org-scoped pages). URL-scoped callers
+ * should resolve the active membership from `memberships` via the URL orgId.
  */
 export interface CachedUserRecord {
   id: string
@@ -25,13 +42,8 @@ export interface CachedUserRecord {
   first_name: string | null
   last_name: string | null
   is_internal: boolean | null
-  organization: {
-    id: string
-    name: string
-    logo_url: string | null
-    website_url: string | null
-    status: string
-  } | null
+  organization: Membership['organization']
+  memberships: Membership[]
 }
 
 /**
@@ -51,22 +63,18 @@ export const getUserRecord = cache(async (userId: string): Promise<CachedUserRec
   if (error || !data) return null
 
   const record = data as Record<string, unknown>
-  const membership = (
-    record.team_members as {
-      organization_id: string
-      role: string
-      organization: CachedUserRecord['organization']
-    }[]
-  )?.[0]
+  const memberships = (record.team_members as Membership[] | null) ?? []
+  const primary = memberships[0]
 
   return {
     id: record.id as string,
-    organization_id: membership?.organization_id ?? null,
-    role: membership?.role ?? 'client_viewer',
+    organization_id: primary?.organization_id ?? null,
+    role: primary?.role ?? 'client_viewer',
     first_name: record.first_name as string | null,
     last_name: record.last_name as string | null,
     is_internal: record.is_internal as boolean | null,
-    organization: membership?.organization ?? null,
+    organization: primary?.organization ?? null,
+    memberships,
   }
 })
 

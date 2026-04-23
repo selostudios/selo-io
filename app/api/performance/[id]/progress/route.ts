@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { canAccessAllAudits } from '@/lib/permissions'
+import { canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { PerformanceAuditStatus } from '@/lib/enums'
 
 // Mark audits as timed out if running for more than 3 minutes
@@ -27,13 +27,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .eq('id', user.id)
     .single()
 
-  const progressMembership = (
-    rawUser?.team_members as { organization_id: string; role: string }[]
-  )?.[0]
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
   const userRecord = rawUser
     ? {
-        organization_id: progressMembership?.organization_id ?? null,
-        role: progressMembership?.role ?? 'client_viewer',
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
         is_internal: rawUser.is_internal,
       }
     : null
@@ -55,7 +53,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   // Verify access: allow if user owns it (same org or created it), or if internal/admin/developer
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) || // One-time audits: only creator
     canAccessAllAudits(userRecord)
 

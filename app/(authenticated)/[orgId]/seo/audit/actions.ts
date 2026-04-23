@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord, getOrganizationsList } from '@/lib/auth/cached'
-import { isInternalUser, canAccessAllAudits } from '@/lib/permissions'
+import { isInternalUser, canAccessAllAudits, canAccessOrg } from '@/lib/permissions'
 import { UnifiedAuditStatus } from '@/lib/enums'
 import type { AuditListBaseResult } from '@/lib/actions/audit-list-helpers'
 import type { UnifiedAudit } from '@/lib/unified-audit/types'
@@ -74,11 +74,20 @@ export async function deleteUnifiedAudit(auditId: string): Promise<{ error?: str
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  const { data: userRecord } = await supabase
+  const { data: rawUser } = await supabase
     .from('users')
-    .select('organization_id, is_internal, role')
+    .select('id, is_internal, team_members(organization_id, role)')
     .eq('id', user.id)
     .single()
+
+  const memberships = (rawUser?.team_members as { organization_id: string; role: string }[]) ?? []
+  const userRecord = rawUser
+    ? {
+        memberships,
+        role: memberships[0]?.role ?? 'client_viewer',
+        is_internal: rawUser.is_internal,
+      }
+    : null
   if (!userRecord) return { error: 'User not found' }
 
   // Fetch audit
@@ -87,7 +96,7 @@ export async function deleteUnifiedAudit(auditId: string): Promise<{ error?: str
 
   // Verify access
   const hasAccess =
-    audit.organization_id === userRecord.organization_id ||
+    (audit.organization_id && canAccessOrg(userRecord, audit.organization_id)) ||
     (audit.organization_id === null && audit.created_by === user.id) ||
     canAccessAllAudits(userRecord)
 
