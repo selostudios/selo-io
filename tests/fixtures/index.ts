@@ -92,3 +92,28 @@ export const testStyleMemo = {
   source: 'auto' as const,
   updatedAt: '2026-01-15T12:00:00Z',
 }
+
+/**
+ * Seeded memo history rows. Ensures the settings timeline and snapshot-detail
+ * callout have content to render without having to trigger the live learner.
+ */
+export const testStyleMemoVersions = {
+  auto: {
+    id: '33333333-3333-4333-8333-333333333333',
+    snapshotId: testMarketingReview.snapshotId,
+    memo: testStyleMemo.memo,
+    rationale: 'Noticed author prefers punchy bullets; leaned into that.',
+    source: 'auto' as const,
+    createdBy: null,
+    createdAt: '2026-01-15T12:00:00Z',
+  },
+  manual: {
+    id: '44444444-4444-4444-8444-444444444444',
+    snapshotId: null,
+    memo: testStyleMemo.memo + ' Also emphasise YoY deltas.',
+    rationale: null,
+    source: 'manual' as const,
+    createdBy: null, // filled in by seed.ts with the admin user id
+    createdAt: '2026-01-20T12:00:00Z',
+  },
+}

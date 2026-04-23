@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { makeChain } from '@/tests/helpers/supabase-mocks'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
@@ -16,6 +17,11 @@ vi.mock('@/lib/reviews/narrative/learn', () => ({
   runStyleMemoLearner: (...args: unknown[]) => runStyleMemoLearner(...args),
 }))
 
+const insertMemoVersion = vi.fn(async () => ({ inserted: true }))
+vi.mock('@/lib/reviews/narrative/memo-history', () => ({
+  insertMemoVersion: (...args: unknown[]) => insertMemoVersion(...args),
+}))
+
 import {
   saveStyleMemo,
   clearStyleMemo,
@@ -25,25 +31,10 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { revalidatePath } from 'next/cache'
 
-function makeChain(overrides: Record<string, unknown> = {}) {
-  const chain: Record<string, unknown> = {
-    select: vi.fn(() => chain),
-    insert: vi.fn(() => chain),
-    update: vi.fn(() => chain),
-    upsert: vi.fn(async () => ({ error: null })),
-    eq: vi.fn(() => chain),
-    order: vi.fn(() => chain),
-    limit: vi.fn(() => chain),
-    single: vi.fn(async () => ({ data: null, error: null })),
-    maybeSingle: vi.fn(async () => ({ data: null, error: null })),
-    ...overrides,
-  }
-  return chain
-}
-
 describe('saveStyleMemo', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    insertMemoVersion.mockResolvedValue({ inserted: true } as never)
   })
 
   test('rejects unauthenticated callers', async () => {
@@ -113,11 +104,87 @@ describe('saveStyleMemo', () => {
     expect(result).toEqual({ success: true })
     expect(revalidatePath).toHaveBeenCalledWith('/org-1/reports/performance/settings')
   })
+
+  test('inserts a manual version row after saving a new memo', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+
+    const upsertMock = vi.fn(async () => ({ error: null }))
+    const supabase = { from: vi.fn(() => ({ upsert: upsertMock })) }
+    vi.mocked(createClient).mockResolvedValue(supabase as never)
+
+    const longMemo = 'y'.repeat(3000)
+    const result = await saveStyleMemo('org-1', longMemo)
+
+    expect(result).toEqual({ success: true })
+    expect(insertMemoVersion).toHaveBeenCalledTimes(1)
+    const call = insertMemoVersion.mock.calls[0][0] as {
+      supabase: unknown
+      organizationId: string
+      snapshotId: string | null
+      memo: string
+      rationale: string | null
+      source: string
+      createdBy: string | null
+    }
+    expect(call.supabase).toBe(supabase)
+    expect(call.organizationId).toBe('org-1')
+    expect(call.snapshotId).toBeNull()
+    expect(call.rationale).toBeNull()
+    expect(call.source).toBe('manual')
+    expect(call.createdBy).toBe('user-1')
+    // Truncated memo is passed through — same value the upsert received.
+    const [upsertPayload] = upsertMock.mock.calls[0] as [Record<string, unknown>, unknown]
+    expect(call.memo).toBe(upsertPayload.memo)
+    expect(call.memo.length).toBeLessThanOrEqual(2000)
+  })
+
+  test('returns success even when version-row insert fails (non-fatal)', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+
+    const upsertMock = vi.fn(async () => ({ error: null }))
+    const supabase = { from: vi.fn(() => ({ upsert: upsertMock })) }
+    vi.mocked(createClient).mockResolvedValue(supabase as never)
+
+    insertMemoVersion.mockResolvedValueOnce({
+      inserted: false,
+      reason: 'error',
+      error: 'db exploded',
+    } as never)
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      const result = await saveStyleMemo('org-1', 'some memo')
+
+      expect(result).toEqual({ success: true })
+      expect(errorSpy).toHaveBeenCalled()
+      const loggedPayload = errorSpy.mock.calls.find(
+        ([, payload]) =>
+          typeof payload === 'object' &&
+          payload !== null &&
+          (payload as { type?: string }).type === 'version_insert_error'
+      )
+      expect(loggedPayload).toBeDefined()
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
 })
 
 describe('clearStyleMemo', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    insertMemoVersion.mockResolvedValue({ inserted: true } as never)
   })
 
   test('upserts an empty string with manual source', async () => {

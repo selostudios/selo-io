@@ -1,6 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser } from '@/lib/auth/cached'
+import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
+import { isInternalUser } from '@/lib/permissions'
+import { UserRole } from '@/lib/enums'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import { PrintButton } from '@/components/reviews/print-button'
 import { ReviewBreadcrumb } from '@/components/reviews/review-breadcrumb'
@@ -8,6 +10,7 @@ import { formatQuarterLabel } from '@/lib/reviews/period'
 import { resolvePublisherNames } from '@/lib/reviews/publishers'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { SnapshotShareButton } from './snapshot-client'
+import { SnapshotLearnerCallout } from './snapshot-learner-callout'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +34,11 @@ export default async function PerformanceReportSnapshotDetailPage({
 
   const user = await getAuthUser()
   if (!user) redirect('/login') // defensive — layout should have caught this
+
+  const userRecord = await getUserRecord(user.id)
+  const canManage = userRecord
+    ? isInternalUser(userRecord) || userRecord.role === UserRole.Admin
+    : false
 
   const supabase = await createClient()
 
@@ -131,6 +139,12 @@ export default async function PerformanceReportSnapshotDetailPage({
           data={data}
         />
       </div>
+
+      <SnapshotLearnerCallout
+        snapshotId={snapshot.id as string}
+        orgId={orgId}
+        canManage={canManage}
+      />
     </div>
   )
 }

@@ -1,12 +1,10 @@
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface EmptyStateProps {
+interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: LucideIcon
   title: string
   description?: string
-  className?: string
-  children?: React.ReactNode
 }
 
 export function EmptyState({
@@ -15,9 +13,11 @@ export function EmptyState({
   description,
   className,
   children,
+  ...rest
 }: EmptyStateProps) {
   return (
     <div
+      {...rest}
       className={cn(
         'flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-8 text-center',
         className

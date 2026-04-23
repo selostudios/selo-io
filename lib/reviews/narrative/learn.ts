@@ -1,8 +1,10 @@
-import { generateText } from 'ai'
+import { generateObject } from 'ai'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAnthropicProvider } from '@/lib/ai/provider'
 import { buildLearnerDiff, loadStyleMemo, truncateMemo } from './style-memo'
 import { buildLearnerPrompt } from './learner-prompts'
+import { learnerOutputSchema, truncateRationale } from './memo-history-types'
+import { insertMemoVersion } from './memo-history'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 const LEARNER_MODEL_ID = 'claude-opus-4-7'
@@ -19,7 +21,7 @@ export interface RunStyleMemoLearnerInput {
 }
 
 export type RunStyleMemoLearnerResult =
-  | { status: 'updated' }
+  | { status: 'updated'; memo: string; rationale: string }
   | { status: 'skipped' }
   | { status: 'failed'; reason: 'empty_response' | 'llm_error' | 'db_error' | 'unknown' }
 
@@ -52,14 +54,15 @@ export async function runStyleMemoLearner(
 
     const anthropic = await getAnthropicProvider()
 
-    let text: string
+    let object: { memo: string; rationale: string }
     try {
-      const result = await generateText({
+      const result = await generateObject({
         model: anthropic(LEARNER_MODEL_ID),
         prompt,
+        schema: learnerOutputSchema,
         maxOutputTokens: LEARNER_MAX_TOKENS,
       })
-      text = result.text
+      object = result.object
     } catch (err) {
       console.error('[Style Memo Error]', {
         type: 'llm_error',
@@ -72,8 +75,8 @@ export async function runStyleMemoLearner(
       return { status: 'failed', reason: 'llm_error' }
     }
 
-    const cleaned = text.trim()
-    if (cleaned.length === 0) {
+    const cleanedMemo = object.memo.trim()
+    if (cleanedMemo.length === 0) {
       console.error('[Style Memo Error]', {
         type: 'empty_response',
         orgId: input.organizationId,
@@ -84,7 +87,8 @@ export async function runStyleMemoLearner(
       return { status: 'failed', reason: 'empty_response' }
     }
 
-    const memo = truncateMemo(cleaned)
+    const memo = truncateMemo(cleanedMemo)
+    const rationale = truncateRationale(object.rationale)
 
     const supabase = createServiceClient()
     try {
@@ -122,7 +126,32 @@ export async function runStyleMemoLearner(
       return { status: 'failed', reason: 'db_error' }
     }
 
-    return { status: 'updated' }
+    // Version insert is best-effort and lives outside the db_error try/catch.
+    // The helper never throws (it catches internally and returns a structured
+    // result), but keeping it here ensures a thrown error could never demote
+    // a successful memo update to { status: 'failed', reason: 'db_error' }.
+    const versionResult = await insertMemoVersion({
+      supabase,
+      organizationId: input.organizationId,
+      snapshotId: input.snapshotId ?? null,
+      memo,
+      rationale,
+      source: 'auto',
+      createdBy: null,
+    })
+
+    if (versionResult.inserted === false && versionResult.reason === 'error') {
+      console.error('[Style Memo Error]', {
+        type: 'version_insert_error',
+        orgId: input.organizationId,
+        ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+        ...(input.reviewId ? { reviewId: input.reviewId } : {}),
+        error: versionResult.error,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    return { status: 'updated', memo, rationale }
   } catch (err) {
     console.error('[Style Memo Error]', {
       type: 'unknown',

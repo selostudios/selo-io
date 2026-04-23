@@ -106,6 +106,54 @@ test.describe('Performance Reports — style memo', () => {
   })
 })
 
+test.describe('Performance Reports — memo history surfaces', () => {
+  test('snapshot-detail callout renders and links to the settings timeline', async ({ page }) => {
+    await loginAsAdmin(page)
+    const orgId = await getOrgIdFromDashboard(page)
+
+    await page.goto(
+      `/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots/${testMarketingReview.snapshotId}`
+    )
+    await page.waitForSelector('[data-testid="performance-reports-snapshot-detail"]')
+
+    const callout = page.locator('[data-testid="snapshot-learner-callout"]')
+    await expect(callout).toBeVisible()
+    await expect(page.locator('[data-testid="snapshot-learner-callout-rationale"]')).toContainText(
+      'Noticed author prefers punchy bullets'
+    )
+
+    const historyLink = callout.getByRole('link', { name: /view full history/i })
+    await expect(historyLink).toHaveAttribute(
+      'href',
+      `/${orgId}/reports/performance/settings#memo-history`
+    )
+  })
+
+  test('settings timeline lists seeded rows and row expand reveals the memo', async ({ page }) => {
+    await loginAsAdmin(page)
+    const orgId = await getOrgIdFromDashboard(page)
+
+    await page.goto(`/${orgId}/reports/performance/settings`)
+    await page.waitForSelector('[data-testid="style-memo-history-timeline"]')
+
+    await expect(page.locator('[data-testid="style-memo-history-row-0"]')).toBeVisible()
+    await expect(page.locator('[data-testid="style-memo-history-row-1"]')).toBeVisible()
+
+    await page.locator('[data-testid="style-memo-history-expand-0"]').click()
+    await expect(page.locator('[data-testid="style-memo-history-row-0"]')).toContainText(
+      testStyleMemo.memo
+    )
+  })
+
+  test('public share route does not render the learner callout', async ({ page }) => {
+    await page.goto(`/s/${testMarketingReview.publicShareToken}`)
+    await expect(page.locator('[data-testid="shared-marketing-review"]')).toBeVisible({
+      timeout: 10_000,
+    })
+    await expect(page.locator('[data-testid="snapshot-learner-callout"]')).toHaveCount(0)
+  })
+})
+
 test.describe('Performance Reports — public share access', () => {
   test('admin creates share link from snapshots list and an unauthenticated visitor can view it', async ({
     page,

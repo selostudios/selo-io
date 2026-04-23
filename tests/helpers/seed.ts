@@ -5,6 +5,7 @@ import {
   testCampaign,
   testMarketingReview,
   testStyleMemo,
+  testStyleMemoVersions,
 } from '../fixtures'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -258,6 +259,41 @@ export async function seedTestData() {
 
   if (memoError) {
     throw new Error(`Failed to seed marketing review style memo: ${memoError.message}`)
+  }
+
+  // Seed memo history version rows so the settings timeline and snapshot
+  // callout have content to render. Upsert-on-id keeps the seed idempotent
+  // across partial cleanup.
+  const { error: versionsError } = await supabase
+    .from('marketing_review_style_memo_versions')
+    .upsert(
+      [
+        {
+          id: testStyleMemoVersions.auto.id,
+          organization_id: org!.id,
+          snapshot_id: testStyleMemoVersions.auto.snapshotId,
+          memo: testStyleMemoVersions.auto.memo,
+          rationale: testStyleMemoVersions.auto.rationale,
+          source: testStyleMemoVersions.auto.source,
+          created_by: testStyleMemoVersions.auto.createdBy,
+          created_at: testStyleMemoVersions.auto.createdAt,
+        },
+        {
+          id: testStyleMemoVersions.manual.id,
+          organization_id: org!.id,
+          snapshot_id: testStyleMemoVersions.manual.snapshotId,
+          memo: testStyleMemoVersions.manual.memo,
+          rationale: testStyleMemoVersions.manual.rationale,
+          source: testStyleMemoVersions.manual.source,
+          created_by: adminUser.data.user!.id,
+          created_at: testStyleMemoVersions.manual.createdAt,
+        },
+      ],
+      { onConflict: 'id' }
+    )
+
+  if (versionsError) {
+    throw new Error(`Failed to seed marketing review style memo versions: ${versionsError.message}`)
   }
 
   console.log('✅ Test data seeded successfully')

@@ -7,6 +7,7 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { truncateMemo } from './style-memo'
 import { runStyleMemoLearner } from './learn'
+import { insertMemoVersion } from './memo-history'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -59,6 +60,29 @@ export async function saveStyleMemo(
   )
 
   if (error) return { success: false, error: error.message }
+
+  // Version-row insert is best-effort: the singleton upsert above is the source
+  // of truth for the current memo, so a failure here must not demote the
+  // action to an error. `insertMemoVersion` never throws — it catches
+  // internally and returns a structured result.
+  const versionResult = await insertMemoVersion({
+    supabase,
+    organizationId,
+    snapshotId: null,
+    memo: truncated,
+    rationale: null,
+    source: 'manual',
+    createdBy: auth.userId,
+  })
+
+  if (versionResult.inserted === false && versionResult.reason === 'error') {
+    console.error('[Style Memo Error]', {
+      type: 'version_insert_error',
+      orgId: organizationId,
+      error: versionResult.error,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   revalidatePath(`/${organizationId}/reports/performance/settings`)
   return { success: true }
