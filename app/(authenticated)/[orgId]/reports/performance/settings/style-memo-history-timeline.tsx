@@ -118,7 +118,7 @@ export async function StyleMemoHistoryTimeline({ orgId }: { orgId: string }) {
   if (snapshotIds.length > 0) {
     const { data: snapshotData, error: snapshotError } = await supabase
       .from('marketing_review_snapshots')
-      .select('id, review_id, marketing_reviews(quarter)')
+      .select('id, review_id, marketing_reviews!marketing_review_snapshots_review_id_fkey(quarter)')
       .in('id', snapshotIds)
 
     if (snapshotError) {

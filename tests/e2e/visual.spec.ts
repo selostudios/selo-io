@@ -101,6 +101,19 @@ test.describe('Visual Regression', () => {
       await expect(page).toHaveScreenshot('performance-report-snapshot.png', { fullPage: true })
     })
 
+    test('performance report snapshot detail with learner callout', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(
+        `/${orgId}/reports/performance/${testMarketingReview.reviewId}/snapshots/${testMarketingReview.snapshotId}`
+      )
+      await page.waitForSelector('[data-testid="performance-reports-snapshot-detail"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await page.waitForSelector('[data-testid="snapshot-learner-callout"]')
+      await expect(page).toHaveScreenshot('performance-report-snapshot-with-callout.png', {
+        fullPage: true,
+      })
+    })
+
     test('performance-reports settings with style memo card', async ({ page }) => {
       const orgId = await getOrgIdFromDashboard(page)
       await page.goto(`/${orgId}/reports/performance/settings`)
