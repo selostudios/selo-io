@@ -92,8 +92,8 @@ export function AuthorNotesEditor({ reviewId, initialNotes, canEdit }: Props) {
           </div>
         </div>
         <p className="text-muted-foreground text-xs">
-          Not shown in the deck. Used only as context for the AI — edits take effect the next time
-          you regenerate the narrative.
+          Not shown in the deck. Used as context for the AI when you publish, and to improve future
+          reports.
         </p>
         <Textarea
           id="author-notes"
