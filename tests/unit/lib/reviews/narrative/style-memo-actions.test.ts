@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { makeChain } from '@/tests/helpers/supabase-mocks'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
@@ -29,22 +30,6 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { revalidatePath } from 'next/cache'
-
-function makeChain(overrides: Record<string, unknown> = {}) {
-  const chain: Record<string, unknown> = {
-    select: vi.fn(() => chain),
-    insert: vi.fn(() => chain),
-    update: vi.fn(() => chain),
-    upsert: vi.fn(async () => ({ error: null })),
-    eq: vi.fn(() => chain),
-    order: vi.fn(() => chain),
-    limit: vi.fn(() => chain),
-    single: vi.fn(async () => ({ data: null, error: null })),
-    maybeSingle: vi.fn(async () => ({ data: null, error: null })),
-    ...overrides,
-  }
-  return chain
-}
 
 describe('saveStyleMemo', () => {
   beforeEach(() => {

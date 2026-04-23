@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest'
 
 import { insertMemoVersion } from '@/lib/reviews/narrative/memo-history'
+import { makeChain, mockSupabaseFrom } from '@/tests/helpers/supabase-mocks'
 
 function makeSupabaseMock(options: {
   priorMemo?: string | null
@@ -17,17 +18,7 @@ function makeSupabaseMock(options: {
     return { data: { memo: options.priorMemo }, error: null }
   })
 
-  const from = vi.fn(() => {
-    const chain = {
-      select: vi.fn(() => chain),
-      eq: vi.fn(() => chain),
-      order: vi.fn(() => chain),
-      limit: vi.fn(() => chain),
-      maybeSingle,
-      insert: insertFn,
-    }
-    return chain
-  })
+  const { from } = mockSupabaseFrom(() => makeChain({ maybeSingle, insert: insertFn }))
 
   return { from, insertFn, maybeSingle }
 }

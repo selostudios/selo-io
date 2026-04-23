@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { makeChain, mockSupabaseFrom } from '@/tests/helpers/supabase-mocks'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -16,21 +17,9 @@ interface VersionRow {
   created_at: string
 }
 
-function chainReturning<T>(result: MaybeSingleResult<T>) {
-  const chain = {
-    select: vi.fn(() => chain),
-    eq: vi.fn(() => chain),
-    order: vi.fn(() => chain),
-    limit: vi.fn(() => chain),
-    maybeSingle: vi.fn(async () => result),
-  }
-  return chain
-}
-
 function mockSupabaseReturning(result: MaybeSingleResult<VersionRow>) {
-  vi.mocked(createClient).mockResolvedValue({
-    from: vi.fn(() => chainReturning(result)),
-  } as never)
+  const chain = makeChain({ maybeSingle: vi.fn(async () => result) })
+  vi.mocked(createClient).mockResolvedValue(mockSupabaseFrom(() => chain) as never)
 }
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111'

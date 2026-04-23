@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { makeChain } from '@/tests/helpers/supabase-mocks'
 
 const generateObject = vi.fn()
 vi.mock('ai', () => ({
@@ -19,19 +20,14 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
     from: (table: string) => {
       if (table === 'marketing_review_style_memo_versions') {
-        const chain = {
-          select: vi.fn(() => chain),
-          eq: vi.fn(() => chain),
-          order: vi.fn(() => chain),
-          limit: vi.fn(() => chain),
+        return makeChain({
           maybeSingle: vi.fn(async () =>
             versionPriorMemo.value === null
               ? { data: null, error: null }
               : { data: { memo: versionPriorMemo.value }, error: null }
           ),
           insert: (payload: unknown) => versionInsert(payload),
-        }
-        return chain
+        })
       }
       return {
         upsert: (payload: unknown) => {

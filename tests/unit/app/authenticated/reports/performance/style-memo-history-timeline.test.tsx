@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { makeChain, mockSupabaseFrom } from '@/tests/helpers/supabase-mocks'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -38,29 +39,23 @@ function setupSupabase(options: {
   snapshots?: QueryResult<SnapshotDbRow[]>
   users?: QueryResult<UserDbRow[]>
 }) {
-  const versionsChain = {
-    select: vi.fn(() => versionsChain),
-    eq: vi.fn(() => versionsChain),
-    order: vi.fn(() => versionsChain),
+  const versionsChain = makeChain({
     limit: vi.fn(async () => options.versions),
-  }
-  const snapshotsChain = {
-    select: vi.fn(() => snapshotsChain),
+  })
+  const snapshotsChain = makeChain({
     in: vi.fn(async () => options.snapshots ?? { data: [], error: null }),
-  }
-  const usersChain = {
-    select: vi.fn(() => usersChain),
+  })
+  const usersChain = makeChain({
     in: vi.fn(async () => options.users ?? { data: [], error: null }),
-  }
+  })
 
-  vi.mocked(createClient).mockResolvedValue({
-    from: vi.fn((table: string) => {
-      if (table === 'marketing_review_style_memo_versions') return versionsChain
-      if (table === 'marketing_review_snapshots') return snapshotsChain
-      if (table === 'users') return usersChain
-      throw new Error(`Unexpected table ${table}`)
-    }),
-  } as never)
+  vi.mocked(createClient).mockResolvedValue(
+    mockSupabaseFrom({
+      marketing_review_style_memo_versions: versionsChain,
+      marketing_review_snapshots: snapshotsChain,
+      users: usersChain,
+    }) as never
+  )
 
   return { versionsChain, snapshotsChain, usersChain }
 }
