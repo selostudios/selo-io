@@ -4,6 +4,7 @@ import { getAnthropicProvider } from '@/lib/ai/provider'
 import { buildLearnerDiff, loadStyleMemo, truncateMemo } from './style-memo'
 import { buildLearnerPrompt } from './learner-prompts'
 import { learnerOutputSchema, truncateRationale } from './memo-history-types'
+import { insertMemoVersion } from './memo-history'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 const LEARNER_MODEL_ID = 'claude-opus-4-7'
@@ -123,6 +124,31 @@ export async function runStyleMemoLearner(
         timestamp: new Date().toISOString(),
       })
       return { status: 'failed', reason: 'db_error' }
+    }
+
+    // Version insert is best-effort and lives outside the db_error try/catch.
+    // The helper never throws (it catches internally and returns a structured
+    // result), but keeping it here ensures a thrown error could never demote
+    // a successful memo update to { status: 'failed', reason: 'db_error' }.
+    const versionResult = await insertMemoVersion({
+      supabase,
+      organizationId: input.organizationId,
+      snapshotId: input.snapshotId ?? null,
+      memo,
+      rationale,
+      source: 'auto',
+      createdBy: null,
+    })
+
+    if (versionResult.inserted === false && versionResult.reason === 'error') {
+      console.error('[Style Memo Error]', {
+        type: 'version_insert_error',
+        orgId: input.organizationId,
+        ...(input.snapshotId ? { snapshotId: input.snapshotId } : {}),
+        ...(input.reviewId ? { reviewId: input.reviewId } : {}),
+        error: versionResult.error,
+        timestamp: new Date().toISOString(),
+      })
     }
 
     return { status: 'updated', memo, rationale }

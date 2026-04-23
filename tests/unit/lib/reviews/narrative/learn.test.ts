@@ -12,14 +12,34 @@ vi.mock('@/lib/ai/provider', () => ({
 }))
 
 const upsertMemo = vi.fn()
+const versionInsert = vi.fn(async () => ({ error: null }))
+const versionPriorMemo: { value: string | null } = { value: null }
+
 vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
-    from: () => ({
-      upsert: (payload: unknown) => {
-        upsertMemo(payload)
-        return Promise.resolve({ error: null })
-      },
-    }),
+    from: (table: string) => {
+      if (table === 'marketing_review_style_memo_versions') {
+        const chain = {
+          select: vi.fn(() => chain),
+          eq: vi.fn(() => chain),
+          order: vi.fn(() => chain),
+          limit: vi.fn(() => chain),
+          maybeSingle: vi.fn(async () =>
+            versionPriorMemo.value === null
+              ? { data: null, error: null }
+              : { data: { memo: versionPriorMemo.value }, error: null }
+          ),
+          insert: (payload: unknown) => versionInsert(payload),
+        }
+        return chain
+      }
+      return {
+        upsert: (payload: unknown) => {
+          upsertMemo(payload)
+          return Promise.resolve({ error: null })
+        },
+      }
+    },
   }),
 }))
 
@@ -50,6 +70,9 @@ beforeEach(() => {
   generateObject.mockReset()
   upsertMemo.mockReset()
   loadStyleMemo.mockReset()
+  versionInsert.mockReset()
+  versionInsert.mockImplementation(async () => ({ error: null }))
+  versionPriorMemo.value = null
 })
 
 describe('runStyleMemoLearner', () => {
@@ -162,6 +185,106 @@ describe('runStyleMemoLearner', () => {
     })
     expect(result).toEqual({ status: 'failed', reason: 'empty_response' })
     expect(upsertMemo).not.toHaveBeenCalled()
+  })
+
+  test('inserts a version row with source=auto, snapshotId, memo, and rationale after a successful upsert', async () => {
+    loadStyleMemo.mockResolvedValueOnce('Existing memo.')
+    generateObject.mockResolvedValueOnce({
+      object: {
+        memo: 'Updated memo body.',
+        rationale: 'Author prefers concise bullets.',
+      },
+    })
+    const finalNarrative = { ...ai, ga_summary: 'Author rewrote.' }
+
+    const result = await runStyleMemoLearner({
+      organizationId: 'org-1',
+      organizationName: 'ACME',
+      ai,
+      finalNarrative,
+      authorNotes: null,
+      snapshotId: 'snap-9',
+    })
+
+    expect(result).toMatchObject({ status: 'updated' })
+    expect(versionInsert).toHaveBeenCalledTimes(1)
+    expect(versionInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organization_id: 'org-1',
+        snapshot_id: 'snap-9',
+        memo: 'Updated memo body.',
+        rationale: 'Author prefers concise bullets.',
+        source: 'auto',
+        created_by: null,
+      })
+    )
+  })
+
+  test('does not log an error and stays updated when the version helper reports a duplicate', async () => {
+    loadStyleMemo.mockResolvedValueOnce('Existing memo.')
+    generateObject.mockResolvedValueOnce({
+      object: { memo: 'Updated memo body.', rationale: 'Rationale.' },
+    })
+    // Prior version row has the same memo text → helper short-circuits with
+    // { inserted: false, reason: 'duplicate' } and never calls .insert().
+    versionPriorMemo.value = 'Updated memo body.'
+    const finalNarrative = { ...ai, ga_summary: 'Author rewrote.' }
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = await runStyleMemoLearner({
+      organizationId: 'org-1',
+      organizationName: 'ACME',
+      ai,
+      finalNarrative,
+      authorNotes: null,
+      snapshotId: 'snap-9',
+    })
+
+    expect(result).toMatchObject({
+      status: 'updated',
+      memo: 'Updated memo body.',
+      rationale: 'Rationale.',
+    })
+    expect(versionInsert).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
+
+  test('still returns updated and logs version_insert_error when the version insert fails', async () => {
+    loadStyleMemo.mockResolvedValueOnce('Existing memo.')
+    generateObject.mockResolvedValueOnce({
+      object: { memo: 'Updated memo body.', rationale: 'Rationale.' },
+    })
+    versionInsert.mockImplementationOnce(async () => ({ error: { message: 'boom' } }))
+    const finalNarrative = { ...ai, ga_summary: 'Author rewrote.' }
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = await runStyleMemoLearner({
+      organizationId: 'org-1',
+      organizationName: 'ACME',
+      ai,
+      finalNarrative,
+      authorNotes: null,
+      snapshotId: 'snap-9',
+    })
+
+    expect(result).toMatchObject({
+      status: 'updated',
+      memo: 'Updated memo body.',
+      rationale: 'Rationale.',
+    })
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[Style Memo Error]',
+      expect.objectContaining({
+        type: 'version_insert_error',
+        orgId: 'org-1',
+        snapshotId: 'snap-9',
+        error: 'boom',
+      })
+    )
+    errorSpy.mockRestore()
   })
 
   test('returns failure status when the LLM throws', async () => {
