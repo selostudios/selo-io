@@ -49,7 +49,11 @@ describe('deleteUnifiedAudit', () => {
   it('returns error when audit is in progress', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockSingleUser.mockResolvedValue({
-      data: { id: 'user-1', is_internal: false, team_members: [{ organization_id: 'org-1', role: 'admin' }] },
+      data: {
+        id: 'user-1',
+        is_internal: false,
+        team_members: [{ organization_id: 'org-1', role: 'admin' }],
+      },
     })
     mockSingleAudit.mockResolvedValue({
       data: {
@@ -67,7 +71,11 @@ describe('deleteUnifiedAudit', () => {
   it('returns error when user has no access to the audit', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockSingleUser.mockResolvedValue({
-      data: { id: 'user-1', is_internal: false, team_members: [{ organization_id: 'org-1', role: 'team_member' }] },
+      data: {
+        id: 'user-1',
+        is_internal: false,
+        team_members: [{ organization_id: 'org-1', role: 'team_member' }],
+      },
     })
     mockSingleAudit.mockResolvedValue({
       data: {
@@ -85,7 +93,11 @@ describe('deleteUnifiedAudit', () => {
   it('allows deleting a completed audit the user owns', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockSingleUser.mockResolvedValue({
-      data: { id: 'user-1', is_internal: false, team_members: [{ organization_id: 'org-1', role: 'admin' }] },
+      data: {
+        id: 'user-1',
+        is_internal: false,
+        team_members: [{ organization_id: 'org-1', role: 'admin' }],
+      },
     })
     mockSingleAudit.mockResolvedValue({
       data: {
@@ -104,7 +116,11 @@ describe('deleteUnifiedAudit', () => {
   it('allows deleting a one-time audit by its creator', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockSingleUser.mockResolvedValue({
-      data: { id: 'user-1', is_internal: false, team_members: [{ organization_id: 'org-1', role: 'admin' }] },
+      data: {
+        id: 'user-1',
+        is_internal: false,
+        team_members: [{ organization_id: 'org-1', role: 'admin' }],
+      },
     })
     mockSingleAudit.mockResolvedValue({
       data: {
