@@ -556,16 +556,14 @@ export async function insertMemoVersion(
     return { inserted: false, reason: 'duplicate' }
   }
 
-  const { error } = await input.supabase
-    .from('marketing_review_style_memo_versions')
-    .insert({
-      organization_id: input.organizationId,
-      snapshot_id: input.snapshotId,
-      memo: input.memo,
-      rationale: input.rationale,
-      source: input.source,
-      created_by: input.createdBy,
-    })
+  const { error } = await input.supabase.from('marketing_review_style_memo_versions').insert({
+    organization_id: input.organizationId,
+    snapshot_id: input.snapshotId,
+    memo: input.memo,
+    rationale: input.rationale,
+    source: input.source,
+    created_by: input.createdBy,
+  })
 
   if (error) return { inserted: false, reason: 'error', error: error.message }
   return { inserted: true }
@@ -900,21 +898,21 @@ export async function SnapshotLearnerCallout({ snapshotId, orgId, canManage }: P
   return (
     <div
       data-testid="snapshot-learner-callout"
-      className="relative overflow-hidden rounded-lg border bg-muted/30 p-4"
+      className="bg-muted/30 relative overflow-hidden rounded-lg border p-4"
     >
-      <div className="absolute inset-y-0 left-0 w-1 bg-primary/60" />
+      <div className="bg-primary/60 absolute inset-y-0 left-0 w-1" />
       <div className="pl-3">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="size-4 text-primary" />
+          <Sparkles className="text-primary size-4" />
           What the AI learned from this report
         </div>
         <p
           data-testid="snapshot-learner-callout-rationale"
-          className="mt-1 text-sm text-muted-foreground"
+          className="text-muted-foreground mt-1 text-sm"
         >
           {row.rationale}
         </p>
-        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs">
           <span>{relative}</span>
           {canManage && (
             <Link
@@ -1077,7 +1075,7 @@ export function StyleMemoHistoryRow({
   return (
     <div
       data-testid={`style-memo-history-row-${index}`}
-      className="rounded-lg border p-3 space-y-2"
+      className="space-y-2 rounded-lg border p-3"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1">
@@ -1116,7 +1114,7 @@ export function StyleMemoHistoryRow({
         )}
       </div>
       {expanded && (
-        <pre className="whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+        <pre className="bg-muted/30 text-muted-foreground rounded-md border p-3 text-xs whitespace-pre-wrap">
           {row.memo || '(empty memo)'}
         </pre>
       )}
@@ -1161,8 +1159,12 @@ export async function StyleMemoHistoryTimeline({ orgId }: Props) {
     created_at: string
   }>
 
-  const snapshotIds = Array.from(new Set(list.map((r) => r.snapshot_id).filter((v): v is string => !!v)))
-  const creatorIds = Array.from(new Set(list.map((r) => r.created_by).filter((v): v is string => !!v)))
+  const snapshotIds = Array.from(
+    new Set(list.map((r) => r.snapshot_id).filter((v): v is string => !!v))
+  )
+  const creatorIds = Array.from(
+    new Set(list.map((r) => r.created_by).filter((v): v is string => !!v))
+  )
 
   const [snapshotsRes, creatorsRes] = await Promise.all([
     snapshotIds.length
@@ -1200,7 +1202,7 @@ export async function StyleMemoHistoryTimeline({ orgId }: Props) {
         <h3 className="text-sm font-medium">Memo history</h3>
         <p
           data-testid="style-memo-history-empty-state"
-          className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
+          className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm"
         >
           No history yet — publish a report or edit the memo to see learning events here.
         </p>

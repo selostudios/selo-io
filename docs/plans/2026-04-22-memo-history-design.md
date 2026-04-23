@@ -101,11 +101,11 @@ The callout is only mounted on the authenticated page, not on `/s/{token}`. Defe
 
 ## Visibility matrix
 
-| Surface                      | Admin | Team member | Client viewer | Public share |
-| ---------------------------- | ----- | ----------- | ------------- | ------------ |
-| Snapshot callout             | ✓     | ✓           | ✓             | ✗            |
-| Settings timeline            | ✓     | ✓ (read)    | ✓ (read)      | n/a          |
-| Memo mutation controls (existing) | ✓ | ✗ | ✗ | ✗ |
+| Surface                           | Admin | Team member | Client viewer | Public share |
+| --------------------------------- | ----- | ----------- | ------------- | ------------ |
+| Snapshot callout                  | ✓     | ✓           | ✓             | ✗            |
+| Settings timeline                 | ✓     | ✓ (read)    | ✓ (read)      | n/a          |
+| Memo mutation controls (existing) | ✓     | ✗           | ✗             | ✗            |
 
 Team members can read history; only admins can mutate. Matches the existing memo card pattern.
 
