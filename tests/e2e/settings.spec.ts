@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
 import { loginAsAdmin } from './helpers'
+import { testOrganization } from '../fixtures'
 
 test.describe('Settings', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,27 +9,35 @@ test.describe('Settings', () => {
   })
 
   test('admin can update organization name', async ({ page }) => {
-    await page.goto('/settings/organization')
+    // Restore the canonical name via the service client regardless of test
+    // outcome — the UI-based restore used to race the success toast (the
+    // first "saved successfully" toast stayed visible and satisfied the
+    // second assertion before the second save had actually committed),
+    // leaving the org in the renamed state and breaking downstream visual
+    // tests that snapshot the org name.
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-    // Wait for hydration
+    await page.goto('/settings/organization')
     await page.waitForLoadState('networkidle')
 
     const nameInput = page.locator('input[name="name"]')
     const saveButton = page.locator('button:has-text("Save Changes")')
 
-    // Rename away from the canonical seed value
-    await nameInput.clear()
-    await nameInput.type('Updated Org Name')
-    await expect(saveButton).toBeEnabled({ timeout: 5000 })
-    await saveButton.click()
-    await expect(page.locator('text=/successfully/i')).toBeVisible()
-
-    // Restore canonical name — downstream visual tests read org name live from DB and snapshot it.
-    await nameInput.clear()
-    await nameInput.type('Test Organization')
-    await expect(saveButton).toBeEnabled({ timeout: 5000 })
-    await saveButton.click()
-    await expect(page.locator('text=/successfully/i')).toBeVisible()
+    try {
+      await nameInput.clear()
+      await nameInput.type('Updated Org Name')
+      await expect(saveButton).toBeEnabled({ timeout: 5000 })
+      await saveButton.click()
+      await expect(page.locator('text=/successfully/i')).toBeVisible()
+    } finally {
+      await supabase
+        .from('organizations')
+        .update({ name: testOrganization.name })
+        .eq('name', 'Updated Org Name')
+    }
   })
 
   test('admin can navigate between settings tabs', async ({ page }) => {
