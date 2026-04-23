@@ -2,19 +2,12 @@ import { History } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatQuarterLabel } from '@/lib/reviews/period'
-import type { MemoHistoryRow, MemoHistorySource } from '@/lib/reviews/narrative/memo-history-types'
+import {
+  toMemoHistoryRow,
+  type MemoVersionDbRow,
+} from '@/lib/reviews/narrative/memo-history-types'
+import type { Tables } from '@/lib/supabase/database.types'
 import { StyleMemoHistoryRow } from './style-memo-history-row'
-
-interface VersionDbRow {
-  id: string
-  organization_id: string
-  snapshot_id: string | null
-  memo: string
-  rationale: string | null
-  source: MemoHistorySource
-  created_by: string | null
-  created_at: string
-}
 
 interface SnapshotDbRow {
   id: string
@@ -22,24 +15,7 @@ interface SnapshotDbRow {
   marketing_reviews: { quarter: string } | { quarter: string }[] | null
 }
 
-interface UserDbRow {
-  id: string
-  first_name: string | null
-  last_name: string | null
-}
-
-function toMemoHistoryRow(row: VersionDbRow): MemoHistoryRow {
-  return {
-    id: row.id,
-    organizationId: row.organization_id,
-    snapshotId: row.snapshot_id,
-    memo: row.memo,
-    rationale: row.rationale,
-    source: row.source,
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-  }
-}
+type UserDbRow = Pick<Tables<'users'>, 'id' | 'first_name' | 'last_name'>
 
 function extractQuarter(row: SnapshotDbRow): string | null {
   const reviews = row.marketing_reviews
@@ -94,7 +70,7 @@ export async function StyleMemoHistoryTimeline({ orgId }: { orgId: string }) {
     )
   }
 
-  const versions = (versionData ?? []) as VersionDbRow[]
+  const versions = (versionData ?? []) as MemoVersionDbRow[]
 
   if (versions.length === 0) {
     return (

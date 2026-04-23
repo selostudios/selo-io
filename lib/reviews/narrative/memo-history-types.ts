@@ -4,8 +4,11 @@
 // without pulling server code into the browser bundle.
 
 import { z } from 'zod'
+import type { Tables } from '@/lib/supabase/database.types'
 
 export type MemoHistorySource = 'auto' | 'manual'
+
+export type MemoVersionDbRow = Tables<'marketing_review_style_memo_versions'>
 
 export interface MemoHistoryRow {
   id: string
@@ -16,6 +19,19 @@ export interface MemoHistoryRow {
   source: MemoHistorySource
   createdBy: string | null
   createdAt: string
+}
+
+export function toMemoHistoryRow(row: MemoVersionDbRow): MemoHistoryRow {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    snapshotId: row.snapshot_id,
+    memo: row.memo,
+    rationale: row.rationale,
+    source: row.source as MemoHistorySource,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+  }
 }
 
 export const learnerOutputSchema = z.object({
