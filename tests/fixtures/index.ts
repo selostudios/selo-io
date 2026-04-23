@@ -80,3 +80,15 @@ export const testMarketingReview = {
       'Double down on the content engine: expand the case-study library, invest in SEO for high-intent commercial keywords, and run a Q2 webinar on the buyer evaluation framework.',
   },
 }
+
+/**
+ * Seeded style memo fixture. The memo is pre-loaded into
+ * `marketing_review_style_memos` for the test org so the settings E2E can
+ * verify the card renders a learned memo without having to trigger the live
+ * learner LLM call (which would be slow, flaky, and costly in CI).
+ */
+export const testStyleMemo = {
+  memo: 'Prefer punchy bullets. Tone: confident and consultative. Lead with deltas.',
+  source: 'auto' as const,
+  updatedAt: '2026-01-15T12:00:00Z',
+}

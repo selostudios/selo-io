@@ -23,6 +23,17 @@ vi.mock('@/lib/reviews/narrative/overrides', () => ({
   loadPromptOverrides: vi.fn(async () => ({})),
 }))
 
+const loadStyleMemo = vi.fn<(organizationId: string) => Promise<string>>()
+vi.mock('@/lib/reviews/narrative/style-memo', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/reviews/narrative/style-memo')>(
+    '@/lib/reviews/narrative/style-memo'
+  )
+  return {
+    ...actual,
+    loadStyleMemo: (organizationId: string) => loadStyleMemo(organizationId),
+  }
+})
+
 const baseInput = {
   organizationId: 'org-1',
   organizationName: 'Acme',
@@ -36,6 +47,8 @@ const baseInput = {
 describe('generateNarrativeBlocks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    loadStyleMemo.mockReset()
+    loadStyleMemo.mockResolvedValue('')
   })
 
   test('returns all six blocks produced by the model', async () => {
@@ -133,6 +146,27 @@ describe('generateNarrativeBlocks', () => {
 
     const call = (generateObject as unknown as Mock).mock.calls[0][0]
     expect(call.prompt).not.toContain('Author notes')
+  })
+
+  test('passes the loaded style memo into the prompt', async () => {
+    loadStyleMemo.mockResolvedValue('Prefer short, punchy bullets.')
+    ;(generateObject as unknown as Mock).mockResolvedValue({
+      object: {
+        cover_subtitle: 'x',
+        ga_summary: 'x',
+        linkedin_insights: 'x',
+        initiatives: 'x',
+        takeaways: 'x',
+        planning: 'x',
+      },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    })
+
+    await generateNarrativeBlocks(baseInput)
+
+    const call = (generateObject as unknown as Mock).mock.calls[0][0]
+    expect(call.prompt).toContain('LEARNED STYLE')
+    expect(call.prompt).toContain('Prefer short, punchy bullets.')
   })
 
   test('logs failure to usage_logs with error metadata when the model call fails', async () => {

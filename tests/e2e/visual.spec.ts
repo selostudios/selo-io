@@ -100,5 +100,14 @@ test.describe('Visual Regression', () => {
       await page.waitForSelector('[data-testid="review-deck"]')
       await expect(page).toHaveScreenshot('performance-report-snapshot.png', { fullPage: true })
     })
+
+    test('performance-reports settings with style memo card', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(`/${orgId}/reports/performance/settings`)
+      await page.waitForSelector('[data-testid="style-memo-card"]')
+      await expect(page).toHaveScreenshot('performance-reports-settings-style-memo.png', {
+        fullPage: true,
+      })
+    })
   })
 })

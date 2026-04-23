@@ -14,6 +14,7 @@ import {
   takeawaysPrompt,
   type PromptContext,
 } from './prompts'
+import { loadStyleMemo } from './style-memo'
 
 const MODEL_ID = 'claude-opus-4-5'
 
@@ -72,17 +73,22 @@ function buildMasterPrompt(ctx: PromptContext, overrides: PromptOverrides): stri
 export async function generateNarrativeBlocks(
   input: GenerateNarrativeInput
 ): Promise<Required<NarrativeBlocks>> {
-  const ctx: PromptContext = {
-    organizationName: input.organizationName,
-    quarter: input.quarter,
-    periodStart: input.periodStart,
-    periodEnd: input.periodEnd,
-    data: input.data,
-    authorNotes: input.authorNotes ?? undefined,
-  }
-
   try {
-    const overrides = await loadPromptOverrides(input.organizationId)
+    const [overrides, styleMemo] = await Promise.all([
+      loadPromptOverrides(input.organizationId),
+      loadStyleMemo(input.organizationId),
+    ])
+
+    const ctx: PromptContext = {
+      organizationName: input.organizationName,
+      quarter: input.quarter,
+      periodStart: input.periodStart,
+      periodEnd: input.periodEnd,
+      data: input.data,
+      authorNotes: input.authorNotes ?? undefined,
+      styleMemo: styleMemo.length > 0 ? styleMemo : undefined,
+    }
+
     const anthropic = await getAnthropicProvider()
     const { object, usage } = await generateObject({
       model: anthropic(MODEL_ID),

@@ -22,13 +22,13 @@ The memo is a single free-form text block per organization, ~300–500 words, au
 
 **New table** `marketing_review_style_memos`:
 
-| column | type | notes |
-|---|---|---|
-| `organization_id` | `uuid` PK, FK → `organizations.id` ON DELETE CASCADE | one row per org |
-| `memo` | `text NOT NULL DEFAULT ''` | empty string until first publish |
-| `updated_at` | `timestamptz NOT NULL DEFAULT now()` | auto |
-| `updated_by` | `uuid NULL` FK → `users.id` ON DELETE SET NULL | `NULL` when updated by the learner |
-| `source` | `text NOT NULL CHECK (source IN ('auto','manual'))` | distinguishes learner output from manual edits |
+| column            | type                                                 | notes                                          |
+| ----------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `organization_id` | `uuid` PK, FK → `organizations.id` ON DELETE CASCADE | one row per org                                |
+| `memo`            | `text NOT NULL DEFAULT ''`                           | empty string until first publish               |
+| `updated_at`      | `timestamptz NOT NULL DEFAULT now()`                 | auto                                           |
+| `updated_by`      | `uuid NULL` FK → `users.id` ON DELETE SET NULL       | `NULL` when updated by the learner             |
+| `source`          | `text NOT NULL CHECK (source IN ('auto','manual'))`  | distinguishes learner output from manual edits |
 
 RLS mirrors `marketing_review_prompt_overrides`: admins and internal users can SELECT/UPSERT/UPDATE rows whose `organization_id` matches their membership. The learner runs under the service client and bypasses RLS for the UPSERT.
 
@@ -92,8 +92,8 @@ A new card, **Learned style memo**, above the existing prompt overrides card. St
 
 Contents:
 
-- Large textarea with the current memo. Empty state: *"No style learned yet — publish your first report and Claude will start here."*
-- Metadata line: *"Auto-updated from Q2 2026 snapshot on Apr 21, 2026"* or *"Edited by Owain on Apr 21, 2026"* (derived from `source` + `updated_by`).
+- Large textarea with the current memo. Empty state: _"No style learned yet — publish your first report and Claude will start here."_
+- Metadata line: _"Auto-updated from Q2 2026 snapshot on Apr 21, 2026"_ or _"Edited by Owain on Apr 21, 2026"_ (derived from `source` + `updated_by`).
 - **Save** — persists edits, flips `source='manual'`, sets `updated_by` to the acting user.
 - **Regenerate from last snapshot** — re-runs the learner against the most recent published snapshot. Useful if a publish's background learner silently failed or the author wants to refresh.
 - **Clear memo** — resets to empty string (confirm dialog). Next publish bootstraps a new memo.
@@ -102,7 +102,7 @@ Access: admins + internal users only (enforced by RLS and the action-layer guard
 
 ### Editor page (`/reports/performance/[id]`)
 
-A collapsible panel, **"Style the AI is using,"** grouped with the author-notes / context field using the same indigo/purple accent treatment so both feel like one "AI context" cluster. Collapsed by default, showing a one-liner: *"Memo last updated Apr 21, 2026 — X words."* Expanded: shows the memo read-only with an "Edit in settings" link.
+A collapsible panel, **"Style the AI is using,"** grouped with the author-notes / context field using the same indigo/purple accent treatment so both feel like one "AI context" cluster. Collapsed by default, showing a one-liner: _"Memo last updated Apr 21, 2026 — X words."_ Expanded: shows the memo read-only with an "Edit in settings" link.
 
 Editing is **not** available on the editor. The memo is a cross-quarter artifact; editing it while drafting a specific quarter creates confusion about when the change applies. Settings is the canonical edit surface.
 

@@ -219,6 +219,35 @@ The unified audit system (`lib/unified-audit/`) replaces the previous separate S
 
 > **Legacy audit systems** (`lib/audit/`, `lib/performance/`) still exist in the codebase but are deprecated. The former `lib/aio/` system has been fully migrated into the unified audit's modular architecture. All new audit work should use the unified system.
 
+### Performance Reports (Marketing Reviews)
+
+Quarterly performance reports (`lib/reviews/`) with AI-generated narrative, author notes, a self-improving style memo, preview deck, and public share links.
+
+**Database tables:**
+
+- `marketing_reviews` — One row per org/quarter. Links to `latest_snapshot_id`.
+- `marketing_review_drafts` — Editable working copy: `data` (metrics payload), `narrative` (bullets/subtitle per block), `ai_originals` (first AI pass, frozen), `author_notes`.
+- `marketing_review_snapshots` — Published immutable version. Gets its own `share_token` for public viewing at `/s/{token}`. Also carries `ai_originals` so the learner can re-analyze historical snapshots.
+- `marketing_review_prompt_overrides` — Per-block per-org prompt template overrides.
+- `marketing_review_style_memos` — Per-org durable style guidance (see Style Memo below).
+
+**Narrative pipeline** (`lib/reviews/narrative/`):
+
+1. `fetchers/` pulls GA, LinkedIn, HubSpot, email, and audit data for the quarter (plus QoQ/YoY comparison periods from `period.ts`).
+2. `generator.ts` calls Claude (`claude-opus-4-5`) via Vercel AI SDK per block: `cover_subtitle`, `ga_summary`, `linkedin_insights`, `initiatives`, `takeaways`, `planning`. Prompts live in `prompts.ts` with per-block `defaultTemplate*` functions.
+3. Output saved as both `narrative` and `ai_originals` on the draft. Admins can edit inline; `ai_originals` stays frozen for diff detection.
+4. Publishing (`publishReview` in `actions.ts`) copies draft → snapshot, mints a `share_token`, and fires the learner via `after()`.
+
+**Style Memo (self-improving narrative):**
+
+- After each publish, `runStyleMemoLearner` (in `narrative/learn.ts`) diffs `ai_originals` vs the human-edited `narrative` and asks Claude (`claude-opus-4-7`) to update a durable per-org style memo capturing tone, focus, and what the author considers important.
+- The memo is injected into every future narrative prompt's header under a **LEARNED STYLE** section (`prompts.ts::header`). Author notes for the current quarter take precedence over the memo.
+- Admins manage the memo at `/{orgId}/reports/performance/settings` — view, manually edit, regenerate from the latest published snapshot, or clear.
+- The editor shows a collapsible read-only preview so authors know what style the AI is currently applying.
+- Client/server split: pure helpers (`MAX_MEMO_CHARS`, `truncateMemo`, `buildLearnerDiff`) live in `style-memo-shared.ts` (client-safe); `loadStyleMemo` lives in `style-memo.ts` (server-only, imports `@/lib/supabase/server`).
+
+**Sharing:** Uses the generic `shared_links` table. Public route: `/s/{token}` renders the snapshot's deck via the `SharedResourceType.PerformanceReport` dispatch.
+
 ### Directory Structure
 
 ```
@@ -243,6 +272,7 @@ lib/
   actions/              # Shared server action utilities (with-auth.ts)
   auth/                 # Cached auth helpers (cached.ts, resolve-org.ts)
   unified-audit/        # Unified audit system (runner, crawler, checks, scoring)
+  reviews/              # Performance Reports: fetchers, narrative gen, style memo learner
   platforms/            # LinkedIn, HubSpot, GA integrations
   metrics/              # Caching, trend calculations, time series
   oauth/providers/      # OAuth provider implementations
