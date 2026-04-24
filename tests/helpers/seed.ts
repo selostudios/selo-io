@@ -147,7 +147,7 @@ export async function seedTestData() {
   // tests can exercise the preview/snapshot/public-share flows without having
   // to click through the "New Review" wizard (which calls external AI APIs).
   //
-  // Narrative is deliberately non-empty across all six blocks so the deck
+  // Narrative is deliberately non-empty across all seven blocks so the deck
   // renders real content (not placeholder text) in screenshots.
   const { data: review } = await supabase
     .from('marketing_reviews')
