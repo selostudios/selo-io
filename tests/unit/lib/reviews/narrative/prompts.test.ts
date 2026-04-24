@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { defaultTemplateGaSummary, gaSummaryPrompt, header } from '@/lib/reviews/narrative/prompts'
+import {
+  contentHighlightsPrompt,
+  defaultTemplateGaSummary,
+  gaSummaryPrompt,
+  header,
+} from '@/lib/reviews/narrative/prompts'
 import { GA_FEATURED_METRICS } from '@/lib/reviews/featured-metrics'
 import type { PromptContext } from '@/lib/reviews/narrative/prompts'
 
@@ -107,5 +112,40 @@ describe('header() with style memo', () => {
     expect(output).toContain('Author notes')
     expect(output).toContain('LEARNED STYLE')
     expect(output.indexOf('LEARNED STYLE')).toBeGreaterThan(output.indexOf('Author notes'))
+  })
+})
+
+describe('contentHighlightsPrompt', () => {
+  test('includes captions, engagement rates, and style memo in prompt', () => {
+    const ctx: PromptContext = {
+      organizationName: 'Acme',
+      quarter: 'Q1 2026',
+      periodStart: '2026-01-01',
+      periodEnd: '2026-03-31',
+      data: {
+        linkedin: {
+          metrics: {},
+          top_posts: [
+            {
+              id: 'urn:li:ugcPost:1',
+              url: null,
+              thumbnail_url: null,
+              caption: 'Great quarter',
+              posted_at: '2026-02-01',
+              impressions: 1000,
+              reactions: 20,
+              comments: 5,
+              shares: 5,
+              engagement_rate: 0.03,
+            },
+          ],
+        },
+      },
+      styleMemo: 'Use confident voice.',
+    }
+    const prompt = contentHighlightsPrompt(ctx)
+    expect(prompt).toContain('What Resonated')
+    expect(prompt).toContain('Great quarter')
+    expect(prompt).toContain('Use confident voice.')
   })
 })

@@ -72,7 +72,7 @@ function buildMasterPrompt(ctx: PromptContext, overrides: PromptOverrides): stri
 
 export async function generateNarrativeBlocks(
   input: GenerateNarrativeInput
-): Promise<Required<NarrativeBlocks>> {
+): Promise<Required<Omit<NarrativeBlocks, 'content_highlights'>>> {
   try {
     const [overrides, styleMemo] = await Promise.all([
       loadPromptOverrides(input.organizationId),
