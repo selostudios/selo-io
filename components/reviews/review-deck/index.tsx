@@ -11,6 +11,7 @@ import { DeckPrintStyles } from '@/components/deck/print-styles'
 import { CoverSlide } from './cover-slide'
 import { BodySlide } from './body-slide'
 import { GaBodySlide } from './ga-body-slide'
+import { LinkedInBodySlide } from './linkedin-body-slide'
 
 export interface ReviewDeckProps {
   organization: {
@@ -24,27 +25,27 @@ export interface ReviewDeckProps {
   /** ISO date string, e.g. '2026-03-31' */
   periodEnd: string
   narrative: NarrativeBlocks
-  /** Snapshot metric data. Currently only `data.ga` is consumed (by the GA slide's metric strip / table). */
+  /** Snapshot metric data. `data.ga` powers the GA slide's strip/table; `data.linkedin` powers the LinkedIn slide's strip/table. */
   data: SnapshotData
 }
 
 /**
  * Tagged union describing a body slide definition. `kind: 'ga'` routes to
- * `GaBodySlide` (metric strip + narrative); `kind: 'default'` routes to
- * `BodySlide` (heading + narrative). Narrow at the definition layer so the
- * render pass stays a pure switch without touching BodySlide's stable API.
+ * `GaBodySlide`, `kind: 'linkedin'` routes to `LinkedInBodySlide`, and
+ * `kind: 'default'` routes to `BodySlide` (heading + narrative).
  */
 type BodySection =
   | {
-      key: Exclude<keyof NarrativeBlocks, 'cover_subtitle' | 'ga_summary'>
+      key: Exclude<keyof NarrativeBlocks, 'cover_subtitle' | 'ga_summary' | 'linkedin_insights'>
       heading: string
       kind: 'default'
     }
   | { key: 'ga_summary'; heading: string; kind: 'ga' }
+  | { key: 'linkedin_insights'; heading: string; kind: 'linkedin' }
 
 const BODY_SECTIONS: readonly BodySection[] = [
   { key: 'ga_summary', heading: 'Google Analytics', kind: 'ga' },
-  { key: 'linkedin_insights', heading: 'LinkedIn', kind: 'default' },
+  { key: 'linkedin_insights', heading: 'LinkedIn', kind: 'linkedin' },
   { key: 'initiatives', heading: 'Initiatives', kind: 'default' },
   { key: 'takeaways', heading: 'Takeaways', kind: 'default' },
   { key: 'planning', heading: 'Planning Ahead', kind: 'default' },
@@ -100,6 +101,15 @@ export function ReviewDeck({
           ariaHeading: section.heading,
           render: (mode: 'screen' | 'print') => (
             <GaBodySlide narrative={text} data={data?.ga} mode={mode} />
+          ),
+        }
+      }
+      if (section.kind === 'linkedin') {
+        return {
+          key: section.key,
+          ariaHeading: section.heading,
+          render: (mode: 'screen' | 'print') => (
+            <LinkedInBodySlide narrative={text} data={data?.linkedin} mode={mode} />
           ),
         }
       }
