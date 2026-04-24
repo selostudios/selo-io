@@ -52,6 +52,7 @@ export interface NarrativeBlocks {
   initiatives?: string
   takeaways?: string
   planning?: string
+  content_highlights?: string
 }
 
 export type GAData = Record<string, MetricTriple>

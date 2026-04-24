@@ -3,6 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { LinkedInAdapter } from './adapter'
+import { LinkedInClient } from './client'
+import { classifyPost } from './classify-post'
+import { computeEngagementRate } from './engagement'
+import { downloadThumbnails, type ThumbnailJob } from './download-thumbnails'
+import { LinkedInPostType } from './post-types'
 import { decryptCredentials } from '@/lib/utils/crypto'
 import { getYesterdayRange, getSyncDateRange } from '@/lib/utils/date-ranges'
 import { getMetricsFromDb, isCacheValid, upsertMetricsAndUpdateSync } from '@/lib/metrics/queries'
@@ -211,5 +216,167 @@ export async function getLinkedInMetrics(period: Period, connectionId?: string) 
       return { error: error.message }
     }
     return { error: 'Failed to fetch LinkedIn metrics' }
+  }
+}
+
+/**
+ * Sync recent LinkedIn organization posts into the `linkedin_posts` table,
+ * refresh analytics counters, and backfill thumbnails for image posts.
+ *
+ * Pipeline: list posts (95d window) → upsert rows → fetch per-post analytics
+ * → update engagement_rate/counters → resolve + download image thumbnails.
+ *
+ * Intended for use by the daily cron. Swallows all errors (logs via
+ * `console.error`) so a single org's failure can't halt the cron loop.
+ */
+export async function syncLinkedInPosts(
+  connectionId: string,
+  organizationId: string,
+  storedCredentials: StoredCredentials,
+  supabase: SupabaseClient
+): Promise<void> {
+  try {
+    const credentials = getCredentials(storedCredentials)
+    const client = new LinkedInClient(credentials, connectionId, supabase)
+
+    const since = new Date(Date.now() - 95 * 86_400_000)
+    const orgUrn = `urn:li:organization:${credentials.organization_id}`
+
+    const rawPosts = await client.listPosts({ orgUrn, since })
+
+    // Build a map urn -> classified so we can reuse imageUrn later for thumbnails.
+    const classifiedByUrn = new Map<string, ReturnType<typeof classifyPost>>()
+    const rows: Array<Record<string, unknown>> = []
+    for (const raw of rawPosts) {
+      if (typeof raw.createdAt !== 'number') continue
+      const classified = classifyPost(raw)
+      classifiedByUrn.set(raw.id, classified)
+      rows.push({
+        organization_id: organizationId,
+        platform_connection_id: connectionId,
+        linkedin_urn: raw.id,
+        posted_at: new Date(raw.createdAt).toISOString(),
+        caption: classified.caption,
+        post_url: classified.postUrl,
+        post_type: classified.postType,
+      })
+    }
+
+    if (rows.length === 0) {
+      return
+    }
+
+    const { error: upsertError } = await supabase
+      .from('linkedin_posts')
+      .upsert(rows, { onConflict: 'organization_id,linkedin_urn' })
+
+    if (upsertError) {
+      console.error('[LinkedIn Posts Sync] Upsert failed', {
+        type: 'posts_upsert_error',
+        connectionId,
+        organizationId,
+        error: upsertError instanceof Error ? upsertError.message : String(upsertError),
+        timestamp: new Date().toISOString(),
+      })
+      return
+    }
+
+    // Re-read so we know which just-upserted posts still need thumbnails
+    // (new posts have thumbnail_path = null).
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000).toISOString()
+    const justUpsertedUrns = rows.map((r) => r.linkedin_urn as string)
+    const { data: analyticsRows } = await supabase
+      .from('linkedin_posts')
+      .select('linkedin_urn, posted_at, post_type, thumbnail_path')
+      .eq('organization_id', organizationId)
+      .gte('posted_at', ninetyDaysAgo)
+      .in('linkedin_urn', justUpsertedUrns)
+
+    const analyticsRowList =
+      (analyticsRows as Array<{
+        linkedin_urn: string
+        posted_at: string
+        post_type: string
+        thumbnail_path: string | null
+      }> | null) ?? []
+
+    const urns = analyticsRowList.map((r) => r.linkedin_urn)
+    const analytics = urns.length > 0 ? await client.getPostAnalytics(urns) : new Map()
+
+    const analyticsUpdatedAt = new Date().toISOString()
+    await Promise.all(
+      analyticsRowList.map(async (row) => {
+        const counters = analytics.get(row.linkedin_urn)
+        if (!counters) return
+        const engagementRate = computeEngagementRate(counters)
+        const { error } = await supabase
+          .from('linkedin_posts')
+          .update({
+            impressions: counters.impressions,
+            reactions: counters.reactions,
+            comments: counters.comments,
+            shares: counters.shares,
+            engagement_rate: engagementRate,
+            analytics_updated_at: analyticsUpdatedAt,
+          })
+          .match({ organization_id: organizationId, linkedin_urn: row.linkedin_urn })
+        if (error) {
+          console.error('[LinkedIn Posts Sync] analytics update failed', {
+            type: 'posts_analytics_update_error',
+            organizationId,
+            linkedinUrn: row.linkedin_urn,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          })
+        }
+      })
+    )
+
+    // Build thumbnail jobs for image posts missing a stored thumbnail.
+    const thumbnailCandidates = analyticsRowList.filter(
+      (row) => row.post_type === LinkedInPostType.Image && row.thumbnail_path == null
+    )
+    const thumbnailJobs: ThumbnailJob[] = []
+    for (const row of thumbnailCandidates) {
+      const classified = classifiedByUrn.get(row.linkedin_urn)
+      const imageUrn = classified?.imageUrn ?? null
+      if (!imageUrn) continue
+      const cdnUrl = await client.resolveImageUrl(imageUrn)
+      if (!cdnUrl) continue
+      thumbnailJobs.push({
+        organizationId,
+        linkedinUrn: row.linkedin_urn,
+        imageCdnUrl: cdnUrl,
+      })
+    }
+
+    if (thumbnailJobs.length > 0) {
+      const thumbMap = await downloadThumbnails(supabase, thumbnailJobs)
+      await Promise.all(
+        Array.from(thumbMap).map(async ([linkedinUrn, path]) => {
+          const { error } = await supabase
+            .from('linkedin_posts')
+            .update({ thumbnail_path: path })
+            .match({ organization_id: organizationId, linkedin_urn: linkedinUrn })
+          if (error) {
+            console.error('[LinkedIn Posts Sync] thumbnail update failed', {
+              type: 'posts_thumbnail_update_error',
+              organizationId,
+              linkedinUrn,
+              error: error.message,
+              timestamp: new Date().toISOString(),
+            })
+          }
+        })
+      )
+    }
+  } catch (error) {
+    console.error('[LinkedIn Posts Sync] Error', {
+      type: 'posts_sync_error',
+      connectionId,
+      organizationId,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+    })
   }
 }

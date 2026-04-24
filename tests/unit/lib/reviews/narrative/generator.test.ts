@@ -51,11 +51,12 @@ describe('generateNarrativeBlocks', () => {
     loadStyleMemo.mockResolvedValue('')
   })
 
-  test('returns all six blocks produced by the model', async () => {
+  test('returns all seven blocks produced by the model', async () => {
     const object = {
       cover_subtitle: 'Strong quarter for organic growth.',
       ga_summary: 'GA narrative.',
       linkedin_insights: 'LinkedIn narrative.',
+      content_highlights: 'Top posts narrative.',
       initiatives: 'Initiatives narrative.',
       takeaways: 'Takeaways narrative.',
       planning: 'Planning narrative.',
@@ -69,12 +70,34 @@ describe('generateNarrativeBlocks', () => {
     expect(result).toEqual(object)
   })
 
+  test('returns content_highlights alongside the other narrative blocks', async () => {
+    const fullObject = {
+      cover_subtitle: 'sub',
+      ga_summary: 'ga',
+      linkedin_insights: 'li',
+      content_highlights: 'top-posts summary',
+      initiatives: 'init',
+      takeaways: 'take',
+      planning: 'plan',
+    }
+    ;(generateObject as unknown as Mock).mockResolvedValueOnce({
+      object: fullObject,
+      usage: {},
+    })
+    loadStyleMemo.mockResolvedValueOnce('')
+
+    const result = await generateNarrativeBlocks(baseInput)
+
+    expect(result.content_highlights).toBe('top-posts summary')
+  })
+
   test('logs usage with MarketingReviews feature and token counts on success', async () => {
     ;(generateObject as unknown as Mock).mockResolvedValue({
       object: {
         cover_subtitle: 'x',
         ga_summary: 'x',
         linkedin_insights: 'x',
+        content_highlights: 'x',
         initiatives: 'x',
         takeaways: 'x',
         planning: 'x',
@@ -112,6 +135,7 @@ describe('generateNarrativeBlocks', () => {
         cover_subtitle: 'x',
         ga_summary: 'x',
         linkedin_insights: 'x',
+        content_highlights: 'x',
         initiatives: 'x',
         takeaways: 'x',
         planning: 'x',
@@ -135,6 +159,7 @@ describe('generateNarrativeBlocks', () => {
         cover_subtitle: 'x',
         ga_summary: 'x',
         linkedin_insights: 'x',
+        content_highlights: 'x',
         initiatives: 'x',
         takeaways: 'x',
         planning: 'x',
@@ -155,6 +180,7 @@ describe('generateNarrativeBlocks', () => {
         cover_subtitle: 'x',
         ga_summary: 'x',
         linkedin_insights: 'x',
+        content_highlights: 'x',
         initiatives: 'x',
         takeaways: 'x',
         planning: 'x',

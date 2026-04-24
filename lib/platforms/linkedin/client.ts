@@ -8,6 +8,33 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/rest'
 const LINKEDIN_VERSION = '202601' // January 2026 version
 
+export interface LinkedInRawPost {
+  id: string
+  createdAt: number | undefined
+  commentary?: string
+  contentType?: string
+  content?: {
+    media?: { id?: string; altText?: string }
+    article?: { thumbnail?: string; source?: string; title?: string }
+    poll?: unknown
+    multiImage?: { images?: Array<{ id?: string }> }
+  }
+  lifecycleState?: string
+}
+
+export interface ListPostsOptions {
+  orgUrn: string
+  since: Date
+  maxPages?: number
+}
+
+export interface PostAnalytics {
+  impressions: number
+  reactions: number
+  comments: number
+  shares: number
+}
+
 export class LinkedInClient {
   private accessToken: string
   private organizationId: string
@@ -371,5 +398,96 @@ export class LinkedInClient {
     }
 
     return dailyMetrics
+  }
+
+  async getPostAnalytics(postUrns: string[]): Promise<Map<string, PostAnalytics>> {
+    const analytics = new Map<string, PostAnalytics>()
+    if (postUrns.length === 0) return analytics
+
+    const orgUrn = `urn:li:organization:${this.organizationId}`
+    const batchSize = 50
+
+    for (let i = 0; i < postUrns.length; i += batchSize) {
+      const batch = postUrns.slice(i, i + batchSize)
+      const shareParams = batch.map((urn) => `shares[]=${encodeURIComponent(urn)}`).join('&')
+      const data = await this.fetch<{
+        elements: Array<{
+          share?: string
+          totalShareStatistics?: {
+            impressionCount?: number
+            likeCount?: number
+            commentCount?: number
+            shareCount?: number
+          }
+        }>
+      }>(
+        `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&${shareParams}`
+      )
+
+      for (const el of data.elements ?? []) {
+        if (!el.share) continue
+        const stats = el.totalShareStatistics ?? {}
+        analytics.set(el.share, {
+          impressions: Number(stats.impressionCount) || 0,
+          reactions: Number(stats.likeCount) || 0,
+          comments: Number(stats.commentCount) || 0,
+          shares: Number(stats.shareCount) || 0,
+        })
+      }
+    }
+
+    return analytics
+  }
+
+  async resolveImageUrl(imageUrn: string): Promise<string | null> {
+    const data = await this.fetch<{ id?: string; downloadUrl?: string }>(
+      `/images/${encodeURIComponent(imageUrn)}`
+    )
+    return data.downloadUrl ?? null
+  }
+
+  async listPosts(opts: ListPostsOptions): Promise<LinkedInRawPost[]> {
+    const maxPages = opts.maxPages ?? 10
+    const sinceMs = opts.since.getTime()
+    const nowMs = Date.now()
+    const posts: LinkedInRawPost[] = []
+    let start = 0
+    let pages = 0
+    while (pages < maxPages) {
+      const data = await this.fetch<{
+        elements: LinkedInRawPost[]
+        paging?: { start?: number; count?: number; links?: Array<{ rel: string; href: string }> }
+      }>(`/posts?author=${encodeURIComponent(opts.orgUrn)}&q=author&count=50&start=${start}`)
+      const elements = data.elements ?? []
+      if (elements.length === 0) break
+      let sawOlder = false
+      for (const post of elements) {
+        if (typeof post.createdAt !== 'number') {
+          // LinkedIn occasionally omits createdAt; skip without signaling "older"
+          // so pagination continues to surface in-window posts on later pages.
+          continue
+        }
+        if (post.createdAt >= sinceMs && post.createdAt <= nowMs) {
+          posts.push(post)
+        } else if (post.createdAt < sinceMs) {
+          sawOlder = true
+        }
+      }
+      if (sawOlder) break
+      const links = data.paging?.links
+      const next = Array.isArray(links) ? links.find((l) => l.rel === 'next') : undefined
+      if (!next) break
+      // Prefer LinkedIn's own cursor when available to avoid drift; fall back
+      // to accumulating element counts.
+      const pagingStart = data.paging?.start
+      const pagingCount = data.paging?.count
+      if (typeof pagingStart === 'number') {
+        start = pagingStart + (typeof pagingCount === 'number' ? pagingCount : elements.length)
+      } else {
+        start += elements.length
+      }
+      pages++
+    }
+    return posts
   }
 }

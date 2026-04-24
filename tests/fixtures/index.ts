@@ -72,12 +72,82 @@ export const testMarketingReview = {
       'Sessions grew 18% quarter-over-quarter to 42,300, with engagement rate up to 63%. The biggest contributor was organic search, which added 6,500 sessions thanks to the new resource hub.',
     linkedin_insights:
       'Follower count increased 12% to 3,200. Impressions trended upward through February, and the Q1 thought-leadership series drove the three highest-engagement posts of the quarter.',
+    content_highlights:
+      'Founder-voice storytelling drove the top posts of the quarter — the common thread was specific, named moments that people could picture.',
     initiatives:
       'Launched the redesigned pricing page, shipped the product-led onboarding flow, and published ten new customer case studies. The content team also kicked off a quarterly webinar cadence.',
     takeaways:
       'Long-form content is our best top-of-funnel investment, organic is more durable than paid, and our case studies convert at roughly twice the rate of generic landing pages.',
     planning:
       'Double down on the content engine: expand the case-study library, invest in SEO for high-intent commercial keywords, and run a Q2 webinar on the buyer evaluation framework.',
+  },
+  /**
+   * Snapshot `data` payload. We only populate the pieces the deck actually
+   * reads from — `data.linkedin.top_posts` is what triggers the "What
+   * Resonated" slide. The GA/LinkedIn metric strips degrade gracefully when
+   * their metric blocks are empty, so we leave the rest unpopulated to keep
+   * the fixture small and deterministic.
+   *
+   * `thumbnail_url: null` on every post is intentional: the seed does not
+   * create storage objects, so null-thumbnails ensure the cards render the
+   * deterministic `TextPostPlaceholder` gradient rather than a broken image.
+   */
+  data: {
+    linkedin: {
+      metrics: {},
+      top_posts: [
+        {
+          id: 'urn:li:ugcPost:seed-1',
+          url: 'https://linkedin.com/feed/update/urn:li:ugcPost:seed-1',
+          thumbnail_url: null,
+          caption:
+            'The five questions we ask every new customer in week one. Short version: we care more about their last win than their next goal.',
+          posted_at: '2026-02-01',
+          impressions: 12450,
+          reactions: 243,
+          comments: 18,
+          shares: 31,
+          engagement_rate: 0.0234,
+        },
+        {
+          id: 'urn:li:ugcPost:seed-2',
+          url: 'https://linkedin.com/feed/update/urn:li:ugcPost:seed-2',
+          thumbnail_url: null,
+          caption:
+            'Founder voice beats corporate voice by 3x on every metric we track. Here is the playbook.',
+          posted_at: '2026-02-14',
+          impressions: 9820,
+          reactions: 189,
+          comments: 12,
+          shares: 24,
+          engagement_rate: 0.0229,
+        },
+        {
+          id: 'urn:li:ugcPost:seed-3',
+          url: 'https://linkedin.com/feed/update/urn:li:ugcPost:seed-3',
+          thumbnail_url: null,
+          caption: 'Q1 customer interview takeaways in one slide.',
+          posted_at: '2026-02-22',
+          impressions: 7410,
+          reactions: 148,
+          comments: 9,
+          shares: 14,
+          engagement_rate: 0.0231,
+        },
+        {
+          id: 'urn:li:ugcPost:seed-4',
+          url: 'https://linkedin.com/feed/update/urn:li:ugcPost:seed-4',
+          thumbnail_url: null,
+          caption: 'We shipped a new onboarding flow. Early activation is up 40%.',
+          posted_at: '2026-03-07',
+          impressions: 6520,
+          reactions: 130,
+          comments: 8,
+          shares: 11,
+          engagement_rate: 0.0228,
+        },
+      ],
+    },
   },
 }
 

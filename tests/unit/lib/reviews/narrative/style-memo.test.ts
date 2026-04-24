@@ -120,4 +120,27 @@ describe('buildLearnerDiff', () => {
       finalText: 'Author wrote from scratch.',
     })
   })
+
+  test('emits content_highlights when the author rewrites that block', () => {
+    const aiWithHighlights: NarrativeBlocks = {
+      ...ai,
+      content_highlights: 'AI: the campaigns all hit hard.',
+    }
+    const finalWithHighlights: NarrativeBlocks = {
+      ...aiWithHighlights,
+      content_highlights: 'Author: founders-voice posts drove the top engagement.',
+    }
+    const diff = buildLearnerDiff({
+      ai: aiWithHighlights,
+      finalNarrative: finalWithHighlights,
+      authorNotes: null,
+    })
+    expect(diff).not.toBeNull()
+    expect(diff!.changedBlocks.map((b) => b.key)).toContain('content_highlights')
+    const block = diff!.changedBlocks.find((b) => b.key === 'content_highlights')
+    expect(block).toMatchObject({
+      aiText: 'AI: the campaigns all hit hard.',
+      finalText: 'Author: founders-voice posts drove the top engagement.',
+    })
+  })
 })

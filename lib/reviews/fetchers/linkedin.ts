@@ -1,9 +1,13 @@
 import type { QuarterPeriods } from '@/lib/reviews/period'
-import type { LinkedInData, MetricTriple } from '@/lib/reviews/types'
+import type { LinkedInData, LinkedInTopPost, MetricTriple } from '@/lib/reviews/types'
 import { buildMetricTriple } from '@/lib/reviews/metric-triple'
 import { isFeaturedLinkedInMetric } from '@/lib/reviews/linkedin-featured-metrics'
 import { createServiceClient } from '@/lib/supabase/server'
 import { PlatformType } from '@/lib/enums'
+
+const THUMBNAIL_SIGNED_URL_TTL_SECONDS = 365 * 24 * 3600
+const THUMBNAIL_BUCKET = 'linkedin-post-thumbnails'
+const TOP_POSTS_LIMIT = 4
 
 const LINKEDIN_METRICS = [
   'linkedin_followers',
@@ -80,5 +84,52 @@ export async function fetchLinkedInData(
 
     metrics[metric] = triple
   }
-  return { metrics, top_posts: [] }
+
+  const { data: postRows, error: postsError } = await supabase
+    .from('linkedin_posts')
+    .select(
+      'linkedin_urn, post_url, thumbnail_path, caption, posted_at, impressions, reactions, comments, shares, engagement_rate'
+    )
+    .eq('organization_id', organizationId)
+    .gte('posted_at', periods.main.start)
+    .lte('posted_at', periods.main.end)
+    .not('engagement_rate', 'is', null)
+    .order('engagement_rate', { ascending: false })
+    .limit(TOP_POSTS_LIMIT)
+
+  if (postsError) {
+    console.error('[Reviews] linkedin top posts query failed', {
+      type: 'linkedin_top_posts_query_failed',
+      organizationId,
+      error: postsError.message,
+      timestamp: new Date().toISOString(),
+    })
+    return { metrics, top_posts: [] }
+  }
+
+  const top_posts: LinkedInTopPost[] = await Promise.all(
+    (postRows ?? []).map(async (row) => {
+      let thumbnail_url: string | null = null
+      if (row.thumbnail_path) {
+        const { data: signed } = await supabase.storage
+          .from(THUMBNAIL_BUCKET)
+          .createSignedUrl(row.thumbnail_path, THUMBNAIL_SIGNED_URL_TTL_SECONDS)
+        thumbnail_url = signed?.signedUrl ?? null
+      }
+      return {
+        id: row.linkedin_urn,
+        url: row.post_url,
+        thumbnail_url,
+        caption: row.caption,
+        posted_at: row.posted_at,
+        impressions: Number(row.impressions) || 0,
+        reactions: Number(row.reactions) || 0,
+        comments: Number(row.comments) || 0,
+        shares: Number(row.shares) || 0,
+        engagement_rate: Number(row.engagement_rate) || 0,
+      }
+    })
+  )
+
+  return { metrics, top_posts }
 }

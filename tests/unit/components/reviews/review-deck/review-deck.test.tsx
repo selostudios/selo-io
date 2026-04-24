@@ -48,6 +48,43 @@ describe('ReviewDeck', () => {
     expect(slides).toHaveLength(6)
   })
 
+  test('renders a seventh "What Resonated" slide when top_posts is non-empty', () => {
+    renderDeck({
+      narrative: { ...fullNarrative, content_highlights: 'Founder voice resonated.' },
+      data: {
+        linkedin: {
+          metrics: {},
+          top_posts: [
+            {
+              id: 'urn:li:ugcPost:1',
+              url: null,
+              thumbnail_url: null,
+              caption: 'Specific post',
+              posted_at: '2026-02-01',
+              impressions: 1000,
+              reactions: 20,
+              comments: 5,
+              shares: 5,
+              engagement_rate: 0.03,
+            },
+          ],
+        },
+      },
+    })
+    const slides = screen.getAllByTestId('review-deck-slide')
+    expect(slides).toHaveLength(7)
+    expect(screen.getByRole('heading', { name: 'What Resonated' })).toBeInTheDocument()
+  })
+
+  test('omits the "What Resonated" slide when top_posts is empty or missing', () => {
+    renderDeck({
+      narrative: { ...fullNarrative, content_highlights: 'Should not appear.' },
+      data: { linkedin: { metrics: {}, top_posts: [] } },
+    })
+    expect(screen.queryByRole('heading', { name: 'What Resonated' })).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('review-deck-slide')).toHaveLength(6)
+  })
+
   test('sets the --deck-accent CSS variable to the organization primary color', () => {
     renderDeck({
       organization: { ...baseOrg, primary_color: '#336699' },

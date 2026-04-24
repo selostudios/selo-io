@@ -39,6 +39,10 @@ const BLOCK_LABELS: Record<(typeof NARRATIVE_BLOCK_KEYS)[number], { label: strin
       label: 'Planning ahead',
       hint: 'Forward-looking, opportunity-framed recommendations (≤ 150 words).',
     },
+    content_highlights: {
+      label: 'Content highlights',
+      hint: 'One or two sentences summarising what resonated across the top LinkedIn posts.',
+    },
   }
 
 export default async function PerformanceReportSettingsPage({

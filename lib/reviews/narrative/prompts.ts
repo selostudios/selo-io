@@ -11,6 +11,7 @@ export const NARRATIVE_BLOCK_KEYS: readonly NarrativeBlockKey[] = [
   'initiatives',
   'takeaways',
   'planning',
+  'content_highlights',
 ] as const
 
 export interface PromptContext {
@@ -171,6 +172,18 @@ export function defaultTemplatePlanning(): string {
   ].join(' ')
 }
 
+export function defaultTemplateContentHighlights(): string {
+  return [
+    'The "What Resonated" slide shows the four LinkedIn posts with the highest engagement rate this quarter.',
+    'Write a 1-2 sentence summary of what resonated: the theme, tone, or format that unites these posts.',
+    'Plain text only. Warm, confident, consultative tone. No markdown.',
+    'Lead with the pattern, not the metrics — the cards above already show the numbers.',
+    '',
+    'If fewer than 2 posts are provided, focus on that single post instead of a pattern.',
+    'If no posts are provided, output: "No posts met the threshold for analysis this quarter."',
+  ].join('\n')
+}
+
 export const defaultTemplates: Record<NarrativeBlockKey, () => string> = {
   cover_subtitle: defaultTemplateCoverSubtitle,
   ga_summary: defaultTemplateGaSummary,
@@ -178,6 +191,7 @@ export const defaultTemplates: Record<NarrativeBlockKey, () => string> = {
   initiatives: defaultTemplateInitiatives,
   takeaways: defaultTemplateTakeaways,
   planning: defaultTemplatePlanning,
+  content_highlights: defaultTemplateContentHighlights,
 }
 
 export function coverSubtitlePrompt(ctx: PromptContext, template?: string): string {
@@ -202,4 +216,8 @@ export function takeawaysPrompt(ctx: PromptContext, template?: string): string {
 
 export function planningPrompt(ctx: PromptContext, template?: string): string {
   return wrap(ctx, resolve(template, defaultTemplatePlanning()))
+}
+
+export function contentHighlightsPrompt(ctx: PromptContext, template?: string): string {
+  return wrap(ctx, resolve(template, defaultTemplateContentHighlights()))
 }

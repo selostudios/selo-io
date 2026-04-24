@@ -6,6 +6,7 @@ import { UsageFeature } from '@/lib/enums'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { loadPromptOverrides, type PromptOverrides } from './overrides'
 import {
+  contentHighlightsPrompt,
   coverSubtitlePrompt,
   gaSummaryPrompt,
   initiativesPrompt,
@@ -22,6 +23,7 @@ const NarrativeSchema = z.object({
   cover_subtitle: z.string().max(200),
   ga_summary: z.string(),
   linkedin_insights: z.string(),
+  content_highlights: z.string(),
   initiatives: z.string(),
   takeaways: z.string(),
   planning: z.string(),
@@ -47,7 +49,7 @@ export class NarrativeGenerationError extends Error {
 
 function buildMasterPrompt(ctx: PromptContext, overrides: PromptOverrides): string {
   return [
-    'You are generating six narrative blocks for a quarterly marketing performance report.',
+    'You are generating seven narrative blocks for a quarterly marketing performance report.',
     'Return one string per block, following each block’s specific instructions below.',
     '',
     '=== Block: cover_subtitle ===',
@@ -58,6 +60,9 @@ function buildMasterPrompt(ctx: PromptContext, overrides: PromptOverrides): stri
     '',
     '=== Block: linkedin_insights ===',
     linkedinInsightsPrompt(ctx, overrides.linkedin_insights),
+    '',
+    '=== Block: content_highlights ===',
+    contentHighlightsPrompt(ctx, overrides.content_highlights),
     '',
     '=== Block: initiatives ===',
     initiativesPrompt(ctx, overrides.initiatives),
