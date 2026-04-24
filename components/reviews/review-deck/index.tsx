@@ -12,6 +12,7 @@ import { CoverSlide } from './cover-slide'
 import { BodySlide } from './body-slide'
 import { GaBodySlide } from './ga-body-slide'
 import { LinkedInBodySlide } from './linkedin-body-slide'
+import { ContentBodySlide } from './content-body-slide'
 
 export interface ReviewDeckProps {
   organization: {
@@ -31,21 +32,28 @@ export interface ReviewDeckProps {
 
 /**
  * Tagged union describing a body slide definition. `kind: 'ga'` routes to
- * `GaBodySlide`, `kind: 'linkedin'` routes to `LinkedInBodySlide`, and
- * `kind: 'default'` routes to `BodySlide` (heading + narrative).
+ * `GaBodySlide`, `kind: 'linkedin'` routes to `LinkedInBodySlide`,
+ * `kind: 'content'` routes to `ContentBodySlide` (rendered only when the
+ * snapshot has top posts), and `kind: 'default'` routes to `BodySlide`
+ * (heading + narrative).
  */
 type BodySection =
   | {
-      key: Exclude<keyof NarrativeBlocks, 'cover_subtitle' | 'ga_summary' | 'linkedin_insights'>
+      key: Exclude<
+        keyof NarrativeBlocks,
+        'cover_subtitle' | 'ga_summary' | 'linkedin_insights' | 'content_highlights'
+      >
       heading: string
       kind: 'default'
     }
   | { key: 'ga_summary'; heading: string; kind: 'ga' }
   | { key: 'linkedin_insights'; heading: string; kind: 'linkedin' }
+  | { key: 'content_highlights'; heading: string; kind: 'content' }
 
 const BODY_SECTIONS: readonly BodySection[] = [
   { key: 'ga_summary', heading: 'Google Analytics', kind: 'ga' },
   { key: 'linkedin_insights', heading: 'LinkedIn', kind: 'linkedin' },
+  { key: 'content_highlights', heading: 'What Resonated', kind: 'content' },
   { key: 'initiatives', heading: 'Initiatives', kind: 'default' },
   { key: 'takeaways', heading: 'Takeaways', kind: 'default' },
   { key: 'planning', heading: 'Planning Ahead', kind: 'default' },
@@ -66,10 +74,13 @@ interface BuiltSlide {
 
 /**
  * `<ReviewDeck>` is the shared renderer used by the editor preview, the
- * snapshot detail page, and the public share page. It produces a fixed
- * 6-slide deck: cover + Google Analytics + LinkedIn + Initiatives +
- * Takeaways + Planning Ahead. Missing narrative blocks render a muted
- * placeholder on body slides so the deck count stays consistent.
+ * snapshot detail page, and the public share page. It produces a 6- or
+ * 7-slide deck: cover + Google Analytics + LinkedIn + (optional) What
+ * Resonated + Initiatives + Takeaways + Planning Ahead. The "What
+ * Resonated" slide renders only when the snapshot has a non-empty
+ * `data.linkedin.top_posts` array; otherwise it is filtered out so the
+ * deck count stays honest. Missing narrative blocks on the remaining
+ * body slides render a muted placeholder.
  */
 export function ReviewDeck({
   organization,
@@ -93,7 +104,7 @@ export function ReviewDeck({
       />
     )
 
-    const bodySlides: BuiltSlide[] = BODY_SECTIONS.map((section) => {
+    const bodySlides: BuiltSlide[] = BODY_SECTIONS.map((section): BuiltSlide | null => {
       const text = narrative[section.key] ?? ''
       if (section.kind === 'ga') {
         return {
@@ -113,12 +124,23 @@ export function ReviewDeck({
           ),
         }
       }
+      if (section.kind === 'content') {
+        const posts = data?.linkedin?.top_posts ?? []
+        if (posts.length === 0) return null
+        return {
+          key: section.key,
+          ariaHeading: section.heading,
+          render: (mode: 'screen' | 'print') => (
+            <ContentBodySlide narrative={text} posts={posts} mode={mode} />
+          ),
+        }
+      }
       return {
         key: section.key,
         ariaHeading: section.heading,
         render: () => <BodySlide heading={section.heading} text={text} />,
       }
-    })
+    }).filter((s): s is BuiltSlide => s !== null)
 
     return [
       {
