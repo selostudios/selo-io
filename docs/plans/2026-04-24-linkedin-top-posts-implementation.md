@@ -28,6 +28,7 @@
 ## Task 1: Create `linkedin_posts` table migration
 
 **Files:**
+
 - Create: `supabase/migrations/20260424120000_linkedin_posts.sql`
 
 **Step 1: Write the migration**
@@ -97,6 +98,7 @@ git commit -m "feat(db): add linkedin_posts table for top-posts slide"
 ## Task 2: Create Supabase Storage bucket for thumbnails
 
 **Files:**
+
 - Create: `supabase/migrations/20260424120100_linkedin_post_thumbnails_bucket.sql`
 
 **Step 1: Write the migration**
@@ -146,6 +148,7 @@ git commit -m "feat(db): add linkedin-post-thumbnails storage bucket"
 ## Task 3: Add `PostType` enum and row types
 
 **Files:**
+
 - Modify: `lib/enums.ts`
 - Create: `lib/platforms/linkedin/post-types.ts`
 - Test: `tests/unit/platforms/linkedin/post-types.test.ts`
@@ -238,6 +241,7 @@ git commit -m "feat(linkedin): add LinkedInPostType enum and row type"
 ## Task 4: Pure helper — compute engagement rate
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/engagement.ts`
 - Test: `tests/unit/platforms/linkedin/engagement.test.ts`
 
@@ -313,6 +317,7 @@ git commit -m "feat(linkedin): add engagement-rate helper"
 ## Task 5: Extend `LinkedInClient` — list posts
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/client.ts`
 - Test: `tests/unit/platforms/linkedin/list-posts.test.ts`
 
@@ -474,6 +479,7 @@ git commit -m "feat(linkedin): list organisation posts via REST API"
 ## Task 6: Extend `LinkedInClient` — per-post analytics
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/client.ts`
 - Test: `tests/unit/platforms/linkedin/post-analytics.test.ts`
 
@@ -524,10 +530,7 @@ describe('LinkedInClient.getPostAnalytics', () => {
       expires_at: new Date(Date.now() + 3_600_000).toISOString(),
     })
 
-    const result = await client.getPostAnalytics([
-      'urn:li:ugcPost:1',
-      'urn:li:ugcPost:2',
-    ])
+    const result = await client.getPostAnalytics(['urn:li:ugcPost:1', 'urn:li:ugcPost:2'])
 
     expect(result.get('urn:li:ugcPost:1')).toEqual({
       impressions: 1000,
@@ -626,6 +629,7 @@ git commit -m "feat(linkedin): fetch per-post share statistics in batches"
 ## Task 7: Extend `LinkedInClient` — resolve image URN to CDN URL
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/client.ts`
 - Test: `tests/unit/platforms/linkedin/resolve-image.test.ts`
 
@@ -707,6 +711,7 @@ git commit -m "feat(linkedin): resolve image URN to CDN download URL"
 ## Task 8: Classify raw posts into normalised shape
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/classify-post.ts`
 - Test: `tests/unit/platforms/linkedin/classify-post.test.ts`
 
@@ -813,10 +818,13 @@ export function classifyPost(raw: LinkedInRawPost): ClassifiedPost {
   }
   if (media?.id) {
     const urn = media.id
-    const type = urn.startsWith('urn:li:video:')
-      ? LinkedInPostType.Video
-      : LinkedInPostType.Image
-    return { postType: type, caption, postUrl, imageUrn: type === LinkedInPostType.Image ? urn : null }
+    const type = urn.startsWith('urn:li:video:') ? LinkedInPostType.Video : LinkedInPostType.Image
+    return {
+      postType: type,
+      caption,
+      postUrl,
+      imageUrn: type === LinkedInPostType.Image ? urn : null,
+    }
   }
   if (article) {
     return { postType: LinkedInPostType.Article, caption, postUrl, imageUrn: null }
@@ -845,6 +853,7 @@ git commit -m "feat(linkedin): classify raw posts into normalised shape"
 ## Task 9: Thumbnail downloader with concurrency limit
 
 **Files:**
+
 - Create: `lib/platforms/linkedin/download-thumbnails.ts`
 - Test: `tests/unit/platforms/linkedin/download-thumbnails.test.ts`
 
@@ -988,6 +997,7 @@ git commit -m "feat(linkedin): download thumbnails to storage with concurrency c
 ## Task 10: `syncLinkedInPosts(connection)` orchestrator
 
 **Files:**
+
 - Modify: `lib/platforms/linkedin/actions.ts` (add new exported function at bottom)
 - Test: `tests/unit/platforms/linkedin/sync-posts.test.ts`
 
@@ -1003,6 +1013,7 @@ export async function syncLinkedInPosts(
 ```
 
 Flow:
+
 1. Decrypt credentials, construct `LinkedInClient`.
 2. Compute window: last 95 days (`Date.now() - 95 * 86_400_000`).
 3. `client.listPosts({ startMs, endMs })`.
@@ -1028,14 +1039,19 @@ vi.mock('@/lib/platforms/linkedin/client', () => ({
         content: { media: { id: 'urn:li:image:abc' } },
       },
     ]),
-    getPostAnalytics: vi.fn(async () => new Map([
-      ['urn:li:ugcPost:1', { impressions: 1000, reactions: 20, comments: 5, shares: 5 }],
-    ])),
+    getPostAnalytics: vi.fn(
+      async () =>
+        new Map([
+          ['urn:li:ugcPost:1', { impressions: 1000, reactions: 20, comments: 5, shares: 5 }],
+        ])
+    ),
     resolveImageUrl: vi.fn(async () => 'https://media.licdn.com/abc.jpg'),
   })),
 }))
 vi.mock('@/lib/platforms/linkedin/download-thumbnails', () => ({
-  downloadThumbnails: vi.fn(async () => new Map([['urn:li:ugcPost:1', 'org1/urn:li:ugcPost:1.jpg']])),
+  downloadThumbnails: vi.fn(
+    async () => new Map([['urn:li:ugcPost:1', 'org1/urn:li:ugcPost:1.jpg']])
+  ),
 }))
 vi.mock('@/lib/utils/crypto', () => ({
   decryptCredentials: (x: unknown) => x,
@@ -1050,7 +1066,14 @@ describe('syncLinkedInPosts', () => {
     const upsertSpy = vi.fn().mockResolvedValue({ error: null })
     const updateSpy = vi.fn().mockResolvedValue({ error: null })
     const selectSpy = vi.fn().mockResolvedValue({
-      data: [{ linkedin_urn: 'urn:li:ugcPost:1', posted_at: new Date().toISOString(), post_type: 'image', thumbnail_path: null }],
+      data: [
+        {
+          linkedin_urn: 'urn:li:ugcPost:1',
+          posted_at: new Date().toISOString(),
+          post_type: 'image',
+          thumbnail_path: null,
+        },
+      ],
       error: null,
     })
     const eq = () => ({ eq, gte: () => ({ is: () => ({ select: selectSpy }) }), select: selectSpy })
@@ -1065,7 +1088,12 @@ describe('syncLinkedInPosts', () => {
     await syncLinkedInPosts(
       'conn-1',
       'org1',
-      { access_token: 't', refresh_token: 'r', organization_id: '12345', expires_at: new Date().toISOString() },
+      {
+        access_token: 't',
+        refresh_token: 'r',
+        organization_id: '12345',
+        expires_at: new Date().toISOString(),
+      },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fakeSupabase as any
     )
@@ -1105,6 +1133,7 @@ git commit -m "feat(linkedin): sync org posts into linkedin_posts table"
 ## Task 11: Wire `syncLinkedInPosts` into the daily cron
 
 **Files:**
+
 - Modify: `app/api/cron/daily-metrics-sync/route.ts`
 - Test: `tests/unit/api/cron/daily-metrics-sync.test.ts` (if it exists; else add a focused test)
 
@@ -1131,7 +1160,9 @@ vi.mock('@/lib/platforms/hubspot/actions', () => ({
 vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
     from: (_t: string) => ({
-      insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'log-1' }, error: null }) }) }),
+      insert: () => ({
+        select: () => ({ single: async () => ({ data: { id: 'log-1' }, error: null }) }),
+      }),
       select: () => ({ eq: () => ({ data: [], error: null }) }),
       update: () => ({ eq: async () => ({}) }),
     }),
@@ -1173,7 +1204,10 @@ Expected: FAIL.
 In `app/api/cron/daily-metrics-sync/route.ts`:
 
 ```ts
-import { syncMetricsForLinkedInConnection, syncLinkedInPosts } from '@/lib/platforms/linkedin/actions'
+import {
+  syncMetricsForLinkedInConnection,
+  syncLinkedInPosts,
+} from '@/lib/platforms/linkedin/actions'
 
 // ...inside syncConnection, case 'linkedin':
 await syncMetricsForLinkedInConnection(/* ... */)
@@ -1216,6 +1250,7 @@ git commit -m "feat(cron): sync LinkedIn posts after daily metrics sync"
 ## Task 12: Extend `fetchLinkedInData` to populate `top_posts`
 
 **Files:**
+
 - Modify: `lib/reviews/fetchers/linkedin.ts`
 - Test: `tests/unit/reviews/fetchers/linkedin.test.ts` (extend existing)
 
@@ -1276,6 +1311,7 @@ git commit -m "feat(reviews): populate LinkedIn top_posts with signed URLs"
 ## Task 13: Add `content_highlights` to `NarrativeBlocks`
 
 **Files:**
+
 - Modify: `lib/reviews/types.ts`
 - Modify: `lib/reviews/narrative/prompts.ts` (extend `NARRATIVE_BLOCK_KEYS` + `defaultTemplates`)
 - Test: `tests/unit/reviews/narrative/prompts.test.ts` (extend)
@@ -1295,7 +1331,18 @@ test('contentHighlightsPrompt includes captions, engagement rates, and style mem
       linkedin: {
         metrics: {},
         top_posts: [
-          { id: 'urn:li:ugcPost:1', url: null, thumbnail_url: null, caption: 'Great quarter', posted_at: '2026-02-01', impressions: 1000, reactions: 20, comments: 5, shares: 5, engagement_rate: 0.03 },
+          {
+            id: 'urn:li:ugcPost:1',
+            url: null,
+            thumbnail_url: null,
+            caption: 'Great quarter',
+            posted_at: '2026-02-01',
+            impressions: 1000,
+            reactions: 20,
+            comments: 5,
+            shares: 5,
+            engagement_rate: 0.03,
+          },
         ],
       },
     },
@@ -1353,6 +1400,7 @@ git commit -m "feat(reviews): add content_highlights narrative block"
 ## Task 14: Generate `content_highlights` in narrative pipeline
 
 **Files:**
+
 - Modify: `lib/reviews/narrative/generator.ts`
 - Test: `tests/unit/reviews/narrative/generator.test.ts` (extend)
 
@@ -1369,7 +1417,9 @@ test('generates content_highlights block when top_posts present', async () => {
     data: {
       linkedin: {
         metrics: {},
-        top_posts: [/* four posts */],
+        top_posts: [
+          /* four posts */
+        ],
       },
     },
   })
@@ -1404,6 +1454,7 @@ git commit -m "feat(reviews): generate content_highlights block"
 ## Task 15: Include `content_highlights` in style-memo learner diff
 
 **Files:**
+
 - Modify: `lib/reviews/narrative/learn.ts`
 - Modify: `lib/reviews/narrative/style-memo-shared.ts` (`buildLearnerDiff`)
 - Test: `tests/unit/reviews/narrative/style-memo.test.ts` (extend)
@@ -1441,6 +1492,7 @@ git commit -m "feat(reviews): surface content_highlights edits to style-memo lea
 ## Task 16: `TextPostPlaceholder` component
 
 **Files:**
+
 - Create: `components/reviews/review-deck/text-post-placeholder.tsx`
 - Test: `tests/unit/components/reviews/review-deck/text-post-placeholder.test.tsx`
 
@@ -1502,6 +1554,7 @@ git commit -m "feat(reviews): add TextPostPlaceholder component"
 ## Task 17: `TopPostCard` component
 
 **Files:**
+
 - Create: `components/reviews/review-deck/top-post-card.tsx`
 - Test: `tests/unit/components/reviews/review-deck/top-post-card.test.tsx`
 
@@ -1573,10 +1626,7 @@ export function TopPostCard({ post }: TopPostCardProps) {
   const [broken, setBroken] = useState(false)
   const totalEngagements = post.reactions + post.comments + post.shares
   return (
-    <div
-      data-testid="top-post-card"
-      className="flex w-full max-w-[240px] flex-col gap-3"
-    >
+    <div data-testid="top-post-card" className="flex w-full max-w-[240px] flex-col gap-3">
       <div className="overflow-hidden rounded-md">
         {post.thumbnail_url && !broken ? (
           <img
@@ -1589,11 +1639,11 @@ export function TopPostCard({ post }: TopPostCardProps) {
           <TextPostPlaceholder />
         )}
       </div>
-      <p className="line-clamp-2 text-sm text-foreground/90">{post.caption ?? ''}</p>
+      <p className="text-foreground/90 line-clamp-2 text-sm">{post.caption ?? ''}</p>
       <div className="text-3xl font-semibold tabular-nums" style={{ color: 'var(--deck-accent)' }}>
         {(post.engagement_rate * 100).toFixed(1)}%
       </div>
-      <div className="text-xs tabular-nums text-foreground/60">
+      <div className="text-foreground/60 text-xs tabular-nums">
         {post.impressions.toLocaleString()} · {totalEngagements.toLocaleString()}
       </div>
     </div>
@@ -1618,6 +1668,7 @@ git commit -m "feat(reviews): add TopPostCard component"
 ## Task 18: `TopPostGrid` component
 
 **Files:**
+
 - Create: `components/reviews/review-deck/top-post-grid.tsx`
 - Test: `tests/unit/components/reviews/review-deck/top-post-grid.test.tsx`
 
@@ -1682,10 +1733,7 @@ export interface TopPostGridProps {
 export function TopPostGrid({ posts }: TopPostGridProps) {
   if (posts.length === 0) return null
   return (
-    <div
-      data-testid="top-post-grid"
-      className="flex w-full flex-wrap justify-center gap-6"
-    >
+    <div data-testid="top-post-grid" className="flex w-full flex-wrap justify-center gap-6">
       {posts.map((post) => (
         <TopPostCard key={post.id} post={post} />
       ))}
@@ -1711,6 +1759,7 @@ git commit -m "feat(reviews): add TopPostGrid component"
 ## Task 19: `ContentBodySlide` slide component
 
 **Files:**
+
 - Create: `components/reviews/review-deck/content-body-slide.tsx`
 - Test: `tests/unit/components/reviews/review-deck/content-body-slide.test.tsx`
 
@@ -1804,6 +1853,7 @@ git commit -m "feat(reviews): add ContentBodySlide component"
 ## Task 20: Wire new slide into `ReviewDeck`
 
 **Files:**
+
 - Modify: `components/reviews/review-deck/index.tsx`
 - Test: `tests/unit/components/reviews/review-deck/review-deck.test.tsx` (extend)
 
@@ -1825,7 +1875,9 @@ test('renders "What Resonated" slide between LinkedIn and Initiatives when top_p
       data={{
         linkedin: {
           metrics: {},
-          top_posts: [/* one post */],
+          top_posts: [
+            /* one post */
+          ],
         },
       }}
     />
@@ -1862,7 +1914,10 @@ import { ContentBodySlide } from './content-body-slide'
 
 type BodySection =
   | {
-      key: Exclude<keyof NarrativeBlocks, 'cover_subtitle' | 'ga_summary' | 'linkedin_insights' | 'content_highlights'>
+      key: Exclude<
+        keyof NarrativeBlocks,
+        'cover_subtitle' | 'ga_summary' | 'linkedin_insights' | 'content_highlights'
+      >
       heading: string
       kind: 'default'
     }
@@ -1915,6 +1970,7 @@ git commit -m "feat(reviews): render What Resonated slide conditionally"
 ## Task 21: Visual snapshot — "What Resonated" slide
 
 **Files:**
+
 - Modify: `tests/e2e/visual.spec.ts` (add a new test)
 
 **Step 1: Add the test**

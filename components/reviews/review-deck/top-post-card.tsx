@@ -25,14 +25,11 @@ export function TopPostCard({ post }: TopPostCardProps) {
           <TextPostPlaceholder />
         )}
       </div>
-      <p className="line-clamp-2 text-sm text-foreground/90">{post.caption ?? ''}</p>
-      <div
-        className="text-3xl font-semibold tabular-nums"
-        style={{ color: 'var(--deck-accent)' }}
-      >
+      <p className="text-foreground/90 line-clamp-2 text-sm">{post.caption ?? ''}</p>
+      <div className="text-3xl font-semibold tabular-nums" style={{ color: 'var(--deck-accent)' }}>
         {(post.engagement_rate * 100).toFixed(1)}%
       </div>
-      <div className="text-xs tabular-nums text-foreground/60">
+      <div className="text-foreground/60 text-xs tabular-nums">
         {post.impressions.toLocaleString()} · {totalEngagements.toLocaleString()}
       </div>
     </div>

@@ -9,17 +9,17 @@ Add a new "What Resonated" slide to the quarterly performance report that surfac
 
 ## Product decisions
 
-| Decision | Choice |
-| --- | --- |
-| Ranking | Engagement rate = `(reactions + comments + shares) / impressions` |
-| Card content | Thumbnail + caption (2-line clamp) + engagement rate (big) + impressions + total engagements |
-| Storage | New `linkedin_posts` table, synced daily by existing cron |
-| Text-only post fallback | Styled placeholder filling the image slot so card dimensions stay consistent |
-| Thumbnails | Downloaded to Supabase Storage at sync time; 1-year signed URLs per report |
-| Post qualification | Posts published within the quarter `main` period only |
-| Fewer than 4 posts | Render up to 4, horizontally centered; hide the slide entirely if zero |
-| Slide title | "What Resonated" (editorial voice, matches Takeaways / Planning Ahead) |
-| Slide position | Between the LinkedIn tiles slide and Initiatives |
+| Decision                | Choice                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Ranking                 | Engagement rate = `(reactions + comments + shares) / impressions`                            |
+| Card content            | Thumbnail + caption (2-line clamp) + engagement rate (big) + impressions + total engagements |
+| Storage                 | New `linkedin_posts` table, synced daily by existing cron                                    |
+| Text-only post fallback | Styled placeholder filling the image slot so card dimensions stay consistent                 |
+| Thumbnails              | Downloaded to Supabase Storage at sync time; 1-year signed URLs per report                   |
+| Post qualification      | Posts published within the quarter `main` period only                                        |
+| Fewer than 4 posts      | Render up to 4, horizontally centered; hide the slide entirely if zero                       |
+| Slide title             | "What Resonated" (editorial voice, matches Takeaways / Planning Ahead)                       |
+| Slide position          | Between the LinkedIn tiles slide and Initiatives                                             |
 
 ## Data model
 
@@ -45,6 +45,7 @@ created_at              timestamptz
 ```
 
 **Indexes**
+
 - `(organization_id, posted_at DESC)` — quarter queries
 - `(organization_id, linkedin_urn)` unique — upsert key
 
@@ -57,6 +58,7 @@ Private bucket. Path pattern: `{organization_id}/{linkedin_urn}.jpg`.
 ### Scopes
 
 No new scopes required. Existing app already has:
+
 - `r_organization_social` — read org posts + per-post analytics
 - `r_organization_admin` — org-level analytics (already in use)
 
@@ -77,6 +79,7 @@ All on `https://api.linkedin.com/rest`, API version `202601` (matches existing c
 New function `syncLinkedInPosts(connection)` in `lib/platforms/linkedin/`, called from the existing daily cron at `/app/api/cron/daily-metrics-sync/route.ts` after the current metrics sync per connection.
 
 **Per run**
+
 1. Fetch posts from the last ~95 days (quarter + buffer).
 2. Upsert by `linkedin_urn`. Caption, post_url, post_type immutable after first insert.
 3. Refresh analytics counters for posts ≤90 days old (engagement trickles in). Posts >90 days are treated as frozen.
