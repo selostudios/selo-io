@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { syncMetricsForLinkedInConnection } from '@/lib/platforms/linkedin/actions'
+import {
+  syncMetricsForLinkedInConnection,
+  syncLinkedInPosts,
+} from '@/lib/platforms/linkedin/actions'
 import { syncMetricsForGoogleAnalyticsConnection } from '@/lib/platforms/google-analytics/actions'
 import { syncMetricsForHubSpotConnection } from '@/lib/platforms/hubspot/actions'
 
@@ -141,6 +144,23 @@ export async function POST(request: Request) {
           supabase,
           targetDate
         )
+        if (!isBackfill) {
+          try {
+            await syncLinkedInPosts(
+              connection.id,
+              connection.organization_id,
+              connection.credentials,
+              supabase
+            )
+          } catch (err) {
+            console.error('[Cron Error]', {
+              type: 'sync_linkedin_posts_failed',
+              connectionId: connection.id,
+              error: err instanceof Error ? err.message : 'unknown',
+              timestamp: new Date().toISOString(),
+            })
+          }
+        }
         break
       case 'google_analytics':
         await syncMetricsForGoogleAnalyticsConnection(
