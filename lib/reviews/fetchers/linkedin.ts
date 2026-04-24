@@ -1,6 +1,7 @@
 import type { QuarterPeriods } from '@/lib/reviews/period'
 import type { LinkedInData, MetricTriple } from '@/lib/reviews/types'
 import { buildMetricTriple } from '@/lib/reviews/metric-triple'
+import { isFeaturedLinkedInMetric } from '@/lib/reviews/linkedin-featured-metrics'
 import { createServiceClient } from '@/lib/supabase/server'
 import { PlatformType } from '@/lib/enums'
 
@@ -18,8 +19,18 @@ const CUMULATIVE_METRICS = new Set<string>(['linkedin_followers'])
 export async function fetchLinkedInData(
   organizationId: string,
   periods: QuarterPeriods
-): Promise<LinkedInData> {
+): Promise<LinkedInData | undefined> {
   const supabase = createServiceClient()
+
+  const { data: connection } = await supabase
+    .from('platform_connections')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('platform_type', PlatformType.LinkedIn)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!connection) return undefined
 
   const fetchSeries = async (start: string, end: string) => {
     const { data } = await supabase
@@ -49,11 +60,25 @@ export async function fetchLinkedInData(
       }
       return filtered
     }
-    metrics[metric] = buildMetricTriple({
+    const triple = buildMetricTriple({
       current: seriesFor(main),
       qoq: seriesFor(qoq),
       yoy: seriesFor(yoy),
     })
+
+    if (isFeaturedLinkedInMetric(metric)) {
+      const toSeries = (rows: typeof main) =>
+        rows
+          .filter((r) => r.metric_type === metric)
+          .map((r) => ({ date: r.date as string, value: Number(r.value) }))
+      triple.timeseries = {
+        current: toSeries(main),
+        qoq: toSeries(qoq),
+        yoy: toSeries(yoy),
+      }
+    }
+
+    metrics[metric] = triple
   }
   return { metrics, top_posts: [] }
 }

@@ -1,7 +1,13 @@
 import { describe, test, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { ReviewDeck } from '@/components/reviews/review-deck'
-import type { NarrativeBlocks, SnapshotData, GAData, MetricTriple } from '@/lib/reviews/types'
+import type {
+  NarrativeBlocks,
+  SnapshotData,
+  GAData,
+  LinkedInData,
+  MetricTriple,
+} from '@/lib/reviews/types'
 
 const baseOrg = {
   name: 'Acme Corp',
@@ -184,12 +190,13 @@ describe('ReviewDeck GA slide routing', () => {
     vi.resetModules()
     vi.doUnmock('@/components/reviews/review-deck/body-slide')
     vi.doUnmock('@/components/reviews/review-deck/ga-body-slide')
+    vi.doUnmock('@/components/reviews/review-deck/linkedin-body-slide')
   })
 
   async function renderWithStubs(props: { narrative: NarrativeBlocks; data: SnapshotData }) {
     // Dynamic import of ReviewDeck resolves against the fresh module graph;
     // reset ensures the deck picks up the new stubs rather than reusing the
-    // real BodySlide/GaBodySlide already cached from the top describe block.
+    // real slide components already cached from the top describe block.
     vi.resetModules()
     vi.doMock('@/components/reviews/review-deck/body-slide', () => ({
       BodySlide: ({ heading, text }: { heading: string; text: string }) => (
@@ -218,6 +225,26 @@ describe('ReviewDeck GA slide routing', () => {
         </div>
       ),
     }))
+    vi.doMock('@/components/reviews/review-deck/linkedin-body-slide', () => ({
+      LinkedInBodySlide: ({
+        narrative,
+        data,
+        mode,
+      }: {
+        narrative: string
+        data: LinkedInData | undefined
+        mode: 'screen' | 'print'
+      }) => (
+        <div
+          data-testid="mock-linkedin-body-slide"
+          data-narrative={narrative}
+          data-has-data={data === undefined ? 'false' : 'true'}
+          data-mode={mode}
+        >
+          mock-linkedin-body-slide
+        </div>
+      ),
+    }))
 
     const mod = await import('@/components/reviews/review-deck')
     return render(
@@ -241,20 +268,22 @@ describe('ReviewDeck GA slide routing', () => {
   }
   const gaData: GAData = { ga_sessions: gaTriple }
 
-  test('renders GaBodySlide for the GA section and BodySlide for the other four body sections', async () => {
+  test('routes GA to GaBodySlide, LinkedIn to LinkedInBodySlide, and the rest to BodySlide', async () => {
     await renderWithStubs({
       narrative: fullNarrative,
       data: { ga: gaData, linkedin: undefined, hubspot: undefined },
     })
 
-    // Two trees (screen-only and print-only) each render one GA body slide.
+    // Two trees (screen-only and print-only) each render one GA and one LinkedIn slide.
     expect(screen.getAllByTestId('mock-ga-body-slide')).toHaveLength(2)
-    // And four BodySlide stubs each (linkedin + initiatives + takeaways + planning).
-    expect(screen.getAllByTestId('mock-body-slide')).toHaveLength(8)
+    expect(screen.getAllByTestId('mock-linkedin-body-slide')).toHaveLength(2)
+    // And three BodySlide stubs per tree (initiatives + takeaways + planning) = 6.
+    expect(screen.getAllByTestId('mock-body-slide')).toHaveLength(6)
 
-    // The BodySlide stubs never carry the GA heading — GA must route to GaBodySlide.
+    // The BodySlide stubs never carry the GA or LinkedIn heading.
     for (const node of screen.getAllByTestId('mock-body-slide')) {
       expect(node.getAttribute('data-heading')).not.toBe('Google Analytics')
+      expect(node.getAttribute('data-heading')).not.toBe('LinkedIn')
     }
   })
 
@@ -308,13 +337,40 @@ describe('ReviewDeck GA slide routing', () => {
 
   test('BodySlide receives an empty string (not undefined) when a narrative block is missing', async () => {
     await renderWithStubs({
-      narrative: { ...fullNarrative, linkedin_insights: undefined },
+      narrative: { ...fullNarrative, initiatives: undefined },
       data: { ga: gaData },
     })
 
     const bodyStubs = screen.getAllByTestId('mock-body-slide')
-    const linkedinStub = bodyStubs.find((n) => n.getAttribute('data-heading') === 'LinkedIn')
-    expect(linkedinStub).toBeDefined()
-    expect(linkedinStub?.getAttribute('data-text')).toBe('')
+    const initiativesStub = bodyStubs.find((n) => n.getAttribute('data-heading') === 'Initiatives')
+    expect(initiativesStub).toBeDefined()
+    expect(initiativesStub?.getAttribute('data-text')).toBe('')
+  })
+
+  test('LinkedInBodySlide receives an empty string when linkedin_insights is missing', async () => {
+    await renderWithStubs({
+      narrative: { ...fullNarrative, linkedin_insights: undefined },
+      data: {},
+    })
+
+    const stubs = screen.getAllByTestId('mock-linkedin-body-slide')
+    expect(stubs).toHaveLength(2)
+    for (const node of stubs) {
+      expect(node.getAttribute('data-narrative')).toBe('')
+      expect(node.getAttribute('data-has-data')).toBe('false')
+    }
+  })
+
+  test('threads the linkedin sub-object into LinkedInBodySlide as the data prop', async () => {
+    const linkedinData: LinkedInData = { metrics: {}, top_posts: [] }
+    await renderWithStubs({
+      narrative: fullNarrative,
+      data: { linkedin: linkedinData },
+    })
+
+    for (const node of screen.getAllByTestId('mock-linkedin-body-slide')) {
+      expect(node.getAttribute('data-has-data')).toBe('true')
+      expect(node.getAttribute('data-narrative')).toBe(fullNarrative.linkedin_insights)
+    }
   })
 })
