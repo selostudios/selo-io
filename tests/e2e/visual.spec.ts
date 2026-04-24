@@ -91,6 +91,27 @@ test.describe('Visual Regression', () => {
       await expect(page).toHaveScreenshot('performance-report-preview.png', { fullPage: true })
     })
 
+    test('performance report preview - what resonated slide', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
+      await page.waitForSelector('[data-testid="performance-reports-preview"]')
+      await page.waitForSelector('[data-testid="review-deck"]')
+      // The seeded snapshot has 4 top_posts so the What Resonated slide
+      // renders at index 3 (cover=0, GA=1, LinkedIn=2, What Resonated=3).
+      // `data-current-index` on the deck track gives us a deterministic
+      // signal that the slide transition has completed, avoiding a flaky
+      // `waitForTimeout`.
+      const deckTrack = page.locator('[data-testid="review-deck-track"]')
+      await page.keyboard.press('ArrowRight')
+      await expect(deckTrack).toHaveAttribute('data-current-index', '1')
+      await page.keyboard.press('ArrowRight')
+      await expect(deckTrack).toHaveAttribute('data-current-index', '2')
+      await page.keyboard.press('ArrowRight')
+      await expect(deckTrack).toHaveAttribute('data-current-index', '3')
+      await page.waitForSelector('[data-testid="content-body-slide-content"]')
+      await expect(page).toHaveScreenshot('what-resonated-slide.png', { fullPage: false })
+    })
+
     test('performance report snapshot detail', async ({ page }) => {
       const orgId = await getOrgIdFromDashboard(page)
       await page.goto(

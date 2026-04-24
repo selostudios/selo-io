@@ -164,7 +164,7 @@ export async function seedTestData() {
   if (review) {
     await supabase.from('marketing_review_drafts').insert({
       review_id: review.id,
-      data: {},
+      data: testMarketingReview.data,
       narrative: testMarketingReview.narrative,
       ai_originals: testMarketingReview.narrative,
     })
@@ -182,7 +182,7 @@ export async function seedTestData() {
         compare_qoq_end: testMarketingReview.compareQoqEnd,
         compare_yoy_start: testMarketingReview.compareYoyStart,
         compare_yoy_end: testMarketingReview.compareYoyEnd,
-        data: {},
+        data: testMarketingReview.data,
         narrative: testMarketingReview.narrative,
         share_token: testMarketingReview.internalShareToken,
       })
