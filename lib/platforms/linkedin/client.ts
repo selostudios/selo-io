@@ -439,6 +439,13 @@ export class LinkedInClient {
     return analytics
   }
 
+  async resolveImageUrl(imageUrn: string): Promise<string | null> {
+    const data = await this.fetch<{ id?: string; downloadUrl?: string }>(
+      `/images/${encodeURIComponent(imageUrn)}`
+    )
+    return data.downloadUrl ?? null
+  }
+
   async listPosts(opts: ListPostsOptions): Promise<LinkedInRawPost[]> {
     const maxPages = opts.maxPages ?? 10
     const sinceMs = opts.since.getTime()
