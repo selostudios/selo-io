@@ -28,6 +28,13 @@ export interface ListPostsOptions {
   maxPages?: number
 }
 
+export interface PostAnalytics {
+  impressions: number
+  reactions: number
+  comments: number
+  shares: number
+}
+
 export class LinkedInClient {
   private accessToken: string
   private organizationId: string
@@ -391,6 +398,45 @@ export class LinkedInClient {
     }
 
     return dailyMetrics
+  }
+
+  async getPostAnalytics(postUrns: string[]): Promise<Map<string, PostAnalytics>> {
+    const analytics = new Map<string, PostAnalytics>()
+    if (postUrns.length === 0) return analytics
+
+    const orgUrn = `urn:li:organization:${this.organizationId}`
+    const batchSize = 50
+
+    for (let i = 0; i < postUrns.length; i += batchSize) {
+      const batch = postUrns.slice(i, i + batchSize)
+      const shareParams = batch.map((urn) => `shares[]=${encodeURIComponent(urn)}`).join('&')
+      const data = await this.fetch<{
+        elements: Array<{
+          share?: string
+          totalShareStatistics?: {
+            impressionCount?: number
+            likeCount?: number
+            commentCount?: number
+            shareCount?: number
+          }
+        }>
+      }>(
+        `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&${shareParams}`
+      )
+
+      for (const el of data.elements ?? []) {
+        if (!el.share) continue
+        const stats = el.totalShareStatistics ?? {}
+        analytics.set(el.share, {
+          impressions: Number(stats.impressionCount) || 0,
+          reactions: Number(stats.likeCount) || 0,
+          comments: Number(stats.commentCount) || 0,
+          shares: Number(stats.shareCount) || 0,
+        })
+      }
+    }
+
+    return analytics
   }
 
   async listPosts(opts: ListPostsOptions): Promise<LinkedInRawPost[]> {
