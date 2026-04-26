@@ -90,6 +90,14 @@ test.describe('Visual Regression', () => {
       await expect(page).toHaveScreenshot('report-editor-overview.png', { fullPage: true })
     })
 
+    test('report editor slide cover with tray', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/slides/cover`)
+      await page.waitForSelector('[data-testid="review-deck"]')
+      await page.waitForSelector('[data-testid="tray-body"]')
+      await expect(page).toHaveScreenshot('report-editor-slide-cover.png', { fullPage: true })
+    })
+
     test('performance report preview', async ({ page }) => {
       const orgId = await getOrgIdFromDashboard(page)
       await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
