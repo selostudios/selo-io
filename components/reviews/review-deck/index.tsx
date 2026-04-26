@@ -117,7 +117,11 @@ export function ReviewDeck({
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const slides: BuiltSlide[] = useMemo(() => {
-    const hidden = new Set(hiddenSlides)
+    // Enforce the registry's `hideable` contract here so callers passing a
+    // non-hideable key (e.g. 'cover') don't accidentally dim or drop it.
+    const hidden = new Set(
+      hiddenSlides.filter((key) => SLIDES.find((s) => s.key === key)?.hideable !== false)
+    )
     const isEditor = mode === 'editor'
     const posts = data?.linkedin?.top_posts ?? []
 
@@ -136,29 +140,43 @@ export function ReviewDeck({
 
       let render: BuiltSlide['render']
 
-      if (slide.kind === 'cover') {
-        render = () => (
-          <CoverSlide
-            organization={{ name: organization.name, logo_url: organization.logo_url }}
-            quarter={quarter}
-            periodStart={periodStart}
-            periodEnd={periodEnd}
-            subtitle={narrative.cover_subtitle}
-          />
-        )
-      } else if (slide.kind === 'ga') {
-        render = (renderMode) => <GaBodySlide narrative={text} data={data?.ga} mode={renderMode} />
-      } else if (slide.kind === 'linkedin') {
-        render = (renderMode) => (
-          <LinkedInBodySlide narrative={text} data={data?.linkedin} mode={renderMode} />
-        )
-      } else if (slide.kind === 'content') {
-        render = (renderMode) => (
-          <ContentBodySlide narrative={text} posts={posts} mode={renderMode} />
-        )
-      } else {
-        // 'prose'
-        render = () => <BodySlide heading={heading} text={text} />
+      switch (slide.kind) {
+        case 'cover':
+          render = () => (
+            <CoverSlide
+              organization={{ name: organization.name, logo_url: organization.logo_url }}
+              quarter={quarter}
+              periodStart={periodStart}
+              periodEnd={periodEnd}
+              subtitle={narrative.cover_subtitle}
+            />
+          )
+          break
+        case 'ga':
+          render = (renderMode) => (
+            <GaBodySlide narrative={text} data={data?.ga} mode={renderMode} />
+          )
+          break
+        case 'linkedin':
+          render = (renderMode) => (
+            <LinkedInBodySlide narrative={text} data={data?.linkedin} mode={renderMode} />
+          )
+          break
+        case 'content':
+          render = (renderMode) => (
+            <ContentBodySlide narrative={text} posts={posts} mode={renderMode} />
+          )
+          break
+        case 'prose':
+          render = () => <BodySlide heading={heading} text={text} />
+          break
+        default: {
+          // Exhaustiveness check — adding a new SlideKind to the registry will
+          // break this build until the switch handles it. Don't silently fall
+          // through to a generic body renderer.
+          const exhaustive: never = slide.kind
+          throw new Error(`Unhandled slide kind: ${exhaustive as string}`)
+        }
       }
 
       // Editor mode wraps hidden slides in the dimming overlay so authors can
