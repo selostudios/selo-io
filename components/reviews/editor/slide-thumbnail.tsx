@@ -44,7 +44,7 @@ export function SlideThumbnail({
           <span className="text-sm font-medium">{label}</span>
         </div>
       </SlideThumbnailLink>
-      <div className="absolute right-2 top-2">
+      <div className="absolute right-2 top-2 z-10">
         <HideSlideToggle
           reviewId={reviewId}
           slideKey={slideKey}

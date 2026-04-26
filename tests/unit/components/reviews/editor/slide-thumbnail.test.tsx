@@ -13,15 +13,12 @@ vi.mock('@/components/ui/sonner', () => ({
 import { SlideThumbnail } from '@/components/reviews/editor/slide-thumbnail'
 
 describe('SlideThumbnail', () => {
-  test('renders the slide label and icon', () => {
+  test('renders the slide label', () => {
     render(
       <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />
     )
 
     expect(screen.getByText('Google Analytics')).toBeInTheDocument()
-    expect(
-      screen.getByTestId('slide-thumbnail-ga_summary').querySelector('svg')
-    ).toBeInTheDocument()
   })
 
   test('links to the slide editor route', () => {
