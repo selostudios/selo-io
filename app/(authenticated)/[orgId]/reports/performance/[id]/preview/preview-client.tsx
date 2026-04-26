@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import { publishReview } from '@/lib/reviews/actions'
 import { showError, showSuccess } from '@/components/ui/sonner'
+import type { SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 export interface PreviewClientProps {
@@ -22,6 +23,7 @@ export interface PreviewClientProps {
   periodEnd: string
   narrative: NarrativeBlocks
   data: SnapshotData
+  hiddenSlides: readonly SlideKey[]
 }
 
 /**
@@ -39,6 +41,7 @@ export function PreviewClient({
   periodEnd,
   narrative,
   data,
+  hiddenSlides,
 }: PreviewClientProps) {
   const router = useRouter()
   const [isPublishing, startPublishTransition] = useTransition()
@@ -104,6 +107,7 @@ export function PreviewClient({
             periodEnd={periodEnd}
             narrative={narrative}
             data={data}
+            hiddenSlides={hiddenSlides}
           />
         </div>
       </div>

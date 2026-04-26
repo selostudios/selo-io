@@ -14,6 +14,7 @@ import type {
 } from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 import { fetchUnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
 import { formatQuarterLabel } from '@/lib/reviews/period'
+import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 // =============================================================================
@@ -75,6 +76,7 @@ export interface SharedMarketingReviewData {
   periodEnd: string
   narrative: NarrativeBlocks
   data: SnapshotData
+  hiddenSlides: readonly SlideKey[]
   version: number
   publishedAt: string | null
 }
@@ -332,7 +334,9 @@ export async function getSharedMarketingReviewData(
 
   const { data: snapshot, error: snapshotError } = await supabase
     .from('marketing_review_snapshots')
-    .select('id, review_id, version, period_start, period_end, data, narrative, published_at')
+    .select(
+      'id, review_id, version, period_start, period_end, data, narrative, hidden_slides, published_at'
+    )
     .eq('id', snapshotId)
     .maybeSingle()
 
@@ -383,6 +387,9 @@ export async function getSharedMarketingReviewData(
   const quarter = review.quarter as string
   const narrative = (snapshot.narrative as NarrativeBlocks | null) ?? {}
   const data = (snapshot.data as SnapshotData | null) ?? {}
+  const hiddenSlides: SlideKey[] = ((snapshot.hidden_slides as string[] | null) ?? []).filter(
+    (k): k is SlideKey => isSlideKey(k)
+  )
 
   return {
     organization: {
@@ -395,6 +402,7 @@ export async function getSharedMarketingReviewData(
     periodEnd: snapshot.period_end as string,
     narrative,
     data,
+    hiddenSlides,
     version: snapshot.version as number,
     publishedAt: (snapshot.published_at as string | null) ?? null,
   }

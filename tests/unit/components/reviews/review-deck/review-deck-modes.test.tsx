@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { ReviewDeck } from '@/components/reviews/review-deck'
+import { SLIDES } from '@/lib/reviews/slides/registry'
 import { sampleOrg, sampleNarrative, sampleSnapshotData } from '@/tests/helpers/reviews-fixtures'
 
 function renderDeck(overrides: Partial<Parameters<typeof ReviewDeck>[0]> = {}) {
@@ -23,6 +24,16 @@ describe('ReviewDeck mode prop', () => {
 
     expect(screen.queryByLabelText(/Google Analytics/)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/LinkedIn/)).toBeInTheDocument()
+  })
+
+  test('presentation mode drops every hideable slide listed in hiddenSlides', () => {
+    renderDeck({ hiddenSlides: ['ga_summary', 'linkedin_insights', 'planning'] })
+
+    const track = screen.getByTestId('review-deck-track')
+    expect(track.children).toHaveLength(SLIDES.length - 3)
+    expect(screen.queryByLabelText(/Google Analytics/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/LinkedIn/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Planning Ahead/)).not.toBeInTheDocument()
   })
 
   test('editor mode keeps hidden slides but renders Hidden badge', () => {

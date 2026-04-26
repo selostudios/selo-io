@@ -26,6 +26,7 @@ interface SnapshotRow {
   period_end: string
   data: unknown
   narrative: unknown
+  hidden_slides: string[] | null
   published_at: string | null
 }
 
@@ -90,6 +91,7 @@ describe('getSharedMarketingReviewData', () => {
           period_end: '2026-03-31',
           data: {},
           narrative: { cover_subtitle: 'hello' },
+          hidden_slides: [],
           published_at: '2026-04-01T00:00:00Z',
         },
         error: null,
@@ -113,6 +115,7 @@ describe('getSharedMarketingReviewData', () => {
           period_end: '2026-03-31',
           data: {},
           narrative: {},
+          hidden_slides: [],
           published_at: null,
         },
         error: null,
@@ -151,6 +154,7 @@ describe('getSharedMarketingReviewData', () => {
           period_end: '2026-03-31',
           data,
           narrative,
+          hidden_slides: ['ga_summary', 'unknown_slide'],
           published_at: '2026-04-01T12:34:00Z',
         },
         error: null,
@@ -188,6 +192,7 @@ describe('getSharedMarketingReviewData', () => {
       periodEnd: '2026-03-31',
       narrative,
       data,
+      hiddenSlides: ['ga_summary'],
       version: 3,
       publishedAt: '2026-04-01T12:34:00Z',
     })
@@ -204,6 +209,7 @@ describe('getSharedMarketingReviewData', () => {
           period_end: '2026-03-31',
           data: null,
           narrative: null,
+          hidden_slides: null,
           published_at: null,
         },
         error: null,
@@ -233,6 +239,7 @@ describe('getSharedMarketingReviewData', () => {
     expect(result).not.toBeNull()
     expect(result!.narrative).toEqual({})
     expect(result!.data).toEqual({})
+    expect(result!.hiddenSlides).toEqual([])
     expect(result!.quarter).toBe('Q2 2026')
     expect(result!.organization.logo_url).toBeNull()
     expect(result!.organization.primary_color).toBeNull()
