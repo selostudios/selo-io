@@ -4,6 +4,17 @@ import { seedOrgWithDraft, type SeededReview } from '../helpers/reviews'
 
 const seeded: SeededReview[] = []
 
+/**
+ * Tracks a fixture for teardown immediately on creation. If the helper throws
+ * partway through it already cleans itself up, but if any later assertion
+ * throws we still want the fixture removed — that's what `afterAll` is for.
+ */
+async function track(promise: Promise<SeededReview>): Promise<SeededReview> {
+  const fixture = await promise
+  seeded.push(fixture)
+  return fixture
+}
+
 afterAll(async () => {
   for (const fixture of seeded) {
     await fixture.cleanup()
@@ -12,8 +23,7 @@ afterAll(async () => {
 
 describe('marketing_review_drafts.hidden_slides', () => {
   test('defaults to empty text[] and accepts narrative-block keys', async () => {
-    const fixture = await seedOrgWithDraft()
-    seeded.push(fixture)
+    const fixture = await track(seedOrgWithDraft())
     const supabase = createServiceClient()
 
     const { data: draft } = await supabase
@@ -31,8 +41,7 @@ describe('marketing_review_drafts.hidden_slides', () => {
   })
 
   test('marketing_review_snapshots.hidden_slides defaults to empty', async () => {
-    const fixture = await seedOrgWithDraft({ withSnapshot: true })
-    seeded.push(fixture)
+    const fixture = await track(seedOrgWithDraft({ withSnapshot: true }))
     const supabase = createServiceClient()
 
     const { data } = await supabase
