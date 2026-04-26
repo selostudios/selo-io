@@ -13,15 +13,15 @@ export function TopPostCard({ post }: TopPostCardProps) {
   const [broken, setBroken] = useState(false)
   const totalEngagements = post.reactions + post.comments + post.shares
   return (
-    <div data-testid="top-post-card" className="flex w-full max-w-[240px] flex-col gap-3">
+    <div data-testid="top-post-card" className="flex w-full max-w-[300px] flex-col gap-3">
       <div className="overflow-hidden rounded-md">
         {post.thumbnail_url && !broken ? (
           <Image
             src={post.thumbnail_url}
             alt={post.caption ?? 'LinkedIn post thumbnail'}
-            width={240}
-            height={135}
-            sizes="240px"
+            width={300}
+            height={169}
+            sizes="300px"
             className="aspect-[16/9] w-full object-cover"
             onError={() => setBroken(true)}
           />

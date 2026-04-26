@@ -8,6 +8,8 @@ export interface SlideLayoutProps {
   narrative: string
   /** Stable selector for the narrative region — each slide variant supplies its own. */
   narrativeTestId: string
+  /** Optional sub-heading rendered directly above the narrative bullets. */
+  narrativeHeading?: string
 }
 
 /**
@@ -17,7 +19,13 @@ export interface SlideLayoutProps {
  * here is the single source of truth — drift between slides was the bug that
  * motivated this extraction.
  */
-export function SlideLayout({ heading, body, narrative, narrativeTestId }: SlideLayoutProps) {
+export function SlideLayout({
+  heading,
+  body,
+  narrative,
+  narrativeTestId,
+  narrativeHeading,
+}: SlideLayoutProps) {
   return (
     <div className="flex h-full w-full flex-col justify-center gap-12 px-8 py-12 md:gap-16 md:px-16 lg:px-24">
       <h2
@@ -29,7 +37,17 @@ export function SlideLayout({ heading, body, narrative, narrativeTestId }: Slide
 
       {body}
 
-      <SlideNarrative text={narrative} testId={narrativeTestId} />
+      <div className="space-y-3">
+        {narrativeHeading && (
+          <h3
+            data-testid={`${narrativeTestId}-heading`}
+            className="text-foreground text-lg font-semibold tracking-tight md:text-xl lg:text-2xl"
+          >
+            {narrativeHeading}
+          </h3>
+        )}
+        <SlideNarrative text={narrative} testId={narrativeTestId} />
+      </div>
     </div>
   )
 }

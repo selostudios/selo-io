@@ -17,6 +17,7 @@ export function ContentBodySlide({ narrative, posts }: ContentBodySlideProps) {
       body={<TopPostGrid posts={posts} />}
       narrative={narrative}
       narrativeTestId="content-body-slide-content"
+      narrativeHeading="Key takeaways"
     />
   )
 }
