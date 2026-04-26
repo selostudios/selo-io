@@ -14,9 +14,15 @@ export function SlideTray({ children, defaultExpanded = true }: SlideTrayProps) 
   const [expanded, setExpanded] = useState(defaultExpanded)
 
   return (
-    <div className="bg-background fullscreen:hidden border-t">
+    <div className="bg-background fullscreen:hidden relative border-t">
       <TrayHandle expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
-      <div data-testid="tray-body" className={cn('p-4', !expanded && 'hidden')}>
+      <div
+        data-testid="tray-body"
+        className={cn(
+          'bg-background absolute right-0 bottom-full left-0 z-10 max-h-[60vh] overflow-y-auto border-t p-4 shadow-lg',
+          !expanded && 'hidden'
+        )}
+      >
         {children}
       </div>
     </div>
