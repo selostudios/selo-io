@@ -62,7 +62,7 @@ export default async function PerformanceReportEditorPage({
 
       {draft ? (
         <div className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             <StyleMemoPreview orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
             <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
           </div>
