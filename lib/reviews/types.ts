@@ -1,3 +1,5 @@
+import type { SlideKey } from './slides/registry'
+
 export interface MarketingReview {
   id: string
   organization_id: string
@@ -25,6 +27,7 @@ export interface MarketingReviewSnapshot {
   narrative: NarrativeBlocks
   share_token: string
   author_notes: string | null
+  hidden_slides: SlideKey[]
 }
 
 export interface MarketingReviewDraft {
@@ -35,6 +38,7 @@ export interface MarketingReviewDraft {
   narrative: NarrativeBlocks
   ai_originals: NarrativeBlocks
   author_notes: string | null
+  hidden_slides: SlideKey[]
 }
 
 export interface SnapshotData {
