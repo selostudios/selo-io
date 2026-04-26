@@ -27,8 +27,19 @@ test.describe('Performance Reports — narrative editing + preview', () => {
     await page.waitForSelector('[data-testid="performance-reports-slide-editor"]')
     await page.waitForSelector('[data-testid="tray-body"]')
 
+    const input = page.locator('[data-testid="field-input-cover_subtitle"]')
+    // Wait for the controlled textarea to be hydrated and bound to its initial
+    // value before typing — without this, `fill()` can race the React mount and
+    // the onChange handler never fires.
+    await expect(input).not.toHaveValue('', { timeout: 5000 })
+
     const distinctiveSubtitle = 'E2E test subtitle 12345'
-    await page.locator('[data-testid="field-input-cover_subtitle"]').fill(distinctiveSubtitle)
+    // Clear first so React's value tracker registers the change. `fill()` alone
+    // can race React's controlled-component reconciliation when the textarea
+    // already has a non-empty initial value, leaving the onChange handler
+    // un-fired and the autosave hook never transitioning out of 'idle'.
+    await input.clear()
+    await input.pressSequentially(distinctiveSubtitle)
 
     await expect(page.locator('[data-testid="field-status-cover_subtitle"]')).toHaveText('Saved', {
       timeout: 5000,
