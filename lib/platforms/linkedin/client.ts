@@ -404,37 +404,56 @@ export class LinkedInClient {
     const analytics = new Map<string, PostAnalytics>()
     if (postUrns.length === 0) return analytics
 
+    // LinkedIn's organizationalEntityShareStatistics endpoint requires URNs in
+    // Restli `List(...)` syntax, with separate query parameter names per URN
+    // type: `shares=List(...)` for `urn:li:share:*` (legacy shares) and
+    // `ugcPosts=List(...)` for `urn:li:ugcPost:*` (UGC posts). The previous
+    // `shares[]=A&shares[]=B` form is rejected as "Invalid query parameters".
+    const shares: string[] = []
+    const ugcPosts: string[] = []
+    for (const urn of postUrns) {
+      if (urn.startsWith('urn:li:share:')) shares.push(urn)
+      else if (urn.startsWith('urn:li:ugcPost:')) ugcPosts.push(urn)
+    }
+
     const orgUrn = `urn:li:organization:${this.organizationId}`
     const batchSize = 50
 
-    for (let i = 0; i < postUrns.length; i += batchSize) {
-      const batch = postUrns.slice(i, i + batchSize)
-      const shareParams = batch.map((urn) => `shares[]=${encodeURIComponent(urn)}`).join('&')
-      const data = await this.fetch<{
-        elements: Array<{
-          share?: string
-          totalShareStatistics?: {
-            impressionCount?: number
-            likeCount?: number
-            commentCount?: number
-            shareCount?: number
-          }
-        }>
-      }>(
-        `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&${shareParams}`
-      )
+    const fetchBucket = async (paramName: 'shares' | 'ugcPosts', urns: string[]) => {
+      for (let i = 0; i < urns.length; i += batchSize) {
+        const batch = urns.slice(i, i + batchSize)
+        const list = `List(${batch.map((u) => encodeURIComponent(u)).join(',')})`
+        const data = await this.fetch<{
+          elements: Array<{
+            share?: string
+            ugcPost?: string
+            totalShareStatistics?: {
+              impressionCount?: number
+              likeCount?: number
+              commentCount?: number
+              shareCount?: number
+            }
+          }>
+        }>(
+          `/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(orgUrn)}&${paramName}=${list}`
+        )
 
-      for (const el of data.elements ?? []) {
-        if (!el.share) continue
-        const stats = el.totalShareStatistics ?? {}
-        analytics.set(el.share, {
-          impressions: Number(stats.impressionCount) || 0,
-          reactions: Number(stats.likeCount) || 0,
-          comments: Number(stats.commentCount) || 0,
-          shares: Number(stats.shareCount) || 0,
-        })
+        for (const el of data.elements ?? []) {
+          const key = el.share ?? el.ugcPost
+          if (!key) continue
+          const stats = el.totalShareStatistics ?? {}
+          analytics.set(key, {
+            impressions: Number(stats.impressionCount) || 0,
+            reactions: Number(stats.likeCount) || 0,
+            comments: Number(stats.commentCount) || 0,
+            shares: Number(stats.shareCount) || 0,
+          })
+        }
       }
     }
+
+    if (shares.length > 0) await fetchBucket('shares', shares)
+    if (ugcPosts.length > 0) await fetchBucket('ugcPosts', ugcPosts)
 
     return analytics
   }
