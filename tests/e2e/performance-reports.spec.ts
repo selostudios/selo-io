@@ -11,8 +11,6 @@ import { testMarketingReview, testStyleMemo } from '../fixtures'
  * Playwright can run them in parallel.
  */
 
-const editorPathRegex =
-  /\/[0-9a-f-]{36}\/reports\/performance\/11111111-1111-4111-8111-111111111111(\?|$|#)/
 const previewPathRegex = /\/reports\/performance\/[0-9a-f-]{36}\/preview(\?|$|#)/
 const snapshotDetailPathRegex =
   /\/reports\/performance\/[0-9a-f-]{36}\/snapshots\/[0-9a-f-]{36}(\?|$|#)/
@@ -25,34 +23,23 @@ test.describe('Performance Reports — narrative editing + preview', () => {
   test('admin edits the cover subtitle and sees it in the preview deck', async ({ page }) => {
     const orgId = await getOrgIdFromDashboard(page)
 
-    await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}`)
-    await expect(page).toHaveURL(editorPathRegex)
-    await page.waitForSelector('[data-testid="narrative-editor"]')
+    await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/slides/cover`)
+    await page.waitForSelector('[data-testid="performance-reports-slide-editor"]')
+    await page.waitForSelector('[data-testid="tray-body"]')
 
-    // Edit the cover subtitle with a distinctive string the preview will echo.
     const distinctiveSubtitle = 'E2E test subtitle 12345'
-    const subtitle = page.locator('[data-testid="narrative-editor-cover_subtitle"]')
-    await subtitle.fill(distinctiveSubtitle)
+    await page.locator('[data-testid="field-input-cover_subtitle"]').fill(distinctiveSubtitle)
 
-    // Wait for the autosave debounce (1500ms) to settle so the preview query
-    // sees the new draft. Target the cover_subtitle block's specific status
-    // span — one "Saved" label renders per block, so a bare text selector
-    // would race sibling blocks.
-    await expect(page.locator('[data-testid="narrative-save-status-cover_subtitle"]')).toHaveText(
-      'Saved',
-      { timeout: 5000 }
-    )
+    await expect(page.locator('[data-testid="field-status-cover_subtitle"]')).toHaveText('Saved', {
+      timeout: 5000,
+    })
 
-    // Click Preview and verify we land on the preview route with the deck.
-    await page.locator('[data-testid="performance-reports-editor-preview-button"]').click()
+    await page.locator('[data-testid="report-preview-button"]').click()
     await page.waitForURL(previewPathRegex)
 
     await expect(page.locator('[data-testid="performance-reports-preview"]')).toBeVisible()
     await expect(page.locator('[data-testid="review-deck"]')).toBeVisible()
 
-    // Cover slide (slide index 0) is visible by default — scope to the active
-    // deck track and take the first match to avoid strict-mode collision with
-    // the hidden adjacent-slide copy that the carousel keeps in the DOM.
     await expect(
       page.getByTestId('review-deck-track').getByText(distinctiveSubtitle).first()
     ).toBeVisible()
