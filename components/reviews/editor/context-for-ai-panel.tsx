@@ -19,6 +19,7 @@ export function ContextForAiPanel({ reviewId, initialNotes, canEdit }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
     return () => {
@@ -33,10 +34,15 @@ export function ContextForAiPanel({ reviewId, initialNotes, canEdit }: Props) {
 
     if (!canEdit) return
 
+    // Bump request id synchronously so any in-flight save started before this
+    // keystroke can detect it's stale when it resolves.
+    const requestId = ++requestIdRef.current
+
     if (timerRef.current) clearTimeout(timerRef.current)
     setStatus('saving')
     timerRef.current = setTimeout(async () => {
       const result = await updateAuthorNotes(reviewId, next)
+      if (requestId !== requestIdRef.current) return
       if (result.success) {
         setStatus('saved')
         setErrorMessage(null)
@@ -86,12 +92,13 @@ export function ContextForAiPanel({ reviewId, initialNotes, canEdit }: Props) {
           )}
         </div>
       </div>
-      <p className="text-muted-foreground text-xs">
+      <p id="context-for-ai-hint" className="text-muted-foreground text-xs">
         Not shown in the deck. Used as context for the AI when you publish, and to improve future
         reports.
       </p>
       <Textarea
         aria-labelledby="context-for-ai-heading"
+        aria-describedby="context-for-ai-hint"
         data-testid="context-for-ai-textarea"
         value={value}
         onChange={(e) => handleChange(e.target.value)}

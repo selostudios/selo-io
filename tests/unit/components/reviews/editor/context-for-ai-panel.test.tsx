@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach, type Mock } from 'vitest'
+import { describe, test, expect, vi, beforeEach, afterAll, type Mock } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { ContextForAiPanel } from '@/components/reviews/editor/context-for-ai-panel'
 
@@ -6,6 +6,10 @@ vi.useFakeTimers()
 vi.mock('@/lib/reviews/actions', () => ({
   updateAuthorNotes: vi.fn().mockResolvedValue({ success: true }),
 }))
+
+afterAll(() => {
+  vi.useRealTimers()
+})
 
 describe('ContextForAiPanel', () => {
   beforeEach(async () => {
@@ -87,5 +91,49 @@ describe('ContextForAiPanel', () => {
     })
 
     expect(updateAuthorNotes).not.toHaveBeenCalled()
+  })
+
+  test('discards stale in-flight save responses when a newer keystroke is in flight', async () => {
+    const { updateAuthorNotes } = await import('@/lib/reviews/actions')
+    ;(updateAuthorNotes as unknown as Mock).mockClear()
+    let resolveFirst: ((value: { success: true }) => void) | undefined
+    ;(updateAuthorNotes as unknown as Mock)
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ success: true }>((resolve) => {
+            resolveFirst = resolve
+          })
+      )
+      .mockResolvedValueOnce({ success: true })
+
+    render(<ContextForAiPanel reviewId="rev-1" initialNotes="" canEdit />)
+
+    const textarea = screen.getByTestId('context-for-ai-textarea')
+
+    // First keystroke + debounce -> first save begins (and remains in-flight).
+    fireEvent.change(textarea, { target: { value: 'first' } })
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+    expect(updateAuthorNotes).toHaveBeenCalledWith('rev-1', 'first')
+    expect(screen.getByTestId('context-for-ai-save-status')).toHaveTextContent(/saving/i)
+
+    // Second keystroke bumps the request id and reschedules the timer.
+    // Status returns to "saving" via the new save's debounce branch.
+    fireEvent.change(textarea, { target: { value: 'second' } })
+    expect(screen.getByTestId('context-for-ai-save-status')).toHaveTextContent(/saving/i)
+
+    // Stale first save resolves while the second is still pending — must not flip to "saved".
+    await act(async () => {
+      resolveFirst?.({ success: true })
+    })
+    expect(screen.getByTestId('context-for-ai-save-status')).toHaveTextContent(/saving/i)
+
+    // Second save fires and resolves successfully.
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+    expect(updateAuthorNotes).toHaveBeenCalledWith('rev-1', 'second')
+    expect(screen.getByTestId('context-for-ai-save-status')).toHaveTextContent(/saved/i)
   })
 })
