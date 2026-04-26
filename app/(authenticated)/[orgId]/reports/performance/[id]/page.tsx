@@ -57,7 +57,7 @@ export default async function PerformanceReportEditorPage({
   const hiddenSlides = parseHiddenSlides(draft?.hidden_slides)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-8" data-testid="performance-reports-editor">
+    <div className="space-y-8 p-8" data-testid="performance-reports-editor">
       <ReportEditorHeader
         backHref={`/${orgId}/reports/performance`}
         title={review.title as string}

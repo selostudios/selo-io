@@ -26,19 +26,21 @@ export function SlideThumbnail({ orgId, reviewId, slideKey, hidden }: SlideThumb
       className={cn('relative rounded-lg border p-4 transition-opacity', hidden && 'opacity-50')}
     >
       <SlideThumbnailLink orgId={orgId} reviewId={reviewId} slideKey={slideKey} className="block">
-        <div className="flex items-center gap-3">
-          <SlideIcon slideKey={slideKey} className="text-muted-foreground size-5" />
+        <div className="flex items-center gap-3 pr-8">
+          <SlideIcon slideKey={slideKey} className="text-muted-foreground size-5 flex-shrink-0" />
           <span className="text-sm font-medium">{label}</span>
         </div>
       </SlideThumbnailLink>
-      <div className="absolute top-2 right-2 z-10">
-        <HideSlideToggle
-          reviewId={reviewId}
-          slideKey={slideKey}
-          hidden={hidden}
-          hideable={hideable}
-        />
-      </div>
+      {hideable && (
+        <div className="absolute top-1/2 right-2 z-10 -translate-y-1/2">
+          <HideSlideToggle
+            reviewId={reviewId}
+            slideKey={slideKey}
+            hidden={hidden}
+            hideable={hideable}
+          />
+        </div>
+      )}
     </article>
   )
 }

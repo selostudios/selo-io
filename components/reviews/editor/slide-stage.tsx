@@ -34,13 +34,9 @@ export function SlideStage({
   return (
     <div
       data-testid="slide-stage"
-      className="@container mx-auto flex h-full w-full max-w-[1600px] items-center justify-center"
+      className="mx-auto flex h-full w-full max-w-[1600px] items-center justify-center"
     >
-      <div
-        data-testid="slide-stage-frame"
-        className="aspect-video"
-        style={{ width: 'min(100%, calc(100cqh * 16 / 9))' }}
-      >
+      <div data-testid="slide-stage-frame" className="aspect-video h-full max-h-full max-w-full">
         <ReviewDeck
           mode="editor"
           initialSlideKey={slideKey}
