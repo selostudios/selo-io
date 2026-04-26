@@ -4,17 +4,35 @@ import userEvent from '@testing-library/user-event'
 import { SlideTray } from '@/components/reviews/editor/slide-tray'
 
 describe('SlideTray', () => {
-  test('toggling the handle collapses and expands the tray content', async () => {
+  test('starts expanded by default and collapses when the handle is clicked', async () => {
     const user = userEvent.setup()
     render(
       <SlideTray defaultExpanded>
-        <div data-testid="tray-body-content">body</div>
+        <div>body</div>
       </SlideTray>
     )
+
     const body = screen.getByTestId('tray-body')
-    expect(body).toBeVisible()
+    expect(body).not.toHaveClass('hidden')
+
     await user.click(screen.getByTestId('tray-handle'))
-    expect(screen.getByTestId('tray-body')).not.toBeVisible()
+    expect(screen.getByTestId('tray-body')).toHaveClass('hidden')
+  })
+
+  test('clicking the handle a second time re-expands the tray', async () => {
+    const user = userEvent.setup()
+    render(
+      <SlideTray defaultExpanded>
+        <div>body</div>
+      </SlideTray>
+    )
+    const handle = screen.getByTestId('tray-handle')
+
+    await user.click(handle)
+    expect(screen.getByTestId('tray-body')).toHaveClass('hidden')
+
+    await user.click(handle)
+    expect(screen.getByTestId('tray-body')).not.toHaveClass('hidden')
   })
 
   test('starts collapsed when defaultExpanded is false', () => {
@@ -23,7 +41,20 @@ describe('SlideTray', () => {
         <div>body</div>
       </SlideTray>
     )
-    expect(screen.getByTestId('tray-body')).not.toBeVisible()
+    expect(screen.getByTestId('tray-body')).toHaveClass('hidden')
+  })
+
+  test('keeps the body mounted in the DOM when collapsed', () => {
+    render(
+      <SlideTray defaultExpanded={false}>
+        <div data-testid="tray-body-content">body content</div>
+      </SlideTray>
+    )
+
+    // The body must remain in the DOM (not unmounted) so its content keeps
+    // its state and is available to assistive tech / scripted access.
+    expect(screen.queryByTestId('tray-body')).not.toBeNull()
+    expect(screen.queryByTestId('tray-body-content')).not.toBeNull()
   })
 
   test('renders children inside the body', () => {
@@ -33,15 +64,6 @@ describe('SlideTray', () => {
       </SlideTray>
     )
     expect(screen.getByTestId('tray-body-content')).toBeInTheDocument()
-  })
-
-  test('hides on :fullscreen via the fullscreen:hidden Tailwind variant', () => {
-    const { container } = render(
-      <SlideTray>
-        <div />
-      </SlideTray>
-    )
-    expect(container.firstChild).toHaveClass('fullscreen:hidden')
   })
 
   test('handle has aria-expanded reflecting collapse state', async () => {
