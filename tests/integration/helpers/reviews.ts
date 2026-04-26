@@ -5,6 +5,7 @@ import {
   createTestOrganization,
   linkUserToOrganization,
 } from '../../helpers/db'
+import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 export type SeededReview = {
   organizationId: string
@@ -17,7 +18,24 @@ export type SeededReview = {
 }
 
 /**
- * Seed a fresh org + admin user + marketing_review + draft (and optionally a
+ * Roles supported by `linkUserToOrganization`. `developer` is intentionally
+ * omitted because it requires `internal_employees` setup; tests that need it
+ * should call `linkUserAsDeveloper` directly.
+ */
+export type SeedRole = 'admin' | 'team_member' | 'client_viewer'
+
+export type SeedOrgOptions = {
+  withSnapshot?: boolean
+  /** Defaults to `'admin'`. */
+  role?: SeedRole
+  /** Initial `hidden_slides` array on the draft (defaults to `[]`). */
+  hiddenSlides?: string[]
+  /** Initial `narrative` JSON on the draft (defaults to `{}`). */
+  narrative?: Partial<NarrativeBlocks>
+}
+
+/**
+ * Seed a fresh org + user + marketing_review + draft (and optionally a
  * published snapshot) for an integration test. Uses random UUIDs so tests
  * never collide with one another or with the global E2E seed fixtures.
  *
@@ -26,9 +44,8 @@ export type SeededReview = {
  * `tests/helpers/db.ts` — only the review/draft/snapshot rows below are
  * genuinely new fixture logic.
  */
-export async function seedOrgWithDraft(
-  options: { withSnapshot?: boolean } = {}
-): Promise<SeededReview> {
+export async function seedOrgWithDraft(options: SeedOrgOptions = {}): Promise<SeededReview> {
+  const role: SeedRole = options.role ?? 'admin'
   const suffix = randomUUID().slice(0, 12)
   const email = `review-fixture-${suffix}@test.local`
 
@@ -42,7 +59,7 @@ export async function seedOrgWithDraft(
   const org = await createTestOrganization(`Review Fixture Org ${suffix}`)
   const organizationId = org.id
 
-  await linkUserToOrganization(userId, organizationId, 'admin', 'Review', 'Fixture')
+  await linkUserToOrganization(userId, organizationId, role, 'Review', 'Fixture')
 
   let reviewId = ''
   let draftId = ''
@@ -67,8 +84,9 @@ export async function seedOrgWithDraft(
       .insert({
         review_id: reviewId,
         data: {},
-        narrative: {},
+        narrative: (options.narrative ?? {}) as NarrativeBlocks,
         ai_originals: {},
+        hidden_slides: options.hiddenSlides ?? [],
       })
       .select('id')
       .single()
@@ -110,6 +128,16 @@ export async function seedOrgWithDraft(
 
   return { organizationId, userId, reviewId, draftId, snapshotId, cleanup }
 }
+
+/** Convenience wrapper — admin-role seed. */
+export const seedOrgWithDraftAsAdmin = (
+  opts: Omit<SeedOrgOptions, 'role'> = {}
+): Promise<SeededReview> => seedOrgWithDraft({ ...opts, role: 'admin' })
+
+/** Convenience wrapper — team_member-role seed. */
+export const seedOrgWithDraftAsTeamMember = (
+  opts: Omit<SeedOrgOptions, 'role'> = {}
+): Promise<SeededReview> => seedOrgWithDraft({ ...opts, role: 'team_member' })
 
 /**
  * Tears down a fixture's org + user. Deleting the organization cascades

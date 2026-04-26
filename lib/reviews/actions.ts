@@ -14,6 +14,7 @@ import {
   NarrativeGenerationError,
 } from '@/lib/reviews/narrative/generator'
 import { runStyleMemoLearner } from '@/lib/reviews/narrative/learn'
+import { isSlideKey, getSlide, type SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -375,4 +376,46 @@ export async function publishReview(
   })
 
   return { success: true, snapshotId: snapshot.id as string, version: nextVersion }
+}
+
+export async function setSlideVisibility(
+  reviewId: string,
+  slideKey: SlideKey,
+  hidden: boolean
+): Promise<ActionOk | ActionErr> {
+  if (!isSlideKey(slideKey)) {
+    return { success: false, error: `Unknown slide key: ${slideKey}` }
+  }
+  if (!getSlide(slideKey).hideable) {
+    return { success: false, error: 'Cover slide cannot be hidden' }
+  }
+
+  const review = await loadReviewForAuth(reviewId)
+  if (!review) return { success: false, error: 'Review not found' }
+  const auth = await authorizeAdminOrInternal(review.organization_id)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const supabase = await createClient()
+  const { data: draft, error: loadError } = await supabase
+    .from('marketing_review_drafts')
+    .select('hidden_slides')
+    .eq('review_id', reviewId)
+    .single()
+  if (loadError || !draft) return { success: false, error: loadError?.message ?? 'Draft not found' }
+
+  const current = ((draft.hidden_slides as string[]) ?? []).filter(isSlideKey)
+  const next = hidden
+    ? Array.from(new Set([...current, slideKey]))
+    : current.filter((k) => k !== slideKey)
+
+  const { error } = await supabase
+    .from('marketing_review_drafts')
+    .update({ hidden_slides: next, updated_at: new Date().toISOString() })
+    .eq('review_id', reviewId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}`)
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}/slides/${slideKey}`)
+  return { success: true }
 }
