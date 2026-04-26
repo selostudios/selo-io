@@ -3,11 +3,10 @@ import { cn } from '@/lib/utils'
 
 export interface BackLinkProps {
   href: string
-  label?: string
   className?: string
 }
 
-export function BackLink({ href, label = '← Back', className }: BackLinkProps) {
+export function BackLink({ href, className }: BackLinkProps) {
   return (
     <Link
       href={href}
@@ -17,7 +16,7 @@ export function BackLink({ href, label = '← Back', className }: BackLinkProps)
         className
       )}
     >
-      {label}
+      ← Back
     </Link>
   )
 }

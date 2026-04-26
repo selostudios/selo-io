@@ -12,14 +12,6 @@ describe('BackLink', () => {
     expect(link).toHaveAttribute('href', '/org-1/reports/performance')
     expect(link).toHaveTextContent('← Back')
   })
-
-  test('renders a custom label when provided', () => {
-    render(<BackLink href="/org-1/reports/performance" label="← All reports" />)
-
-    const link = screen.getByTestId('report-editor-back-link')
-    expect(link).toHaveTextContent('← All reports')
-    expect(link).not.toHaveTextContent('← Back')
-  })
 })
 
 describe('ReportTitle', () => {
