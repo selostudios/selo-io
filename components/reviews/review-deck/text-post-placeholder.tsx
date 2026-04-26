@@ -2,7 +2,7 @@ export function TextPostPlaceholder() {
   return (
     <div
       data-testid="text-post-placeholder"
-      className="flex aspect-[4/3] w-full items-center justify-center rounded-md bg-neutral-200 text-neutral-500"
+      className="flex aspect-[16/9] w-full items-center justify-center rounded-md bg-neutral-200 text-neutral-500"
       aria-hidden="true"
     >
       <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
