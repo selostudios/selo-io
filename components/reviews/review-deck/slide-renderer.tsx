@@ -1,5 +1,3 @@
-'use client'
-
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import type { SlideDefinition } from '@/lib/reviews/slides/registry'
 import { CoverSlide } from './cover-slide'
