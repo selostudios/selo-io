@@ -3,11 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
-import { AuthorNotesEditor } from './author-notes-editor'
-import { EditorHeader } from './editor-header'
-import { NarrativeEditor } from './narrative-editor'
-import { StyleMemoPreview } from './style-memo-preview'
+import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
+import { ReportEditorHeader } from '@/components/reviews/editor/report-editor-header'
+import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
+import { PreviewButton } from '@/components/reviews/editor/preview-button'
+import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
+import { PublishButton } from '@/components/reviews/editor/publish-button'
+import { ContextForAiPanel } from '@/components/reviews/editor/context-for-ai-panel'
+import { SlideThumbnailStrip } from '@/components/reviews/editor/slide-thumbnail-strip'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +37,7 @@ export default async function PerformanceReportEditorPage({
 
   const { data: draft } = await supabase
     .from('marketing_review_drafts')
-    .select('narrative, ai_originals, author_notes')
+    .select('author_notes, hidden_slides')
     .eq('review_id', id)
     .maybeSingle()
 
@@ -44,35 +47,35 @@ export default async function PerformanceReportEditorPage({
     .eq('organization_id', orgId)
     .maybeSingle()
 
-  const narrative = (draft?.narrative as NarrativeBlocks | null) ?? {}
-  const aiOriginals = (draft?.ai_originals as NarrativeBlocks | null) ?? {}
   const authorNotes = (draft?.author_notes as string | null) ?? ''
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
 
+  const hiddenSlides: SlideKey[] = ((draft?.hidden_slides as string[] | null) ?? []).filter(
+    (k): k is SlideKey => isSlideKey(k)
+  )
+
   return (
-    <div className="mx-auto max-w-3xl p-8" data-testid="performance-reports-editor">
-      <EditorHeader
-        orgId={orgId}
-        reviewId={id}
+    <div className="mx-auto max-w-5xl space-y-8 p-8" data-testid="performance-reports-editor">
+      <ReportEditorHeader
+        backHref={`/${orgId}/reports/performance`}
         title={review.title as string}
         quarter={review.quarter as string}
-        canEdit={canEdit}
+        actions={
+          <>
+            <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
+            <PreviewButton orgId={orgId} reviewId={id} />
+            <SnapshotsButton orgId={orgId} reviewId={id} />
+            {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
+          </>
+        }
       />
 
       {draft ? (
-        <div className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            <StyleMemoPreview orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
-            <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
-          </div>
-          <NarrativeEditor
-            reviewId={id}
-            narrative={narrative}
-            aiOriginals={aiOriginals}
-            canEdit={canEdit}
-          />
-        </div>
+        <>
+          <ContextForAiPanel reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+          <SlideThumbnailStrip orgId={orgId} reviewId={id} hiddenSlides={hiddenSlides} />
+        </>
       ) : (
         <p className="text-muted-foreground text-sm" data-testid="performance-reports-no-draft">
           No draft yet. Create one from the reports list.

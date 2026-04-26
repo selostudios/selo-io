@@ -83,6 +83,13 @@ test.describe('Visual Regression', () => {
       await loginAsAdmin(page)
     })
 
+    test('report editor overview', async ({ page }) => {
+      const orgId = await getOrgIdFromDashboard(page)
+      await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}`)
+      await page.waitForSelector('[data-testid="slide-thumbnail-cover"]')
+      await expect(page).toHaveScreenshot('report-editor-overview.png', { fullPage: true })
+    })
+
     test('performance report preview', async ({ page }) => {
       const orgId = await getOrgIdFromDashboard(page)
       await page.goto(`/${orgId}/reports/performance/${testMarketingReview.reviewId}/preview`)
