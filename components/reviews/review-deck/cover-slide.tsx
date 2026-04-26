@@ -37,7 +37,7 @@ export function CoverSlide({
         <img
           src={organization.logo_url}
           alt={organization.name}
-          className="mb-4 h-24 w-auto object-contain md:h-32 lg:h-40"
+          className="mb-4 h-16 w-auto object-contain md:h-20 lg:h-24"
         />
       ) : (
         <h1 className="text-3xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
