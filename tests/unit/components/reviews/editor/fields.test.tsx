@@ -28,65 +28,134 @@ describe.each(cases)('$name', ({ Component, expectedRows }) => {
   })
 
   test('uses the variant-specific row count on the textarea', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} />)
-    expect(screen.getByTestId('field-input-x')).toHaveAttribute('rows', String(expectedRows))
+    render(<Component name="ga_summary" label="GA summary" value="" onChange={() => {}} />)
+    expect(screen.getByTestId('field-input-ga_summary')).toHaveAttribute(
+      'rows',
+      String(expectedRows)
+    )
   })
 
   test('calls onChange with the new value on user input', async () => {
     const user = userEvent.setup()
     const handleChange = vi.fn()
-    render(<Component name="x" label="X" hint="" value="" onChange={handleChange} />)
-    await user.type(screen.getByTestId('field-input-x'), 'a')
+    render(<Component name="initiatives" label="Initiatives" value="" onChange={handleChange} />)
+    await user.type(screen.getByTestId('field-input-initiatives'), 'a')
     expect(handleChange).toHaveBeenCalledWith('a')
   })
 
-  test('renders the saving indicator when status is "saving"', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} status="saving" />)
-    expect(screen.getByTestId('field-status-x')).toHaveTextContent(/saving/i)
-  })
-
-  test('renders the saved indicator when status is "saved"', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} status="saved" />)
-    expect(screen.getByTestId('field-status-x')).toHaveTextContent(/saved/i)
-  })
-
-  test('renders the error message when status is "error"', () => {
+  test('shows a saving indicator while a save is in flight', () => {
     render(
       <Component
-        name="x"
-        label="X"
-        hint=""
+        name="ga_summary"
+        label="GA summary"
+        value=""
+        onChange={() => {}}
+        status="saving"
+      />
+    )
+    expect(screen.getByTestId('field-status-ga_summary')).toHaveTextContent(/saving/i)
+  })
+
+  test('shows a saved indicator after a successful save', () => {
+    render(
+      <Component name="ga_summary" label="GA summary" value="" onChange={() => {}} status="saved" />
+    )
+    expect(screen.getByTestId('field-status-ga_summary')).toHaveTextContent(/saved/i)
+  })
+
+  test('shows the error message when a save fails', () => {
+    render(
+      <Component
+        name="takeaways"
+        label="Takeaways"
         value=""
         onChange={() => {}}
         status="error"
         errorMessage="boom"
       />
     )
-    expect(screen.getByTestId('field-status-x')).toHaveTextContent('boom')
+    expect(screen.getByTestId('field-status-takeaways')).toHaveTextContent('boom')
   })
 
   test('falls back to "Save failed" when status is "error" and no errorMessage is supplied', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} status="error" />)
-    expect(screen.getByTestId('field-status-x')).toHaveTextContent(/save failed/i)
+    render(
+      <Component name="takeaways" label="Takeaways" value="" onChange={() => {}} status="error" />
+    )
+    expect(screen.getByTestId('field-status-takeaways')).toHaveTextContent(/save failed/i)
   })
 
-  test('does not render any indicator when status is "idle" (or omitted)', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} />)
-    expect(screen.queryByTestId('field-status-x')).not.toBeInTheDocument()
+  test('shows no indicator when the field is idle', () => {
+    render(<Component name="planning" label="Planning" value="" onChange={() => {}} />)
+    expect(screen.queryByTestId('field-status-planning')).not.toBeInTheDocument()
   })
 
   test('renders the character counter when limit is provided', () => {
-    render(<Component name="x" label="X" hint="" value="hello" onChange={() => {}} limit={120} />)
-    expect(screen.getByTestId('field-counter-x')).toHaveTextContent('5 / 120')
+    render(
+      <Component
+        name="cover_subtitle"
+        label="Cover subtitle"
+        value="hello"
+        onChange={() => {}}
+        limit={120}
+      />
+    )
+    expect(screen.getByTestId('field-counter-cover_subtitle')).toHaveTextContent('5 / 120')
   })
 
   test('does not render the counter when limit is omitted', () => {
-    render(<Component name="x" label="X" hint="" value="hello" onChange={() => {}} />)
-    expect(screen.queryByTestId('field-counter-x')).not.toBeInTheDocument()
+    render(
+      <Component name="cover_subtitle" label="Cover subtitle" value="hello" onChange={() => {}} />
+    )
+    expect(screen.queryByTestId('field-counter-cover_subtitle')).not.toBeInTheDocument()
   })
 
   test('disables the textarea when disabled is true', () => {
-    render(<Component name="x" label="X" hint="" value="" onChange={() => {}} disabled />)
-    expect(screen.getByTestId('field-input-x')).toBeDisabled()
+    render(<Component name="planning" label="Planning" value="" onChange={() => {}} disabled />)
+    expect(screen.getByTestId('field-input-planning')).toBeDisabled()
+  })
+
+  test('announces save status changes to assistive tech via role="status" + aria-live="polite"', () => {
+    render(
+      <Component
+        name="ga_summary"
+        label="GA summary"
+        value=""
+        onChange={() => {}}
+        status="saving"
+      />
+    )
+    const statusEl = screen.getByTestId('field-status-ga_summary')
+    expect(statusEl).toHaveAttribute('role', 'status')
+    expect(statusEl).toHaveAttribute('aria-live', 'polite')
+  })
+})
+
+describe('SubtitleField', () => {
+  test('renders no placeholder', () => {
+    render(
+      <SubtitleField name="cover_subtitle" label="Cover subtitle" value="" onChange={() => {}} />
+    )
+    expect(screen.getByTestId('field-input-cover_subtitle')).not.toHaveAttribute('placeholder')
+  })
+
+  test('uses the supplied name on the wrapper testid', () => {
+    render(
+      <SubtitleField name="cover_subtitle" label="Cover subtitle" value="" onChange={() => {}} />
+    )
+    expect(screen.getByTestId('field-cover_subtitle')).toBeInTheDocument()
+  })
+})
+
+describe('BulletsField', () => {
+  test('renders the default "• One bullet per line" placeholder', () => {
+    render(<BulletsField name="initiatives" label="Initiatives" value="" onChange={() => {}} />)
+    expect(screen.getByPlaceholderText('• One bullet per line')).toBeInTheDocument()
+  })
+})
+
+describe('ProseField', () => {
+  test('renders no placeholder', () => {
+    render(<ProseField name="ga_summary" label="GA summary" value="" onChange={() => {}} />)
+    expect(screen.getByTestId('field-input-ga_summary')).not.toHaveAttribute('placeholder')
   })
 })

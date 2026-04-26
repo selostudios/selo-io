@@ -12,7 +12,7 @@ import type { NarrativeBlocks } from '@/lib/reviews/types'
 
 export const AUTOSAVE_DELAY_MS = 1500
 
-type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface UseNarrativeBlockAutosaveResult {
   value: string

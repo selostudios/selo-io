@@ -1,22 +1,29 @@
 'use client'
 
 import { Textarea } from '@/components/ui/textarea'
+import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { AutosaveStatus } from '@/components/reviews/editor/use-narrative-block-autosave'
 
-export type NarrativeFieldStatus = 'idle' | 'saving' | 'saved' | 'error'
+/**
+ * Re-export of {@link AutosaveStatus} kept for backward compatibility with
+ * existing imports of `NarrativeFieldStatus`. New code should import
+ * `AutosaveStatus` from the autosave hook directly.
+ */
+export type NarrativeFieldStatus = AutosaveStatus
 
 export interface NarrativeFieldProps {
-  /** Field id used for the label `htmlFor` and `data-testid` namespace. Use the narrative block key (e.g. 'cover_subtitle'). */
-  name: string
+  /** Field id used for the label `htmlFor` and `data-testid` namespace. Must match a narrative block key. */
+  name: keyof NarrativeBlocks
   /** Visible label rendered above the textarea. */
   label: string
-  /** Helper text rendered between label and textarea. */
-  hint: string
+  /** Optional helper text rendered between label and textarea. */
+  hint?: string
   /** Current value; controlled by parent. */
   value: string
   /** Called on every keystroke. Parent owns debouncing/autosave. */
   onChange: (next: string) => void
   /** Optional save status — drives the indicator next to the label. Default: 'idle' (nothing rendered). */
-  status?: NarrativeFieldStatus
+  status?: AutosaveStatus
   /** Shown when `status === 'error'`. Falls back to "Save failed" when null/undefined. */
   errorMessage?: string | null
   /** Optional character limit; when provided, renders a "{value.length} / {limit}" counter under the textarea. */
@@ -44,6 +51,12 @@ export function NarrativeFieldBase({
   placeholder,
 }: NarrativeFieldBaseProps) {
   const inputId = `field-${name}`
+  const hintId = `field-hint-${name}`
+  const counterId = `field-counter-${name}`
+  const hasHint = Boolean(hint)
+  const hasCounter = typeof limit === 'number'
+  const describedBy =
+    [hasHint ? hintId : null, hasCounter ? counterId : null].filter(Boolean).join(' ') || undefined
 
   return (
     <div className="space-y-2" data-testid={`field-${name}`}>
@@ -53,6 +66,8 @@ export function NarrativeFieldBase({
         </label>
         {status !== 'idle' && (
           <span
+            role="status"
+            aria-live="polite"
             className={
               status === 'error' ? 'text-destructive text-xs' : 'text-muted-foreground text-xs'
             }
@@ -64,7 +79,11 @@ export function NarrativeFieldBase({
           </span>
         )}
       </div>
-      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+      {hasHint && (
+        <p id={hintId} className="text-muted-foreground text-xs">
+          {hint}
+        </p>
+      )}
       <Textarea
         id={inputId}
         data-testid={`field-input-${name}`}
@@ -73,9 +92,14 @@ export function NarrativeFieldBase({
         rows={rows}
         placeholder={placeholder}
         disabled={disabled}
+        aria-describedby={describedBy}
       />
-      {typeof limit === 'number' && (
-        <p className="text-muted-foreground text-xs" data-testid={`field-counter-${name}`}>
+      {hasCounter && (
+        <p
+          id={counterId}
+          className="text-muted-foreground text-xs"
+          data-testid={`field-counter-${name}`}
+        >
           {value.length} / {limit}
         </p>
       )}
