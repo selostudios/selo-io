@@ -21,12 +21,6 @@ export interface SlideStageProps {
   hiddenSlides: readonly SlideKey[]
 }
 
-/**
- * Thin client wrapper around `<ReviewDeck>` for the slide editor route. The
- * deck is opened in `'editor'` mode pre-focused on `slideKey` so authors land
- * directly on the slide they want to edit. Sizing matches the read-only
- * preview client so the deck renders at a consistent stage size.
- */
 export function SlideStage({
   slideKey,
   organization,
