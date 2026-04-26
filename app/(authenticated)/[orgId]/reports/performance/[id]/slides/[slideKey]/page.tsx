@@ -139,8 +139,7 @@ export default async function PerformanceReportSlideEditorPage({
         }
       />
 
-      {/* pb-32 keeps the deck clear of the fixed bottom tray. */}
-      <main className="flex-1 overflow-auto p-8 pb-32">
+      <main className="flex-1 overflow-auto p-8">
         <SlideStage
           slideKey={slide.key}
           organization={{

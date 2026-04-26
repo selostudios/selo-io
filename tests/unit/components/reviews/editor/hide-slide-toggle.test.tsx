@@ -58,12 +58,12 @@ describe('HideSlideToggle', () => {
     })
   })
 
-  test('renders an inert dash and no button when hideable is false', () => {
-    render(
+  test('renders nothing when hideable is false', () => {
+    const { container } = render(
       <HideSlideToggle reviewId={REVIEW_ID} slideKey="cover" hidden={false} hideable={false} />
     )
 
     expect(screen.queryByRole('button')).toBeNull()
-    expect(screen.getByText('—')).toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
   })
 })

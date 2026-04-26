@@ -22,13 +22,7 @@ export interface HideSlideToggleProps {
 export function HideSlideToggle({ reviewId, slideKey, hidden, hideable }: HideSlideToggleProps) {
   const [isPending, startTransition] = useTransition()
 
-  if (!hideable) {
-    return (
-      <span data-testid={`hide-slide-toggle-${slideKey}`} aria-hidden="true">
-        —
-      </span>
-    )
-  }
+  if (!hideable) return null
 
   function handleClick() {
     startTransition(async () => {

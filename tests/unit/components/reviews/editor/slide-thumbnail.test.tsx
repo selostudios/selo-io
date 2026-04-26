@@ -34,7 +34,7 @@ describe('SlideThumbnail', () => {
     expect(screen.getByTestId('slide-thumbnail-ga_summary')).toHaveClass('opacity-50')
   })
 
-  test('renders the HideSlideToggle button alongside the link for hideable slides and an inert dash for the cover', () => {
+  test('renders the HideSlideToggle button for hideable slides and nothing for the cover', () => {
     const { rerender } = render(
       <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />
     )
@@ -45,9 +45,7 @@ describe('SlideThumbnail', () => {
 
     rerender(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="cover" hidden={false} />)
 
-    const coverToggle = screen.getByTestId('hide-slide-toggle-cover')
-    expect(coverToggle).toBeInTheDocument()
-    expect(coverToggle.tagName).not.toBe('BUTTON')
+    expect(screen.queryByTestId('hide-slide-toggle-cover')).toBeNull()
     expect(within(screen.getByTestId('slide-thumbnail-cover')).queryByRole('button')).toBeNull()
   })
 })

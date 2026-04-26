@@ -32,6 +32,9 @@ const sectionDefaultRoutes: Record<ParentSection, string> = {
 /** Sections with only a single nav item — no child sidebar needed */
 const SINGLE_ITEM_SECTIONS: ParentSection[] = ['quick-audit', 'organizations', 'support']
 
+/** Routes where the child sidebar should default to collapsed to maximize working area. */
+const SLIDE_EDITOR_ROUTE = /\/reports\/performance\/[^/]+\/slides\//
+
 interface NavigationShellProps {
   isInternal?: boolean
   userRole?: string
@@ -48,7 +51,14 @@ export function NavigationShell({
   const orgId = useOrgId()
   const { hasActiveAudit } = useActiveAudit(orgId)
 
-  const [isChildCollapsed, setIsChildCollapsed] = useState(false)
+  const isSlideEditor = SLIDE_EDITOR_ROUTE.test(pathname)
+  const [isChildCollapsed, setIsChildCollapsed] = useState(isSlideEditor)
+  const [previousIsSlideEditor, setPreviousIsSlideEditor] = useState(isSlideEditor)
+
+  if (previousIsSlideEditor !== isSlideEditor) {
+    setPreviousIsSlideEditor(isSlideEditor)
+    setIsChildCollapsed(isSlideEditor)
+  }
 
   // Derive active section from current pathname
   const activeSection = getSectionFromPathname(pathname)
