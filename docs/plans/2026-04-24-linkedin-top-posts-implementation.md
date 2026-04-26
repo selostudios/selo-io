@@ -302,7 +302,9 @@ test('returns null when impressions is 0', () => {
   expect(computeEngagementRate({ reactions: 5, comments: 0, shares: 0, impressions: 0 })).toBeNull()
 })
 test('returns engagements / impressions', () => {
-  expect(computeEngagementRate({ reactions: 50, comments: 10, shares: 5, impressions: 1000 })).toBeCloseTo(0.065)
+  expect(
+    computeEngagementRate({ reactions: 50, comments: 10, shares: 5, impressions: 1000 })
+  ).toBeCloseTo(0.065)
 })
 test('treats missing reactions/comments/shares as 0', () => {
   expect(computeEngagementRate({ impressions: 100 })).toBe(0)
@@ -623,7 +625,9 @@ export async function syncLinkedInPosts(
     const { error: upsertError } = await supabase
       .from('linkedin_posts')
       .upsert(rows, { onConflict: 'organization_id,linkedin_urn' })
-    if (upsertError) { /* log + return */ }
+    if (upsertError) {
+      /* log + return */
+    }
 
     const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000).toISOString()
     const justUpsertedUrns = rows.map((r) => r.linkedin_urn as string)
@@ -639,23 +643,28 @@ export async function syncLinkedInPosts(
     const analytics = urns.length > 0 ? await client.getPostAnalytics(urns) : new Map()
 
     const analyticsUpdatedAt = new Date().toISOString()
-    await Promise.all(analyticsRowList.map(async (row) => {
-      const counters = analytics.get(row.linkedin_urn)
-      if (!counters) return
-      const engagementRate = computeEngagementRate(counters)
-      await supabase.from('linkedin_posts').update({
-        impressions: counters.impressions,
-        reactions: counters.reactions,
-        comments: counters.comments,
-        shares: counters.shares,
-        engagement_rate: engagementRate,
-        analytics_updated_at: analyticsUpdatedAt,
-      }).match({ organization_id: organizationId, linkedin_urn: row.linkedin_urn })
-    }))
+    await Promise.all(
+      analyticsRowList.map(async (row) => {
+        const counters = analytics.get(row.linkedin_urn)
+        if (!counters) return
+        const engagementRate = computeEngagementRate(counters)
+        await supabase
+          .from('linkedin_posts')
+          .update({
+            impressions: counters.impressions,
+            reactions: counters.reactions,
+            comments: counters.comments,
+            shares: counters.shares,
+            engagement_rate: engagementRate,
+            analytics_updated_at: analyticsUpdatedAt,
+          })
+          .match({ organization_id: organizationId, linkedin_urn: row.linkedin_urn })
+      })
+    )
 
     const thumbnailJobs: ThumbnailJob[] = []
-    for (const row of analyticsRowList.filter((r) =>
-      r.post_type === LinkedInPostType.Image && r.thumbnail_path == null
+    for (const row of analyticsRowList.filter(
+      (r) => r.post_type === LinkedInPostType.Image && r.thumbnail_path == null
     )) {
       const imageUrn = classifiedByUrn.get(row.linkedin_urn)?.imageUrn ?? null
       if (!imageUrn) continue
@@ -665,10 +674,14 @@ export async function syncLinkedInPosts(
     }
     if (thumbnailJobs.length > 0) {
       const thumbMap = await downloadThumbnails(supabase, thumbnailJobs)
-      await Promise.all(Array.from(thumbMap).map(async ([linkedinUrn, path]) => {
-        await supabase.from('linkedin_posts').update({ thumbnail_path: path })
-          .match({ organization_id: organizationId, linkedin_urn: linkedinUrn })
-      }))
+      await Promise.all(
+        Array.from(thumbMap).map(async ([linkedinUrn, path]) => {
+          await supabase
+            .from('linkedin_posts')
+            .update({ thumbnail_path: path })
+            .match({ organization_id: organizationId, linkedin_urn: linkedinUrn })
+        })
+      )
     }
   } catch (error) {
     console.error('[LinkedIn Posts Sync] Error', {
@@ -992,7 +1005,9 @@ const TOP_POSTS_LIMIT = 4
 // after building `metrics` …
 const { data: postRows, error: postsError } = await supabase
   .from('linkedin_posts')
-  .select('linkedin_urn, post_url, thumbnail_path, caption, posted_at, impressions, reactions, comments, shares, engagement_rate')
+  .select(
+    'linkedin_urn, post_url, thumbnail_path, caption, posted_at, impressions, reactions, comments, shares, engagement_rate'
+  )
   .eq('organization_id', organizationId)
   .gte('posted_at', periods.main.start)
   .lte('posted_at', periods.main.end)
@@ -1134,11 +1149,11 @@ export function TopPostCard({ post }: { post: LinkedInTopPost }) {
           onError={() => setImgFailed(true)}
         />
       )}
-      {post.caption && <p className="text-sm leading-snug line-clamp-2">{post.caption}</p>}
+      {post.caption && <p className="line-clamp-2 text-sm leading-snug">{post.caption}</p>}
       <div className="text-2xl font-semibold" style={{ color: 'var(--deck-accent)' }}>
         {(post.engagement_rate * 100).toFixed(1)}%
       </div>
-      <div className="text-xs text-muted-foreground">
+      <div className="text-muted-foreground text-xs">
         {post.impressions.toLocaleString()} impressions · {engagements.toLocaleString()} engagements
       </div>
     </div>
