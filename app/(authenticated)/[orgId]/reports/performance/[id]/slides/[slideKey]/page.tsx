@@ -5,10 +5,10 @@ import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import {
   isSlideKey,
+  parseHiddenSlides,
   SLIDES,
   getSlide,
   type SlideDefinition,
-  type SlideKey,
 } from '@/lib/reviews/slides/registry'
 import { formatQuarterLabel, periodsForQuarter } from '@/lib/reviews/period'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
@@ -109,9 +109,7 @@ export default async function PerformanceReportSlideEditorPage({
 
   const narrative = (draft.narrative as NarrativeBlocks | null) ?? {}
   const data = (draft.data as SnapshotData | null) ?? {}
-  const hiddenSlides: SlideKey[] = ((draft.hidden_slides as string[] | null) ?? []).filter(
-    (k): k is SlideKey => isSlideKey(k)
-  )
+  const hiddenSlides = parseHiddenSlides(draft.hidden_slides)
 
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null

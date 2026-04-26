@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
-import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
 import { ReportEditorHeader } from '@/components/reviews/editor/report-editor-header'
 import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
 import { PreviewButton } from '@/components/reviews/editor/preview-button'
@@ -51,9 +51,7 @@ export default async function PerformanceReportEditorPage({
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
 
-  const hiddenSlides: SlideKey[] = ((draft?.hidden_slides as string[] | null) ?? []).filter(
-    (k): k is SlideKey => isSlideKey(k)
-  )
+  const hiddenSlides = parseHiddenSlides(draft?.hidden_slides)
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-8" data-testid="performance-reports-editor">

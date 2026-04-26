@@ -8,7 +8,7 @@ import { PrintButton } from '@/components/reviews/print-button'
 import { ReviewBreadcrumb } from '@/components/reviews/review-breadcrumb'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import { resolvePublisherNames } from '@/lib/reviews/publishers'
-import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { SnapshotShareButton } from './snapshot-client'
 import { SnapshotLearnerCallout } from './snapshot-learner-callout'
@@ -85,9 +85,7 @@ export default async function PerformanceReportSnapshotDetailPage({
   const version = snapshot.version as number
   const narrative = (snapshot.narrative as NarrativeBlocks | null) ?? {}
   const data = (snapshot.data as SnapshotData | null) ?? {}
-  const hiddenSlides: SlideKey[] = ((snapshot.hidden_slides as string[] | null) ?? []).filter(
-    (k): k is SlideKey => isSlideKey(k)
-  )
+  const hiddenSlides = parseHiddenSlides(snapshot.hidden_slides)
   const periodStart = snapshot.period_start as string
   const periodEnd = snapshot.period_end as string
   const publishedAtLabel = formatPublishedDate(snapshot.published_at as string)

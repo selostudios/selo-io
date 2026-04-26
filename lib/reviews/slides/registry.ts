@@ -98,3 +98,8 @@ export function getSlide(key: SlideKey): SlideDefinition {
   if (!found) throw new Error(`Unknown slide key: ${key}`)
   return found
 }
+
+export function parseHiddenSlides(value: unknown): SlideKey[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((k): k is SlideKey => typeof k === 'string' && isSlideKey(k))
+}

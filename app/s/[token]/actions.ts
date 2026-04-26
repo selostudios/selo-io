@@ -14,7 +14,7 @@ import type {
 } from '@/app/(authenticated)/[orgId]/reports/audit/actions'
 import { fetchUnifiedAuditScores } from '@/lib/reports/unified-audit-fetch'
 import { formatQuarterLabel } from '@/lib/reviews/period'
-import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
+import { parseHiddenSlides, type SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 // =============================================================================
@@ -387,9 +387,7 @@ export async function getSharedMarketingReviewData(
   const quarter = review.quarter as string
   const narrative = (snapshot.narrative as NarrativeBlocks | null) ?? {}
   const data = (snapshot.data as SnapshotData | null) ?? {}
-  const hiddenSlides: SlideKey[] = ((snapshot.hidden_slides as string[] | null) ?? []).filter(
-    (k): k is SlideKey => isSlideKey(k)
-  )
+  const hiddenSlides = parseHiddenSlides(snapshot.hidden_slides)
 
   return {
     organization: {

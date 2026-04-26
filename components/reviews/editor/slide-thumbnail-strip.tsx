@@ -4,7 +4,7 @@ import { SlideThumbnail } from './slide-thumbnail'
 export interface SlideThumbnailStripProps {
   orgId: string
   reviewId: string
-  hiddenSlides: SlideKey[]
+  hiddenSlides: readonly SlideKey[]
 }
 
 export function SlideThumbnailStrip({ orgId, reviewId, hiddenSlides }: SlideThumbnailStripProps) {

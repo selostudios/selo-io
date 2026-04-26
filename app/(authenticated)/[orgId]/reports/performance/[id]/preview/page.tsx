@@ -8,7 +8,7 @@ import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatQuarterLabel, periodsForQuarter } from '@/lib/reviews/period'
-import { isSlideKey, type SlideKey } from '@/lib/reviews/slides/registry'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { PreviewClient } from './preview-client'
 
@@ -85,9 +85,7 @@ export default async function PerformanceReportPreviewPage({
 
   const narrative = (draft.narrative as NarrativeBlocks | null) ?? {}
   const data = (draft.data as SnapshotData | null) ?? {}
-  const hiddenSlides: SlideKey[] = ((draft.hidden_slides as string[] | null) ?? []).filter(
-    (k): k is SlideKey => isSlideKey(k)
-  )
+  const hiddenSlides = parseHiddenSlides(draft.hidden_slides)
   const quarterLabel = formatQuarterLabel(review.quarter as string)
   const periods = periodsForQuarter(review.quarter as string)
 

@@ -27,7 +27,7 @@ export interface MarketingReviewSnapshot {
   narrative: NarrativeBlocks
   share_token: string
   author_notes: string | null
-  hidden_slides: SlideKey[]
+  hidden_slides: readonly SlideKey[]
 }
 
 export interface MarketingReviewDraft {
@@ -38,7 +38,7 @@ export interface MarketingReviewDraft {
   narrative: NarrativeBlocks
   ai_originals: NarrativeBlocks
   author_notes: string | null
-  hidden_slides: SlideKey[]
+  hidden_slides: readonly SlideKey[]
 }
 
 export interface SnapshotData {

@@ -14,7 +14,12 @@ import {
   NarrativeGenerationError,
 } from '@/lib/reviews/narrative/generator'
 import { runStyleMemoLearner } from '@/lib/reviews/narrative/learn'
-import { isSlideKey, getSlide, type SlideKey } from '@/lib/reviews/slides/registry'
+import {
+  isSlideKey,
+  getSlide,
+  parseHiddenSlides,
+  type SlideKey,
+} from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
@@ -404,7 +409,7 @@ export async function setSlideVisibility(
     .single()
   if (loadError || !draft) return { success: false, error: loadError?.message ?? 'Draft not found' }
 
-  const current = ((draft.hidden_slides as string[]) ?? []).filter(isSlideKey)
+  const current = parseHiddenSlides(draft.hidden_slides)
   const next = hidden
     ? Array.from(new Set([...current, slideKey]))
     : current.filter((k) => k !== slideKey)
