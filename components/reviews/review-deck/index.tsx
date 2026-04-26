@@ -9,6 +9,7 @@ import { Slide } from '@/components/deck/slide'
 import { DeckControls } from '@/components/deck/deck-controls'
 import { getFullscreenElement, toggleElementFullscreen } from '@/components/deck/fullscreen'
 import { DeckPrintStyles } from '@/components/deck/print-styles'
+import { SlideChromeLogo } from '@/components/deck/slide-chrome-logo'
 import { HiddenSlideOverlay } from './hidden-slide-overlay'
 import { SlideRenderer } from './slide-renderer'
 
@@ -220,8 +221,9 @@ export function ReviewDeck({
 
       <div className="print-only">
         {slides.map((slide) => (
-          <div key={slide.key} className="print-slide">
+          <div key={slide.key} className="print-slide relative">
             {slide.render('print')}
+            <SlideChromeLogo />
           </div>
         ))}
       </div>

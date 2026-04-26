@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { SlideChromeLogo } from './slide-chrome-logo'
 
 export interface SlideProps {
   /** 1-indexed slide number, used for the aria-label. */
@@ -23,10 +24,11 @@ export function Slide({ index, total, ariaHeading, widthPercent, children }: Sli
       role="group"
       aria-roledescription="slide"
       aria-label={`Slide ${index} of ${total}: ${ariaHeading}`}
-      className="bg-background flex h-full shrink-0 items-stretch"
+      className="bg-background relative flex h-full shrink-0 items-stretch"
       style={{ width: `${widthPercent}%` }}
     >
       {children}
+      <SlideChromeLogo />
     </section>
   )
 }

@@ -139,7 +139,7 @@ export default async function PerformanceReportSlideEditorPage({
         }
       />
 
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-hidden p-4 md:p-8">
         <SlideStage
           slideKey={slide.key}
           organization={{

@@ -34,19 +34,25 @@ export function SlideStage({
   return (
     <div
       data-testid="slide-stage"
-      className="mx-auto flex h-full w-full max-w-[1600px] items-center justify-center"
+      className="@container mx-auto flex h-full w-full max-w-[1600px] items-center justify-center"
     >
-      <ReviewDeck
-        mode="editor"
-        initialSlideKey={slideKey}
-        organization={organization}
-        quarter={quarter}
-        periodStart={periodStart}
-        periodEnd={periodEnd}
-        narrative={narrative}
-        data={data}
-        hiddenSlides={hiddenSlides}
-      />
+      <div
+        data-testid="slide-stage-frame"
+        className="aspect-video"
+        style={{ width: 'min(100%, calc(100cqh * 16 / 9))' }}
+      >
+        <ReviewDeck
+          mode="editor"
+          initialSlideKey={slideKey}
+          organization={organization}
+          quarter={quarter}
+          periodStart={periodStart}
+          periodEnd={periodEnd}
+          narrative={narrative}
+          data={data}
+          hiddenSlides={hiddenSlides}
+        />
+      </div>
     </div>
   )
 }

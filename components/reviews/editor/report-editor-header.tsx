@@ -19,12 +19,10 @@ export function ReportEditorHeader({
   className,
 }: ReportEditorHeaderProps) {
   return (
-    <header className={cn('space-y-3 border-b px-6 py-4', className)}>
-      <BackLink href={backHref} />
-      <div className="flex items-center justify-between gap-4">
-        <ReportTitle title={title} quarter={quarter} />
-        <ReportHeaderActions>{actions}</ReportHeaderActions>
-      </div>
+    <header className={cn('flex items-center gap-4 border-b px-6 py-4', className)}>
+      <BackLink href={backHref} className="flex-shrink-0" />
+      <ReportTitle title={title} quarter={quarter} className="min-w-0 flex-1" />
+      <ReportHeaderActions>{actions}</ReportHeaderActions>
     </header>
   )
 }
