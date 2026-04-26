@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
+import { FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
 import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
+import { EmptyState } from '@/components/ui/empty-state'
 import { ReportEditorHeader } from '@/components/reviews/editor/report-editor-header'
 import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
 import { PreviewButton } from '@/components/reviews/editor/preview-button'
@@ -76,9 +78,12 @@ export default async function PerformanceReportEditorPage({
           <SlideThumbnailStrip orgId={orgId} reviewId={id} hiddenSlides={hiddenSlides} />
         </>
       ) : (
-        <p className="text-muted-foreground text-sm" data-testid="performance-reports-no-draft">
-          No draft yet. Create one from the reports list.
-        </p>
+        <EmptyState
+          icon={FileText}
+          title="No draft yet"
+          description="Create one from the reports list."
+          data-testid="performance-reports-no-draft"
+        />
       )}
     </div>
   )

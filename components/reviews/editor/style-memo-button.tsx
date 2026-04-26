@@ -13,12 +13,12 @@ export function StyleMemoButton(props: StyleMemoButtonProps) {
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
-          size="icon"
+          variant="outline"
           aria-label="Style memo"
           data-testid="style-memo-button"
         >
           <Brain className="size-4" aria-hidden />
+          Learning
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
