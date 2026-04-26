@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { TextPostPlaceholder } from './text-post-placeholder'
 import type { LinkedInTopPost } from '@/lib/reviews/types'
@@ -15,9 +16,12 @@ export function TopPostCard({ post }: TopPostCardProps) {
     <div data-testid="top-post-card" className="flex w-full max-w-[240px] flex-col gap-3">
       <div className="overflow-hidden rounded-md">
         {post.thumbnail_url && !broken ? (
-          <img
+          <Image
             src={post.thumbnail_url}
             alt={post.caption ?? 'LinkedIn post thumbnail'}
+            width={240}
+            height={180}
+            sizes="240px"
             className="aspect-[4/3] w-full object-cover"
             onError={() => setBroken(true)}
           />

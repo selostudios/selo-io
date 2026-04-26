@@ -33,6 +33,6 @@ describe('TopPostCard', () => {
   test('renders <img> when thumbnail_url is provided', () => {
     render(<TopPostCard post={{ ...base, thumbnail_url: 'https://example.com/t.jpg' }} />)
     const img = screen.getByRole('img')
-    expect(img).toHaveAttribute('src', 'https://example.com/t.jpg')
+    expect(img.getAttribute('src')).toContain(encodeURIComponent('https://example.com/t.jpg'))
   })
 })
