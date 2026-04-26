@@ -141,6 +141,8 @@ export default async function PerformanceReportSlideEditorPage({
 
       <main className="flex-1 overflow-hidden p-4 md:p-8">
         <SlideStage
+          orgId={orgId}
+          reviewId={id}
           slideKey={slide.key}
           organization={{
             name: (org?.name as string | undefined) ?? 'Organization',

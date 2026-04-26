@@ -51,6 +51,13 @@ export interface ReviewDeckProps {
    * when the key isn't present.
    */
   initialSlideKey?: SlideKey
+  /**
+   * When provided, the deck delegates slide navigation to the caller. Clicking
+   * prev/next (and pressing keyboard shortcuts) calls `onNavigate` with the
+   * destination slide key instead of mutating internal state. The caller is
+   * expected to remount the deck (e.g. via `key`) when the slide changes.
+   */
+  onNavigate?: (slideKey: SlideKey) => void
 }
 
 /**
@@ -93,6 +100,7 @@ export function ReviewDeck({
   hiddenSlides = [],
   mode = 'presentation',
   initialSlideKey,
+  onNavigate,
 }: ReviewDeckProps) {
   const deckRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -152,9 +160,18 @@ export function ReviewDeck({
     return idx === -1 ? 0 : idx
   }, [slides, initialSlideKey])
 
+  const handleIndexNavigate = useMemo(() => {
+    if (!onNavigate) return undefined
+    return (target: number) => {
+      const slide = slides[target]
+      if (slide) onNavigate(slide.key as SlideKey)
+    }
+  }, [onNavigate, slides])
+
   const { currentIndex, next, prev, isFirst, isLast } = useDeckNavigation(
     slides.length,
-    initialIndex
+    initialIndex,
+    { onNavigate: handleIndexNavigate }
   )
 
   useEffect(() => {

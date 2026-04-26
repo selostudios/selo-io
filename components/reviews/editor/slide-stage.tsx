@@ -1,10 +1,14 @@
 'use client'
 
+import { useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import type { SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 
 export interface SlideStageProps {
+  orgId: string
+  reviewId: string
   slideKey: SlideKey
   organization: {
     name: string
@@ -22,6 +26,8 @@ export interface SlideStageProps {
 }
 
 export function SlideStage({
+  orgId,
+  reviewId,
   slideKey,
   organization,
   quarter,
@@ -31,6 +37,15 @@ export function SlideStage({
   data,
   hiddenSlides,
 }: SlideStageProps) {
+  const router = useRouter()
+
+  const handleNavigate = useCallback(
+    (key: SlideKey) => {
+      router.push(`/${orgId}/reports/performance/${reviewId}/slides/${key}`)
+    },
+    [router, orgId, reviewId]
+  )
+
   return (
     <div
       data-testid="slide-stage"
@@ -38,6 +53,7 @@ export function SlideStage({
     >
       <div data-testid="slide-stage-frame" className="aspect-video h-full max-h-full max-w-full">
         <ReviewDeck
+          key={slideKey}
           mode="editor"
           initialSlideKey={slideKey}
           organization={organization}
@@ -47,6 +63,7 @@ export function SlideStage({
           narrative={narrative}
           data={data}
           hiddenSlides={hiddenSlides}
+          onNavigate={handleNavigate}
         />
       </div>
     </div>
