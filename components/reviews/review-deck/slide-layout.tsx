@@ -39,12 +39,12 @@ export function SlideLayout({
 
       <div className="space-y-3">
         {narrativeHeading && (
-          <h3
+          <p
             data-testid={`${narrativeTestId}-heading`}
-            className="text-foreground text-lg font-semibold tracking-tight md:text-xl lg:text-2xl"
+            className="text-foreground text-sm font-semibold md:text-base"
           >
             {narrativeHeading}
-          </h3>
+          </p>
         )}
         <SlideNarrative text={narrative} testId={narrativeTestId} />
       </div>

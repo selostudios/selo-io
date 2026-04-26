@@ -19,7 +19,7 @@ export function ContentTrayEditor({ reviewId, initialValue, disabled }: Props) {
     <ProseField
       name="content_highlights"
       label="What resonated"
-      hint="Highlight one or two posts that drove the most engagement and why they landed (≤ 100 words)."
+      hint="Two or three bullets (one per line, prefixed with '- ') describing the patterns behind the top posts."
       value={value}
       onChange={setValue}
       status={status}
