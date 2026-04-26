@@ -7,11 +7,6 @@ export interface SlideThumbnailStripProps {
   hiddenSlides: SlideKey[]
 }
 
-/**
- * Renders a row of slide thumbnails for the report editor overview page.
- * Iterates the slide registry in order and delegates per-slide rendering
- * (label, link, hide toggle) to `<SlideThumbnail>`.
- */
 export function SlideThumbnailStrip({
   orgId,
   reviewId,
