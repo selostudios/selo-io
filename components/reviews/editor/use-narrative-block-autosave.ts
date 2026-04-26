@@ -1,5 +1,11 @@
 'use client'
 
+// Caller must remount this hook (e.g. via `key={`${reviewId}:${blockKey}`}` on the
+// field component) when switching to a different review/block. The hook seeds
+// `value` from `initialValue` on mount only and does not track later changes to
+// the prop — syncing via effect would clobber in-progress edits whenever a
+// parent re-renders with stale data.
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { updateNarrative } from '@/lib/reviews/actions'
 import type { NarrativeBlocks } from '@/lib/reviews/types'
@@ -24,9 +30,9 @@ export function useNarrativeBlockAutosave(
   const [status, setStatus] = useState<AutosaveStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const valueRef = useRef(initialValue)
+  const requestIdRef = useRef(0)
 
-  // Cancel any pending timer when the component unmounts so a stale save
-  // doesn't fire after the user has navigated away.
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -35,15 +41,19 @@ export function useNarrativeBlockAutosave(
 
   const setValue = useCallback(
     (next: string) => {
+      if (next === valueRef.current) return
+      valueRef.current = next
       setValueState(next)
-      // Optimistically flip to "saving" the moment the user types so the UI
-      // can show progress through the debounce window.
       setStatus('saving')
       setErrorMessage(null)
 
       if (timerRef.current) clearTimeout(timerRef.current)
+      const requestId = ++requestIdRef.current
       timerRef.current = setTimeout(async () => {
         const result = await updateNarrative(reviewId, blockKey, next)
+        // Drop the resolution if a newer save has been dispatched in the
+        // meantime — its outcome is the one the UI should reflect.
+        if (requestId !== requestIdRef.current) return
         if (result.success) {
           setStatus('saved')
           setErrorMessage(null)
