@@ -29,4 +29,27 @@ test.describe('Performance report slide editor', () => {
     )
     expect(response?.status()).toBe(404)
   })
+
+  test('toggling visibility on a hidden-able slide shows the dim overlay and Hidden badge', async ({
+    page,
+  }) => {
+    const orgId = await getOrgIdFromDashboard(page)
+    await page.goto(
+      `/${orgId}/reports/performance/${testMarketingReview.reviewId}/slides/ga_summary`
+    )
+    await page.waitForSelector('[data-testid="review-deck"]')
+
+    // The header toggle for the current slide.
+    const toggle = page.locator('[data-testid="hide-slide-toggle-ga_summary"]').first()
+
+    // Hide the slide. Server action revalidates the page and the deck re-renders
+    // with the slide wrapped in <HiddenSlideOverlay>.
+    await toggle.click()
+    await expect(page.locator('[data-testid="hidden-slide-overlay"]').first()).toBeVisible()
+    await expect(page.getByText('Hidden').first()).toBeVisible()
+
+    // Toggle back so the seed stays clean for parallel tests.
+    await toggle.click()
+    await expect(page.locator('[data-testid="hidden-slide-overlay"]').first()).not.toBeVisible()
+  })
 })

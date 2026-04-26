@@ -17,6 +17,7 @@ import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
 import { PreviewButton } from '@/components/reviews/editor/preview-button'
 import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
 import { PublishButton } from '@/components/reviews/editor/publish-button'
+import { HideSlideToggle } from '@/components/reviews/editor/hide-slide-toggle'
 import { SlideTray } from '@/components/reviews/editor/slide-tray'
 import { SlideStage } from '@/components/reviews/editor/slide-stage'
 import { CoverTrayEditor } from '@/components/reviews/editor/trays/cover-tray-editor'
@@ -126,6 +127,12 @@ export default async function PerformanceReportSlideEditorPage({
         quarter={`Slide ${slideIndex + 1} of ${SLIDES.length}`}
         actions={
           <>
+            <HideSlideToggle
+              reviewId={id}
+              slideKey={slide.key}
+              hidden={hiddenSlides.includes(slide.key)}
+              hideable={slide.hideable}
+            />
             <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
             <PreviewButton orgId={orgId} reviewId={id} />
             <SnapshotsButton orgId={orgId} reviewId={id} />
