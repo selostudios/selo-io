@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test, vi } from 'vitest'
+import type { CachedUserRecord, Membership } from '@/lib/auth/cached'
 import {
   seedOrgWithDraftAsAdmin,
   seedOrgWithDraftAsTeamMember,
@@ -30,16 +31,17 @@ vi.mock('@/lib/auth/cached', async () => {
   const { testDb: db } = await import('../../helpers/db')
   return {
     getAuthUser: async () => (mockAuthUserId ? { id: mockAuthUserId } : null),
-    getUserRecord: async (userId: string) => {
+    getUserRecord: async (userId: string): Promise<CachedUserRecord | null> => {
       const { data } = await db
         .from('users')
-        .select('id, is_internal, first_name, last_name, team_members(organization_id, role)')
+        .select(
+          'id, is_internal, first_name, last_name, team_members(organization_id, role, organization:organizations(id, name, logo_url, website_url, status))'
+        )
         .eq('id', userId)
         .single()
       if (!data) return null
 
-      const memberships =
-        (data.team_members as { organization_id: string; role: string }[] | null) ?? []
+      const memberships = (data.team_members as Membership[] | null) ?? []
       const primary = memberships[0]
 
       return {
@@ -49,7 +51,7 @@ vi.mock('@/lib/auth/cached', async () => {
         first_name: data.first_name as string | null,
         last_name: data.last_name as string | null,
         is_internal: data.is_internal as boolean | null,
-        organization: null,
+        organization: primary?.organization ?? null,
         memberships,
       }
     },
