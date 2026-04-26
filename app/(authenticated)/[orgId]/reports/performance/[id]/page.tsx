@@ -35,17 +35,18 @@ export default async function PerformanceReportEditorPage({
 
   if (!review) notFound()
 
-  const { data: draft } = await supabase
-    .from('marketing_review_drafts')
-    .select('author_notes, hidden_slides')
-    .eq('review_id', id)
-    .maybeSingle()
-
-  const { data: memoRow } = await supabase
-    .from('marketing_review_style_memos')
-    .select('memo, updated_at')
-    .eq('organization_id', orgId)
-    .maybeSingle()
+  const [{ data: draft }, { data: memoRow }] = await Promise.all([
+    supabase
+      .from('marketing_review_drafts')
+      .select('author_notes, hidden_slides')
+      .eq('review_id', id)
+      .maybeSingle(),
+    supabase
+      .from('marketing_review_style_memos')
+      .select('memo, updated_at')
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+  ])
 
   const authorNotes = (draft?.author_notes as string | null) ?? ''
   const styleMemo = (memoRow?.memo as string | null) ?? ''
