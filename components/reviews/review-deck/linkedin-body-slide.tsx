@@ -1,6 +1,6 @@
 import { LinkedInMetricStrip } from './linkedin-metric-strip'
 import { LinkedInMetricTable } from './linkedin-metric-table'
-import { SlideNarrative } from './slide-narrative'
+import { SlideLayout } from './slide-layout'
 import type { LinkedInData } from '@/lib/reviews/types'
 
 export interface LinkedInBodySlideProps {
@@ -10,28 +10,22 @@ export interface LinkedInBodySlideProps {
 }
 
 /**
- * LinkedIn-specific body slide for the quarterly performance deck. Mirrors
- * `GaBodySlide`: outer container, accent heading, metric slot between heading
- * and narrative. Screen mode renders the interactive strip; print mode renders
- * a compact table.
+ * LinkedIn-specific body slide. Screen mode renders the interactive strip;
+ * print mode renders a compact table.
  */
 export function LinkedInBodySlide({ narrative, data, mode }: LinkedInBodySlideProps) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-12 px-8 py-12 md:gap-16 md:px-16 lg:px-24">
-      <h2
-        className="text-2xl font-semibold tracking-tight md:text-4xl lg:text-5xl"
-        style={{ color: 'var(--deck-accent)' }}
-      >
-        LinkedIn
-      </h2>
-
-      {mode === 'screen' ? (
-        <LinkedInMetricStrip data={data} />
-      ) : (
-        <LinkedInMetricTable data={data} />
-      )}
-
-      <SlideNarrative text={narrative} testId="linkedin-body-slide-content" />
-    </div>
+    <SlideLayout
+      heading="LinkedIn"
+      body={
+        mode === 'screen' ? (
+          <LinkedInMetricStrip data={data} />
+        ) : (
+          <LinkedInMetricTable data={data} />
+        )
+      }
+      narrative={narrative}
+      narrativeTestId="linkedin-body-slide-content"
+    />
   )
 }

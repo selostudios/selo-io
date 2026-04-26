@@ -1,5 +1,5 @@
 import { TopPostGrid } from './top-post-grid'
-import { SlideNarrative } from './slide-narrative'
+import { SlideLayout } from './slide-layout'
 import type { LinkedInTopPost } from '@/lib/reviews/types'
 
 export interface ContentBodySlideProps {
@@ -12,15 +12,11 @@ export interface ContentBodySlideProps {
 
 export function ContentBodySlide({ narrative, posts }: ContentBodySlideProps) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-12 px-8 py-12 md:gap-16 md:px-16 lg:px-24">
-      <h2
-        className="text-2xl font-semibold tracking-tight md:text-4xl lg:text-5xl"
-        style={{ color: 'var(--deck-accent)' }}
-      >
-        What Resonated
-      </h2>
-      <TopPostGrid posts={posts} />
-      <SlideNarrative text={narrative} testId="content-body-slide-content" />
-    </div>
+    <SlideLayout
+      heading="What Resonated"
+      body={<TopPostGrid posts={posts} />}
+      narrative={narrative}
+      narrativeTestId="content-body-slide-content"
+    />
   )
 }
