@@ -118,7 +118,7 @@ export default async function PerformanceReportSlideEditorPage({
   const periods = periodsForQuarter(review.quarter as string)
 
   return (
-    <div className="flex h-screen flex-col" data-testid="performance-reports-slide-editor">
+    <div className="flex h-full flex-col" data-testid="performance-reports-slide-editor">
       <ReportEditorHeader
         backHref={`/${orgId}/reports/performance/${id}`}
         title={slide.label}
