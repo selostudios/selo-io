@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { LINKEDIN_FEATURED_METRICS } from '@/lib/reviews/linkedin-featured-metrics'
 import { formatMetricValue } from '@/lib/reviews/format'
 import type { LinkedInData } from '@/lib/reviews/types'
-import { DeckSparkline } from './deck-sparkline'
+import { DeckTrendBadge } from './deck-trend-badge'
 
 interface LinkedInMetricStripProps {
   data: LinkedInData | undefined
@@ -21,17 +21,15 @@ export function LinkedInMetricStrip({ data }: LinkedInMetricStripProps) {
     const triple = data.metrics[meta.key]
     if (!triple) return null
 
-    const series = triple.timeseries?.current ?? []
-
     return (
       <div key={meta.key} data-testid={`linkedin-metric-strip-item-${meta.key}`}>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-muted-foreground text-sm md:text-base">{meta.label}</p>
-          <DeckSparkline data={series} gradientId={`linkedin-spark-${meta.key}`} />
-        </div>
+        <p className="text-muted-foreground text-sm md:text-base">{meta.label}</p>
         <p className="text-foreground mt-1 text-5xl font-semibold tabular-nums md:text-6xl">
           {formatMetricValue(triple.current, meta.format)}
         </p>
+        <div className="mt-2">
+          <DeckTrendBadge delta={triple.qoq_delta_pct} />
+        </div>
       </div>
     )
   }).filter((node): node is ReactElement => node !== null)

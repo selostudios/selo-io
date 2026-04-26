@@ -17,7 +17,7 @@ export interface LinkedInBodySlideProps {
  */
 export function LinkedInBodySlide({ narrative, data, mode }: LinkedInBodySlideProps) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-6 px-8 py-12 md:px-16 lg:px-24">
+    <div className="flex h-full w-full flex-col justify-center gap-12 px-8 py-12 md:gap-16 md:px-16 lg:px-24">
       <h2
         className="text-2xl font-semibold tracking-tight md:text-4xl lg:text-5xl"
         style={{ color: 'var(--deck-accent)' }}
