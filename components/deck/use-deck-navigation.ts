@@ -16,6 +16,11 @@ export interface UseDeckNavigationResult {
  * navigation. Treats `slideCount === 0` as a degenerate "empty deck" where
  * both `isFirst` and `isLast` are true and every navigation method is a no-op.
  *
+ * `initialIndex` lets callers (e.g. the editor's slide-stage view) start the
+ * deck on a specific slide instead of always slide 0. The supplied index is
+ * clamped into `[0, slideCount - 1]` so a stale or out-of-range value can't
+ * desynchronise the state from the rendered slide list.
+ *
  * Keyboard shortcuts (handled on `window`):
  *   - ArrowRight / Space / PageDown → next slide
  *   - ArrowLeft  / PageUp          → previous slide
@@ -25,8 +30,13 @@ export interface UseDeckNavigationResult {
  * Shortcuts are ignored while focus is inside an input, textarea, or
  * contentEditable element so they don't hijack normal typing.
  */
-export function useDeckNavigation(slideCount: number): UseDeckNavigationResult {
-  const [currentIndex, setCurrentIndex] = useState(0)
+export function useDeckNavigation(
+  slideCount: number,
+  initialIndex: number = 0
+): UseDeckNavigationResult {
+  const clampedInitial =
+    slideCount === 0 ? 0 : Math.max(0, Math.min(slideCount - 1, Math.floor(initialIndex)))
+  const [currentIndex, setCurrentIndex] = useState(clampedInitial)
 
   const maxIndex = Math.max(0, slideCount - 1)
 
