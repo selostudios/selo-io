@@ -62,23 +62,51 @@ describe('tray editors', () => {
     expect(updateNarrative).toHaveBeenCalledWith('rev-1', 'content_highlights', 'Top post')
   })
 
-  test.each([
-    ['initiatives' as const, 'Initiatives'],
-    ['takeaways' as const, 'Takeaways'],
-    ['planning' as const, 'Planning ahead'],
-  ])('ProseTrayEditor with slideKey=%s autosaves on %s', async (slideKey) => {
-    render(<ProseTrayEditor reviewId="rev-1" slideKey={slideKey} initialValue="" />)
-    fireEvent.change(screen.getByTestId(`field-input-${slideKey}`), { target: { value: 'x' } })
-    await act(async () => {
-      vi.advanceTimersByTime(1500)
-    })
-    expect(updateNarrative).toHaveBeenCalledWith('rev-1', slideKey, 'x')
-  })
+  test.each(['initiatives', 'takeaways', 'planning'] as const)(
+    'ProseTrayEditor with slideKey=%s autosaves on that block',
+    async (slideKey) => {
+      render(<ProseTrayEditor reviewId="rev-1" slideKey={slideKey} initialValue="" />)
+      fireEvent.change(screen.getByTestId(`field-input-${slideKey}`), { target: { value: 'x' } })
+      await act(async () => {
+        vi.advanceTimersByTime(1500)
+      })
+      expect(updateNarrative).toHaveBeenCalledWith('rev-1', slideKey, 'x')
+    }
+  )
 
-  test('disabled prop disables the underlying textarea', () => {
-    render(<CoverTrayEditor reviewId="rev-1" initialValue="" disabled />)
-    expect(screen.getByTestId('field-input-cover_subtitle')).toBeDisabled()
-  })
+  test.each([
+    [
+      'CoverTrayEditor',
+      () => <CoverTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      'cover_subtitle',
+    ],
+    [
+      'GaTrayEditor',
+      () => <GaTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      'ga_summary',
+    ],
+    [
+      'LinkedInTrayEditor',
+      () => <LinkedInTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      'linkedin_insights',
+    ],
+    [
+      'ContentTrayEditor',
+      () => <ContentTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      'content_highlights',
+    ],
+    [
+      'ProseTrayEditor',
+      () => <ProseTrayEditor reviewId="rev-1" slideKey="initiatives" initialValue="" disabled />,
+      'initiatives',
+    ],
+  ] as const)(
+    '%s propagates disabled to the underlying textarea',
+    (_name, renderTray, fieldKey) => {
+      render(renderTray())
+      expect(screen.getByTestId(`field-input-${fieldKey}`)).toBeDisabled()
+    }
+  )
 
   test('ProseTrayEditor renders the correct label per slideKey', () => {
     const { rerender } = render(
