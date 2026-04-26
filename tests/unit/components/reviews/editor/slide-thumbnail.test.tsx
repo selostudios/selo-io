@@ -14,17 +14,13 @@ import { SlideThumbnail } from '@/components/reviews/editor/slide-thumbnail'
 
 describe('SlideThumbnail', () => {
   test('renders the slide label', () => {
-    render(
-      <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />
-    )
+    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />)
 
     expect(screen.getByText('Google Analytics')).toBeInTheDocument()
   })
 
   test('links to the slide editor route', () => {
-    render(
-      <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />
-    )
+    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />)
 
     expect(screen.getByRole('link')).toHaveAttribute(
       'href',
@@ -33,9 +29,7 @@ describe('SlideThumbnail', () => {
   })
 
   test('dims the card when hidden is true', () => {
-    render(
-      <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={true} />
-    )
+    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={true} />)
 
     expect(screen.getByTestId('slide-thumbnail-ga_summary')).toHaveClass('opacity-50')
   })
@@ -49,15 +43,11 @@ describe('SlideThumbnail', () => {
     expect(hideableToggle).toBeInTheDocument()
     expect(hideableToggle.tagName).toBe('BUTTON')
 
-    rerender(
-      <SlideThumbnail orgId="o1" reviewId="r1" slideKey="cover" hidden={false} />
-    )
+    rerender(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="cover" hidden={false} />)
 
     const coverToggle = screen.getByTestId('hide-slide-toggle-cover')
     expect(coverToggle).toBeInTheDocument()
     expect(coverToggle.tagName).not.toBe('BUTTON')
-    expect(
-      within(screen.getByTestId('slide-thumbnail-cover')).queryByRole('button')
-    ).toBeNull()
+    expect(within(screen.getByTestId('slide-thumbnail-cover')).queryByRole('button')).toBeNull()
   })
 })

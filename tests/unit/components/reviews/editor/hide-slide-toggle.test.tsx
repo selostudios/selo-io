@@ -25,9 +25,7 @@ describe('HideSlideToggle', () => {
   test('calls setSlideVisibility with hidden=true when toggling a visible slide', async () => {
     vi.mocked(setSlideVisibility).mockResolvedValueOnce({ success: true })
 
-    render(
-      <HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden={false} hideable />
-    )
+    render(<HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden={false} hideable />)
 
     fireEvent.click(screen.getByRole('button', { name: /hide ga_summary/i }))
 
@@ -39,9 +37,7 @@ describe('HideSlideToggle', () => {
   test('calls setSlideVisibility with hidden=false when toggling a hidden slide', async () => {
     vi.mocked(setSlideVisibility).mockResolvedValueOnce({ success: true })
 
-    render(
-      <HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden hideable />
-    )
+    render(<HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden hideable />)
 
     fireEvent.click(screen.getByRole('button', { name: /show ga_summary/i }))
 
@@ -53,9 +49,7 @@ describe('HideSlideToggle', () => {
   test('shows an error toast when setSlideVisibility fails', async () => {
     vi.mocked(setSlideVisibility).mockResolvedValueOnce({ success: false, error: 'Boom' })
 
-    render(
-      <HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden={false} hideable />
-    )
+    render(<HideSlideToggle reviewId={REVIEW_ID} slideKey="ga_summary" hidden={false} hideable />)
 
     fireEvent.click(screen.getByRole('button', { name: /hide ga_summary/i }))
 

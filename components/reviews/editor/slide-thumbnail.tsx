@@ -16,35 +16,22 @@ export interface SlideThumbnailProps {
  * Composes a `<SlideThumbnailLink>` (the visual body) with a positioned
  * `<HideSlideToggle>` sibling so we don't nest a button inside an anchor.
  */
-export function SlideThumbnail({
-  orgId,
-  reviewId,
-  slideKey,
-  hidden,
-}: SlideThumbnailProps) {
+export function SlideThumbnail({ orgId, reviewId, slideKey, hidden }: SlideThumbnailProps) {
   const { label, hideable } = getSlide(slideKey)
 
   return (
     <article
       data-testid={`slide-thumbnail-${slideKey}`}
       data-hidden={String(hidden)}
-      className={cn(
-        'relative rounded-lg border p-4 transition-opacity',
-        hidden && 'opacity-50'
-      )}
+      className={cn('relative rounded-lg border p-4 transition-opacity', hidden && 'opacity-50')}
     >
-      <SlideThumbnailLink
-        orgId={orgId}
-        reviewId={reviewId}
-        slideKey={slideKey}
-        className="block"
-      >
+      <SlideThumbnailLink orgId={orgId} reviewId={reviewId} slideKey={slideKey} className="block">
         <div className="flex items-center gap-3">
-          <SlideIcon slideKey={slideKey} className="size-5 text-muted-foreground" />
+          <SlideIcon slideKey={slideKey} className="text-muted-foreground size-5" />
           <span className="text-sm font-medium">{label}</span>
         </div>
       </SlideThumbnailLink>
-      <div className="absolute right-2 top-2 z-10">
+      <div className="absolute top-2 right-2 z-10">
         <HideSlideToggle
           reviewId={reviewId}
           slideKey={slideKey}

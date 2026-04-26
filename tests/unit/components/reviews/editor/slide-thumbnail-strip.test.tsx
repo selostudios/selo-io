@@ -23,21 +23,9 @@ describe('SlideThumbnailStrip', () => {
   })
 
   test('marks hidden slides with data-hidden=true', () => {
-    render(
-      <SlideThumbnailStrip
-        orgId="o1"
-        reviewId="r1"
-        hiddenSlides={['ga_summary']}
-      />
-    )
+    render(<SlideThumbnailStrip orgId="o1" reviewId="r1" hiddenSlides={['ga_summary']} />)
 
-    expect(screen.getByTestId('slide-thumbnail-ga_summary')).toHaveAttribute(
-      'data-hidden',
-      'true'
-    )
-    expect(screen.getByTestId('slide-thumbnail-cover')).toHaveAttribute(
-      'data-hidden',
-      'false'
-    )
+    expect(screen.getByTestId('slide-thumbnail-ga_summary')).toHaveAttribute('data-hidden', 'true')
+    expect(screen.getByTestId('slide-thumbnail-cover')).toHaveAttribute('data-hidden', 'false')
   })
 })

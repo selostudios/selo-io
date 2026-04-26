@@ -7,11 +7,7 @@ export interface SlideThumbnailStripProps {
   hiddenSlides: SlideKey[]
 }
 
-export function SlideThumbnailStrip({
-  orgId,
-  reviewId,
-  hiddenSlides,
-}: SlideThumbnailStripProps) {
+export function SlideThumbnailStrip({ orgId, reviewId, hiddenSlides }: SlideThumbnailStripProps) {
   return (
     <div className="grid grid-cols-7 gap-3">
       {SLIDES.map((slide) => (

@@ -19,12 +19,7 @@ export interface HideSlideToggleProps {
  * `setSlideVisibility` server action. The cover slide cannot be hidden, so
  * when `hideable` is false we render an inert dash placeholder instead.
  */
-export function HideSlideToggle({
-  reviewId,
-  slideKey,
-  hidden,
-  hideable,
-}: HideSlideToggleProps) {
+export function HideSlideToggle({ reviewId, slideKey, hidden, hideable }: HideSlideToggleProps) {
   const [isPending, startTransition] = useTransition()
 
   if (!hideable) {
