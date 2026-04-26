@@ -9,11 +9,8 @@ import { Slide } from '@/components/deck/slide'
 import { DeckControls } from '@/components/deck/deck-controls'
 import { getFullscreenElement, toggleElementFullscreen } from '@/components/deck/fullscreen'
 import { DeckPrintStyles } from '@/components/deck/print-styles'
-import { CoverSlide } from './cover-slide'
-import { BodySlide } from './body-slide'
-import { GaBodySlide } from './ga-body-slide'
-import { LinkedInBodySlide } from './linkedin-body-slide'
-import { ContentBodySlide } from './content-body-slide'
+import { HiddenSlideOverlay } from './hidden-slide-overlay'
+import { SlideRenderer } from './slide-renderer'
 
 /**
  * Which surface is rendering the deck. `'presentation'` is the public/share
@@ -69,26 +66,6 @@ interface BuiltSlide {
 }
 
 /**
- * Minimal placeholder overlay used by editor mode to dim a hidden slide and
- * label it with a "Hidden" badge. Task 6 extracts this into its own file with
- * production styling — for Task 5 we just need the badge to be discoverable
- * by tests and the dim to be visually obvious.
- */
-function HiddenSlideOverlay({ children }: { children: ReactNode }) {
-  return (
-    <div
-      data-testid="hidden-slide-overlay"
-      className="relative flex h-full w-full items-stretch opacity-40"
-    >
-      <div className="absolute top-4 left-4 z-10 rounded-md bg-black/70 px-2 py-1 text-xs font-medium text-white">
-        Hidden
-      </div>
-      {children}
-    </div>
-  )
-}
-
-/**
  * `<ReviewDeck>` is the shared renderer used by the editor preview, the
  * snapshot detail page, and the public share page. It produces a 6- or
  * 7-slide deck: cover + Google Analytics + LinkedIn + (optional) What
@@ -101,6 +78,9 @@ function HiddenSlideOverlay({ children }: { children: ReactNode }) {
  * In `'editor'` mode, every registry slide is rendered (so authors can edit
  * the narrative even before posts seed) and hidden slides are wrapped in a
  * dimming overlay with a "Hidden" badge.
+ *
+ * Per-slide body rendering is delegated to `<SlideRenderer>` — this component
+ * handles orchestration only (filtering, navigation, fullscreen, print).
  */
 export function ReviewDeck({
   organization,
@@ -135,49 +115,18 @@ export function ReviewDeck({
       // top posts exist. Editor keeps it so authors can still edit the block.
       if (slide.kind === 'content' && !isEditor && posts.length === 0) continue
 
-      const heading = slide.label
-      const text = slide.kind === 'cover' ? '' : (narrative[slide.narrativeBlockKey] ?? '')
-
-      let render: BuiltSlide['render']
-
-      switch (slide.kind) {
-        case 'cover':
-          render = () => (
-            <CoverSlide
-              organization={{ name: organization.name, logo_url: organization.logo_url }}
-              quarter={quarter}
-              periodStart={periodStart}
-              periodEnd={periodEnd}
-              subtitle={narrative.cover_subtitle}
-            />
-          )
-          break
-        case 'ga':
-          render = (renderMode) => (
-            <GaBodySlide narrative={text} data={data?.ga} mode={renderMode} />
-          )
-          break
-        case 'linkedin':
-          render = (renderMode) => (
-            <LinkedInBodySlide narrative={text} data={data?.linkedin} mode={renderMode} />
-          )
-          break
-        case 'content':
-          render = (renderMode) => (
-            <ContentBodySlide narrative={text} posts={posts} mode={renderMode} />
-          )
-          break
-        case 'prose':
-          render = () => <BodySlide heading={heading} text={text} />
-          break
-        default: {
-          // Exhaustiveness check — adding a new SlideKind to the registry will
-          // break this build until the switch handles it. Don't silently fall
-          // through to a generic body renderer.
-          const exhaustive: never = slide.kind
-          throw new Error(`Unhandled slide kind: ${exhaustive as string}`)
-        }
-      }
+      let render: BuiltSlide['render'] = (renderMode) => (
+        <SlideRenderer
+          slide={slide}
+          narrative={narrative}
+          data={data}
+          organization={{ name: organization.name, logo_url: organization.logo_url }}
+          quarter={quarter}
+          periodStart={periodStart}
+          periodEnd={periodEnd}
+          mode={renderMode}
+        />
+      )
 
       // Editor mode wraps hidden slides in the dimming overlay so authors can
       // still see and edit them while making it visually clear they're off.
@@ -188,7 +137,7 @@ export function ReviewDeck({
 
       built.push({
         key: slide.key,
-        ariaHeading: slide.kind === 'cover' ? 'Quarterly Performance Review' : heading,
+        ariaHeading: slide.kind === 'cover' ? 'Quarterly Performance Review' : slide.label,
         render,
       })
     }
