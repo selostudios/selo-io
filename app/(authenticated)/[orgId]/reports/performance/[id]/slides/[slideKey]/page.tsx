@@ -17,7 +17,8 @@ import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
 import { PreviewButton } from '@/components/reviews/editor/preview-button'
 import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
 import { PublishButton } from '@/components/reviews/editor/publish-button'
-import { HideSlideToggle } from '@/components/reviews/editor/hide-slide-toggle'
+import { HiddenSlidesProvider } from '@/components/reviews/editor/hidden-slides-provider'
+import { VisibilityToggle } from '@/components/reviews/editor/visibility-toggle'
 import { SlideTray } from '@/components/reviews/editor/slide-tray'
 import { SlideStage } from '@/components/reviews/editor/slide-stage'
 import { CoverTrayEditor } from '@/components/reviews/editor/trays/cover-tray-editor'
@@ -118,47 +119,43 @@ export default async function PerformanceReportSlideEditorPage({
   const periods = periodsForQuarter(review.quarter as string)
 
   return (
-    <div className="flex h-full flex-col" data-testid="performance-reports-slide-editor">
-      <ReportEditorHeader
-        backHref={`/${orgId}/reports/performance/${id}`}
-        title={slide.label}
-        quarter={`Slide ${slideIndex + 1} of ${SLIDES.length}`}
-        actions={
-          <>
-            <HideSlideToggle
-              reviewId={id}
-              slideKey={slide.key}
-              hidden={hiddenSlides.includes(slide.key)}
-              hideable={slide.hideable}
-            />
-            <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
-            <PreviewButton orgId={orgId} reviewId={id} />
-            <SnapshotsButton orgId={orgId} reviewId={id} />
-            {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
-          </>
-        }
-      />
-
-      <main className="flex-1 overflow-hidden p-4 md:p-8">
-        <SlideStage
-          orgId={orgId}
-          reviewId={id}
-          slideKey={slide.key}
-          organization={{
-            name: (org?.name as string | undefined) ?? 'Organization',
-            logo_url: (org?.logo_url as string | null | undefined) ?? null,
-            primary_color: (org?.primary_color as string | null | undefined) ?? null,
-          }}
-          quarter={quarterLabel}
-          periodStart={periods.main.start}
-          periodEnd={periods.main.end}
-          narrative={narrative}
-          data={data}
-          hiddenSlides={hiddenSlides}
+    <HiddenSlidesProvider reviewId={id} initialHidden={hiddenSlides}>
+      <div className="flex h-full flex-col" data-testid="performance-reports-slide-editor">
+        <ReportEditorHeader
+          backHref={`/${orgId}/reports/performance/${id}`}
+          title={slide.label}
+          quarter={`Slide ${slideIndex + 1} of ${SLIDES.length}`}
+          actions={
+            <>
+              <VisibilityToggle slideKey={slide.key} hideable={slide.hideable} />
+              <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
+              <PreviewButton orgId={orgId} reviewId={id} />
+              <SnapshotsButton orgId={orgId} reviewId={id} />
+              {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
+            </>
+          }
         />
-      </main>
 
-      <SlideTray defaultExpanded>{trayContent(slide, id, narrative, !canEdit)}</SlideTray>
-    </div>
+        <main className="flex-1 overflow-hidden p-4 md:p-8">
+          <SlideStage
+            orgId={orgId}
+            reviewId={id}
+            slideKey={slide.key}
+            organization={{
+              name: (org?.name as string | undefined) ?? 'Organization',
+              logo_url: (org?.logo_url as string | null | undefined) ?? null,
+              primary_color: (org?.primary_color as string | null | undefined) ?? null,
+            }}
+            quarter={quarterLabel}
+            periodStart={periods.main.start}
+            periodEnd={periods.main.end}
+            narrative={narrative}
+            data={data}
+          />
+        </main>
+
+        <SlideTray defaultExpanded>{trayContent(slide, id, narrative, !canEdit)}</SlideTray>
+      </div>
+    </HiddenSlidesProvider>
   )
 }

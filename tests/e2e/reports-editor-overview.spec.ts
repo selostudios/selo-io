@@ -17,11 +17,11 @@ test.describe('Performance report editor overview', () => {
     const gaCard = page.locator('[data-testid="slide-thumbnail-ga_summary"]')
     await expect(gaCard).toHaveAttribute('data-hidden', 'false')
 
-    await gaCard.locator('[data-testid="hide-slide-toggle-ga_summary"]').click()
+    await gaCard.locator('[data-testid="visibility-switch-ga_summary"]').click()
     await expect(gaCard).toHaveAttribute('data-hidden', 'true')
 
     // Toggle back so the seed stays clean for parallel tests.
-    await gaCard.locator('[data-testid="hide-slide-toggle-ga_summary"]').click()
+    await gaCard.locator('[data-testid="visibility-switch-ga_summary"]').click()
     await expect(gaCard).toHaveAttribute('data-hidden', 'false')
   })
 

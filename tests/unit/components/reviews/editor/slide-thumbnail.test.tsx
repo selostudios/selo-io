@@ -11,16 +11,26 @@ vi.mock('@/components/ui/sonner', () => ({
 }))
 
 import { SlideThumbnail } from '@/components/reviews/editor/slide-thumbnail'
+import { HiddenSlidesProvider } from '@/components/reviews/editor/hidden-slides-provider'
+import type { SlideKey } from '@/lib/reviews/slides/registry'
+
+function renderThumbnail(slideKey: SlideKey, initialHidden: SlideKey[] = []) {
+  return render(
+    <HiddenSlidesProvider reviewId="r1" initialHidden={initialHidden}>
+      <SlideThumbnail orgId="o1" reviewId="r1" slideKey={slideKey} />
+    </HiddenSlidesProvider>
+  )
+}
 
 describe('SlideThumbnail', () => {
   test('renders the slide label', () => {
-    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />)
+    renderThumbnail('ga_summary')
 
     expect(screen.getByText('Google Analytics')).toBeInTheDocument()
   })
 
   test('links to the slide editor route', () => {
-    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />)
+    renderThumbnail('ga_summary')
 
     expect(screen.getByRole('link')).toHaveAttribute(
       'href',
@@ -28,24 +38,23 @@ describe('SlideThumbnail', () => {
     )
   })
 
-  test('dims the card when hidden is true', () => {
-    render(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={true} />)
+  test('dims the card when the slide is hidden in context', () => {
+    renderThumbnail('ga_summary', ['ga_summary'])
 
     expect(screen.getByTestId('slide-thumbnail-ga_summary')).toHaveClass('opacity-50')
   })
 
-  test('renders the HideSlideToggle button for hideable slides and nothing for the cover', () => {
-    const { rerender } = render(
-      <SlideThumbnail orgId="o1" reviewId="r1" slideKey="ga_summary" hidden={false} />
-    )
+  test('renders the visibility toggle for hideable slides', () => {
+    renderThumbnail('ga_summary')
 
-    const hideableToggle = screen.getByTestId('hide-slide-toggle-ga_summary')
-    expect(hideableToggle).toBeInTheDocument()
-    expect(hideableToggle.tagName).toBe('BUTTON')
+    expect(screen.getByTestId('visibility-toggle-ga_summary')).toBeInTheDocument()
+    expect(screen.getByTestId('visibility-switch-ga_summary')).toBeInTheDocument()
+  })
 
-    rerender(<SlideThumbnail orgId="o1" reviewId="r1" slideKey="cover" hidden={false} />)
+  test('does not render any toggle for the cover slide', () => {
+    renderThumbnail('cover')
 
-    expect(screen.queryByTestId('hide-slide-toggle-cover')).toBeNull()
-    expect(within(screen.getByTestId('slide-thumbnail-cover')).queryByRole('button')).toBeNull()
+    expect(screen.queryByTestId('visibility-toggle-cover')).toBeNull()
+    expect(within(screen.getByTestId('slide-thumbnail-cover')).queryByRole('switch')).toBeNull()
   })
 })

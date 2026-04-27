@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ReviewDeck } from '@/components/reviews/review-deck'
 import type { SlideKey } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import { useHiddenSlides } from './hidden-slides-provider'
 
 export interface SlideStageProps {
   orgId: string
@@ -22,7 +23,6 @@ export interface SlideStageProps {
   periodEnd: string
   narrative: NarrativeBlocks
   data: SnapshotData
-  hiddenSlides: readonly SlideKey[]
 }
 
 export function SlideStage({
@@ -35,9 +35,9 @@ export function SlideStage({
   periodEnd,
   narrative,
   data,
-  hiddenSlides,
 }: SlideStageProps) {
   const router = useRouter()
+  const { hiddenSlides } = useHiddenSlides()
 
   const handleNavigate = useCallback(
     (key: SlideKey) => {

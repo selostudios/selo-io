@@ -40,7 +40,7 @@ test.describe('Performance report slide editor', () => {
     await page.waitForSelector('[data-testid="review-deck"]')
 
     // The header toggle for the current slide.
-    const toggle = page.locator('[data-testid="hide-slide-toggle-ga_summary"]').first()
+    const toggle = page.locator('[data-testid="visibility-switch-ga_summary"]').first()
 
     // Hide the slide. Server action revalidates the page and the deck re-renders
     // with the slide wrapped in <HiddenSlideOverlay>.

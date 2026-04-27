@@ -12,6 +12,7 @@ import { PreviewButton } from '@/components/reviews/editor/preview-button'
 import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
 import { PublishButton } from '@/components/reviews/editor/publish-button'
 import { ContextForAiPanel } from '@/components/reviews/editor/context-for-ai-panel'
+import { HiddenSlidesProvider } from '@/components/reviews/editor/hidden-slides-provider'
 import { SlideThumbnailStrip } from '@/components/reviews/editor/slide-thumbnail-strip'
 
 export const dynamic = 'force-dynamic'
@@ -57,34 +58,36 @@ export default async function PerformanceReportEditorPage({
   const hiddenSlides = parseHiddenSlides(draft?.hidden_slides)
 
   return (
-    <div className="space-y-8 p-8" data-testid="performance-reports-editor">
-      <ReportEditorHeader
-        backHref={`/${orgId}/reports/performance`}
-        title={review.title as string}
-        quarter={review.quarter as string}
-        actions={
-          <>
-            <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
-            <PreviewButton orgId={orgId} reviewId={id} />
-            <SnapshotsButton orgId={orgId} reviewId={id} />
-            {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
-          </>
-        }
-      />
-
-      {draft ? (
-        <>
-          <ContextForAiPanel reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
-          <SlideThumbnailStrip orgId={orgId} reviewId={id} hiddenSlides={hiddenSlides} />
-        </>
-      ) : (
-        <EmptyState
-          icon={FileText}
-          title="No draft yet"
-          description="Create one from the reports list."
-          data-testid="performance-reports-no-draft"
+    <HiddenSlidesProvider reviewId={id} initialHidden={hiddenSlides}>
+      <div className="space-y-8 p-8" data-testid="performance-reports-editor">
+        <ReportEditorHeader
+          backHref={`/${orgId}/reports/performance`}
+          title={review.title as string}
+          quarter={review.quarter as string}
+          actions={
+            <>
+              <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
+              <PreviewButton orgId={orgId} reviewId={id} />
+              <SnapshotsButton orgId={orgId} reviewId={id} />
+              {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
+            </>
+          }
         />
-      )}
-    </div>
+
+        {draft ? (
+          <>
+            <ContextForAiPanel reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+            <SlideThumbnailStrip orgId={orgId} reviewId={id} />
+          </>
+        ) : (
+          <EmptyState
+            icon={FileText}
+            title="No draft yet"
+            description="Create one from the reports list."
+            data-testid="performance-reports-no-draft"
+          />
+        )}
+      </div>
+    </HiddenSlidesProvider>
   )
 }
