@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Eye } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Presentation } from 'lucide-react'
+import { HeaderActionButton } from './header-action-button'
 
 export interface PreviewButtonProps {
   orgId: string
@@ -13,11 +13,11 @@ export interface PreviewButtonProps {
  */
 export function PreviewButton({ orgId, reviewId }: PreviewButtonProps) {
   return (
-    <Button variant="outline" asChild data-testid="report-preview-button">
+    <HeaderActionButton asChild data-testid="report-preview-button">
       <Link href={`/${orgId}/reports/performance/${reviewId}/preview`}>
-        <Eye className="size-4" aria-hidden="true" />
+        <Presentation className="size-4" aria-hidden="true" />
         Preview
       </Link>
-    </Button>
+    </HeaderActionButton>
   )
 }

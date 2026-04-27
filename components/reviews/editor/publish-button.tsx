@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { UploadCloud } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { HeaderActionButton } from './header-action-button'
 import { showError, showSuccess } from '@/components/ui/sonner'
 import { publishReview } from '@/lib/reviews/actions'
 
@@ -35,15 +35,15 @@ export function PublishButton({ orgId, reviewId }: PublishButtonProps) {
   }
 
   return (
-    <Button
+    <HeaderActionButton
       type="button"
-      variant="default"
+      emphasis="primary"
       onClick={handlePublish}
       disabled={isPublishing}
       data-testid="report-publish-button"
     >
       <UploadCloud className="size-4" aria-hidden="true" />
       {isPublishing ? 'Publishing…' : 'Publish'}
-    </Button>
+    </HeaderActionButton>
   )
 }

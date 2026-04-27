@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { FileStack } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { HeaderActionButton } from './header-action-button'
 
 export interface SnapshotsButtonProps {
   orgId: string
@@ -13,11 +13,11 @@ export interface SnapshotsButtonProps {
  */
 export function SnapshotsButton({ orgId, reviewId }: SnapshotsButtonProps) {
   return (
-    <Button variant="outline" asChild data-testid="report-snapshots-button">
+    <HeaderActionButton asChild data-testid="report-snapshots-button">
       <Link href={`/${orgId}/reports/performance/${reviewId}/snapshots`}>
         <FileStack className="size-4" aria-hidden="true" />
         Snapshots
       </Link>
-    </Button>
+    </HeaderActionButton>
   )
 }
