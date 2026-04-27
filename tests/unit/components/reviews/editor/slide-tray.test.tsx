@@ -1,9 +1,13 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SlideTray } from '@/components/reviews/editor/slide-tray'
 
 describe('SlideTray', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   test('starts expanded by default and collapses when the handle is clicked', async () => {
     const user = userEvent.setup()
     render(
@@ -77,5 +81,26 @@ describe('SlideTray', () => {
     expect(handle).toHaveAttribute('aria-expanded', 'true')
     await user.click(handle)
     expect(handle).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('restores collapsed state from a previous session', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(
+      <SlideTray defaultExpanded>
+        <div />
+      </SlideTray>
+    )
+    await user.click(screen.getByTestId('tray-handle'))
+    expect(screen.getByTestId('tray-body')).toHaveClass('hidden')
+    unmount()
+
+    // Simulate navigating to a sibling slide: a fresh mount with the same
+    // default should pick up the persisted "collapsed" preference.
+    render(
+      <SlideTray defaultExpanded>
+        <div />
+      </SlideTray>
+    )
+    expect(screen.getByTestId('tray-body')).toHaveClass('hidden')
   })
 })
