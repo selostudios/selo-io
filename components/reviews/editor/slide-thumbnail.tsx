@@ -23,9 +23,14 @@ export function SlideThumbnail({ orgId, reviewId, slideKey, hidden }: SlideThumb
     <article
       data-testid={`slide-thumbnail-${slideKey}`}
       data-hidden={String(hidden)}
-      className={cn('relative rounded-lg border p-4 transition-opacity', hidden && 'opacity-50')}
+      className={cn('relative rounded-lg border transition-opacity', hidden && 'opacity-50')}
     >
-      <SlideThumbnailLink orgId={orgId} reviewId={reviewId} slideKey={slideKey} className="block">
+      <SlideThumbnailLink
+        orgId={orgId}
+        reviewId={reviewId}
+        slideKey={slideKey}
+        className="hover:bg-accent/50 block rounded-lg p-4 transition-colors"
+      >
         <div className="flex items-center gap-3 pr-8">
           <SlideIcon slideKey={slideKey} className="text-muted-foreground size-5 flex-shrink-0" />
           <span className="text-sm font-medium">{label}</span>
