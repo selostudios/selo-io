@@ -58,7 +58,7 @@ export default async function PerformanceReportsListPage({
     <div className="p-8" data-testid="performance-reports-list">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Performance Reports</h1>
+          <h1 className="text-2xl font-semibold">Marketing Reports</h1>
           <p className="text-muted-foreground text-sm">Quarterly marketing performance reviews.</p>
         </div>
         {canCreate && (
