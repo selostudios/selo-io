@@ -38,7 +38,7 @@ export default async function PerformanceReportEditorPage({
 
   if (!review) notFound()
 
-  const [{ data: draft }, { data: memoRow }] = await Promise.all([
+  const [{ data: draft }, { data: memoRow }, { data: org }] = await Promise.all([
     supabase
       .from('marketing_review_drafts')
       .select('author_notes, hidden_slides')
@@ -49,11 +49,13 @@ export default async function PerformanceReportEditorPage({
       .select('memo, updated_at')
       .eq('organization_id', orgId)
       .maybeSingle(),
+    supabase.from('organizations').select('accent_color').eq('id', orgId).maybeSingle(),
   ])
 
   const authorNotes = (draft?.author_notes as string | null) ?? ''
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
+  const accentColor = (org?.accent_color as string | null) ?? null
 
   const hiddenSlides = parseHiddenSlides(draft?.hidden_slides)
 
@@ -76,7 +78,12 @@ export default async function PerformanceReportEditorPage({
 
         {draft ? (
           <>
-            <ContextForAiPanel reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
+            <ContextForAiPanel
+              reviewId={id}
+              initialNotes={authorNotes}
+              canEdit={canEdit}
+              accentColor={accentColor}
+            />
             <SlideThumbnailStrip orgId={orgId} reviewId={id} />
           </>
         ) : (

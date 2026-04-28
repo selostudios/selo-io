@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { updateAuthorNotes } from '@/lib/reviews/actions'
 
@@ -12,9 +13,10 @@ interface Props {
   reviewId: string
   initialNotes: string
   canEdit: boolean
+  accentColor?: string | null
 }
 
-export function ContextForAiPanel({ reviewId, initialNotes, canEdit }: Props) {
+export function ContextForAiPanel({ reviewId, initialNotes, canEdit, accentColor }: Props) {
   const [value, setValue] = useState(initialNotes)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -53,10 +55,20 @@ export function ContextForAiPanel({ reviewId, initialNotes, canEdit }: Props) {
     }, AUTOSAVE_DELAY_MS)
   }
 
+  const accent = accentColor || 'var(--foreground)'
+
   return (
-    <section className="space-y-2" data-testid="context-for-ai-panel">
+    <section
+      className="space-y-2 rounded-r-md border-l-4 bg-neutral-50/60 py-3 pr-4 pl-4"
+      style={{ borderLeftColor: accent }}
+      data-testid="context-for-ai-panel"
+    >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="context-for-ai-heading" className="text-sm font-semibold tracking-tight">
+        <h2
+          id="context-for-ai-heading"
+          className="flex items-center gap-2 text-sm font-semibold tracking-tight"
+        >
+          <Sparkles className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
           Context for AI
         </h2>
         <div className="flex items-center gap-2 text-xs">
