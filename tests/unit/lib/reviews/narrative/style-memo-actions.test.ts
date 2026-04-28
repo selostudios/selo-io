@@ -269,6 +269,7 @@ describe('regenerateStyleMemoFromLatestSnapshot', () => {
       ai: aiOriginals,
       finalNarrative,
       authorNotes: 'a note',
+      slideNotes: {},
       snapshotId: 'snap-1',
       reviewId: 'review-1',
     })

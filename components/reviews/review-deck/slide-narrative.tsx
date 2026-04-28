@@ -1,3 +1,4 @@
+import { NarrativeBulletList } from './narrative-bullet-list'
 import { parseBodyNarrative, type NarrativeNode } from './parse-body-narrative'
 
 export const EMPTY_NARRATIVE_PLACEHOLDER = 'No narrative available for this section'
@@ -34,13 +35,7 @@ export function SlideNarrative({ text, testId }: SlideNarrativeProps) {
     >
       {parseBodyNarrative(text).map((node: NarrativeNode, idx) => {
         if (node.kind === 'list') {
-          return (
-            <ul key={`ul-${idx}`} className="list-disc space-y-2 pl-6">
-              {node.content.map((item, itemIdx) => (
-                <li key={itemIdx}>{item}</li>
-              ))}
-            </ul>
-          )
+          return <NarrativeBulletList key={`ul-${idx}`} items={node.content} />
         }
         if (SECTION_HEADINGS.has(node.content)) {
           return (

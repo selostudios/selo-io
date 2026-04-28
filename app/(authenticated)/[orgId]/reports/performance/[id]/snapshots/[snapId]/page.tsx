@@ -8,6 +8,7 @@ import { PrintButton } from '@/components/reviews/print-button'
 import { ReviewBreadcrumb } from '@/components/reviews/review-breadcrumb'
 import { formatQuarterLabel } from '@/lib/reviews/period'
 import { resolvePublisherNames } from '@/lib/reviews/publishers'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { SnapshotShareButton } from './snapshot-client'
 import { SnapshotLearnerCallout } from './snapshot-learner-callout'
@@ -52,7 +53,7 @@ export default async function PerformanceReportSnapshotDetailPage({
     supabase
       .from('marketing_review_snapshots')
       .select(
-        'id, review_id, version, period_start, period_end, published_at, published_by, narrative, data'
+        'id, review_id, version, period_start, period_end, published_at, published_by, narrative, data, hidden_slides'
       )
       .eq('id', snapId)
       .eq('review_id', reviewId)
@@ -84,6 +85,7 @@ export default async function PerformanceReportSnapshotDetailPage({
   const version = snapshot.version as number
   const narrative = (snapshot.narrative as NarrativeBlocks | null) ?? {}
   const data = (snapshot.data as SnapshotData | null) ?? {}
+  const hiddenSlides = parseHiddenSlides(snapshot.hidden_slides)
   const periodStart = snapshot.period_start as string
   const periodEnd = snapshot.period_end as string
   const publishedAtLabel = formatPublishedDate(snapshot.published_at as string)
@@ -137,6 +139,7 @@ export default async function PerformanceReportSnapshotDetailPage({
           periodEnd={periodEnd}
           narrative={narrative}
           data={data}
+          hiddenSlides={hiddenSlides}
         />
       </div>
 

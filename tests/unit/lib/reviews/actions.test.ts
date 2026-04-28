@@ -37,6 +37,7 @@ import {
   deleteReview,
   publishReview,
   updateAuthorNotes,
+  updateSlideNote,
 } from '@/lib/reviews/actions'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
@@ -584,6 +585,137 @@ describe('updateAuthorNotes', () => {
     vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
 
     const result = await updateAuthorNotes('review-1', 'hello')
+    expect(result).toEqual({ success: true })
+  })
+})
+
+describe('updateSlideNote', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-1' } as never)
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'admin',
+      is_internal: false,
+    } as never)
+  })
+
+  test('rejects non-admin non-internal users', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'org-1',
+      role: 'team_member',
+      is_internal: false,
+    } as never)
+    const chain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: vi.fn(() => chain) } as never)
+
+    const result = await updateSlideNote('review-1', 'ga_summary', 'note')
+    expect(result).toEqual({ success: false, error: 'Insufficient permissions' })
+  })
+
+  test('writes a trimmed note merged into existing slide_notes', async () => {
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const draftSingle = vi.fn(async () => ({
+      data: { slide_notes: { cover_subtitle: 'keep me' } },
+      error: null,
+    }))
+    const draftChain = makeChain({ single: draftSingle })
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'marketing_reviews') return lookupChain
+      // First call to drafts is the load (.select.eq.single), second is update.
+      if (table === 'marketing_review_drafts') {
+        if (draftSingle.mock.calls.length === 0) return draftChain
+        return updateChain as never
+      }
+      return makeChain()
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateSlideNote('review-1', 'ga_summary', '   stop the jargon   ')
+    expect(result).toEqual({ success: true })
+    expect(updateChain.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slide_notes: { cover_subtitle: 'keep me', ga_summary: 'stop the jargon' },
+      })
+    )
+  })
+
+  test('removes the key when the note is whitespace-only', async () => {
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const draftSingle = vi.fn(async () => ({
+      data: { slide_notes: { cover_subtitle: 'keep', ga_summary: 'old' } },
+      error: null,
+    }))
+    const draftChain = makeChain({ single: draftSingle })
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'marketing_reviews') return lookupChain
+      if (table === 'marketing_review_drafts') {
+        if (draftSingle.mock.calls.length === 0) return draftChain
+        return updateChain as never
+      }
+      return makeChain()
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateSlideNote('review-1', 'ga_summary', '   ')
+    expect(result).toEqual({ success: true })
+    expect(updateChain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ slide_notes: { cover_subtitle: 'keep' } })
+    )
+  })
+
+  test('allows internal users to update notes in any organization', async () => {
+    vi.mocked(getUserRecord).mockResolvedValue({
+      organization_id: 'different-org',
+      role: 'developer',
+      is_internal: true,
+    } as never)
+    const updateChain = {
+      update: vi.fn(() => updateChain),
+      eq: vi.fn(async () => ({ error: null })),
+    }
+    const lookupChain = makeChain({
+      maybeSingle: async () => ({
+        data: { organization_id: 'org-1', quarter: '2026-Q2' },
+        error: null,
+      }),
+    })
+    const draftSingle = vi.fn(async () => ({ data: { slide_notes: {} }, error: null }))
+    const draftChain = makeChain({ single: draftSingle })
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'marketing_reviews') return lookupChain
+      if (table === 'marketing_review_drafts') {
+        if (draftSingle.mock.calls.length === 0) return draftChain
+        return updateChain as never
+      }
+      return makeChain()
+    })
+    vi.mocked(createClient).mockResolvedValue({ from: fromMock } as never)
+
+    const result = await updateSlideNote('review-1', 'ga_summary', 'hello')
     expect(result).toEqual({ success: true })
   })
 })

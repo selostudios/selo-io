@@ -80,6 +80,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative: ai,
       authorNotes: null,
+      slideNotes: {},
     })
     expect(result).toEqual({ status: 'skipped' })
     expect(generateObject).not.toHaveBeenCalled()
@@ -99,6 +100,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
     })
 
     expect(result).toMatchObject({ status: 'updated', memo: 'Updated memo body.' })
@@ -134,6 +136,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
     })
 
     expect(result).toMatchObject({
@@ -159,6 +162,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
     })
 
     const payload = upsertMemo.mock.calls[0][0] as { memo: string }
@@ -178,6 +182,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
     })
     expect(result).toEqual({ status: 'failed', reason: 'empty_response' })
     expect(upsertMemo).not.toHaveBeenCalled()
@@ -199,6 +204,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
       snapshotId: 'snap-9',
     })
 
@@ -234,6 +240,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
       snapshotId: 'snap-9',
     })
 
@@ -263,6 +270,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
       snapshotId: 'snap-9',
     })
 
@@ -296,6 +304,7 @@ describe('runStyleMemoLearner', () => {
       ai,
       finalNarrative,
       authorNotes: null,
+      slideNotes: {},
       snapshotId: 'snap-42',
     })
     expect(result).toEqual({ status: 'failed', reason: 'llm_error' })

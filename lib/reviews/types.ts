@@ -1,3 +1,5 @@
+import type { SlideKey } from './slides/registry'
+
 export interface MarketingReview {
   id: string
   organization_id: string
@@ -25,6 +27,8 @@ export interface MarketingReviewSnapshot {
   narrative: NarrativeBlocks
   share_token: string
   author_notes: string | null
+  hidden_slides: readonly SlideKey[]
+  slide_notes: SlideNotes
 }
 
 export interface MarketingReviewDraft {
@@ -35,7 +39,11 @@ export interface MarketingReviewDraft {
   narrative: NarrativeBlocks
   ai_originals: NarrativeBlocks
   author_notes: string | null
+  hidden_slides: readonly SlideKey[]
+  slide_notes: SlideNotes
 }
+
+export type SlideNotes = Partial<Record<keyof NarrativeBlocks, string>>
 
 export interface SnapshotData {
   ga?: GAData

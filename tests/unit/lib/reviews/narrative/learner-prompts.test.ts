@@ -11,6 +11,7 @@ const diff: LearnerDiff = {
     },
   ],
   authorNotes: 'Q1 always dips.',
+  slideNotes: [],
 }
 
 describe('buildLearnerPrompt', () => {
@@ -54,7 +55,7 @@ describe('buildLearnerPrompt', () => {
     const prompt = buildLearnerPrompt({
       organizationName: 'ACME',
       currentMemo: '',
-      diff: { changedBlocks: [], authorNotes: 'Q1 always dips.' },
+      diff: { changedBlocks: [], authorNotes: 'Q1 always dips.', slideNotes: [] },
     })
     expect(prompt.toLowerCase()).toContain('no edits this quarter')
   })
@@ -63,7 +64,7 @@ describe('buildLearnerPrompt', () => {
     const prompt = buildLearnerPrompt({
       organizationName: 'ACME',
       currentMemo: '',
-      diff: { changedBlocks: diff.changedBlocks, authorNotes: null },
+      diff: { changedBlocks: diff.changedBlocks, authorNotes: null, slideNotes: [] },
     })
     expect(prompt).toContain('AUTHOR NOTES FOR THIS QUARTER\n(none)')
   })
@@ -72,7 +73,7 @@ describe('buildLearnerPrompt', () => {
     const prompt = buildLearnerPrompt({
       organizationName: 'Acme',
       currentMemo: '',
-      diff: { changedBlocks: [], authorNotes: null },
+      diff: { changedBlocks: [], authorNotes: null, slideNotes: [] },
     })
     expect(prompt).toMatch(/one-sentence rationale/i)
     expect(prompt).toMatch(/past-tense/i)
@@ -82,9 +83,37 @@ describe('buildLearnerPrompt', () => {
     const prompt = buildLearnerPrompt({
       organizationName: 'Acme',
       currentMemo: '',
-      diff: { changedBlocks: [], authorNotes: null },
+      diff: { changedBlocks: [], authorNotes: null, slideNotes: [] },
     })
     expect(prompt).toMatch(/memo/)
     expect(prompt).toMatch(/rationale/)
+  })
+
+  test('labels absent slide notes so the LLM does not invent any', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'Acme',
+      currentMemo: '',
+      diff: { changedBlocks: [], authorNotes: null, slideNotes: [] },
+    })
+    expect(prompt).toContain('PER-SLIDE AUTHOR NOTES\n(none)')
+  })
+
+  test('includes per-slide notes keyed by block when present', () => {
+    const prompt = buildLearnerPrompt({
+      organizationName: 'Acme',
+      currentMemo: '',
+      diff: {
+        changedBlocks: [],
+        authorNotes: null,
+        slideNotes: [
+          { key: 'ga_summary', note: 'Stop using marketing jargon.' },
+          { key: 'planning', note: 'Lean into experimentation language.' },
+        ],
+      },
+    })
+    expect(prompt).toContain('### ga_summary')
+    expect(prompt).toContain('Stop using marketing jargon.')
+    expect(prompt).toContain('### planning')
+    expect(prompt).toContain('Lean into experimentation language.')
   })
 })

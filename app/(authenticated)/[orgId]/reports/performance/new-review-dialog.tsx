@@ -28,7 +28,7 @@ export function NewReviewDialog({ orgId, quarters, defaultQuarter }: NewReviewDi
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg" data-testid="performance-reports-new-dialog">
         <DialogHeader>
-          <DialogTitle>New Performance Report</DialogTitle>
+          <DialogTitle>New Marketing Report</DialogTitle>
           <DialogDescription>
             Pick a quarter. We&apos;ll seed a draft with the latest data from your connected
             platforms.

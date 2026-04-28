@@ -49,6 +49,7 @@ const defaultProps = {
     planning: 'Double down.',
   } satisfies NarrativeBlocks,
   data: {} satisfies SnapshotData,
+  hiddenSlides: [],
 }
 
 describe('PreviewClient', () => {

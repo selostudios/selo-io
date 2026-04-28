@@ -11,9 +11,9 @@ export interface DeckControlsProps {
 }
 
 /**
- * Deck controls: fullscreen sits top-right; prev/next sit on the bottom
- * edge. All buttons are icon-only ghost styling so they stay out of the
- * way of presentation content.
+ * Deck controls: fullscreen sits top-right; prev/next sit centered on
+ * the left and right edges. All buttons are icon-only ghost styling so
+ * they stay out of the way of presentation content.
  */
 export function DeckControls({
   onPrev,
@@ -36,7 +36,7 @@ export function DeckControls({
         </Button>
       </div>
 
-      <div className="absolute bottom-4 left-4 z-10">
+      <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2">
         <Button
           variant="ghost"
           size="icon"
@@ -48,7 +48,7 @@ export function DeckControls({
         </Button>
       </div>
 
-      <div className="absolute right-4 bottom-4 z-10">
+      <div className="absolute top-1/2 right-4 z-10 -translate-y-1/2">
         <Button
           variant="ghost"
           size="icon"

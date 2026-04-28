@@ -175,12 +175,21 @@ export function defaultTemplatePlanning(): string {
 export function defaultTemplateContentHighlights(): string {
   return [
     'The "What Resonated" slide shows the four LinkedIn posts with the highest engagement rate this quarter.',
-    'Write a 1-2 sentence summary of what resonated: the theme, tone, or format that unites these posts.',
-    'Plain text only. Warm, confident, consultative tone. No markdown.',
-    'Lead with the pattern, not the metrics — the cards above already show the numbers.',
+    'Summarize the patterns behind why these posts performed well.',
     '',
-    'If fewer than 2 posts are provided, focus on that single post instead of a pattern.',
-    'If no posts are provided, output: "No posts met the threshold for analysis this quarter."',
+    'Format exactly like this (plain text, no markdown):',
+    '- <bullet>',
+    '- <bullet>',
+    '- <bullet>',
+    '',
+    'Rules:',
+    '- Output 2 to 3 bullets, each prefixed with "- ".',
+    '- Each bullet 15 words or fewer. Lead with the pattern (theme, tone, format), then the implication.',
+    '- Do not restate the metrics — the cards above already show the numbers.',
+    '- Warm, confident, consultative tone.',
+    '',
+    'If fewer than 2 posts are provided, output a single bullet about that one post.',
+    'If no posts are provided, output: "- No posts met the threshold for analysis this quarter."',
   ].join('\n')
 }
 

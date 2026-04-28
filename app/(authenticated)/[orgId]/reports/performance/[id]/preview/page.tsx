@@ -8,6 +8,7 @@ import { UserRole } from '@/lib/enums'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatQuarterLabel, periodsForQuarter } from '@/lib/reviews/period'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
 import { PreviewClient } from './preview-client'
 
@@ -52,7 +53,7 @@ export default async function PerformanceReportPreviewPage({
   const [{ data: draft }, { data: org }] = await Promise.all([
     supabase
       .from('marketing_review_drafts')
-      .select('narrative, data')
+      .select('narrative, data, hidden_slides')
       .eq('review_id', id)
       .maybeSingle(),
     supabase
@@ -84,6 +85,7 @@ export default async function PerformanceReportPreviewPage({
 
   const narrative = (draft.narrative as NarrativeBlocks | null) ?? {}
   const data = (draft.data as SnapshotData | null) ?? {}
+  const hiddenSlides = parseHiddenSlides(draft.hidden_slides)
   const quarterLabel = formatQuarterLabel(review.quarter as string)
   const periods = periodsForQuarter(review.quarter as string)
 
@@ -101,6 +103,7 @@ export default async function PerformanceReportPreviewPage({
       periodEnd={periods.main.end}
       narrative={narrative}
       data={data}
+      hiddenSlides={hiddenSlides}
     />
   )
 }

@@ -11,10 +11,27 @@ export interface UseDeckNavigationResult {
   isLast: boolean
 }
 
+export interface UseDeckNavigationOptions {
+  /**
+   * When provided, takes over slide-change behavior. Instead of mutating
+   * internal state, `next`, `prev`, `goTo`, and keyboard shortcuts call
+   * `onNavigate(targetIndex)` so the caller can drive navigation externally
+   * (e.g. by pushing a new URL). `currentIndex` remains pinned to
+   * `initialIndex`; the caller is expected to remount the deck (via `key`)
+   * once the underlying slide changes.
+   */
+  onNavigate?: (targetIndex: number) => void
+}
+
 /**
  * Owns the current slide index for a review deck and wires up keyboard
  * navigation. Treats `slideCount === 0` as a degenerate "empty deck" where
  * both `isFirst` and `isLast` are true and every navigation method is a no-op.
+ *
+ * `initialIndex` lets callers (e.g. the editor's slide-stage view) start the
+ * deck on a specific slide instead of always slide 0. The supplied index is
+ * clamped into `[0, slideCount - 1]` so a stale or out-of-range value can't
+ * desynchronise the state from the rendered slide list.
  *
  * Keyboard shortcuts (handled on `window`):
  *   - ArrowRight / Space / PageDown → next slide
@@ -25,8 +42,15 @@ export interface UseDeckNavigationResult {
  * Shortcuts are ignored while focus is inside an input, textarea, or
  * contentEditable element so they don't hijack normal typing.
  */
-export function useDeckNavigation(slideCount: number): UseDeckNavigationResult {
-  const [currentIndex, setCurrentIndex] = useState(0)
+export function useDeckNavigation(
+  slideCount: number,
+  initialIndex: number = 0,
+  options?: UseDeckNavigationOptions
+): UseDeckNavigationResult {
+  const clampedInitial =
+    slideCount === 0 ? 0 : Math.max(0, Math.min(slideCount - 1, Math.floor(initialIndex)))
+  const [currentIndex, setCurrentIndex] = useState(clampedInitial)
+  const onNavigate = options?.onNavigate
 
   const maxIndex = Math.max(0, slideCount - 1)
 
@@ -34,28 +58,42 @@ export function useDeckNavigation(slideCount: number): UseDeckNavigationResult {
   // during render (React's recommended way to derive state from props without
   // a useEffect round-trip). This keeps `currentIndex` valid on the very next
   // render after `slideCount` changes.
-  if (currentIndex > maxIndex) {
+  if (currentIndex > maxIndex && !onNavigate) {
     setCurrentIndex(maxIndex)
   }
 
   const next = useCallback(() => {
     if (slideCount === 0) return
+    if (onNavigate) {
+      const target = Math.min(currentIndex + 1, slideCount - 1)
+      if (target !== currentIndex) onNavigate(target)
+      return
+    }
     setCurrentIndex((prev) => Math.min(prev + 1, slideCount - 1))
-  }, [slideCount])
+  }, [slideCount, currentIndex, onNavigate])
 
   const prev = useCallback(() => {
     if (slideCount === 0) return
-    setCurrentIndex((prev) => Math.max(prev - 1, 0))
-  }, [slideCount])
+    if (onNavigate) {
+      const target = Math.max(currentIndex - 1, 0)
+      if (target !== currentIndex) onNavigate(target)
+      return
+    }
+    setCurrentIndex((p) => Math.max(p - 1, 0))
+  }, [slideCount, currentIndex, onNavigate])
 
   const goTo = useCallback(
     (i: number) => {
       if (slideCount === 0) return
       const floored = Math.floor(i)
       const clamped = Math.max(0, Math.min(slideCount - 1, floored))
+      if (onNavigate) {
+        if (clamped !== currentIndex) onNavigate(clamped)
+        return
+      }
       setCurrentIndex(clamped)
     },
-    [slideCount]
+    [slideCount, currentIndex, onNavigate]
   )
 
   useEffect(() => {

@@ -3,16 +3,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CSSProperties } from 'react'
 import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import { SLIDES, type SlideKey } from '@/lib/reviews/slides/registry'
 import { useDeckNavigation } from '@/components/deck/use-deck-navigation'
 import { Slide } from '@/components/deck/slide'
 import { DeckControls } from '@/components/deck/deck-controls'
 import { getFullscreenElement, toggleElementFullscreen } from '@/components/deck/fullscreen'
 import { DeckPrintStyles } from '@/components/deck/print-styles'
-import { CoverSlide } from './cover-slide'
-import { BodySlide } from './body-slide'
-import { GaBodySlide } from './ga-body-slide'
-import { LinkedInBodySlide } from './linkedin-body-slide'
-import { ContentBodySlide } from './content-body-slide'
+import { SlideChromeLogo } from '@/components/deck/slide-chrome-logo'
+import { HiddenSlideOverlay } from './hidden-slide-overlay'
+import { SlideRenderer } from './slide-renderer'
+
+/**
+ * Which surface is rendering the deck. `'presentation'` is the public/share
+ * surface — it filters out hidden slides and skips the "What Resonated" slide
+ * when there are no top posts. `'editor'` is the authoring surface — it keeps
+ * every registry slide (so admins can edit the narrative even before posts
+ * land) and dims hidden slides with a "Hidden" badge instead of removing them.
+ */
+export type DeckMode = 'editor' | 'presentation'
 
 export interface ReviewDeckProps {
   organization: {
@@ -28,36 +36,29 @@ export interface ReviewDeckProps {
   narrative: NarrativeBlocks
   /** Snapshot metric data. `data.ga` powers the GA slide's strip/table; `data.linkedin` powers the LinkedIn slide's strip/table. */
   data: SnapshotData
+  /**
+   * Slide keys (matching the registry) to mark as hidden. In presentation
+   * mode these slides are filtered out entirely; in editor mode they remain
+   * visible but are dimmed with a "Hidden" badge so authors can still toggle
+   * them.
+   */
+  hiddenSlides?: readonly string[]
+  /** Render surface — defaults to `'presentation'`. */
+  mode?: DeckMode
+  /**
+   * Optional slide key to start the deck on. Resolved against the rendered
+   * slide list (after mode-specific filtering); falls back to the first slide
+   * when the key isn't present.
+   */
+  initialSlideKey?: SlideKey
+  /**
+   * When provided, the deck delegates slide navigation to the caller. Clicking
+   * prev/next (and pressing keyboard shortcuts) calls `onNavigate` with the
+   * destination slide key instead of mutating internal state. The caller is
+   * expected to remount the deck (e.g. via `key`) when the slide changes.
+   */
+  onNavigate?: (slideKey: SlideKey) => void
 }
-
-/**
- * Tagged union describing a body slide definition. `kind: 'ga'` routes to
- * `GaBodySlide`, `kind: 'linkedin'` routes to `LinkedInBodySlide`,
- * `kind: 'content'` routes to `ContentBodySlide` (rendered only when the
- * snapshot has top posts), and `kind: 'default'` routes to `BodySlide`
- * (heading + narrative).
- */
-type BodySection =
-  | {
-      key: Exclude<
-        keyof NarrativeBlocks,
-        'cover_subtitle' | 'ga_summary' | 'linkedin_insights' | 'content_highlights'
-      >
-      heading: string
-      kind: 'default'
-    }
-  | { key: 'ga_summary'; heading: string; kind: 'ga' }
-  | { key: 'linkedin_insights'; heading: string; kind: 'linkedin' }
-  | { key: 'content_highlights'; heading: string; kind: 'content' }
-
-const BODY_SECTIONS: readonly BodySection[] = [
-  { key: 'ga_summary', heading: 'Google Analytics', kind: 'ga' },
-  { key: 'linkedin_insights', heading: 'LinkedIn', kind: 'linkedin' },
-  { key: 'content_highlights', heading: 'What Resonated', kind: 'content' },
-  { key: 'initiatives', heading: 'Initiatives', kind: 'default' },
-  { key: 'takeaways', heading: 'Takeaways', kind: 'default' },
-  { key: 'planning', heading: 'Planning Ahead', kind: 'default' },
-]
 
 /**
  * Each slide knows how to render itself for a given output surface. The
@@ -76,11 +77,18 @@ interface BuiltSlide {
  * `<ReviewDeck>` is the shared renderer used by the editor preview, the
  * snapshot detail page, and the public share page. It produces a 6- or
  * 7-slide deck: cover + Google Analytics + LinkedIn + (optional) What
- * Resonated + Initiatives + Takeaways + Planning Ahead. The "What
- * Resonated" slide renders only when the snapshot has a non-empty
- * `data.linkedin.top_posts` array; otherwise it is filtered out so the
- * deck count stays honest. Missing narrative blocks on the remaining
- * body slides render a muted placeholder.
+ * Resonated + Initiatives + Takeaways + Planning Ahead.
+ *
+ * In `'presentation'` mode (default), slides whose keys appear in
+ * `hiddenSlides` are filtered out, and the "What Resonated" slide is
+ * filtered out when `data.linkedin.top_posts` is empty.
+ *
+ * In `'editor'` mode, every registry slide is rendered (so authors can edit
+ * the narrative even before posts seed) and hidden slides are wrapped in a
+ * dimming overlay with a "Hidden" badge.
+ *
+ * Per-slide body rendering is delegated to `<SlideRenderer>` — this component
+ * handles orchestration only (filtering, navigation, fullscreen, print).
  */
 export function ReviewDeck({
   organization,
@@ -89,70 +97,82 @@ export function ReviewDeck({
   periodEnd,
   narrative,
   data,
+  hiddenSlides = [],
+  mode = 'presentation',
+  initialSlideKey,
+  onNavigate,
 }: ReviewDeckProps) {
   const deckRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const slides: BuiltSlide[] = useMemo(() => {
-    const coverRender = (
-      <CoverSlide
-        organization={{ name: organization.name, logo_url: organization.logo_url }}
-        quarter={quarter}
-        periodStart={periodStart}
-        periodEnd={periodEnd}
-        subtitle={narrative.cover_subtitle}
-      />
+    // Enforce the registry's `hideable` contract here so callers passing a
+    // non-hideable key (e.g. 'cover') don't accidentally dim or drop it.
+    const hidden = new Set(
+      hiddenSlides.filter((key) => SLIDES.find((s) => s.key === key)?.hideable !== false)
     )
+    const isEditor = mode === 'editor'
+    const posts = data?.linkedin?.top_posts ?? []
 
-    const bodySlides: BuiltSlide[] = BODY_SECTIONS.map((section): BuiltSlide | null => {
-      const text = narrative[section.key] ?? ''
-      if (section.kind === 'ga') {
-        return {
-          key: section.key,
-          ariaHeading: section.heading,
-          render: (mode: 'screen' | 'print') => (
-            <GaBodySlide narrative={text} data={data?.ga} mode={mode} />
-          ),
-        }
-      }
-      if (section.kind === 'linkedin') {
-        return {
-          key: section.key,
-          ariaHeading: section.heading,
-          render: (mode: 'screen' | 'print') => (
-            <LinkedInBodySlide narrative={text} data={data?.linkedin} mode={mode} />
-          ),
-        }
-      }
-      if (section.kind === 'content') {
-        const posts = data?.linkedin?.top_posts ?? []
-        if (posts.length === 0) return null
-        return {
-          key: section.key,
-          ariaHeading: section.heading,
-          render: (mode: 'screen' | 'print') => (
-            <ContentBodySlide narrative={text} posts={posts} mode={mode} />
-          ),
-        }
-      }
-      return {
-        key: section.key,
-        ariaHeading: section.heading,
-        render: () => <BodySlide heading={section.heading} text={text} />,
-      }
-    }).filter((s): s is BuiltSlide => s !== null)
+    const built: BuiltSlide[] = []
 
-    return [
-      {
-        key: 'cover',
-        ariaHeading: 'Quarterly Performance Review',
-        render: () => coverRender,
-      },
-      ...bodySlides,
-    ]
-  }, [organization, quarter, periodStart, periodEnd, narrative, data])
+    for (const slide of SLIDES) {
+      // In presentation mode, drop hidden slides outright.
+      if (!isEditor && hidden.has(slide.key)) continue
 
-  const { currentIndex, next, prev, isFirst, isLast } = useDeckNavigation(slides.length)
+      // In presentation mode only, drop the content_highlights slide when no
+      // top posts exist. Editor keeps it so authors can still edit the block.
+      if (slide.kind === 'content' && !isEditor && posts.length === 0) continue
+
+      let render: BuiltSlide['render'] = (renderMode) => (
+        <SlideRenderer
+          slide={slide}
+          narrative={narrative}
+          data={data}
+          organization={{ name: organization.name, logo_url: organization.logo_url }}
+          quarter={quarter}
+          periodStart={periodStart}
+          periodEnd={periodEnd}
+          mode={renderMode}
+        />
+      )
+
+      // Editor mode wraps hidden slides in the dimming overlay so authors can
+      // still see and edit them while making it visually clear they're off.
+      if (isEditor && hidden.has(slide.key)) {
+        const innerRender = render
+        render = (renderMode) => <HiddenSlideOverlay>{innerRender(renderMode)}</HiddenSlideOverlay>
+      }
+
+      built.push({
+        key: slide.key,
+        ariaHeading: slide.kind === 'cover' ? 'Quarterly Performance Review' : slide.label,
+        render,
+      })
+    }
+
+    return built
+  }, [organization, quarter, periodStart, periodEnd, narrative, data, hiddenSlides, mode])
+
+  const initialIndex = useMemo(() => {
+    if (!initialSlideKey) return 0
+    const idx = slides.findIndex((s) => s.key === initialSlideKey)
+    return idx === -1 ? 0 : idx
+  }, [slides, initialSlideKey])
+
+  const handleIndexNavigate = useMemo(() => {
+    if (!onNavigate) return undefined
+    return (target: number) => {
+      const slide = slides[target]
+      if (slide) onNavigate(slide.key as SlideKey)
+    }
+  }, [onNavigate, slides])
+
+  const { currentIndex, next, prev, isFirst, isLast } = useDeckNavigation(
+    slides.length,
+    initialIndex,
+    { onNavigate: handleIndexNavigate }
+  )
 
   useEffect(() => {
     function handleChange() {
@@ -218,8 +238,9 @@ export function ReviewDeck({
 
       <div className="print-only">
         {slides.map((slide) => (
-          <div key={slide.key} className="print-slide">
+          <div key={slide.key} className="print-slide relative">
             {slide.render('print')}
+            <SlideChromeLogo />
           </div>
         ))}
       </div>

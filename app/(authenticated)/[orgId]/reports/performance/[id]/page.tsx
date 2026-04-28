@@ -1,13 +1,19 @@
 import { notFound } from 'next/navigation'
+import { FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getUserRecord } from '@/lib/auth/cached'
 import { isInternalUser } from '@/lib/permissions'
 import { UserRole } from '@/lib/enums'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
-import { AuthorNotesEditor } from './author-notes-editor'
-import { EditorHeader } from './editor-header'
-import { NarrativeEditor } from './narrative-editor'
-import { StyleMemoPreview } from './style-memo-preview'
+import { parseHiddenSlides } from '@/lib/reviews/slides/registry'
+import { EmptyState } from '@/components/ui/empty-state'
+import { ReportEditorHeader } from '@/components/reviews/editor/report-editor-header'
+import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
+import { PreviewButton } from '@/components/reviews/editor/preview-button'
+import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
+import { PublishButton } from '@/components/reviews/editor/publish-button'
+import { ContextForAiPanel } from '@/components/reviews/editor/context-for-ai-panel'
+import { HiddenSlidesProvider } from '@/components/reviews/editor/hidden-slides-provider'
+import { SlideThumbnailStrip } from '@/components/reviews/editor/slide-thumbnail-strip'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,52 +38,63 @@ export default async function PerformanceReportEditorPage({
 
   if (!review) notFound()
 
-  const { data: draft } = await supabase
-    .from('marketing_review_drafts')
-    .select('narrative, ai_originals, author_notes')
-    .eq('review_id', id)
-    .maybeSingle()
+  const [{ data: draft }, { data: memoRow }, { data: org }] = await Promise.all([
+    supabase
+      .from('marketing_review_drafts')
+      .select('author_notes, hidden_slides')
+      .eq('review_id', id)
+      .maybeSingle(),
+    supabase
+      .from('marketing_review_style_memos')
+      .select('memo, updated_at')
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+    supabase.from('organizations').select('accent_color').eq('id', orgId).maybeSingle(),
+  ])
 
-  const { data: memoRow } = await supabase
-    .from('marketing_review_style_memos')
-    .select('memo, updated_at')
-    .eq('organization_id', orgId)
-    .maybeSingle()
-
-  const narrative = (draft?.narrative as NarrativeBlocks | null) ?? {}
-  const aiOriginals = (draft?.ai_originals as NarrativeBlocks | null) ?? {}
   const authorNotes = (draft?.author_notes as string | null) ?? ''
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
+  const accentColor = (org?.accent_color as string | null) ?? null
+
+  const hiddenSlides = parseHiddenSlides(draft?.hidden_slides)
 
   return (
-    <div className="mx-auto max-w-3xl p-8" data-testid="performance-reports-editor">
-      <EditorHeader
-        orgId={orgId}
-        reviewId={id}
-        title={review.title as string}
-        quarter={review.quarter as string}
-        canEdit={canEdit}
-      />
+    <HiddenSlidesProvider reviewId={id} initialHidden={hiddenSlides}>
+      <div className="space-y-8 p-8" data-testid="performance-reports-editor">
+        <ReportEditorHeader
+          backHref={`/${orgId}/reports/performance`}
+          title={review.title as string}
+          quarter={review.quarter as string}
+          actions={
+            <>
+              <StyleMemoButton orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
+              <PreviewButton orgId={orgId} reviewId={id} />
+              <SnapshotsButton orgId={orgId} reviewId={id} />
+              {canEdit && <PublishButton orgId={orgId} reviewId={id} />}
+            </>
+          }
+        />
 
-      {draft ? (
-        <div className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            <StyleMemoPreview orgId={orgId} memo={styleMemo} updatedAt={styleMemoUpdatedAt} />
-            <AuthorNotesEditor reviewId={id} initialNotes={authorNotes} canEdit={canEdit} />
-          </div>
-          <NarrativeEditor
-            reviewId={id}
-            narrative={narrative}
-            aiOriginals={aiOriginals}
-            canEdit={canEdit}
+        {draft ? (
+          <>
+            <ContextForAiPanel
+              reviewId={id}
+              initialNotes={authorNotes}
+              canEdit={canEdit}
+              accentColor={accentColor}
+            />
+            <SlideThumbnailStrip orgId={orgId} reviewId={id} />
+          </>
+        ) : (
+          <EmptyState
+            icon={FileText}
+            title="No draft yet"
+            description="Create one from the reports list."
+            data-testid="performance-reports-no-draft"
           />
-        </div>
-      ) : (
-        <p className="text-muted-foreground text-sm" data-testid="performance-reports-no-draft">
-          No draft yet. Create one from the reports list.
-        </p>
-      )}
-    </div>
+        )}
+      </div>
+    </HiddenSlidesProvider>
   )
 }

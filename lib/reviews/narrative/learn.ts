@@ -5,7 +5,7 @@ import { buildLearnerDiff, loadStyleMemo, truncateMemo } from './style-memo'
 import { buildLearnerPrompt } from './learner-prompts'
 import { learnerOutputSchema, truncateRationale } from './memo-history-types'
 import { insertMemoVersion } from './memo-history'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SlideNotes } from '@/lib/reviews/types'
 
 const LEARNER_MODEL_ID = 'claude-opus-4-7'
 const LEARNER_MAX_TOKENS = 800
@@ -16,6 +16,7 @@ export interface RunStyleMemoLearnerInput {
   ai: NarrativeBlocks
   finalNarrative: NarrativeBlocks
   authorNotes: string | null
+  slideNotes: SlideNotes
   snapshotId?: string
   reviewId?: string
 }
@@ -42,6 +43,7 @@ export async function runStyleMemoLearner(
       ai: input.ai,
       finalNarrative: input.finalNarrative,
       authorNotes: input.authorNotes,
+      slideNotes: input.slideNotes,
     })
 
     if (diff === null) return { status: 'skipped' }

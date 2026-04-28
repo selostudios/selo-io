@@ -1,6 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { EditorHeader } from '@/app/(authenticated)/[orgId]/reports/performance/[id]/editor-header'
+import { PreviewButton } from '@/components/reviews/editor/preview-button'
+import { SnapshotsButton } from '@/components/reviews/editor/snapshots-button'
+import { PublishButton } from '@/components/reviews/editor/publish-button'
 
 const routerPush = vi.fn()
 const publishReview = vi.fn()
@@ -24,18 +26,32 @@ vi.mock('@/components/ui/sonner', () => ({
   showError: (...args: unknown[]) => showError(...args),
 }))
 
-const ORG_ID = '11111111-1111-1111-1111-111111111111'
-const REVIEW_ID = '22222222-2222-2222-2222-222222222222'
+const ORG_ID = 'org-1'
+const REVIEW_ID = 'rev-q1-2026'
 
-const baseProps = {
-  orgId: ORG_ID,
-  reviewId: REVIEW_ID,
-  title: 'Q1 2026 Marketing Review',
-  quarter: 'Q1 2026',
-  canEdit: true,
-}
+describe('PreviewButton', () => {
+  test('renders a link to the preview route with the Preview label', () => {
+    render(<PreviewButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
 
-describe('EditorHeader', () => {
+    const link = screen.getByTestId('report-preview-button')
+    expect(link.tagName).toBe('A')
+    expect(link).toHaveAttribute('href', `/${ORG_ID}/reports/performance/${REVIEW_ID}/preview`)
+    expect(link).toHaveTextContent('Preview')
+  })
+})
+
+describe('SnapshotsButton', () => {
+  test('renders a link to the snapshots route with the Snapshots label', () => {
+    render(<SnapshotsButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
+
+    const link = screen.getByTestId('report-snapshots-button')
+    expect(link.tagName).toBe('A')
+    expect(link).toHaveAttribute('href', `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots`)
+    expect(link).toHaveTextContent('Snapshots')
+  })
+})
+
+describe('PublishButton', () => {
   beforeEach(() => {
     routerPush.mockReset()
     publishReview.mockReset()
@@ -43,34 +59,13 @@ describe('EditorHeader', () => {
     showError.mockReset()
   })
 
-  test('links to the preview route', () => {
-    render(<EditorHeader {...baseProps} />)
-    const previewLink = screen.getByTestId('performance-reports-editor-preview-button')
-    expect(previewLink.tagName).toBe('A')
-    expect(previewLink).toHaveAttribute(
-      'href',
-      `/${ORG_ID}/reports/performance/${REVIEW_ID}/preview`
-    )
-  })
+  test('renders a Publish button', () => {
+    render(<PublishButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
 
-  test('links to the snapshots list route', () => {
-    render(<EditorHeader {...baseProps} />)
-    const snapshotsLink = screen.getByTestId('performance-reports-editor-snapshots-button')
-    expect(snapshotsLink.tagName).toBe('A')
-    expect(snapshotsLink).toHaveAttribute(
-      'href',
-      `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots`
-    )
-  })
-
-  test('hides the publish button for viewers without edit permission', () => {
-    render(<EditorHeader {...baseProps} canEdit={false} />)
-    expect(screen.queryByTestId('performance-reports-editor-publish-button')).toBeNull()
-  })
-
-  test('shows the publish button for users with edit permission', () => {
-    render(<EditorHeader {...baseProps} canEdit={true} />)
-    expect(screen.getByTestId('performance-reports-editor-publish-button')).toBeInTheDocument()
+    const button = screen.getByTestId('report-publish-button')
+    expect(button).toBeInTheDocument()
+    expect(button).toHaveTextContent('Publish')
+    expect(button).not.toBeDisabled()
   })
 
   test('publishes, toasts the new version, and navigates to the snapshot on success', async () => {
@@ -80,9 +75,9 @@ describe('EditorHeader', () => {
       version: 3,
     })
 
-    render(<EditorHeader {...baseProps} />)
+    render(<PublishButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
 
-    fireEvent.click(screen.getByTestId('performance-reports-editor-publish-button'))
+    fireEvent.click(screen.getByTestId('report-publish-button'))
 
     await waitFor(() => {
       expect(publishReview).toHaveBeenCalledWith(REVIEW_ID)
@@ -102,9 +97,9 @@ describe('EditorHeader', () => {
       error: 'Nothing to publish — narrative is empty',
     })
 
-    render(<EditorHeader {...baseProps} />)
+    render(<PublishButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
 
-    fireEvent.click(screen.getByTestId('performance-reports-editor-publish-button'))
+    fireEvent.click(screen.getByTestId('report-publish-button'))
 
     await waitFor(() => {
       expect(showError).toHaveBeenCalledWith('Nothing to publish — narrative is empty')
@@ -126,20 +121,20 @@ describe('EditorHeader', () => {
     )
     publishReview.mockReturnValueOnce(pendingPublish)
 
-    render(<EditorHeader {...baseProps} />)
+    render(<PublishButton orgId={ORG_ID} reviewId={REVIEW_ID} />)
 
-    const publishButton = screen.getByTestId('performance-reports-editor-publish-button')
-    fireEvent.click(publishButton)
+    const button = screen.getByTestId('report-publish-button')
+    fireEvent.click(button)
 
     await waitFor(() => {
-      expect(publishButton).toHaveTextContent('Publishing…')
+      expect(button).toHaveTextContent('Publishing…')
     })
-    expect(publishButton).toBeDisabled()
+    expect(button).toBeDisabled()
 
-    resolvePublish({ success: true, snapshotId: 'snap-abc', version: 1 })
+    resolvePublish({ success: true, snapshotId: 'snap-xyz', version: 1 })
     await waitFor(() => {
       expect(routerPush).toHaveBeenCalledWith(
-        `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots/snap-abc`
+        `/${ORG_ID}/reports/performance/${REVIEW_ID}/snapshots/snap-xyz`
       )
     })
   })

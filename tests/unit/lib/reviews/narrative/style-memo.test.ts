@@ -78,15 +78,19 @@ describe('buildLearnerDiff', () => {
   }
 
   test('returns null when every block is unchanged and author notes are empty', () => {
-    expect(buildLearnerDiff({ ai, finalNarrative: ai, authorNotes: null })).toBeNull()
+    expect(
+      buildLearnerDiff({ ai, finalNarrative: ai, authorNotes: null, slideNotes: {} })
+    ).toBeNull()
   })
 
   test('returns null when every block is unchanged and notes are whitespace', () => {
-    expect(buildLearnerDiff({ ai, finalNarrative: ai, authorNotes: '   \n ' })).toBeNull()
+    expect(
+      buildLearnerDiff({ ai, finalNarrative: ai, authorNotes: '   \n ', slideNotes: {} })
+    ).toBeNull()
   })
 
   test('emits only the changed blocks when some differ', () => {
-    const diff = buildLearnerDiff({ ai, finalNarrative, authorNotes: null })
+    const diff = buildLearnerDiff({ ai, finalNarrative, authorNotes: null, slideNotes: {} })
     expect(diff).not.toBeNull()
     expect(diff!.changedBlocks.map((b) => b.key)).toEqual(['ga_summary', 'planning'])
     expect(diff!.changedBlocks[0]).toMatchObject({
@@ -101,6 +105,7 @@ describe('buildLearnerDiff', () => {
       ai,
       finalNarrative: ai,
       authorNotes: 'Q1 is always slow.',
+      slideNotes: {},
     })
     expect(diff).not.toBeNull()
     expect(diff!.changedBlocks).toEqual([])
@@ -114,6 +119,7 @@ describe('buildLearnerDiff', () => {
       ai: partialAi,
       finalNarrative: partialFinal,
       authorNotes: null,
+      slideNotes: {},
     })
     expect(diff!.changedBlocks[0]).toMatchObject({
       aiText: '',
@@ -134,6 +140,7 @@ describe('buildLearnerDiff', () => {
       ai: aiWithHighlights,
       finalNarrative: finalWithHighlights,
       authorNotes: null,
+      slideNotes: {},
     })
     expect(diff).not.toBeNull()
     expect(diff!.changedBlocks.map((b) => b.key)).toContain('content_highlights')
@@ -142,5 +149,27 @@ describe('buildLearnerDiff', () => {
       aiText: 'AI: the campaigns all hit hard.',
       finalText: 'Author: founders-voice posts drove the top engagement.',
     })
+  })
+
+  test('emits the diff when only slide notes are present', () => {
+    const diff = buildLearnerDiff({
+      ai,
+      finalNarrative: ai,
+      authorNotes: null,
+      slideNotes: { ga_summary: 'Stop using jargon.' },
+    })
+    expect(diff).not.toBeNull()
+    expect(diff!.changedBlocks).toEqual([])
+    expect(diff!.slideNotes).toEqual([{ key: 'ga_summary', note: 'Stop using jargon.' }])
+  })
+
+  test('skips empty or whitespace-only slide notes and trims valid ones', () => {
+    const diff = buildLearnerDiff({
+      ai,
+      finalNarrative,
+      authorNotes: null,
+      slideNotes: { cover_subtitle: '   ', ga_summary: '  ok  ' },
+    })
+    expect(diff!.slideNotes).toEqual([{ key: 'ga_summary', note: 'ok' }])
   })
 })

@@ -14,7 +14,13 @@ import {
   NarrativeGenerationError,
 } from '@/lib/reviews/narrative/generator'
 import { runStyleMemoLearner } from '@/lib/reviews/narrative/learn'
-import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import {
+  isSlideKey,
+  getSlide,
+  parseHiddenSlides,
+  type SlideKey,
+} from '@/lib/reviews/slides/registry'
+import type { NarrativeBlocks, SlideNotes, SnapshotData } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
 type ActionErr = { success: false; error: string }
@@ -272,6 +278,49 @@ export async function updateAuthorNotes(
   return { success: true }
 }
 
+export async function updateSlideNote(
+  reviewId: string,
+  block: keyof NarrativeBlocks,
+  note: string
+): Promise<ActionOk | ActionErr> {
+  const review = await loadReviewForAuth(reviewId)
+  if (!review) return { success: false, error: 'Review not found' }
+
+  const auth = await authorizeAdminOrInternal(review.organization_id)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const supabase = await createClient()
+
+  const { data: draft, error: loadError } = await supabase
+    .from('marketing_review_drafts')
+    .select('slide_notes')
+    .eq('review_id', reviewId)
+    .single()
+
+  if (loadError || !draft) {
+    return { success: false, error: loadError?.message ?? 'Draft not found' }
+  }
+
+  const trimmed = note.trim()
+  const current = (draft.slide_notes as SlideNotes | null) ?? {}
+  const next: SlideNotes = { ...current }
+  if (trimmed.length > 0) {
+    next[block] = trimmed
+  } else {
+    delete next[block]
+  }
+
+  const { error } = await supabase
+    .from('marketing_review_drafts')
+    .update({ slide_notes: next, updated_at: new Date().toISOString() })
+    .eq('review_id', reviewId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}`)
+  return { success: true }
+}
+
 export async function deleteReview(reviewId: string): Promise<ActionOk | ActionErr> {
   const review = await loadReviewForAuth(reviewId)
   if (!review) return { success: false, error: 'Review not found' }
@@ -301,7 +350,7 @@ export async function publishReview(
 
   const { data: draft, error: draftError } = await supabase
     .from('marketing_review_drafts')
-    .select('data, narrative, author_notes, ai_originals')
+    .select('data, narrative, author_notes, ai_originals, hidden_slides, slide_notes')
     .eq('review_id', reviewId)
     .single()
 
@@ -345,6 +394,8 @@ export async function publishReview(
       share_token: nanoid(21),
       author_notes: (draft.author_notes as string | null) ?? null,
       ai_originals: (draft.ai_originals as NarrativeBlocks | null) ?? null,
+      hidden_slides: (draft.hidden_slides as string[] | null) ?? [],
+      slide_notes: (draft.slide_notes as SlideNotes | null) ?? {},
     })
     .select('id')
     .single()
@@ -369,10 +420,53 @@ export async function publishReview(
       ai: (draft.ai_originals as NarrativeBlocks | null) ?? ({} as NarrativeBlocks),
       finalNarrative: draft.narrative as NarrativeBlocks,
       authorNotes: (draft.author_notes as string | null) ?? null,
+      slideNotes: (draft.slide_notes as SlideNotes | null) ?? {},
       snapshotId: snapshot.id as string,
       reviewId,
     })
   })
 
   return { success: true, snapshotId: snapshot.id as string, version: nextVersion }
+}
+
+export async function setSlideVisibility(
+  reviewId: string,
+  slideKey: SlideKey,
+  hidden: boolean
+): Promise<ActionOk | ActionErr> {
+  if (!isSlideKey(slideKey)) {
+    return { success: false, error: `Unknown slide key: ${slideKey}` }
+  }
+  if (!getSlide(slideKey).hideable) {
+    return { success: false, error: 'Cover slide cannot be hidden' }
+  }
+
+  const review = await loadReviewForAuth(reviewId)
+  if (!review) return { success: false, error: 'Review not found' }
+  const auth = await authorizeAdminOrInternal(review.organization_id)
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const supabase = await createClient()
+  const { data: draft, error: loadError } = await supabase
+    .from('marketing_review_drafts')
+    .select('hidden_slides')
+    .eq('review_id', reviewId)
+    .single()
+  if (loadError || !draft) return { success: false, error: loadError?.message ?? 'Draft not found' }
+
+  const current = parseHiddenSlides(draft.hidden_slides)
+  const next = hidden
+    ? Array.from(new Set([...current, slideKey]))
+    : current.filter((k) => k !== slideKey)
+
+  const { error } = await supabase
+    .from('marketing_review_drafts')
+    .update({ hidden_slides: next, updated_at: new Date().toISOString() })
+    .eq('review_id', reviewId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}`)
+  revalidatePath(`/${review.organization_id}/reports/performance/${reviewId}/slides/${slideKey}`)
+  return { success: true }
 }

@@ -252,6 +252,7 @@ export function SharedResourceClient({
                 periodEnd={resourceData.data.periodEnd}
                 narrative={resourceData.data.narrative}
                 data={resourceData.data.data}
+                hiddenSlides={resourceData.data.hiddenSlides}
               />
             </div>
           </div>
