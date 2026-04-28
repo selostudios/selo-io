@@ -28,6 +28,7 @@ export interface MarketingReviewSnapshot {
   share_token: string
   author_notes: string | null
   hidden_slides: readonly SlideKey[]
+  slide_notes: SlideNotes
 }
 
 export interface MarketingReviewDraft {
@@ -39,7 +40,10 @@ export interface MarketingReviewDraft {
   ai_originals: NarrativeBlocks
   author_notes: string | null
   hidden_slides: readonly SlideKey[]
+  slide_notes: SlideNotes
 }
+
+export type SlideNotes = Partial<Record<keyof NarrativeBlocks, string>>
 
 export interface SnapshotData {
   ga?: GAData

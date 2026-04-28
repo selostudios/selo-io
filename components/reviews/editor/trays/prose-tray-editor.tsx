@@ -2,6 +2,7 @@
 
 import { useNarrativeBlockAutosave } from '@/components/reviews/editor/use-narrative-block-autosave'
 import { BulletsField } from '@/components/reviews/editor/fields/bullets-field'
+import { TrayShell } from './tray-shell'
 
 type ProseSlideKey = 'initiatives' | 'takeaways' | 'planning'
 
@@ -26,10 +27,17 @@ interface Props {
   reviewId: string
   slideKey: ProseSlideKey
   initialValue: string
+  noteInitialValue: string | null
   disabled?: boolean
 }
 
-export function ProseTrayEditor({ reviewId, slideKey, initialValue, disabled }: Props) {
+export function ProseTrayEditor({
+  reviewId,
+  slideKey,
+  initialValue,
+  noteInitialValue,
+  disabled,
+}: Props) {
   const { value, setValue, status, errorMessage } = useNarrativeBlockAutosave(
     reviewId,
     slideKey,
@@ -37,15 +45,17 @@ export function ProseTrayEditor({ reviewId, slideKey, initialValue, disabled }: 
   )
   const { label, hint } = PROSE_COPY[slideKey]
   return (
-    <BulletsField
-      name={slideKey}
-      label={label}
-      hint={hint}
-      value={value}
-      onChange={setValue}
-      status={status}
-      errorMessage={errorMessage}
-      disabled={disabled}
-    />
+    <TrayShell reviewId={reviewId} blockKey={slideKey} noteInitialValue={noteInitialValue}>
+      <BulletsField
+        name={slideKey}
+        label={label}
+        hint={hint}
+        value={value}
+        onChange={setValue}
+        status={status}
+        errorMessage={errorMessage}
+        disabled={disabled}
+      />
+    </TrayShell>
   )
 }

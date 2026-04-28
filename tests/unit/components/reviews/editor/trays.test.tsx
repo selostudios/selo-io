@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 vi.useFakeTimers()
 vi.mock('@/lib/reviews/actions', () => ({
   updateNarrative: vi.fn().mockResolvedValue({ success: true }),
+  updateSlideNote: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 import { CoverTrayEditor } from '@/components/reviews/editor/trays/cover-tray-editor'
@@ -19,7 +20,7 @@ beforeEach(() => {
 
 describe('tray editors', () => {
   test('CoverTrayEditor autosaves on cover_subtitle', async () => {
-    render(<CoverTrayEditor reviewId="rev-1" initialValue="" />)
+    render(<CoverTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} />)
     fireEvent.change(screen.getByTestId('field-input-cover_subtitle'), {
       target: { value: 'Hello' },
     })
@@ -30,7 +31,7 @@ describe('tray editors', () => {
   })
 
   test('GaTrayEditor autosaves on ga_summary', async () => {
-    render(<GaTrayEditor reviewId="rev-1" initialValue="" />)
+    render(<GaTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} />)
     fireEvent.change(screen.getByTestId('field-input-ga_summary'), {
       target: { value: 'Sessions' },
     })
@@ -41,7 +42,7 @@ describe('tray editors', () => {
   })
 
   test('LinkedInTrayEditor autosaves on linkedin_insights', async () => {
-    render(<LinkedInTrayEditor reviewId="rev-1" initialValue="" />)
+    render(<LinkedInTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} />)
     fireEvent.change(screen.getByTestId('field-input-linkedin_insights'), {
       target: { value: 'Followers' },
     })
@@ -52,7 +53,7 @@ describe('tray editors', () => {
   })
 
   test('ContentTrayEditor autosaves on content_highlights', async () => {
-    render(<ContentTrayEditor reviewId="rev-1" initialValue="" />)
+    render(<ContentTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} />)
     fireEvent.change(screen.getByTestId('field-input-content_highlights'), {
       target: { value: 'Top post' },
     })
@@ -65,7 +66,14 @@ describe('tray editors', () => {
   test.each(['initiatives', 'takeaways', 'planning'] as const)(
     'ProseTrayEditor with slideKey=%s autosaves on that block',
     async (slideKey) => {
-      render(<ProseTrayEditor reviewId="rev-1" slideKey={slideKey} initialValue="" />)
+      render(
+        <ProseTrayEditor
+          reviewId="rev-1"
+          slideKey={slideKey}
+          initialValue=""
+          noteInitialValue={null}
+        />
+      )
       fireEvent.change(screen.getByTestId(`field-input-${slideKey}`), { target: { value: 'x' } })
       await act(async () => {
         vi.advanceTimersByTime(1500)
@@ -77,27 +85,37 @@ describe('tray editors', () => {
   test.each([
     [
       'CoverTrayEditor',
-      () => <CoverTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      () => <CoverTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} disabled />,
       'cover_subtitle',
     ],
     [
       'GaTrayEditor',
-      () => <GaTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      () => <GaTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} disabled />,
       'ga_summary',
     ],
     [
       'LinkedInTrayEditor',
-      () => <LinkedInTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      () => (
+        <LinkedInTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} disabled />
+      ),
       'linkedin_insights',
     ],
     [
       'ContentTrayEditor',
-      () => <ContentTrayEditor reviewId="rev-1" initialValue="" disabled />,
+      () => <ContentTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} disabled />,
       'content_highlights',
     ],
     [
       'ProseTrayEditor',
-      () => <ProseTrayEditor reviewId="rev-1" slideKey="initiatives" initialValue="" disabled />,
+      () => (
+        <ProseTrayEditor
+          reviewId="rev-1"
+          slideKey="initiatives"
+          initialValue=""
+          noteInitialValue={null}
+          disabled
+        />
+      ),
       'initiatives',
     ],
   ] as const)(
@@ -110,12 +128,41 @@ describe('tray editors', () => {
 
   test('ProseTrayEditor renders the correct label per slideKey', () => {
     const { rerender } = render(
-      <ProseTrayEditor reviewId="rev-1" slideKey="initiatives" initialValue="" />
+      <ProseTrayEditor
+        reviewId="rev-1"
+        slideKey="initiatives"
+        initialValue=""
+        noteInitialValue={null}
+      />
     )
     expect(screen.getByLabelText('Initiatives')).toBeInTheDocument()
-    rerender(<ProseTrayEditor reviewId="rev-1" slideKey="takeaways" initialValue="" />)
+    rerender(
+      <ProseTrayEditor
+        reviewId="rev-1"
+        slideKey="takeaways"
+        initialValue=""
+        noteInitialValue={null}
+      />
+    )
     expect(screen.getByLabelText('Takeaways')).toBeInTheDocument()
-    rerender(<ProseTrayEditor reviewId="rev-1" slideKey="planning" initialValue="" />)
+    rerender(
+      <ProseTrayEditor
+        reviewId="rev-1"
+        slideKey="planning"
+        initialValue=""
+        noteInitialValue={null}
+      />
+    )
     expect(screen.getByLabelText('Planning ahead')).toBeInTheDocument()
+  })
+
+  test('hides the SlideNoteButton when noteInitialValue is null (non-admin)', () => {
+    render(<GaTrayEditor reviewId="rev-1" initialValue="" noteInitialValue={null} />)
+    expect(screen.queryByTestId('slide-note-button-ga_summary')).not.toBeInTheDocument()
+  })
+
+  test('renders the SlideNoteButton when noteInitialValue is a string (admin)', () => {
+    render(<GaTrayEditor reviewId="rev-1" initialValue="" noteInitialValue="" />)
+    expect(screen.getByTestId('slide-note-button-ga_summary')).toBeInTheDocument()
   })
 })

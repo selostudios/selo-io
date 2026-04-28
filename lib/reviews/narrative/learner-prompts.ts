@@ -48,6 +48,16 @@ export function buildLearnerPrompt({
     ? `AUTHOR NOTES FOR THIS QUARTER\n${diff.authorNotes}`
     : 'AUTHOR NOTES FOR THIS QUARTER\n(none)'
 
+  const slideNotesBlock =
+    diff.slideNotes.length === 0
+      ? 'PER-SLIDE AUTHOR NOTES\n(none)'
+      : [
+          'PER-SLIDE AUTHOR NOTES',
+          'Direct, slide-specific commentary the author left for the AI — often tone corrections, recurring complaints about how the AI handles a slide, or quarter-specific context. Treat recurring patterns (mistakes the AI keeps making, preferences the author keeps repeating) as durable; treat one-off facts as quarter-specific.',
+          '',
+          ...diff.slideNotes.flatMap((entry) => [`### ${entry.key}`, entry.note, '']),
+        ].join('\n')
+
   return [
     `You are maintaining a living style memo for ${organizationName}'s quarterly performance report. The memo is consumed by a narrative-generating LLM on future quarters as soft, durable guidance.`,
     '',
@@ -56,6 +66,8 @@ export function buildLearnerPrompt({
     editBlock,
     '',
     notesBlock,
+    '',
+    slideNotesBlock,
     '',
     'TASK',
     'Produce an updated memo that:',

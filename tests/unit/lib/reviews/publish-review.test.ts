@@ -212,6 +212,7 @@ describe('publishReview — style memo learner', () => {
       ai: aiOriginals,
       finalNarrative,
       authorNotes: 'author note',
+      slideNotes: {},
       snapshotId: 'snap-1',
       reviewId: 'review-1',
     })

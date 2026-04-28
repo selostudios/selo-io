@@ -11,7 +11,7 @@ import {
   type SlideDefinition,
 } from '@/lib/reviews/slides/registry'
 import { formatQuarterLabel, periodsForQuarter } from '@/lib/reviews/period'
-import type { NarrativeBlocks, SnapshotData } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SlideNotes, SnapshotData } from '@/lib/reviews/types'
 import { ReportEditorHeader } from '@/components/reviews/editor/report-editor-header'
 import { StyleMemoButton } from '@/components/reviews/editor/style-memo-button'
 import { PreviewButton } from '@/components/reviews/editor/preview-button'
@@ -33,21 +33,49 @@ function trayContent(
   slide: SlideDefinition,
   reviewId: string,
   narrative: NarrativeBlocks,
-  disabled: boolean
+  slideNotes: SlideNotes,
+  canEdit: boolean
 ) {
   const initialValue = (narrative[slide.narrativeBlockKey] as string | undefined) ?? ''
+  // Notes are admin-only — passing `null` to the tray hides the affordance.
+  const noteInitialValue = canEdit ? (slideNotes[slide.narrativeBlockKey] ?? '') : null
+  const disabled = !canEdit
   switch (slide.kind) {
     case 'cover':
-      return <CoverTrayEditor reviewId={reviewId} initialValue={initialValue} disabled={disabled} />
+      return (
+        <CoverTrayEditor
+          reviewId={reviewId}
+          initialValue={initialValue}
+          noteInitialValue={noteInitialValue}
+          disabled={disabled}
+        />
+      )
     case 'ga':
-      return <GaTrayEditor reviewId={reviewId} initialValue={initialValue} disabled={disabled} />
+      return (
+        <GaTrayEditor
+          reviewId={reviewId}
+          initialValue={initialValue}
+          noteInitialValue={noteInitialValue}
+          disabled={disabled}
+        />
+      )
     case 'linkedin':
       return (
-        <LinkedInTrayEditor reviewId={reviewId} initialValue={initialValue} disabled={disabled} />
+        <LinkedInTrayEditor
+          reviewId={reviewId}
+          initialValue={initialValue}
+          noteInitialValue={noteInitialValue}
+          disabled={disabled}
+        />
       )
     case 'content':
       return (
-        <ContentTrayEditor reviewId={reviewId} initialValue={initialValue} disabled={disabled} />
+        <ContentTrayEditor
+          reviewId={reviewId}
+          initialValue={initialValue}
+          noteInitialValue={noteInitialValue}
+          disabled={disabled}
+        />
       )
     case 'prose':
       // `slide.kind === 'prose'` only matches initiatives, takeaways, and
@@ -57,6 +85,7 @@ function trayContent(
           reviewId={reviewId}
           slideKey={slide.key as 'initiatives' | 'takeaways' | 'planning'}
           initialValue={initialValue}
+          noteInitialValue={noteInitialValue}
           disabled={disabled}
         />
       )
@@ -91,7 +120,7 @@ export default async function PerformanceReportSlideEditorPage({
   const [{ data: draft }, { data: org }, { data: memoRow }] = await Promise.all([
     supabase
       .from('marketing_review_drafts')
-      .select('narrative, data, author_notes, hidden_slides')
+      .select('narrative, data, author_notes, hidden_slides, slide_notes')
       .eq('review_id', id)
       .maybeSingle(),
     supabase
@@ -111,6 +140,7 @@ export default async function PerformanceReportSlideEditorPage({
   const narrative = (draft.narrative as NarrativeBlocks | null) ?? {}
   const data = (draft.data as SnapshotData | null) ?? {}
   const hiddenSlides = parseHiddenSlides(draft.hidden_slides)
+  const slideNotes = (draft.slide_notes as SlideNotes | null) ?? {}
 
   const styleMemo = (memoRow?.memo as string | null) ?? ''
   const styleMemoUpdatedAt = (memoRow?.updated_at as string | null) ?? null
@@ -154,7 +184,9 @@ export default async function PerformanceReportSlideEditorPage({
           />
         </main>
 
-        <SlideTray defaultExpanded>{trayContent(slide, id, narrative, !canEdit)}</SlideTray>
+        <SlideTray defaultExpanded>
+          {trayContent(slide, id, narrative, slideNotes, canEdit)}
+        </SlideTray>
       </div>
     </HiddenSlidesProvider>
   )

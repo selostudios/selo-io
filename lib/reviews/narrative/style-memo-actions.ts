@@ -8,7 +8,7 @@ import { UserRole } from '@/lib/enums'
 import { truncateMemo } from './style-memo'
 import { runStyleMemoLearner } from './learn'
 import { insertMemoVersion } from './memo-history'
-import type { NarrativeBlocks } from '@/lib/reviews/types'
+import type { NarrativeBlocks, SlideNotes } from '@/lib/reviews/types'
 
 type ActionOk = { success: true }
 type ActionErr = { success: false; error: string }
@@ -114,7 +114,7 @@ export async function regenerateStyleMemoFromLatestSnapshot(
   const { data: snapshot, error: snapshotError } = await supabase
     .from('marketing_review_snapshots')
     .select(
-      'id, review_id, ai_originals, narrative, author_notes, marketing_reviews!inner(organization_id)'
+      'id, review_id, ai_originals, narrative, author_notes, slide_notes, marketing_reviews!inner(organization_id)'
     )
     .eq('marketing_reviews.organization_id', organizationId)
     .order('published_at', { ascending: false })
@@ -131,6 +131,7 @@ export async function regenerateStyleMemoFromLatestSnapshot(
     ai_originals: NarrativeBlocks | null
     narrative: NarrativeBlocks | null
     author_notes: string | null
+    slide_notes: SlideNotes | null
   }
 
   const { data: org } = await supabase
@@ -144,6 +145,7 @@ export async function regenerateStyleMemoFromLatestSnapshot(
   const ai = (snapshotRow.ai_originals ?? {}) as NarrativeBlocks
   const finalNarrative = (snapshotRow.narrative ?? {}) as NarrativeBlocks
   const authorNotes = snapshotRow.author_notes ?? null
+  const slideNotes = snapshotRow.slide_notes ?? {}
 
   const result = await runStyleMemoLearner({
     organizationId,
@@ -151,6 +153,7 @@ export async function regenerateStyleMemoFromLatestSnapshot(
     ai,
     finalNarrative,
     authorNotes,
+    slideNotes,
     snapshotId: snapshotRow.id,
     reviewId: snapshotRow.review_id,
   })
