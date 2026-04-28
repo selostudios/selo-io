@@ -34,15 +34,13 @@ export function SlideThumbnail({ orgId, reviewId, slideKey }: SlideThumbnailProp
         orgId={orgId}
         reviewId={reviewId}
         slideKey={slideKey}
-        className="hover:bg-accent/50 block rounded-lg p-4 transition-colors"
+        className="hover:bg-accent/50 flex aspect-video flex-col items-center justify-center gap-3 rounded-lg p-6 transition-colors"
       >
-        <div className="flex items-center gap-3 pr-12">
-          <SlideIcon slideKey={slideKey} className="text-muted-foreground size-5 flex-shrink-0" />
-          <span className="text-sm font-medium">{label}</span>
-        </div>
+        <SlideIcon slideKey={slideKey} className="text-muted-foreground size-10 flex-shrink-0" />
+        <span className="text-center text-sm font-medium">{label}</span>
       </SlideThumbnailLink>
       {hideable && (
-        <div className="absolute top-1/2 right-3 z-10 -translate-y-1/2">
+        <div className="absolute top-3 right-3 z-10">
           <VisibilityToggle slideKey={slideKey} hideable={hideable} />
         </div>
       )}
